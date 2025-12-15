@@ -382,30 +382,36 @@
             <!-- Modern Bento Grid Layout -->
             <div class="grid grid-cols-1 md:grid-cols-12 gap-4">
 
-                <!-- Tile 1: Main Content (Left) -->
+                <!-- Tile 1: Functional Contact Form (Left) -->
                 <div
-                    class="col-span-1 md:col-span-7 crystal-panel p-8 md:p-12 rounded-3xl text-left flex flex-col justify-center relative group overflow-hidden hover:border-taurusGold/40 transition-colors duration-300">
-                    <!-- Glow -->
-                    <div
-                        class="absolute top-0 right-0 w-32 h-32 bg-taurusGold/10 blur-[50px] rounded-full group-hover:bg-taurusGold/20 transition-all duration-500">
+                    class="col-span-1 md:col-span-7 crystal-panel p-8 rounded-3xl text-left flex flex-col justify-center relative group hover:border-taurusGold/40 transition-colors duration-300">
+
+                    <div class="mb-6">
+                        <h2 class="font-display text-2xl md:text-3xl font-bold text-white mb-2">Start a Project</h2>
+                        <p class="text-gray-400 text-xs md:text-sm">Ready to build? Fill out the form below.</p>
                     </div>
 
-                    <div class="relative z-10">
-                        <div class="flex items-center gap-3 mb-6">
-                            <div class="w-2 h-2 bg-taurusGold rounded-full animate-pulse"></div>
-                            <span class="text-taurusGold text-[10px] font-bold uppercase tracking-widest">Ongoing
-                                Maintenance</span>
+                    <form action="https://formsubmit.co/info@omeryigitler.com" method="POST"
+                        class="space-y-4 relative z-10">
+                        <!-- FormSubmit Configuration -->
+                        <input type="hidden" name="_captcha" value="false">
+                        <input type="hidden" name="_subject" value="New Lead | Omeryigitler.com">
+                        <input type="hidden" name="_template" value="table">
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <input type="text" name="name" placeholder="Your Name" required
+                                class="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-taurusGold/50 focus:bg-black/40 transition-all text-sm">
+                            <input type="email" name="email" placeholder="Email Address" required
+                                class="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-taurusGold/50 focus:bg-black/40 transition-all text-sm">
                         </div>
+                        <textarea name="message" rows="3" placeholder="Tell us about the project..." required
+                            class="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-taurusGold/50 focus:bg-black/40 transition-all text-sm resize-none"></textarea>
 
-                        <h2 class="font-display text-3xl md:text-4xl font-bold text-white mb-6 leading-tight">
-                            Support & <br> <span class="text-gray-500">Updates</span>
-                        </h2>
-
-                        <p class="text-gray-400 text-sm leading-relaxed max-w-md">
-                            We don't just build and leave. We offer continuous support, security patches, and
-                            performance optimizations to keep your business running at peak efficiency.
-                        </p>
-                    </div>
+                        <button type="submit"
+                            class="w-full py-4 rounded-xl bg-taurusGold text-black font-bold uppercase tracking-widest text-xs hover:bg-white hover:scale-[1.02] active:scale-95 transition-all duration-300 shadow-[0_0_20px_-5px_rgba(255,215,0,0.3)]">
+                            Send Request
+                        </button>
+                    </form>
                 </div>
 
                 <!-- Tile 2: Visual System Status (Right) -->
@@ -446,18 +452,24 @@
                     </div>
                 </div>
 
-                <!-- Tile 3: Call to Action (Bottom) -->
+                <!-- Tile 3: Info & Maintenance (Bottom) -->
                 <div
-                    class="col-span-1 md:col-span-12 crystal-panel p-6 md:px-12 md:py-8 rounded-3xl flex flex-col md:flex-row items-center justify-between gap-6 hover:border-taurusGold/40 transition-colors duration-300 group">
-                    <div class="text-center md:text-left">
-                        <h3 class="text-white font-bold text-lg">Secure Your Digital Future</h3>
-                        <p class="text-gray-400 text-xs mt-1">Tell us about your vision. We reply within 24 hours.</p>
+                    class="col-span-1 md:col-span-12 crystal-panel p-6 md:px-12 md:py-8 rounded-3xl flex flex-col md:flex-row items-center justify-between gap-6 hover:border-taurusGold/40 transition-colors duration-300">
+                    <div class="flex items-center gap-4">
+                        <div
+                            class="w-10 h-10 rounded-full bg-taurusGold/10 flex items-center justify-center text-taurusGold border border-taurusGold/20">
+                            <i data-lucide="shield-check" class="w-5 h-5"></i>
+                        </div>
+                        <div class="text-center md:text-left">
+                            <h3 class="text-white font-bold text-sm">Long-Term Support & Maintenance</h3>
+                            <p class="text-gray-400 text-xs mt-1">We provide continuous security updates and performance
+                                optimization for every project.</p>
+                        </div>
                     </div>
 
                     <a href="mailto:info@omeryigitler.com"
-                        class="px-8 py-3 rounded-full border border-taurusGold bg-taurusGold text-black text-xs font-bold uppercase tracking-widest transition-all duration-300 shadow-[0_0_20px_-5px_rgba(255,215,0,0.4)] hover:bg-obsidian/80 hover:text-taurusGold hover:border-taurusGold/50 hover:shadow-[0_0_30px_-5px_rgba(255,215,0,0.1)] hover:scale-105 active:scale-95 group-hover:shadow-[0_0_30px_rgba(255,215,0,0.3)] flex items-center gap-3">
-                        <span>Contact Us Today</span>
-                        <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                        class="text-xs font-bold uppercase tracking-widest text-gray-400 hover:text-white transition-colors">
+                        info@omeryigitler.com
                     </a>
                 </div>
 
