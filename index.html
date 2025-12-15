@@ -577,20 +577,23 @@
                 </h4>
 
                 <div class="relative pl-4 space-y-4">
-                    <!-- Golden Line -->
-                    <div
-                        class="absolute top-2 left-[5px] w-[1px] h-[85%] bg-gradient-to-b from-taurusGold via-taurusGold/50 to-transparent">
+                    <!-- Animated Golden Line -->
+                    <div class="absolute top-2 left-[5px] w-[1px] h-[85%] bg-white/5 overflow-hidden">
+                        <div
+                            class="absolute top-0 left-0 w-full h-[50%] bg-gradient-to-b from-transparent via-taurusGold to-transparent animate-scan-line opacity-75">
+                        </div>
                     </div>
 
                     <!-- Step 1 -->
                     <div class="relative flex gap-4 group/step">
                         <div
-                            class="w-2.5 h-2.5 rounded-full bg-taurusGold shrink-0 mt-1.5 ring-4 ring-taurusGold/10 group-hover/step:ring-taurusGold/30 transition-all">
+                            class="w-2.5 h-2.5 rounded-full bg-gray-700 shrink-0 mt-1.5 ring-4 ring-gray-700/20 group-hover/step:bg-taurusGold group-hover/step:ring-taurusGold/30 transition-all">
                         </div>
                         <div
                             class="flex-1 bg-white/5 border border-white/5 rounded-lg p-3 hover:bg-white/10 transition-colors">
-                            <h5 class="text-taurusGold text-[10px] font-bold uppercase mb-0.5">1.
-                                Discovery</h5>
+                            <h5
+                                class="text-white text-[10px] font-bold uppercase mb-0.5 group-hover/step:text-taurusGold transition-colors">
+                                1. Discovery</h5>
                             <p class="text-[10px] text-gray-400 leading-tight">Business goals, target
                                 audience, competitors.</p>
                         </div>
