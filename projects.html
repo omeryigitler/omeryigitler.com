@@ -80,36 +80,51 @@
     </div>
 
     <!-- Header -->
+    <!-- Modern Floating Glass Header -->
     <header class="fixed top-6 left-1/2 -translate-x-1/2 z-50 w-[95%] max-w-5xl">
         <div
-            class="flex items-center justify-between p-3 rounded-full border border-white/10 bg-gray-900/80 backdrop-blur-xl shadow-[0_10px_40px_-10px_rgba(0,0,0,0.5)] ring-1 ring-white/5 hover:border-taurusGold/30 transition-colors duration-500">
+            class="relative flex items-center justify-between px-3 py-3 rounded-full border border-white/10 bg-neutral-900/60 backdrop-blur-2xl shadow-2xl ring-1 ring-white/5 hover:border-white/20 transition-all duration-500">
 
-            <div class="flex items-center gap-6">
-                <!-- Logo -->
-                <a href="index.html"
-                    class="flex items-center justify-center w-12 h-12 rounded-full bg-gradient-to-br from-white/10 to-transparent border border-white/5 hover:bg-taurusGold hover:text-black hover:border-taurusGold transition-all duration-300 group relative overflow-hidden">
-                    <div
-                        class="absolute inset-0 bg-taurusGold opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                    </div>
+            <!-- 1. Logo Module (Left) -->
+            <a href="index.html"
+                class="flex items-center justify-center w-12 h-12 rounded-full bg-white/5 border border-white/5 hover:bg-taurusGold hover:text-black hover:border-taurusGold transition-all duration-300 group relative overflow-hidden shrink-0">
+                <div
+                    class="absolute inset-0 bg-taurusGold opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                </div>
+                <span
+                    class="relative z-10 font-display font-bold text-sm tracking-tighter text-taurusGold group-hover:text-black transition-colors">ÖY</span>
+            </a>
+
+            <!-- 2. Navigation Links (Absolute Center for Perfect Symmetry) -->
+            <nav
+                class="absolute left-1/2 -translate-x-1/2 hidden md:flex items-center gap-10 text-[11px] font-bold uppercase tracking-[0.2em] text-gray-400">
+
+                <a href="index.html" class="hover:text-white transition-colors relative group py-4">
+                    Home
                     <span
-                        class="relative z-10 font-display font-bold text-sm tracking-tighter text-taurusGold group-hover:text-black transition-colors">ÖY</span>
+                        class="absolute bottom-2 left-1/2 -translate-x-1/2 w-0 h-[1px] bg-taurusGold transition-all duration-300 group-hover:w-full"></span>
                 </a>
 
-                <nav
-                    class="hidden md:flex items-center gap-8 text-xs font-bold uppercase tracking-widest text-gray-400">
-                    <a href="index.html#portfolio" class="hover:text-white transition-colors">Home</a>
-                    <a href="#" class="text-white transition-colors relative group py-2">
-                        Projects
-                        <span class="absolute bottom-0 left-1/2 -translate-x-1/2 w-full h-[1px] bg-taurusGold"></span>
-                    </a>
-                </nav>
-            </div>
+                <a href="#" class="text-white transition-colors relative group py-4">
+                    Projects
+                    <span
+                        class="absolute bottom-2 left-1/2 -translate-x-1/2 w-full h-[1px] bg-taurusGold transition-all duration-300"></span>
+                </a>
 
+                <a href="index.html#contact" class="hover:text-white transition-colors relative group py-4">
+                    Contact
+                    <span
+                        class="absolute bottom-2 left-1/2 -translate-x-1/2 w-0 h-[1px] bg-taurusGold transition-all duration-300 group-hover:w-full"></span>
+                </a>
+            </nav>
+
+            <!-- 3. Action Button (Right) -->
             <a href="index.html#contact"
-                class="flex items-center gap-3 px-8 py-3 rounded-full border border-taurusGold bg-taurusGold text-black text-xs font-bold uppercase tracking-widest transition-all duration-300 shadow-[0_0_20px_-5px_rgba(255,215,0,0.4)] hover:bg-obsidian/80 hover:text-taurusGold hover:border-taurusGold/50 hover:shadow-[0_0_30px_-5px_rgba(255,215,0,0.1)] hover:scale-105 active:scale-95 group relative overflow-hidden">
+                class="flex items-center gap-3 px-6 py-3 rounded-full border border-taurusGold bg-taurusGold text-black text-[10px] font-bold uppercase tracking-widest transition-all duration-300 shadow-[0_0_20px_-5px_rgba(255,215,0,0.4)] hover:bg-obsidian/80 hover:text-taurusGold hover:border-taurusGold/50 hover:shadow-[0_0_30px_-5px_rgba(255,215,0,0.1)] hover:scale-105 active:scale-95 group relative overflow-hidden shrink-0">
                 <span class="relative z-10">Start Project</span>
-                <i data-lucide="arrow-up-right" class="w-4 h-4 relative z-10"></i>
+                <i data-lucide="arrow-up-right" class="w-3.5 h-3.5 relative z-10"></i>
             </a>
+
         </div>
     </header>
 
