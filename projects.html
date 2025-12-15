@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Projects | Ömer Yiğitler</title>
+    <link rel="icon" href="assets/favicon.png" type="image/png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Syncopate:wght@400;700&family=Manrope:wght@300;400;600;800&display=swap"
+        rel="stylesheet">
+
+    <meta name="description"
+        content="View Selected Projects by Ömer Yiğitler. Premium web design case studies including Reformer Pilates Malta.">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        display: ['"Syncopate"', 'sans-serif'],
+                        body: ['"Manrope"', 'sans-serif'],
+                    },
+                    colors: {
+                        obsidian: '#050505',
+                        deepSpace: '#0B1120',
+                        taurusGold: '#FFD700',
+                        cyberGray: '#1E293B',
+                    },
+                    backgroundImage: {
+                        'symmetry-grid': "radial-gradient(circle at center, transparent 0%, #050505 100%), linear-gradient(rgba(255, 215, 0, 0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 215, 0, 0.03) 1px, transparent 1px)",
+                    },
+                    animation: {
+                        'hover-glow': 'hoverGlow 4s ease-in-out infinite',
+                        'float-center': 'floatCenter 6s ease-in-out infinite',
+                        'scan-line': 'scanLine 6s linear infinite',
+                    },
+                    keyframes: {
+                        hoverGlow: {
+                            '0%, 100%': { borderColor: 'rgba(255, 255, 255, 0.1)' },
+                            '50%': { borderColor: 'rgba(255, 215, 0, 0.5)', boxShadow: '0 0 30px rgba(255, 215, 0, 0.1)' },
+                        },
+                        floatCenter: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-15px)' },
+                        },
+                        scanLine: {
+                            '0%': { transform: 'translateY(-100%)' },
+                            '100%': { transform: 'translateY(100vh)' }
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        .grid-bg {
+            background-size: 100% 100%, 40px 40px, 40px 40px;
+        }
+
+        .crystal-panel {
+            background: rgba(11, 17, 32, 0.6);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 20px 50px -10px rgba(0, 0, 0, 0.8);
+        }
+    </style>
+</head>
+
+<body
+    class="bg-obsidian text-white font-body min-h-screen flex flex-col items-center overflow-x-hidden selection:bg-taurusGold selection:text-black">
+
+    <div class="fixed inset-0 w-full h-full grid-bg bg-symmetry-grid -z-10 opacity-40"></div>
+    <div
+        class="fixed top-0 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-deepSpace rounded-full blur-[150px] -z-10 opacity-60">
+    </div>
+
+    <!-- Header -->
+    <header class="fixed top-6 left-1/2 -translate-x-1/2 z-50 w-[95%] max-w-5xl">
+        <div
+            class="flex items-center justify-between p-3 rounded-full border border-white/10 bg-gray-900/80 backdrop-blur-xl shadow-[0_10px_40px_-10px_rgba(0,0,0,0.5)] ring-1 ring-white/5 hover:border-taurusGold/30 transition-colors duration-500">
+
+            <div class="flex items-center gap-6">
+                <!-- Logo -->
+                <a href="index.html"
+                    class="flex items-center justify-center w-12 h-12 rounded-full bg-gradient-to-br from-white/10 to-transparent border border-white/5 hover:bg-taurusGold hover:text-black hover:border-taurusGold transition-all duration-300 group relative overflow-hidden">
+                    <div
+                        class="absolute inset-0 bg-taurusGold opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                    </div>
+                    <span
+                        class="relative z-10 font-display font-bold text-sm tracking-tighter text-taurusGold group-hover:text-black transition-colors">ÖY</span>
+                </a>
+
+                <nav
+                    class="hidden md:flex items-center gap-8 text-xs font-bold uppercase tracking-widest text-gray-400">
+                    <a href="index.html#portfolio" class="hover:text-white transition-colors">Home</a>
+                    <a href="#" class="text-white transition-colors relative group py-2">
+                        Projects
+                        <span class="absolute bottom-0 left-1/2 -translate-x-1/2 w-full h-[1px] bg-taurusGold"></span>
+                    </a>
+                </nav>
+            </div>
+
+            <a href="index.html#contact"
+                class="flex items-center gap-3 px-8 py-3 rounded-full border border-taurusGold bg-taurusGold text-black text-xs font-bold uppercase tracking-widest transition-all duration-300 shadow-[0_0_20px_-5px_rgba(255,215,0,0.4)] hover:bg-obsidian/80 hover:text-taurusGold hover:border-taurusGold/50 hover:shadow-[0_0_30px_-5px_rgba(255,215,0,0.1)] hover:scale-105 active:scale-95 group relative overflow-hidden">
+                <span class="relative z-10">Start Project</span>
+                <i data-lucide="arrow-up-right" class="w-4 h-4 relative z-10"></i>
+            </a>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-grow flex flex-col items-center w-full max-w-7xl px-4 relative z-10 py-32">
+
+        <div class="text-center mb-16 animate-float-center">
+            <h1 class="font-display text-4xl md:text-5xl font-bold text-white mb-4">Selected Work</h1>
+            <p class="text-gray-400 max-w-xl mx-auto">CASE STUDIES</p>
+        </div>
+
+        <!-- FEATURED PROJECT: Reformer Pilates Malta -->
+        <div class="w-full max-w-6xl text-center md:text-left">
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-6">
+
+                <!-- Project Info & Case Study -->
+                <div
+                    class="col-span-1 md:col-span-5 crystal-panel p-8 md:p-10 rounded-3xl flex flex-col justify-between hover:border-taurusGold/40 transition-colors duration-300 group relative overflow-hidden">
+                    <!-- Decorative Background -->
+                    <div
+                        class="absolute top-0 right-0 w-40 h-40 bg-purple-500/5 blur-[60px] rounded-full group-hover:bg-purple-500/10 transition-all duration-500">
+                    </div>
+
+                    <div>
+                        <h3 class="font-display text-2xl md:text-3xl font-bold text-white mb-2 leading-tight">
+                            Reformer Pilates <br> Malta
+                        </h3>
+                        <p class="text-gray-500 text-xs font-bold uppercase tracking-wider mb-6">Custom Website Design
+                        </p>
+
+                        <p class="text-gray-400 text-sm leading-relaxed mb-8">
+                            A modern, mobile‑friendly website designed to showcase classes, facilitate bookings, and
+                            strengthen the studio’s local presence in Malta.
+                        </p>
+
+                        <!-- Case Study Mini-Grid -->
+                        <div class="space-y-4 border-t border-white/5 pt-6">
+                            <div>
+                                <h4 class="text-taurusGold text-[10px] font-bold uppercase mb-1">Challenge</h4>
+                                <p class="text-gray-500 text-[11px] leading-snug">Lack of online visibility & mobile
+                                    booking options for clients.</p>
+                            </div>
+                            <div>
+                                <h4 class="text-taurusGold text-[10px] font-bold uppercase mb-1">Solution</h4>
+                                <p class="text-gray-500 text-[11px] leading-snug">Custom responsive design with clear
+                                    class schedules & SEO foundations.</p>
+                            </div>
+                            <div>
+                                <h4 class="text-taurusGold text-[10px] font-bold uppercase mb-1">Result</h4>
+                                <p class="text-gray-500 text-[11px] leading-snug">Improved brand perception and
+                                    accessible class information for locals.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-8 pt-6 border-t border-white/5">
+                        <a href="#"
+                            class="inline-flex items-center gap-2 text-white text-xs font-bold uppercase tracking-wider hover:text-taurusGold transition-colors">
+                            View Case Study <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Project Visual (Mockup) -->
+                <div
+                    class="col-span-1 md:col-span-7 crystal-panel p-8 rounded-3xl relative overflow-hidden group hover:border-taurusGold/40 transition-colors duration-300 flex items-center justify-center bg-gradient-to-br from-gray-900 to-black">
+                    <!-- Abstract Laptop Visual -->
+                    <div
+                        class="relative w-[340px] h-[200px] md:w-[480px] md:h-[280px] transition-transform duration-700 group-hover:scale-105">
+                        <!-- Screen -->
+                        <div
+                            class="absolute inset-0 bg-gray-800 rounded-lg border border-gray-700 shadow-2xl overflow-hidden flex flex-col">
+                            <div class="h-6 bg-gray-900 flex items-center px-3 space-x-1.5 border-b border-gray-700">
+                                <div class="w-2 h-2 rounded-full bg-red-500"></div>
+                                <div class="w-2 h-2 rounded-full bg-yellow-500"></div>
+                                <div class="w-2 h-2 rounded-full bg-green-500"></div>
+                            </div>
+                            <div class="flex-1 bg-gray-900 relative flex items-center justify-center overflow-hidden">
+                                <img src="assets/pilates-desktop.png" alt="Reformer Pilates Malta Desktop"
+                                    class="w-full h-full object-cover object-[center_65%] opacity-90 transition-opacity duration-500 group-hover:opacity-100">
+                            </div>
+                        </div>
+                        <!-- Base -->
+                        <div
+                            class="absolute -bottom-4 left-1/2 -translate-x-1/2 w-[110%] h-4 bg-gray-800 rounded-b-xl shadow-xl">
+                        </div>
+
+                        <!-- Mobile Floating -->
+                        <div
+                            class="absolute -bottom-6 -right-8 w-[100px] h-[180px] bg-gray-800 rounded-xl border border-gray-700 shadow-2xl transform rotate-[-5deg] group-hover:rotate-0 transition-transform duration-500 delay-100 flex flex-col p-1 z-20">
+                            <div class="flex-1 bg-black rounded-lg overflow-hidden relative">
+                                <img src="assets/pilates-mobile.png" alt="Reformer Pilates Malta Mobile"
+                                    class="w-full h-full object-cover object-top opacity-90 transition-opacity duration-500 group-hover:opacity-100">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+    </main>
+
+    <footer class="relative z-10 py-12 border-t border-white/5 bg-black/80 backdrop-blur-md">
+        <div class="max-w-7xl mx-auto px-6 text-center">
+            <p class="text-gray-400 font-body tracking-widest text-xs md:text-sm">
+                Designed & Developed by <span class="text-taurusGold font-bold">Ömer YİĞİTLER</span>
+            </p>
+        </div>
+    </footer>
+
+    <script>
+        lucide.createIcons();
+    </script>
+</body>
+
+</html>

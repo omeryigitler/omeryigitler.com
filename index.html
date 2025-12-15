@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Symmetrical Antigravity | Architect of Code</title>
+    <link rel="icon" href="assets/favicon.png" type="image/png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Syncopate:wght@400;700&family=Manrope:wght@300;400;600;800&display=swap"
+        rel="stylesheet">
+
+    <meta name="description"
+        content="Premium web design and development for small businesses in Malta. Custom-coded, mobile-first websites that drive customers. Designed by Ömer Yiğitler.">
+
+    <!-- Google Workspace & Business Identity (JSON-LD) -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "ProfessionalService",
+      "name": "Ömer Yiğitler | Web Architect",
+      "image": "https://omeryigitler.com/assets/logo.png",
+      "url": "https://omeryigitler.com",
+      "telephone": "",
+      "email": "info@omeryigitler.com",
+      "priceRange": "$$$",
+      "address": {
+        "@type": "PostalAddress",
+        "addressCountry": "MT"
+      },
+      "description": "Premium custom web design and development services for small businesses in Malta. Specializing in high-performance, mobile-first websites.",
+      "founder": {
+        "@type": "Person",
+        "name": "Ömer Yiğitler"
+      }
+    }
+    </script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        display: ['"Syncopate"', 'sans-serif'], // Fütüristik ve geniş başlıklar
+                        body: ['"Manrope"', 'sans-serif'], // Okunaklı ve geometrik gövde
+                    },
+                    colors: {
+                        obsidian: '#050505',   // En koyu siyah
+                        deepSpace: '#0B1120',  // Derin lacivert
+                        taurusGold: '#FFD700', // Boğa'ya özel Altın Sarısı (Neon yerine daha tok)
+                        cyberGray: '#1E293B',
+                    },
+                    backgroundImage: {
+                        'symmetry-grid': "radial-gradient(circle at center, transparent 0%, #050505 100%), linear-gradient(rgba(255, 215, 0, 0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 215, 0, 0.03) 1px, transparent 1px)",
+                    },
+                    animation: {
+                        'hover-glow': 'hoverGlow 4s ease-in-out infinite',
+                        'float-center': 'floatCenter 6s ease-in-out infinite',
+                        'scan-line': 'scanLine 6s linear infinite',
+                    },
+                    keyframes: {
+                        hoverGlow: {
+                            '0%, 100%': { borderColor: 'rgba(255, 255, 255, 0.1)' },
+                            '50%': { borderColor: 'rgba(255, 215, 0, 0.5)', boxShadow: '0 0 30px rgba(255, 215, 0, 0.1)' },
+                        },
+                        floatCenter: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-15px)' }, // Daha kontrollü, az hareket
+                        },
+                        scanLine: {
+                            '0%': { transform: 'translateY(-100%)' },
+                            '100%': { transform: 'translateY(100vh)' }
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* Mükemmel Simetri için Izgara Arka Planı */
+        .grid-bg {
+            background-size: 100% 100%, 40px 40px, 40px 40px;
+        }
+
+        /* Glassmorphism - Daha Sert ve Keskin (Kristal) */
+        .crystal-panel {
+            background: rgba(11, 17, 32, 0.6);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 20px 50px -10px rgba(0, 0, 0, 0.8);
+        }
+
+        /* Başlıklarda Boşluk Kullanımı (Tracking) */
+        .widest-heading {
+            letter-spacing: 0.2em;
+        }
+
+        /* Dikey Çizgi */
+        .vertical-line {
+            width: 1px;
+            height: 100px;
+            background: linear-gradient(to bottom, transparent, #FFD700, transparent);
+        }
+    </style>
+</head>
+
+<body
+    class="bg-obsidian text-white font-body min-h-screen flex flex-col items-center overflow-x-hidden selection:bg-taurusGold selection:text-black">
+
+    <div class="fixed inset-0 w-full h-full grid-bg bg-symmetry-grid -z-10 opacity-40"></div>
+
+
+
+    <div
+        class="fixed top-0 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-deepSpace rounded-full blur-[150px] -z-10 opacity-60">
+    </div>
+
+    <!-- Modern Floating Glass Header -->
+    <header class="fixed top-6 left-1/2 -translate-x-1/2 z-50 w-[95%] max-w-5xl">
+        <div
+            class="flex items-center justify-between p-3 rounded-full border border-white/10 bg-gray-900/80 backdrop-blur-xl shadow-[0_10px_40px_-10px_rgba(0,0,0,0.5)] ring-1 ring-white/5 hover:border-taurusGold/30 transition-colors duration-500">
+
+            <div class="flex items-center gap-6">
+                <!-- Logo Module -->
+                <a href="#"
+                    class="flex items-center justify-center w-12 h-12 rounded-full bg-gradient-to-br from-white/10 to-transparent border border-white/5 hover:bg-taurusGold hover:text-black hover:border-taurusGold transition-all duration-300 group relative overflow-hidden">
+                    <div
+                        class="absolute inset-0 bg-taurusGold opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                    </div>
+                    <span
+                        class="relative z-10 font-display font-bold text-sm tracking-tighter text-taurusGold group-hover:text-black transition-colors">ÖY</span>
+                </a>
+
+                <!-- Navigation Links -->
+                <nav
+                    class="hidden md:flex items-center gap-8 text-xs font-bold uppercase tracking-widest text-gray-400">
+                    <a href="#portfolio" class="hover:text-white transition-colors relative group py-2">
+                        Projects
+                        <span
+                            class="absolute bottom-0 left-1/2 -translate-x-1/2 w-0 h-[1px] bg-taurusGold transition-all duration-300 group-hover:w-full"></span>
+                    </a>
+                    <a href="#contact" class="hover:text-white transition-colors relative group py-2">
+                        Contact
+                        <span
+                            class="absolute bottom-0 left-1/2 -translate-x-1/2 w-0 h-[1px] bg-taurusGold transition-all duration-300 group-hover:w-full"></span>
+                    </a>
+                </nav>
+            </div>
+
+            <!-- Action Button -->
+            <!-- Action Button -->
+            <a href="#contact"
+                class="flex items-center gap-3 px-8 py-3 rounded-full border border-taurusGold bg-taurusGold text-black text-xs font-bold uppercase tracking-widest transition-all duration-300 shadow-[0_0_20px_-5px_rgba(255,215,0,0.4)] hover:bg-obsidian/80 hover:text-taurusGold hover:border-taurusGold/50 hover:shadow-[0_0_30px_-5px_rgba(255,215,0,0.1)] hover:scale-105 active:scale-95 group relative overflow-hidden">
+                <span class="relative z-10">Start Project</span>
+                <i data-lucide="arrow-up-right" class="w-4 h-4 relative z-10"></i>
+            </a>
+
+        </div>
+    </header>
+
+    <main class="flex-grow flex flex-col items-center justify-center w-full max-w-7xl px-4 relative z-10 py-20 mt-32">
+
+        <!-- Central Neon Scan Line (Symmetrical Axis) -->
+        <div class="absolute top-0 left-1/2 -translate-x-1/2 w-[1px] h-full bg-white/5 overflow-hidden -z-10">
+            <div
+                class="absolute top-0 left-0 w-full h-[40%] bg-gradient-to-b from-transparent via-taurusGold to-transparent animate-scan-line opacity-75">
+            </div>
+        </div>
+
+        <!-- Glaido-Style Hero Layout -->
+        <div class="flex flex-col items-center text-center max-w-7xl px-4 mx-auto mb-20 animate-float-center">
+
+            <!-- Headline -->
+            <h1
+                class="font-display text-4xl md:text-6xl lg:text-7xl font-bold text-white leading-tight mb-8 drop-shadow-2xl">
+                CUSTOM & <span
+                    class="text-transparent bg-clip-text bg-gradient-to-r from-white via-gray-200 to-gray-500">RESPONSIVE</span>
+                <span class="block text-taurusGold mt-2 filter drop-shadow-[0_0_15px_rgba(255,215,0,0.3)]">WEB
+                    DESIGN</span>
+                <span
+                    class="text-transparent bg-clip-text bg-gradient-to-b from-taurusGold to-amber-700">SERVICES</span>
+            </h1>
+
+            <p class="text-gray-400 text-sm md:text-lg max-w-2xl mx-auto mb-12 leading-relaxed">
+                We design and build premium websites that do more than just look good—they drive business.
+                Custom-coded, mobile-first, and globally optimized to turn visitors into loyal customers.
+            </p>
+
+            <!-- Symmetrical CTA Buttons aligned around the Central Axis -->
+            <div class="relative w-full max-w-3xl">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-16 items-center w-full">
+
+                    <!-- Left Button (Solid -> Outline) -->
+                    <div class="flex justify-end w-full">
+                        <button onclick="document.getElementById('portfolio').scrollIntoView({behavior: 'smooth'})"
+                            class="w-full md:w-64 py-4 rounded-full border border-taurusGold bg-taurusGold text-black text-sm font-bold uppercase tracking-widest transition-all duration-300 shadow-[0_0_20px_-5px_rgba(255,215,0,0.4)] hover:bg-obsidian/80 hover:text-taurusGold hover:border-taurusGold/50 hover:shadow-[0_0_30px_-5px_rgba(255,215,0,0.1)] hover:scale-105 active:scale-95 group relative overflow-hidden flex items-center justify-center">
+                            <span class="relative z-10">Initialize Project</span>
+                        </button>
+                    </div>
+
+                    <!-- Right Button (Outline -> Solid) -->
+                    <div class="flex justify-start w-full">
+                        <a href="https://github.com/omeryigitler" target="_blank"
+                            class="w-full md:w-64 py-4 rounded-full border border-white/10 bg-obsidian/50 backdrop-blur-md text-taurusGold text-sm font-bold uppercase tracking-widest transition-all duration-300 flex items-center justify-center hover:bg-taurusGold hover:text-black hover:border-taurusGold hover:shadow-[0_0_30px_-5px_rgba(255,215,0,0.4)] hover:scale-105 active:scale-95 group relative overflow-hidden">
+                            <span class="relative z-10">Explore Our Work</span>
+                        </a>
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+
+
+
+
+
+        <!-- PORTFOLIO SECTION -->
+        <div id="portfolio" class="w-full max-w-6xl mt-40 flex flex-col items-center relative z-10 scroll-mt-40">
+            <div class="flex flex-col md:flex-row items-center gap-12 w-full">
+
+                <!-- Text Content -->
+                <!-- Text Content -->
+                <div class="w-full flex-1 text-left">
+                    <span
+                        class="px-4 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-[10px] font-bold uppercase tracking-widest mb-6 inline-block">
+                        Portfolio Focus
+                    </span>
+                    <h2 class="font-display text-3xl md:text-5xl font-bold text-white mb-6 leading-tight">
+                        Seamless Across <br> Every Device
+                    </h2>
+                    <p class="text-gray-400 text-sm md:text-base leading-relaxed tracking-wide mb-8">
+                        All of our designs are created to deliver an excellent user experience across desktop, tablet,
+                        and mobile devices. Hand-coded for maximum performance—no templates, just pure quality.
+                    </p>
+
+                    <a href="projects.html"
+                        class="px-8 py-3 rounded-full border border-white/10 bg-obsidian/50 backdrop-blur-md text-taurusGold text-xs font-bold uppercase tracking-widest transition-all duration-300 inline-flex items-center justify-center hover:bg-taurusGold hover:text-black hover:border-taurusGold hover:shadow-[0_0_30px_-5px_rgba(255,215,0,0.4)] hover:scale-105 active:scale-95 group relative overflow-hidden">
+                        <span class="relative z-10">View Recent Projects</span>
+                    </a>
+                </div>
+
+                <!-- Visual (ClickPilot-Style Device Insights) -->
+                <!-- Visual (ClickPilot-Style Device Insights) -->
+                <div class="w-full flex-1 relative">
+                    <div
+                        class="relative w-full aspect-square md:aspect-[4/3] bg-gradient-to-tr from-deepSpace to-obsidian rounded-2xl border border-white/5 flex items-center justify-center shadow-2xl overflow-hidden group">
+                        <div class="absolute inset-0 grid-bg opacity-30"></div>
+
+                        <!-- Floating Dust/Particles -->
+                        <div
+                            class="absolute w-2 h-2 bg-taurusGold rounded-full blur-[2px] top-10 left-10 animate-bounce delay-700 opacity-20">
+                        </div>
+                        <div
+                            class="absolute w-1 h-1 bg-white rounded-full blur-[1px] bottom-20 right-20 animate-pulse delay-1000 opacity-20">
+                        </div>
+
+                        <!-- Main Container for Centralized Composition -->
+                        <div
+                            class="relative z-10 w-full h-full flex items-center justify-center transform scale-90 md:scale-100 transition-transform duration-700">
+
+                            <!-- Laptop (Desktop) -->
+                            <div
+                                class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[280px] h-[180px] z-10">
+                                <div
+                                    class="w-full h-full bg-gray-900 rounded-lg border border-gray-700 shadow-2xl relative flex items-center justify-center overflow-hidden group-hover:border-taurusGold/30 transition-colors duration-500">
+                                    <!-- Screen -->
+                                    <div
+                                        class="absolute inset-1 bg-black rounded flex flex-col items-center justify-center overflow-hidden">
+                                        <div class="w-full h-6 bg-gray-800 flex items-center px-2 gap-1 opacity-50">
+                                            <div class="w-1.5 h-1.5 rounded-full bg-red-500"></div>
+                                            <div class="w-1.5 h-1.5 rounded-full bg-yellow-500"></div>
+                                            <div class="w-1.5 h-1.5 rounded-full bg-green-500"></div>
+                                        </div>
+                                        <div class="flex-grow w-full p-2 grid grid-cols-2 gap-2 opacity-30">
+                                            <div class="bg-gray-700/50 rounded h-full"></div>
+                                            <div class="bg-gray-700/50 rounded h-full"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- Keyboard Base -->
+                                <div
+                                    class="absolute -bottom-3 left-1/2 -translate-x-1/2 w-[320px] h-3 bg-gray-800 rounded-b border-b border-x border-gray-700 shadow-xl">
+                                </div>
+
+                                <!-- Insight Card: Desktop (Right Side) -->
+                                <div
+                                    class="absolute -right-[120px] -top-12 w-48 p-3 rounded-xl bg-obsidian/90 backdrop-blur-md border border-taurusGold/40 text-left shadow-[0_0_30px_rgba(255,215,0,0.15)] animate-float-center z-50">
+                                    <div class="flex items-center gap-2 mb-2">
+                                        <div
+                                            class="w-5 h-5 rounded-md bg-taurusGold/20 flex items-center justify-center text-taurusGold">
+                                            <i data-lucide="monitor" class="w-3 h-3"></i>
+                                        </div>
+                                        <span class="text-[10px] font-bold text-white uppercase tracking-wider">Web &
+                                            Desktop</span>
+                                    </div>
+                                    <div class="text-[10px] text-gray-400 leading-tight">
+                                        <span class="text-taurusGold font-bold">Excellent:</span> Immersive experiences
+                                        for high-resolution screens using every pixel.
+                                    </div>
+                                    <!-- Connector Line -->
+                                    <div
+                                        class="absolute top-full left-0 w-8 h-[1px] bg-taurusGold/40 rotate-45 origin-top-left">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Tablet (Left Floater) -->
+                            <div
+                                class="absolute top-1/4 left-4 md:left-12 w-[100px] h-[140px] z-20 transform -rotate-6 transition-transform duration-500 hover:rotate-0 hover:z-30">
+                                <div
+                                    class="w-full h-full bg-gray-800 rounded-lg border border-gray-600 shadow-xl relative p-1">
+                                    <div
+                                        class="w-full h-full bg-black rounded flex items-center justify-center relative overflow-hidden">
+                                        <div
+                                            class="absolute inset-0 bg-gradient-to-br from-purple-500/10 to-transparent">
+                                        </div>
+                                        <i data-lucide="tablet" class="text-gray-700 w-8 h-8 opacity-50"></i>
+                                    </div>
+                                </div>
+
+                                <!-- Insight Card: Tablet (Top Left) -->
+                                <div class="absolute -left-2 top-[-90px] w-40 p-3 rounded-xl bg-obsidian/90 backdrop-blur-md border border-purple-500/40 text-left shadow-[0_0_20px_rgba(168,85,247,0.2)] animate-float-center"
+                                    style="animation-delay: 1.2s">
+                                    <div class="flex items-center gap-2 mb-1">
+                                        <div class="w-2 h-2 rounded-full bg-purple-500 shadow-[0_0_5px_#a855f7]"></div>
+                                        <span class="text-[9px] font-bold text-purple-400 uppercase">Tablet Ready</span>
+                                    </div>
+                                    <p class="text-[9px] text-gray-400 leading-tight">
+                                        Unified brand consistency across all touch interfaces.
+                                    </p>
+                                    <!-- Connector -->
+                                    <div class="absolute bottom-[-10px] left-4 w-[1px] h-4 bg-purple-500/40"></div>
+                                </div>
+                            </div>
+
+                            <!-- Mobile (Bottom Right Floater) -->
+                            <div
+                                class="absolute bottom-10 right-12 md:right-24 w-[60px] h-[110px] z-30 transform rotate-12 transition-transform duration-500 hover:rotate-0 hover:z-40">
+                                <div
+                                    class="w-full h-full bg-gray-800 rounded-[0.8rem] border border-gray-600 shadow-xl relative p-1">
+                                    <div
+                                        class="w-full h-full bg-black rounded-[0.6rem] flex items-center justify-center relative overflow-hidden">
+                                        <div class="absolute inset-0 bg-gradient-to-t from-green-500/10 to-transparent">
+                                        </div>
+                                        <i data-lucide="smartphone" class="text-gray-700 w-6 h-6 opacity-50"></i>
+                                    </div>
+                                </div>
+
+                                <!-- Insight Card: Mobile (Bottom) -->
+                                <div class="absolute -right-8 top-16 w-44 p-3 rounded-xl bg-obsidian/90 backdrop-blur-md border border-green-500/40 text-left shadow-[0_0_20px_rgba(34,197,94,0.2)] animate-float-center"
+                                    style="animation-delay: 2s;">
+                                    <div class="flex items-center gap-2 mb-1">
+                                        <div
+                                            class="flex items-center justify-center w-3 h-3 rounded-full bg-green-500 text-black text-[8px] font-bold">
+                                            ✓</div>
+                                        <span class="text-[9px] font-bold text-green-400 uppercase">Mobile First</span>
+                                    </div>
+                                    <p class="text-[9px] text-gray-400 leading-tight">
+                                        Optimized layouts ensuring you capture the mobile audience effectively.
+                                    </p>
+                                    <!-- Connector -->
+                                    <div class="absolute top-[-10px] right-20 w-[1px] h-3 bg-green-500/40"></div>
+                                </div>
+                            </div>
+
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- CONTACT SECTION -->
+        <div id="contact" class="w-full max-w-5xl mt-40 mb-20 relative z-10 scroll-mt-48">
+
+            <!-- Modern Bento Grid Layout -->
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-4">
+
+                <!-- Tile 1: Main Content (Left) -->
+                <div
+                    class="col-span-1 md:col-span-7 crystal-panel p-8 md:p-12 rounded-3xl text-left flex flex-col justify-center relative group overflow-hidden hover:border-taurusGold/40 transition-colors duration-300">
+                    <!-- Glow -->
+                    <div
+                        class="absolute top-0 right-0 w-32 h-32 bg-taurusGold/10 blur-[50px] rounded-full group-hover:bg-taurusGold/20 transition-all duration-500">
+                    </div>
+
+                    <div class="relative z-10">
+                        <div class="flex items-center gap-3 mb-6">
+                            <div class="w-2 h-2 bg-taurusGold rounded-full animate-pulse"></div>
+                            <span class="text-taurusGold text-[10px] font-bold uppercase tracking-widest">Ongoing
+                                Maintenance</span>
+                        </div>
+
+                        <h2 class="font-display text-3xl md:text-4xl font-bold text-white mb-6 leading-tight">
+                            Support & <br> <span class="text-gray-500">Updates</span>
+                        </h2>
+
+                        <p class="text-gray-400 text-sm leading-relaxed max-w-md">
+                            We don't just build and leave. We offer continuous support, security patches, and
+                            performance optimizations to keep your business running at peak efficiency.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Tile 2: Visual System Status (Right) -->
+                <div
+                    class="col-span-1 md:col-span-5 crystal-panel p-8 rounded-3xl relative overflow-hidden flex flex-col justify-between group hover:border-taurusGold/40 transition-colors duration-300">
+                    <div class="absolute inset-0 bg-symmetry-grid opacity-20"></div>
+
+                    <div class="flex justify-between items-start mb-8 relative z-10">
+                        <span class="text-gray-500 text-[10px] font-bold uppercase tracking-wider">System Status</span>
+                        <div
+                            class="px-2 py-1 rounded bg-green-500/10 border border-green-500/20 text-green-400 text-[10px] font-bold uppercase flex items-center gap-2">
+                            <span class="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
+                            Nominal
+                        </div>
+                    </div>
+
+                    <!-- Decorative Uptime Graph -->
+                    <div class="flex items-end gap-1 h-32 w-full opacity-50 relative z-10">
+                        <div class="flex-1 bg-taurusGold/20 h-[40%] rounded-t-sm animate-pulse"
+                            style="animation-delay: 0.1s"></div>
+                        <div class="flex-1 bg-taurusGold/40 h-[70%] rounded-t-sm animate-pulse"
+                            style="animation-delay: 0.2s"></div>
+                        <div class="flex-1 bg-taurusGold/20 h-[50%] rounded-t-sm animate-pulse"
+                            style="animation-delay: 0.4s"></div>
+                        <div class="flex-1 bg-taurusGold/60 h-[85%] rounded-t-sm animate-pulse"
+                            style="animation-delay: 0.1s"></div>
+                        <div class="flex-1 bg-taurusGold/30 h-[60%] rounded-t-sm animate-pulse"
+                            style="animation-delay: 0.5s"></div>
+                        <div class="flex-1 bg-taurusGold/20 h-[45%] rounded-t-sm animate-pulse"
+                            style="animation-delay: 0.3s"></div>
+                        <div class="flex-1 bg-taurusGold/50 h-[80%] rounded-t-sm animate-pulse"
+                            style="animation-delay: 0.6s"></div>
+                    </div>
+
+                    <div class="mt-4 relative z-10">
+                        <span class="text-white text-2xl font-display font-bold">24/7</span>
+                        <span class="text-gray-500 text-xs uppercase tracking-wide ml-2">Uptime Monitor</span>
+                    </div>
+                </div>
+
+                <!-- Tile 3: Call to Action (Bottom) -->
+                <div
+                    class="col-span-1 md:col-span-12 crystal-panel p-6 md:px-12 md:py-8 rounded-3xl flex flex-col md:flex-row items-center justify-between gap-6 hover:border-taurusGold/40 transition-colors duration-300 group">
+                    <div class="text-center md:text-left">
+                        <h3 class="text-white font-bold text-lg">Secure Your Digital Future</h3>
+                        <p class="text-gray-400 text-xs mt-1">Tell us about your vision. We reply within 24 hours.</p>
+                    </div>
+
+                    <a href="mailto:info@omeryigitler.com"
+                        class="px-8 py-3 rounded-full border border-taurusGold bg-taurusGold text-black text-xs font-bold uppercase tracking-widest transition-all duration-300 shadow-[0_0_20px_-5px_rgba(255,215,0,0.4)] hover:bg-obsidian/80 hover:text-taurusGold hover:border-taurusGold/50 hover:shadow-[0_0_30px_-5px_rgba(255,215,0,0.1)] hover:scale-105 active:scale-95 group-hover:shadow-[0_0_30px_rgba(255,215,0,0.3)] flex items-center gap-3">
+                        <span>Contact Us Today</span>
+                        <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                    </a>
+                </div>
+
+            </div>
+        </div>
+
+    </main>
+
+    <footer class="relative z-10 py-12 border-t border-white/5 bg-black/80 backdrop-blur-md">
+        <div class="max-w-7xl mx-auto px-6 text-center">
+            <p class="text-gray-400 font-body tracking-widest text-xs md:text-sm">
+                Designed & Developed by <span class="text-taurusGold font-bold">Ömer YİĞİTLER</span>
+            </p>
+        </div>
+    </footer>
+
+    <script>
+        lucide.createIcons();
+    </script>
+</body>
+
+</html>
