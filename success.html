@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Message Sent | Ömer Yiğitler</title>
+    <link rel="icon" href="assets/favicon.png" type="image/png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Syncopate:wght@400;700&family=Manrope:wght@300;400;600;800&display=swap"
+        rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        display: ['"Syncopate"', 'sans-serif'],
+                        body: ['"Manrope"', 'sans-serif'],
+                    },
+                    colors: {
+                        obsidian: '#050505',
+                        taurusGold: '#FFD700',
+                    },
+                    backgroundImage: {
+                        'symmetry-grid': "radial-gradient(circle at center, transparent 0%, #050505 100%), linear-gradient(rgba(255, 215, 0, 0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 215, 0, 0.03) 1px, transparent 1px)",
+                    },
+                }
+            }
+        }
+    </script>
+    <style>
+        .grid-bg {
+            background-size: 100% 100%, 40px 40px, 40px 40px;
+        }
+    </style>
+</head>
+
+<body
+    class="bg-obsidian text-white font-body h-screen flex flex-col items-center justify-center overflow-hidden selection:bg-taurusGold selection:text-black">
+    <div class="fixed inset-0 w-full h-full grid-bg bg-symmetry-grid -z-10 opacity-40"></div>
+
+    <!-- Background Glow -->
+    <div
+        class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-taurusGold/5 rounded-full blur-[100px] -z-10">
+    </div>
+
+    <div class="text-center p-8 max-w-lg relative z-10 animate-fade-in-up">
+        <div
+            class="w-20 h-20 bg-taurusGold/10 rounded-full flex items-center justify-center mx-auto mb-8 border border-taurusGold/20 shadow-[0_0_30px_-5px_rgba(255,215,0,0.3)]">
+            <i data-lucide="check" class="w-10 h-10 text-taurusGold"></i>
+        </div>
+
+        <h1 class="font-display text-4xl font-bold text-white mb-4">Message Provided</h1>
+        <p class="text-gray-400 text-sm leading-relaxed mb-10">
+            Thank you for reaching out. Your inquiry has been secured in our system. We will analyze your request and
+            respond within 24 hours.
+        </p>
+
+        <a href="index.html"
+            class="px-8 py-4 rounded-full border border-taurusGold bg-taurusGold text-black text-xs font-bold uppercase tracking-widest transition-all duration-300 hover:bg-obsidian hover:text-taurusGold hover:scale-105 active:scale-95 shadow-[0_0_20px_-5px_rgba(255,215,0,0.4)]">
+            Return to Base
+        </a>
+    </div>
+
+    <footer class="absolute bottom-10 w-full text-center">
+        <p class="text-gray-600 font-body tracking-widest text-[10px]">
+            &copy; 2025 Ömer YİĞİTLER. All Systems Nominal.
+        </p>
+    </footer>
+
+    <script>
+        lucide.createIcons();
+    </script>
+</body>
+
+</html>
