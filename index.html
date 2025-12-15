@@ -58,7 +58,7 @@
                     animation: {
                         'hover-glow': 'hoverGlow 4s ease-in-out infinite',
                         'float-center': 'floatCenter 6s ease-in-out infinite',
-                        'scan-line': 'scanLine 2.5s linear infinite',
+                        'scan-line': 'scanLine 5s linear infinite',
                     },
                     keyframes: {
                         hoverGlow: {
@@ -511,13 +511,19 @@
         </div>
     </footer>
 
-    <!-- MEGA MENU OVERLAY (Detached from Header) -->
-    <div id="mega-menu-overlay"
-        class="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 backdrop-blur-md opacity-0 invisible transition-all duration-500 cursor-default">
+    <!-- MEGA MENU STRUCTURE -->
+    <!-- 1. The Visual Backdrop (Sibling) -->
+    <div id="mega-menu-backdrop"
+        class="fixed inset-0 z-40 bg-black/80 backdrop-blur-md opacity-0 invisible transition-all duration-500">
+    </div>
 
-        <!-- Mega Menu Content Box -->
-        <div
-            class="relative w-[90vw] max-w-6xl p-12 rounded-3xl bg-[#0a0a0a] border border-white/10 shadow-[0_0_100px_rgba(0,0,0,0.8)] grid grid-cols-5 gap-12 overflow-hidden">
+    <!-- 2. The Content Container (Sibling, on top) -->
+    <div id="mega-menu-container"
+        class="fixed inset-0 z-50 flex items-center justify-center opacity-0 invisible transition-all duration-500 pointer-events-none">
+
+        <!-- The Actual Card (pointer-events-auto) -->
+        <div id="mega-menu-content"
+            class="pointer-events-auto relative grid grid-cols-5 gap-12 w-[90vw] max-w-6xl p-12 rounded-3xl bg-neutral-950 border border-white/10 shadow-2xl overflow-hidden transform transition-all duration-500 scale-95 origin-center">
 
             <!-- Ambient Glow -->
             <div class="absolute top-0 right-0 w-64 h-64 bg-taurusGold/5 rounded-full blur-[80px] -z-10">
@@ -651,29 +657,60 @@
     <script>
         lucide.createIcons();
 
-        // Mega Menu Interaction Logic (Detached from Header)
+        // Refactored Mega Menu & Backdrop Logic
         const trigger = document.getElementById('expertise-trigger');
-        const menu = document.getElementById('mega-menu-overlay');
+        const backdrop = document.getElementById('mega-menu-backdrop');
+        const menuContainer = document.getElementById('mega-menu-container');
+        const menuContent = document.getElementById('mega-menu-content');
+
         let hideTimeout;
 
         function showMenu() {
             if (hideTimeout) clearTimeout(hideTimeout);
-            menu.classList.remove('opacity-0', 'invisible');
-            menu.classList.add('opacity-100', 'visible');
+
+            // Show Backdrop
+            backdrop.classList.remove('opacity-0', 'invisible');
+            backdrop.classList.add('opacity-100', 'visible');
+
+            // Show Container
+            menuContainer.classList.remove('opacity-0', 'invisible');
+            menuContainer.classList.add('opacity-100', 'visible');
+
+            // Scale content for nice effect
+            menuContent.classList.remove('scale-95');
+            menuContent.classList.add('scale-100');
         }
 
         function hideMenu() {
+            if (hideTimeout) clearTimeout(hideTimeout); // Prevent multiple timers
             hideTimeout = setTimeout(() => {
-                menu.classList.remove('opacity-100', 'visible');
-                menu.classList.add('opacity-0', 'invisible');
-            }, 200);
+                // Hide Backdrop
+                backdrop.classList.remove('opacity-100', 'visible');
+                backdrop.classList.add('opacity-0', 'invisible');
+
+                // Hide Container
+                menuContainer.classList.remove('opacity-100', 'visible');
+                menuContainer.classList.add('opacity-0', 'invisible');
+
+                // Reset Scale
+                menuContent.classList.remove('scale-100');
+                menuContent.classList.add('scale-95');
+            }, 500); // 500ms grace period
         }
 
-        if (trigger && menu) {
+        if (trigger && backdrop && menuContainer && menuContent) {
+
+            // 1. Trigger Hover
             trigger.addEventListener('mouseenter', showMenu);
             trigger.addEventListener('mouseleave', hideMenu);
-            menu.addEventListener('mouseenter', showMenu);
-            menu.addEventListener('mouseleave', hideMenu);
+
+            // 2. Content Hover (Keep open)
+            menuContent.addEventListener('mouseenter', showMenu);
+            menuContent.addEventListener('mouseleave', hideMenu);
+
+            // 3. Backdrop Hover (Close immediately if user strays into void)
+            // Backdrop is a sibling to container, so hovering it means you definitely left content.
+            backdrop.addEventListener('mouseenter', hideMenu);
         }
     </script>
 </body>
