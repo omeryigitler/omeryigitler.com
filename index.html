@@ -647,6 +647,31 @@
 
     <script>
         lucide.createIcons();
+
+        // Mega Menu Interaction Logic (Detached from Header)
+        const trigger = document.getElementById('expertise-trigger');
+        const menu = document.getElementById('mega-menu-overlay');
+        let hideTimeout;
+
+        function showMenu() {
+            if (hideTimeout) clearTimeout(hideTimeout);
+            menu.classList.remove('opacity-0', 'invisible');
+            menu.classList.add('opacity-100', 'visible');
+        }
+
+        function hideMenu() {
+            hideTimeout = setTimeout(() => {
+                menu.classList.remove('opacity-100', 'visible');
+                menu.classList.add('opacity-0', 'invisible');
+            }, 200);
+        }
+
+        if (trigger && menu) {
+            trigger.addEventListener('mouseenter', showMenu);
+            trigger.addEventListener('mouseleave', hideMenu);
+            menu.addEventListener('mouseenter', showMenu);
+            menu.addEventListener('mouseleave', hideMenu);
+        }
     </script>
 </body>
 
