@@ -1,0 +1,11 @@
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://omeryigitler.com/sitemap.xml
+
+# Disallow admin or sensitive areas (if any in future)
+# Disallow: /admin/
+
+# Crawl-delay (optional, helps prevent server overload)
+Crawl-delay: 1
