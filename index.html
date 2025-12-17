@@ -205,7 +205,6 @@
         <!-- Glaido-Style Hero Layout -->
         <div class="flex flex-col items-center text-center max-w-7xl px-4 mx-auto mb-20 animate-float-center">
 
-            <!-- Headline -->
             <h1
                 class="font-display text-4xl md:text-6xl lg:text-7xl font-bold text-white leading-tight mb-8 drop-shadow-2xl">
                 CUSTOM & <span
@@ -562,7 +561,7 @@
             <div class="space-y-4 md:space-y-8 mb-16 relative">
                 <!-- Background Subtle Text -->
                 <div
-                    class="hidden lg:block absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[10rem] md:text-[15rem] font-display font-bold text-white/[0.02] tracking-widest select-none pointer-events-none whitespace-nowrap -z-10">
+                    class="hidden lg:block absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[10rem] md:text-[15rem] font-display font-bold text-white/[0.02] tracking-widest select-none pointer-events-none whitespace-nowrap -z-10 transform-gpu will-change-transform">
                     TAURUS
                 </div>
 
@@ -625,10 +624,9 @@
                         <p class="text-gray-400 text-xs md:text-sm">Ready to build? Fill out the form below.</p>
                     </div>
 
-                    <form action="https://formsubmit.co/info@omeryigitler.com" method="POST"
+                    <form id="contact-form" action="https://formsubmit.co/info@omeryigitler.com" method="POST"
                         class="space-y-4 relative z-10">
                         <!-- FormSubmit Configuration -->
-                        <input type="hidden" name="_next" value="https://omeryigitler.com/success.html?v=1">
                         <input type="hidden" name="_captcha" value="false">
                         <input type="hidden" name="_subject" value="New Lead | Omeryigitler.com">
                         <input type="hidden" name="_template" value="table">
@@ -642,11 +640,13 @@
                         <textarea name="message" rows="3" placeholder="Tell us about the project..." required
                             class="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-taurusGold/50 focus:bg-black/40 transition-all text-sm resize-none"></textarea>
 
-                        <button type="submit"
+                        <button type="submit" id="submit-btn"
                             class="w-full py-4 rounded-xl bg-taurusGold text-black font-bold uppercase tracking-widest text-xs hover:bg-white hover:scale-[1.02] active:scale-95 transition-all duration-300 shadow-[0_0_20px_-5px_rgba(255,215,0,0.3)]">
                             Send Request
                         </button>
                     </form>
+
+
                 </div>
 
                 <!-- Tile 2: Visual System Status (Right) -->
@@ -978,7 +978,43 @@
             // Backdrop is a sibling to container, so hovering it means you definitely left content.
             backdrop.addEventListener('mouseenter', hideMenu);
         }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // 1. LOGOYU BULMA KISMI
+            // Eğer logonun class'ı farklıysa (örneğin .logo veya #header-logo), 
+            // parantez içindeki '.logo-container' kısmını ona göre değiştirmen gerekebilir.
+            const gizliButon = document.querySelector('.logo-container') || document.querySelector('header a'); 
+
+            if (gizliButon) {
+                let tiklamaSayisi = 0;
+                let sifirlamaZamanlayicisi;
+
+                gizliButon.addEventListener('click', (e) => {
+                    // Eğer logoya tıklayınca anasayfaya gitmesini İSTEMİYORSAN, alttaki satırın başındaki // işaretlerini kaldır.
+                    e.preventDefault(); 
+                    
+                    tiklamaSayisi++;
+
+                    // 2. 3 KERE TIKLANDI MI KONTROLÜ
+                    if (tiklamaSayisi === 3) {
+                        // Başarılı! Yönetim panelini yeni sekmede açar.
+                        // Siteni canlıya aldığında 'http://127.0.0.1:5001' yerine gerçek site adresini yazmalısın.
+                        window.open('http://127.0.0.1:5001', '_blank'); 
+                        tiklamaSayisi = 0;
+                    }
+
+                    // 3. SÜREYİ SIFIRLAMA
+                    // Eğer 500 milisaniye (yarım saniye) içinde tekrar tıklanmazsa sayacı sıfırla.
+                    clearTimeout(sifirlamaZamanlayicisi);
+                    sifirlamaZamanlayicisi = setTimeout(() => {
+                        tiklamaSayisi = 0;
+                    }, 500);
+                });
+            }
+        });
     </script>
+
+
 </body>
 
 </html>
