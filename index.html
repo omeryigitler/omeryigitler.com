@@ -1016,7 +1016,10 @@
 
     <!-- FIREBASE INTEGRATION FOR CONTACT FORM -->
     <script type="module">
-        import { saveMessage } from './assets/js/firebase-config.js';
+        import { saveMessage, incrementVisit } from './assets/js/firebase-config.js';
+
+        // 1. Visit Counter
+        incrementVisit();
 
         const contactForm = document.getElementById('contact-form');
         const submitBtn = document.getElementById('submit-btn');

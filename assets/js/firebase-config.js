@@ -1,6 +1,6 @@
 // Import Firebase SDKs
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getFirestore, collection, addDoc, getDocs, orderBy, query, limit } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getFirestore, collection, addDoc, getDocs, orderBy, query, limit, doc, getDoc, updateDoc, increment, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 // -------------------------------------------------------------
 // FIREBASE CONFIGURATION
@@ -53,4 +53,35 @@ async function getMessages() {
     }
 }
 
-export { db, saveMessage, getMessages };
+// Helper: Increment Visit Counter
+async function incrementVisit() {
+    const counterRef = doc(db, "stats", "visits");
+    try {
+        await updateDoc(counterRef, {
+            count: increment(1)
+        });
+    } catch (error) {
+        // If doc doesn't exist, create it
+        if (error.code === 'not-found' || error.message.includes('No document')) {
+            await setDoc(counterRef, { count: 1 });
+        }
+    }
+}
+
+// Helper: Get Visit Count
+async function getVisitCount() {
+    try {
+        const docRef = doc(db, "stats", "visits");
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+            return docSnap.data().count;
+        } else {
+            return 0;
+        }
+    } catch (error) {
+        console.error("Error getting visit count:", error);
+        return 0;
+    }
+}
+
+export { db, saveMessage, getMessages, incrementVisit, getVisitCount };

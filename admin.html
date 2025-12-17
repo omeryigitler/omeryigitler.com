@@ -331,11 +331,14 @@
 
             <!-- PROJECTS VIEW -->
             <div id="view-projects" class="hidden text-center py-20 fade-in">
-                <div class="w-20 h-20 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-6">
-                    <i data-lucide="folder-kanban" class="w-10 h-10 text-gray-600"></i>
+                <div class="absolute right-0 top-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                    <i data-lucide="users" class="w-16 h-16 text-taurusGold"></i>
                 </div>
-                <h3 class="text-xl font-bold text-white">Project Manager</h3>
-                <p class="text-gray-500 mt-2 text-sm">Connect a Database to manage dynamic projects.</p>
+                <h3 class="text-gray-500 text-xs font-bold uppercase tracking-widest mb-2">Total Visits</h3>
+                <p id="stat-total-visits" class="text-3xl font-display font-bold text-white">0</p>
+                <div class="mt-4 text-green-400 text-xs flex items-center gap-1">
+                    <i data-lucide="trending-up" class="w-3 h-3"></i> +12% this week
+                </div>
                 <button
                     class="mt-8 px-8 py-3 bg-taurusGold text-black font-bold uppercase tracking-widest text-xs rounded-full hover:bg-white transition-colors">
                     Integrate CMS
@@ -420,18 +423,34 @@
 
     <!-- FIREBASE DATA FETCHING -->
     <script type="module">
-        import { getMessages } from './assets/js/firebase-config.js';
+        import { getMessages, getVisitCount } from './assets/js/firebase-config.js';
+
+        // 1. SECURITY CHECK (Simple Client-Side Guard)
+        if (!sessionStorage.getItem('admin_session')) {
+            window.location.href = 'gateway.html';
+        }
 
         async function loadDashboardData() {
             console.log("Loading dashboard data...");
             try {
-                const messages = await getMessages();
+                // Fetch Data in Parallel
+                const [messages, visits] = await Promise.all([
+                    getMessages(),
+                    getVisitCount()
+                ]);
 
-                // 1. Update Stats
+                // 1. Update Message Stats
                 document.getElementById('total-messages-count').innerText = messages.length;
                 document.getElementById('nav-msg-badge').innerText = messages.length;
 
-                // 2. Populate Table
+                // 2. Update Visit Stats
+                // Update element with id="stat-visits" (Need to add ID to HTML first, but JS runs after DOM)
+                // Let's target by finding the h3 directly or add ID in a separate clean step. 
+                // For now, let's assume I add ID to the visit h3.
+                const visitEl = document.getElementById('stat-total-visits');
+                if (visitEl) visitEl.innerText = visits;
+
+                // 3. Populate Table
                 const tbody = document.getElementById('messages-table-body');
                 tbody.innerHTML = ''; // Clear fake data
 
@@ -461,7 +480,8 @@
 
             } catch (error) {
                 console.error("Error loading data:", error);
-                // Optional: Show error toast
+
+                // Allow access even if data fails, or handle graceful degradation
             }
         }
 

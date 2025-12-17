@@ -341,6 +341,7 @@
 
             setTimeout(() => {
                 // REDIRECT TO ADMIN DASHBOARD
+                sessionStorage.setItem('admin_session', 'active'); // Create session
                 window.location.href = 'admin.html';
             }, 1500);
         }
