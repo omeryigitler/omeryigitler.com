@@ -185,8 +185,11 @@
                             <span class="text-green-400 text-xs font-bold flex items-center gap-1">+24% <i
                                     data-lucide="arrow-up" class="w-3 h-3"></i></span>
                         </div>
-                        <h3 class="text-2xl font-display font-bold text-white">12.4k</h3>
-                        <p class="text-gray-500 text-xs uppercase tracking-wider mt-1">Total Impressions</p>
+                        <h3 class="text-gray-500 text-xs font-bold uppercase tracking-widest mb-2">Total Visits</h3>
+                        <p id="stat-total-views" class="text-3xl font-display font-bold text-white">...</p>
+                        <div class="mt-4 text-green-400 text-xs flex items-center gap-1">
+                            <i data-lucide="trending-up" class="w-3 h-3"></i> +1 this session
+                        </div>
                     </div>
 
                     <div
@@ -199,7 +202,7 @@
                             <span class="text-green-400 text-xs font-bold flex items-center gap-1">+8 <i
                                     data-lucide="arrow-up" class="w-3 h-3"></i></span>
                         </div>
-                        <h3 class="text-2xl font-display font-bold text-white">142</h3>
+                        <h3 id="stat-total-messages" class="text-2xl font-display font-bold text-white">142</h3>
                         <p class="text-gray-500 text-xs uppercase tracking-wider mt-1">Total Messages</p>
                     </div>
 
@@ -211,7 +214,7 @@
                                 <i data-lucide="briefcase" class="w-5 h-5"></i>
                             </div>
                         </div>
-                        <h3 class="text-2xl font-display font-bold text-white">8</h3>
+                        <h3 class="text-2xl font-display font-bold text-white">1</h3>
                         <p class="text-gray-500 text-xs uppercase tracking-wider mt-1">Active Projects</p>
                     </div>
 
@@ -259,49 +262,9 @@
 
                     <div class="p-8 rounded-2xl bg-white/5 border border-glassBorder">
                         <h3 class="font-display text-white mb-6">Recent Leads</h3>
-                        <div class="space-y-4">
-                            <!-- Item -->
-                            <div
-                                class="flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 transition-colors cursor-pointer group">
-                                <div
-                                    class="w-10 h-10 rounded-full bg-gradient-to-br from-gray-700 to-black flex items-center justify-center text-xs font-bold">
-                                    JD</div>
-                                <div>
-                                    <h4
-                                        class="text-sm font-bold text-white group-hover:text-taurusGold transition-colors">
-                                        John Doe</h4>
-                                    <p class="text-xs text-gray-500">Project Inquiry - E-comm...</p>
-                                </div>
-                                <span class="ml-auto text-[10px] text-gray-600">2m</span>
-                            </div>
-                            <!-- Item -->
-                            <div
-                                class="flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 transition-colors cursor-pointer group">
-                                <div
-                                    class="w-10 h-10 rounded-full bg-gradient-to-br from-gray-700 to-black flex items-center justify-center text-xs font-bold">
-                                    AS</div>
-                                <div>
-                                    <h4
-                                        class="text-sm font-bold text-white group-hover:text-taurusGold transition-colors">
-                                        Alice Smith</h4>
-                                    <p class="text-xs text-gray-500">Design System Help...</p>
-                                </div>
-                                <span class="ml-auto text-[10px] text-gray-600">1h</span>
-                            </div>
-                            <!-- Item -->
-                            <div
-                                class="flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 transition-colors cursor-pointer group">
-                                <div
-                                    class="w-10 h-10 rounded-full bg-gradient-to-br from-gray-700 to-black flex items-center justify-center text-xs font-bold">
-                                    MK</div>
-                                <div>
-                                    <h4
-                                        class="text-sm font-bold text-white group-hover:text-taurusGold transition-colors">
-                                        Mehmet Kaya</h4>
-                                    <p class="text-xs text-gray-500">Teklif İsteği...</p>
-                                </div>
-                                <span class="ml-auto text-[10px] text-gray-600">4h</span>
-                            </div>
+                        <div class="space-y-4" id="recent-leads-container">
+                            <!-- Dynamic Content Loaded via JS -->
+                            <p class="text-gray-500 text-xs">Loading leads...</p>
                         </div>
                         <button onclick="switchTab('messages')"
                             class="w-full mt-6 py-3 rounded-xl border border-white/10 text-xs font-bold uppercase tracking-widest hover:bg-taurusGold hover:text-black transition-colors">View
@@ -482,14 +445,67 @@
 
         async function loadStats() {
             if (!db) return;
-            // Simple counter for now
-            const snapshot = await db.collection('messages').get();
-            const count = snapshot.size;
 
-            // Update the "Total Messages" card (assuming it's the 2nd one or by ID, let's just find by text content manually or add IDs later)
-            // For now, let's update the badge in Sidebar
-            const badge = document.querySelector('#nav-messages span');
-            if (badge) badge.innerText = count;
+            try {
+                // 1. Get TOTAL MESSAGES & RECENT LEADS in one query if possible, but distinct queries are easier
+                const msgsSnapshot = await db.collection('messages').orderBy('timestamp', 'desc').get();
+                const totalMessages = msgsSnapshot.size;
+
+                // Update Badge and Card
+                const badge = document.querySelector('#nav-messages span');
+                if (badge) badge.innerText = totalMessages;
+                document.getElementById('stat-total-messages').innerText = totalMessages;
+
+                // 2. Get TOTAL IMPRESSIONS (Page Views)
+                const docRef = await db.collection('stats').doc('global').get();
+                let views = 0;
+                if (docRef.exists) {
+                    views = docRef.data().views || 0;
+                }
+                document.getElementById('stat-total-views').innerText = views;
+
+                // 3. Populate RECENT LEADS (Right Panel)
+                const recentContainer = document.getElementById('recent-leads-container');
+                if (recentContainer && !msgsSnapshot.empty) {
+                    let recentHtml = '';
+                    // Take first 3
+                    const recentDocs = msgsSnapshot.docs.slice(0, 3);
+
+                    recentDocs.forEach(doc => {
+                        const d = doc.data();
+                        // Format time (e.g. "2m", "1h") - Simple approximation
+                        const now = new Date();
+                        const date = d.timestamp ? new Date(d.timestamp.seconds * 1000) : new Date();
+                        const diffMins = Math.floor((now - date) / 60000);
+                        let timeStr = diffMins + 'm';
+                        if (diffMins > 60) timeStr = Math.floor(diffMins / 60) + 'h';
+                        if (diffMins > 1440) timeStr = Math.floor(diffMins / 1440) + 'd';
+
+                        // Initials
+                        const name = d.name || 'Anonymous';
+                        const initials = name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+
+                        recentHtml += `
+                            <div onclick="switchTab('messages')" class="flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 transition-colors cursor-pointer group">
+                                <div class="w-10 h-10 rounded-full bg-gradient-to-br from-gray-700 to-black flex items-center justify-center text-xs font-bold border border-white/10 group-hover:border-taurusGold/50 text-white group-hover:text-taurusGold transition-all">
+                                    ${initials}
+                                </div>
+                                <div>
+                                    <h4 class="text-sm font-bold text-white group-hover:text-taurusGold transition-colors">${name}</h4>
+                                    <p class="text-xs text-gray-500 truncate w-32">${d.message || 'No message'}</p>
+                                </div>
+                                <span class="ml-auto text-[10px] text-gray-600">${timeStr}</span>
+                            </div>
+                        `;
+                    });
+                    recentContainer.innerHTML = recentHtml;
+                } else if (recentContainer) {
+                    recentContainer.innerHTML = '<p class="text-xs text-gray-500 p-4">No leads yet.</p>';
+                }
+
+            } catch (err) {
+                console.error("Stats Error:", err);
+            }
         }
 
         // --- UI LOGIC ---
