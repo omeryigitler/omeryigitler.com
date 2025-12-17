@@ -311,16 +311,26 @@
             </div>
 
             <!-- PROJECTS VIEW -->
-            <div id="view-projects" class="hidden text-center py-20 fade-in">
-                <div class="w-20 h-20 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-6">
-                    <i data-lucide="folder-kanban" class="w-10 h-10 text-gray-600"></i>
+            <div id="view-projects" class="hidden fade-in h-full flex flex-col">
+                <!-- Toolbar -->
+                <div class="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
+                    <div class="flex bg-white/5 rounded-lg p-1 border border-white/10">
+                        <button onclick="filterProjects('active')" id="filter-active"
+                            class="px-6 py-2 rounded-md text-xs font-bold uppercase tracking-wider bg-taurusGold text-black transition-all">Active</button>
+                        <button onclick="filterProjects('completed')" id="filter-completed"
+                            class="px-6 py-2 rounded-md text-xs font-bold uppercase tracking-wider text-gray-400 hover:text-white transition-all">Completed</button>
+                    </div>
+                    <button onclick="openProjectModal()"
+                        class="px-6 py-3 bg-white/5 border border-taurusGold/50 text-taurusGold hover:bg-taurusGold hover:text-black rounded-lg text-xs font-bold uppercase tracking-widest transition-all flex items-center gap-2">
+                        <i data-lucide="plus" class="w-4 h-4"></i> New Project
+                    </button>
                 </div>
-                <h3 class="text-xl font-bold text-white">Project Manager</h3>
-                <p class="text-gray-500 mt-2 text-sm">Connect a Database to manage dynamic projects.</p>
-                <button onclick="alert('CMS Module: Pending Integration')"
-                    class="mt-8 px-8 py-3 bg-taurusGold text-black font-bold uppercase tracking-widest text-xs rounded-full hover:bg-white transition-colors">
-                    Integrate CMS
-                </button>
+
+                <!-- Projects Grid -->
+                <div id="projects-grid"
+                    class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pb-20 overflow-y-auto">
+                    <!-- Dynamic Project Cards Will Appear Here -->
+                </div>
             </div>
 
             <!-- SETTINGS VIEW -->
@@ -634,6 +644,7 @@
 
             // Reload data if switching to messages
             if (tabId === 'messages') loadMessages();
+            if (tabId === 'projects') loadProjects();
         }
 
         function toggleRole() {
@@ -644,7 +655,136 @@
                 roleText.innerText = 'Supervisor';
             }
         }
-        // --- MODAL LOGIC ---
+        // --- PROJECT MANAGEMENT LOGIC ---
+        let currentProjectFilter = 'active';
+
+        async function loadProjects() {
+            if (!db) return;
+            const container = document.getElementById('projects-grid');
+
+            db.collection('projects').onSnapshot(snapshot => {
+                let html = '';
+                let count = 0;
+
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    // Filter logic
+                    const status = data.status || 'active';
+                    if (status !== currentProjectFilter) return;
+
+                    count++;
+                    const progress = data.completion || 0;
+
+                    html += `
+                        <div class="bg-white/5 border border-glassBorder rounded-2xl p-6 hover:border-taurusGold/50 transition-all group flex flex-col h-full relative overflow-hidden">
+                            <div class="absolute top-0 left-0 w-1 h-full ${status === 'active' ? 'bg-taurusGold' : 'bg-green-500'}"></div>
+                            
+                            <!-- Header -->
+                            <div class="flex justify-between items-start mb-4 pl-3">
+                                <div>
+                                    <h3 class="text-lg font-display font-bold text-white group-hover:text-taurusGold transition-colors">${data.projectName}</h3>
+                                    <p class="text-xs text-gray-500 flex items-center gap-1 mt-1"><i data-lucide="user" class="w-3 h-3"></i> ${data.clientName}</p>
+                                </div>
+                                <span class="px-2 py-1 rounded text-[10px] font-bold uppercase ${status === 'active' ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20' : 'bg-green-500/10 text-green-400 border border-green-500/20'}">${status}</span>
+                            </div>
+
+                            <!-- Progress Snippet -->
+                            <div class="mb-6 pl-3">
+                                <p class="text-[10px] text-gray-400 uppercase tracking-widest mb-2">Latest Action</p>
+                                <p class="text-sm text-gray-300 line-clamp-2">${(data.done || 'No updates yet.').split('\n')[0]}</p>
+                            </div>
+
+                            <!-- Foofer / Actions -->
+                            <div class="mt-auto pt-4 border-t border-white/5 flex justify-between items-center pl-3">
+                                <span class="text-xs text-gray-600 font-mono">${new Date().toLocaleDateString()}</span>
+                                <button onclick="openProjectModal('${doc.id}')" class="px-4 py-2 rounded bg-white/5 hover:bg-white/10 text-xs font-bold text-white border border-white/10 transition-colors">
+                                    Manage
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                if (count === 0) {
+                    container.innerHTML = `<div class="col-span-3 text-center py-20 text-gray-600">No ${currentProjectFilter} projects found.</div>`;
+                } else {
+                    container.innerHTML = html;
+                    lucide.createIcons();
+                }
+            });
+        }
+
+        function filterProjects(status) {
+            currentProjectFilter = status;
+            // Update Buttons
+            const activeBtn = document.getElementById('filter-active');
+            const completedBtn = document.getElementById('filter-completed');
+
+            if (status === 'active') {
+                activeBtn.className = "px-6 py-2 rounded-md text-xs font-bold uppercase tracking-wider bg-taurusGold text-black transition-all";
+                completedBtn.className = "px-6 py-2 rounded-md text-xs font-bold uppercase tracking-wider text-gray-400 hover:text-white transition-all";
+            } else {
+                activeBtn.className = "px-6 py-2 rounded-md text-xs font-bold uppercase tracking-wider text-gray-400 hover:text-white transition-all";
+                completedBtn.className = "px-6 py-2 rounded-md text-xs font-bold uppercase tracking-wider bg-green-500 text-black transition-all";
+            }
+            loadProjects(); // Refetch/Re-render
+        }
+
+        let editingProjectId = null;
+
+        async function openProjectModal(id = null) {
+            editingProjectId = id;
+            document.getElementById('project-modal').classList.remove('hidden');
+            const form = document.getElementById('project-form');
+            form.reset();
+
+            if (id) {
+                // Edit Mode - Fetch Data
+                try {
+                    const doc = await db.collection('projects').doc(id).get();
+                    const data = doc.data();
+
+                    document.getElementById('p-client').value = data.clientName || '';
+                    document.getElementById('p-email').value = data.clientEmail || '';
+                    document.getElementById('p-name').value = data.projectName || '';
+                    document.getElementById('p-status').value = data.status || 'active';
+                    document.getElementById('p-done').value = data.done || '';
+                    document.getElementById('p-todo').value = data.todo || '';
+                    document.getElementById('p-requests').value = data.requests || '';
+                    document.getElementById('p-modal-title').innerText = "Edit Project";
+                } catch (e) { console.error(e); }
+            } else {
+                document.getElementById('p-modal-title').innerText = "New Project";
+            }
+        }
+
+        function closeProjectModal() {
+            document.getElementById('project-modal').classList.add('hidden');
+        }
+
+        async function saveProject() {
+            const data = {
+                clientName: document.getElementById('p-client').value,
+                clientEmail: document.getElementById('p-email').value,
+                projectName: document.getElementById('p-name').value,
+                status: document.getElementById('p-status').value,
+                done: document.getElementById('p-done').value,
+                todo: document.getElementById('p-todo').value,
+                requests: document.getElementById('p-requests').value,
+                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            };
+
+            try {
+                if (editingProjectId) {
+                    await db.collection('projects').doc(editingProjectId).update(data);
+                } else {
+                    await db.collection('projects').add(data);
+                }
+                closeProjectModal();
+            } catch (e) { console.error("Save Error", e); }
+        }
+
+        // --- EXISTING MODAL LOGIC (Kept as is) ---
         function openMessageModal(id) {
             const data = messagesMap[id];
             if (!data) return;
@@ -711,6 +851,92 @@
                     class="px-6 py-3 rounded-xl bg-taurusGold text-black font-bold text-xs uppercase tracking-widest hover:bg-white hover:scale-105 transition-all">
                     Close
                 </button>
+            </div>
+        </div>
+    </div>
+    <!-- Project Modal -->
+    <div id="project-modal"
+        class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm transition-opacity duration-300">
+        <div
+            class="glass-card w-full max-w-4xl rounded-2xl border border-glassBorder bg-[#0a0a0a] shadow-2xl overflow-hidden animate-fade-in-up h-[90vh] flex flex-col">
+            <!-- Header -->
+            <div class="p-6 border-b border-white/5 flex justify-between items-center bg-white/5 flex-shrink-0">
+                <h3 id="p-modal-title" class="text-xl font-display font-bold text-white flex items-center gap-2">
+                    New Project
+                </h3>
+                <button onclick="closeProjectModal()"
+                    class="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-gray-400 hover:text-white transition-colors">
+                    <i data-lucide="x" class="w-4 h-4"></i>
+                </button>
+            </div>
+
+            <!-- Scrollable Content -->
+            <div class="p-8 overflow-y-auto flex-1">
+                <form id="project-form" class="space-y-8">
+                    <!-- Section 1: Basics -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="space-y-4">
+                            <h4
+                                class="text-taurusGold text-xs font-bold uppercase tracking-widest border-b border-white/10 pb-2">
+                                Client Details</h4>
+                            <input id="p-client" type="text" placeholder="Client Name"
+                                class="w-full bg-white/5 border border-white/10 rounded-lg p-3 text-white focus:outline-none focus:border-taurusGold transition-colors">
+                            <input id="p-email" type="email" placeholder="Client Email / Contact"
+                                class="w-full bg-white/5 border border-white/10 rounded-lg p-3 text-white focus:outline-none focus:border-taurusGold transition-colors">
+                        </div>
+                        <div class="space-y-4">
+                            <h4
+                                class="text-taurusGold text-xs font-bold uppercase tracking-widest border-b border-white/10 pb-2">
+                                Project Info</h4>
+                            <input id="p-name" type="text" placeholder="Project Title"
+                                class="w-full bg-white/5 border border-white/10 rounded-lg p-3 text-white focus:outline-none focus:border-taurusGold transition-colors">
+                            <select id="p-status"
+                                class="w-full bg-white/5 border border-white/10 rounded-lg p-3 text-white focus:outline-none focus:border-taurusGold transition-colors">
+                                <option value="active">Active</option>
+                                <option value="completed">Completed</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Section 2: Work Log -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div class="bg-green-500/5 rounded-xl p-4 border border-green-500/10 h-64 flex flex-col">
+                            <label
+                                class="text-green-500 text-xs font-bold uppercase tracking-widest mb-2 flex items-center gap-2"><i
+                                    data-lucide="check-circle" class="w-3 h-3"></i> Completed</label>
+                            <textarea id="p-done"
+                                class="flex-1 bg-transparent border-none text-gray-300 text-sm focus:outline-none resize-none"
+                                placeholder="- Task 1 finished..."></textarea>
+                        </div>
+
+                        <div class="bg-blue-500/5 rounded-xl p-4 border border-blue-500/10 h-64 flex flex-col">
+                            <label
+                                class="text-blue-500 text-xs font-bold uppercase tracking-widest mb-2 flex items-center gap-2"><i
+                                    data-lucide="loader" class="w-3 h-3"></i> To Do / Roadmap</label>
+                            <textarea id="p-todo"
+                                class="flex-1 bg-transparent border-none text-gray-300 text-sm focus:outline-none resize-none"
+                                placeholder="- Next task..."></textarea>
+                        </div>
+
+                        <div class="bg-taurusGold/5 rounded-xl p-4 border border-taurusGold/10 h-64 flex flex-col">
+                            <label
+                                class="text-taurusGold text-xs font-bold uppercase tracking-widest mb-2 flex items-center gap-2"><i
+                                    data-lucide="message-square" class="w-3 h-3"></i> Client Requests</label>
+                            <textarea id="p-requests"
+                                class="flex-1 bg-transparent border-none text-gray-300 text-sm focus:outline-none resize-none"
+                                placeholder="- User wants darker mode..."></textarea>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Footer -->
+            <div class="p-6 border-t border-white/5 bg-white/5 flex justify-end gap-4 flex-shrink-0">
+                <button onclick="closeProjectModal()"
+                    class="px-6 py-3 rounded-xl border border-white/10 text-gray-400 font-bold text-xs uppercase tracking-widest hover:bg-white/10 transition-all">Cancel</button>
+                <button onclick="saveProject()"
+                    class="px-6 py-3 rounded-xl bg-taurusGold text-black font-bold text-xs uppercase tracking-widest hover:bg-white hover:scale-105 transition-all">Save
+                    Project</button>
             </div>
         </div>
     </div>
