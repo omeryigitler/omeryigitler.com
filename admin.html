@@ -101,8 +101,8 @@
             </button>
             <button onclick="switchTab('messages')" id="nav-messages"
                 class="nav-item w-full flex items-center px-8 py-4 text-gray-400 hover:text-white hover:bg-white/5 transition-all text-xs font-bold uppercase tracking-widest">
-                <i data-lucide="mail" class="w-4 h-4 mr-3"></i> Inbox <span
-                    class="ml-auto bg-taurusGold text-black px-1.5 py-0.5 rounded text-[9px]">3</span>
+                <i data-lucide="mail" class="w-4 h-4 mr-3"></i> Inbox <span id="nav-msg-badge"
+                    class="ml-auto bg-taurusGold text-black px-1.5 py-0.5 rounded text-[9px]">0</span>
             </button>
             <button onclick="switchTab('projects')" id="nav-projects"
                 class="nav-item w-full flex items-center px-8 py-4 text-gray-400 hover:text-white hover:bg-white/5 transition-all text-xs font-bold uppercase tracking-widest">
@@ -197,7 +197,7 @@
                             <span class="text-green-400 text-xs font-bold flex items-center gap-1">+8 <i
                                     data-lucide="arrow-up" class="w-3 h-3"></i></span>
                         </div>
-                        <h3 class="text-2xl font-display font-bold text-white">142</h3>
+                        <h3 id="total-messages-count" class="text-2xl font-display font-bold text-white">0</h3>
                         <p class="text-gray-500 text-xs uppercase tracking-wider mt-1">Total Messages</p>
                     </div>
 
@@ -322,37 +322,8 @@
                                 <th class="p-6 text-right">Action</th>
                             </tr>
                         </thead>
-                        <tbody class="text-sm text-gray-300">
-                            <!-- Row 1 -->
-                            <tr class="border-b border-white/5 hover:bg-white/5 transition-colors group">
-                                <td class="p-6"><span
-                                        class="px-2 py-1 rounded bg-blue-500/20 text-blue-400 text-[10px] font-bold uppercase">New</span>
-                                </td>
-                                <td class="p-6 font-bold text-white">John Doe <span
-                                        class="block text-xs text-gray-600 font-normal">john@example.com</span></td>
-                                <td class="p-6">Looking for a comprehensive E-commerce redesign for my...</td>
-                                <td class="p-6 text-gray-500">Oct 24, 2024</td>
-                                <td class="p-6 text-right">
-                                    <button
-                                        class="p-2 rounded hover:bg-white/10 hover:text-taurusGold transition-colors"><i
-                                            data-lucide="eye" class="w-4 h-4"></i></button>
-                                </td>
-                            </tr>
-                            <!-- Row 2 -->
-                            <tr class="border-b border-white/5 hover:bg-white/5 transition-colors group">
-                                <td class="p-6"><span
-                                        class="px-2 py-1 rounded bg-green-500/20 text-green-400 text-[10px] font-bold uppercase">Replied</span>
-                                </td>
-                                <td class="p-6 font-bold text-white">Alice Smith <span
-                                        class="block text-xs text-gray-600 font-normal">alice@studio.io</span></td>
-                                <td class="p-6">Collaboration on a new fintech project...</td>
-                                <td class="p-6 text-gray-500">Oct 22, 2024</td>
-                                <td class="p-6 text-right">
-                                    <button
-                                        class="p-2 rounded hover:bg-white/10 hover:text-taurusGold transition-colors"><i
-                                            data-lucide="eye" class="w-4 h-4"></i></button>
-                                </td>
-                            </tr>
+                        <tbody id="messages-table-body" class="text-sm text-gray-300">
+                            <!-- Data will be loaded via JS -->
                         </tbody>
                     </table>
                 </div>
@@ -445,6 +416,57 @@
                 roleText.innerText = 'Supervisor';
             }
         }
+    </script>
+
+    <!-- FIREBASE DATA FETCHING -->
+    <script type="module">
+        import { getMessages } from './assets/js/firebase-config.js';
+
+        async function loadDashboardData() {
+            console.log("Loading dashboard data...");
+            try {
+                const messages = await getMessages();
+
+                // 1. Update Stats
+                document.getElementById('total-messages-count').innerText = messages.length;
+                document.getElementById('nav-msg-badge').innerText = messages.length;
+
+                // 2. Populate Table
+                const tbody = document.getElementById('messages-table-body');
+                tbody.innerHTML = ''; // Clear fake data
+
+                if (messages.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="5" class="p-6 text-center text-gray-500">No messages found.</td></tr>';
+                    return;
+                }
+
+                messages.forEach(msg => {
+                    const date = msg.timestamp ? new Date(msg.timestamp.seconds * 1000).toLocaleDateString() : 'Just now';
+                    const row = `
+                        <tr class="border-b border-white/5 hover:bg-white/5 transition-colors group">
+                            <td class="p-6"><span class="px-2 py-1 rounded bg-blue-500/20 text-blue-400 text-[10px] font-bold uppercase">${msg.status || 'New'}</span></td>
+                            <td class="p-6 font-bold text-white">${msg.name} <span class="block text-xs text-gray-600 font-normal">${msg.email}</span></td>
+                            <td class="p-6 text-gray-300 line-clamp-1">${msg.message.substring(0, 50)}...</td>
+                            <td class="p-6 text-gray-500">${date}</td>
+                            <td class="p-6 text-right">
+                                <button onclick="alert('${msg.message}')" class="p-2 rounded hover:bg-white/10 hover:text-taurusGold transition-colors"><i data-lucide="eye" class="w-4 h-4"></i></button>
+                            </td>
+                        </tr>
+                    `;
+                    tbody.innerHTML += row;
+                });
+
+                // Re-init icons for new elements
+                lucide.createIcons();
+
+            } catch (error) {
+                console.error("Error loading data:", error);
+                // Optional: Show error toast
+            }
+        }
+
+        // Load on start
+        loadDashboardData();
     </script>
 </body>
 
