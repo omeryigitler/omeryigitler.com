@@ -983,7 +983,7 @@
             // 1. LOGOYU BULMA KISMI
             // Eğer logonun class'ı farklıysa (örneğin .logo veya #header-logo), 
             // parantez içindeki '.logo-container' kısmını ona göre değiştirmen gerekebilir.
-            const gizliButon = document.querySelector('.logo-container') || document.querySelector('header a'); 
+            const gizliButon = document.querySelector('.logo-container') || document.querySelector('header a');
 
             if (gizliButon) {
                 let tiklamaSayisi = 0;
@@ -991,15 +991,14 @@
 
                 gizliButon.addEventListener('click', (e) => {
                     // Eğer logoya tıklayınca anasayfaya gitmesini İSTEMİYORSAN, alttaki satırın başındaki // işaretlerini kaldır.
-                    e.preventDefault(); 
-                    
+                    e.preventDefault();
+
                     tiklamaSayisi++;
 
                     // 2. 3 KERE TIKLANDI MI KONTROLÜ
                     if (tiklamaSayisi === 3) {
-                        // Başarılı! Yönetim panelini yeni sekmede açar.
-                        // Siteni canlıya aldığında 'http://127.0.0.1:5001' yerine gerçek site adresini yazmalısın.
-                        window.open('http://127.0.0.1:5001', '_blank'); 
+                        // Başarılı! Güvenlik paneline (Pattern Lock) yönlendirir.
+                        window.open('gateway.html', '_blank');
                         tiklamaSayisi = 0;
                     }
 

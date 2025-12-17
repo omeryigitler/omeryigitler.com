@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Security Gateway | Ömer YİĞİTLER</title>
+    <link rel="icon" href="assets/favicon1.svg" type="image/svg+xml">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Syncopate:wght@400;700&family=Manrope:wght@300;400;600;800&display=swap"
+        rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        display: ['"Syncopate"', 'sans-serif'],
+                        body: ['"Manrope"', 'sans-serif'],
+                    },
+                    colors: {
+                        obsidian: '#050505',
+                        taurusGold: '#FFD700',
+                        deepSpace: '#0B1120',
+                    },
+                    backgroundImage: {
+                        'symmetry-grid': "radial-gradient(circle at center, transparent 0%, #050505 100%), linear-gradient(rgba(255, 215, 0, 0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 215, 0, 0.03) 1px, transparent 1px)",
+                    },
+                    animation: {
+                        'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        .grid-bg {
+            background-size: 100% 100%, 40px 40px, 40px 40px;
+        }
+
+        .crystal-panel {
+            background: rgba(11, 17, 32, 0.6);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 20px 50px -10px rgba(0, 0, 0, 0.8);
+        }
+
+        /* Pattern Lock Styles */
+        #pattern-container {
+            position: relative;
+            width: 300px;
+            height: 300px;
+            margin: 0 auto;
+            touch-action: none;
+            /* Prevent scrolling on mobile */
+        }
+
+        .dot {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 215, 0, 0.3);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .dot::after {
+            content: '';
+            width: 6px;
+            height: 6px;
+            background: #FFD700;
+            border-radius: 50%;
+            opacity: 0.5;
+            transition: all 0.3s ease;
+        }
+
+        .dot.active {
+            background: rgba(255, 215, 0, 0.2);
+            border-color: #FFD700;
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.4);
+        }
+
+        .dot.active::after {
+            opacity: 1;
+            transform: scale(1.5);
+        }
+
+        .dot.error {
+            border-color: #ef4444;
+            background: rgba(239, 68, 68, 0.2);
+            box-shadow: 0 0 15px rgba(239, 68, 68, 0.4);
+        }
+
+        .dot.error::after {
+            background: #ef4444;
+        }
+
+        #line-svg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        path {
+            stroke: #FFD700;
+            stroke-width: 3;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            fill: none;
+            filter: drop-shadow(0 0 5px rgba(255, 215, 0, 0.5));
+        }
+
+        path.error {
+            stroke: #ef4444;
+            filter: drop-shadow(0 0 5px rgba(239, 68, 68, 0.5));
+        }
+    </style>
+</head>
+
+<body
+    class="bg-obsidian text-white font-body h-screen flex flex-col items-center justify-center overflow-hidden selection:bg-taurusGold selection:text-black">
+
+    <div class="fixed inset-0 w-full h-full grid-bg bg-symmetry-grid -z-10 opacity-40"></div>
+
+    <!-- Ambient Glow -->
+    <div
+        class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-taurusGold rounded-full blur-[150px] -z-10 opacity-5">
+    </div>
+
+    <div class="crystal-panel p-8 md:p-12 rounded-3xl w-full max-w-md text-center transform transition-all duration-500 scale-100 opacity-100"
+        id="main-panel">
+
+        <div class="mb-8">
+            <div
+                class="w-16 h-16 rounded-full bg-white/5 border border-white/10 flex items-center justify-center mx-auto mb-4 relative group">
+                <i data-lucide="shield-check"
+                    class="w-8 h-8 text-taurusGold opacity-80 group-hover:opacity-100 transition-opacity"></i>
+                <div class="absolute inset-0 rounded-full border border-taurusGold/30 animate-pulse-slow"></div>
+            </div>
+            <h1 class="font-display text-2xl font-bold tracking-wider text-white mb-2">Identify Yourself</h1>
+            <p class="text-xs text-gray-500 uppercase tracking-widest">Connect the constellation</p>
+        </div>
+
+        <!-- Pattern Lock Area -->
+        <div id="pattern-container">
+            <svg id="line-svg"></svg>
+            <!-- Dots will be generated by JS -->
+        </div>
+
+    </div>
+
+    <!-- Redirect Message (Hidden by default) -->
+    <div id="success-msg"
+        class="hidden absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none">
+        <h2 class="font-display text-4xl text-taurusGold font-bold mb-4 animate-bounce">Access Granted</h2>
+        <p class="text-gray-400 text-sm tracking-widest">Initiating Admin Protocol...</p>
+    </div>
+
+    <script>
+        lucide.createIcons();
+
+        // --- CONFIGURATION ---
+        // 0 1 2
+        // 3 4 5
+        // 6 7 8
+        const CORRECT_PATTERN = [0, 3, 6, 7, 8]; // "L" shape (Top-Left -> Bottom-Left -> Bottom-Right)
+        const GRID_SIZE = 3;
+
+        // --- LOGIC ---
+        const container = document.getElementById('pattern-container');
+        const svg = document.getElementById('line-svg');
+        const dots = [];
+        let isDragging = false;
+        let pLine = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        let currentPath = [];
+        let pattern = [];
+
+        // Initialize Dots
+        const spacing = 100; // px
+        const offset = 50; // padding inside container
+
+        for (let i = 0; i < 9; i++) {
+            const row = Math.floor(i / 3);
+            const col = i % 3;
+
+            const dot = document.createElement('div');
+            dot.classList.add('dot');
+            dot.dataset.index = i;
+
+            // Layout (Absolute positioning)
+            const x = col * spacing + offset;
+            const y = row * spacing + offset;
+            dot.style.left = x + 'px';
+            dot.style.top = y + 'px';
+
+            container.appendChild(dot);
+            dots.push({ el: dot, x, y, index: i });
+        }
+
+        svg.appendChild(pLine);
+
+        // Interaction Handlers
+        function startPattern(e) {
+            e.preventDefault();
+            resetPattern();
+            isDragging = true;
+            handleInput(e);
+        }
+
+        function movePattern(e) {
+            if (!isDragging) return;
+            e.preventDefault();
+            handleInput(e, true);
+        }
+
+        function endPattern(e) {
+            if (!isDragging) return;
+            isDragging = false;
+            checkPattern();
+        }
+
+        function handleInput(e, isMove = false) {
+            let clientX, clientY;
+            if (e.touches) {
+                clientX = e.touches[0].clientX;
+                clientY = e.touches[0].clientY;
+            } else {
+                clientX = e.clientX;
+                clientY = e.clientY;
+            }
+
+            // Get coordinates relative to container
+            const rect = container.getBoundingClientRect();
+            const relX = clientX - rect.left;
+            const relY = clientY - rect.top;
+
+            // Check collision with dots
+            if (!isMove) {
+                // For click/start, standard hit testing
+                dots.forEach(dot => {
+                    const dx = relX - dot.x;
+                    const dy = relY - dot.y;
+                    if (Math.hypot(dx, dy) < 30) { // 30px hit radius
+                        addDot(dot);
+                    }
+                });
+            } else {
+                // For drag, update the "current line" to mouse position
+                updateLine(relX, relY);
+
+                // And check collisions
+                dots.forEach(dot => {
+                    const dx = relX - dot.x;
+                    const dy = relY - dot.y;
+                    if (Math.hypot(dx, dy) < 30) {
+                        addDot(dot);
+                    }
+                });
+            }
+        }
+
+        function addDot(dot) {
+            if (pattern.includes(dot.index)) return;
+
+            pattern.push(dot.index);
+            dot.el.classList.add('active');
+
+            // Navigator Vibrate for feedback (Android mostly)
+            if (navigator.vibrate) navigator.vibrate(20);
+
+            // Redraw path connecting only the locked dots
+            renderPath();
+        }
+
+        function updateLine(mouseX, mouseY) {
+            // Draw lines between confirmed dots, PLUS a line to the current mouse pos
+            if (pattern.length === 0) return;
+
+            let d = '';
+            pattern.forEach((idx, i) => {
+                const dot = dots[idx];
+                d += (i === 0 ? 'M' : 'L') + dot.x + ',' + dot.y + ' ';
+            });
+
+            // Add line to cursor
+            d += 'L' + mouseX + ',' + mouseY;
+
+            pLine.setAttribute('d', d);
+        }
+
+        function renderPath() {
+            let d = '';
+            pattern.forEach((idx, i) => {
+                const dot = dots[idx];
+                d += (i === 0 ? 'M' : 'L') + dot.x + ',' + dot.y + ' ';
+            });
+            pLine.setAttribute('d', d);
+        }
+
+        function checkPattern() {
+            // Remove the trailing line segment to mouse
+            renderPath();
+
+            const isCorrect = JSON.stringify(pattern) === JSON.stringify(CORRECT_PATTERN);
+
+            if (isCorrect) {
+                success();
+            } else {
+                error();
+            }
+        }
+
+        function success() {
+            pLine.style.stroke = '#4ade80'; // Green
+            dots.forEach(d => {
+                if (pattern.includes(d.index)) {
+                    d.el.style.borderColor = '#4ade80';
+                    d.el.style.backgroundColor = 'rgba(74, 222, 128, 0.2)';
+                }
+            });
+
+            document.getElementById('main-panel').classList.add('scale-0', 'opacity-0');
+            setTimeout(() => {
+                document.getElementById('main-panel').style.display = 'none';
+                document.getElementById('success-msg').classList.remove('hidden');
+            }, 300);
+
+            setTimeout(() => {
+                // REDIRECT TO LOCALHOST:5001
+                window.location.href = 'http://127.0.0.1:5001';
+                // Fallback for new tab if needed (though location.href is better for "portal" feel)
+                // window.open('http://127.0.0.1:5001', '_blank');
+            }, 1500);
+        }
+
+        function error() {
+            pLine.classList.add('error');
+            dots.forEach(d => {
+                if (pattern.includes(d.index)) d.el.classList.add('error');
+            });
+
+            // Vibrate error
+            if (navigator.vibrate) navigator.vibrate([50, 50, 50]);
+
+            setTimeout(resetPattern, 500);
+        }
+
+        function resetPattern() {
+            pattern = [];
+            pLine.setAttribute('d', '');
+            pLine.classList.remove('error');
+            pLine.style.stroke = '';
+            dots.forEach(d => {
+                d.el.classList.remove('active', 'error');
+                d.el.style.borderColor = '';
+                d.el.style.backgroundColor = '';
+            });
+        }
+
+        // Event Listeners
+        container.addEventListener('mousedown', startPattern);
+        window.addEventListener('mousemove', movePattern);
+        window.addEventListener('mouseup', endPattern);
+
+        container.addEventListener('touchstart', startPattern, { passive: false });
+        window.addEventListener('touchmove', movePattern, { passive: false });
+        window.addEventListener('touchend', endPattern);
+
+    </script>
+</body>
+
+</html>
