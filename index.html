@@ -127,6 +127,14 @@
             background: linear-gradient(to bottom, transparent, #FFD700, transparent);
         }
     </style>
+    <!-- EmailJS SDK -->
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+    <script type="text/javascript">
+            (function () {
+                // https://dashboard.emailjs.com/admin/account
+                emailjs.init("V1YT-CYD1Y7eX0BIE");
+            })();
+    </script>
 </head>
 
 <body
@@ -624,13 +632,7 @@
                         <p class="text-gray-400 text-xs md:text-sm">Ready to build? Fill out the form below.</p>
                     </div>
 
-                    <form id="contact-form" action="https://formsubmit.co/info@omeryigitler.com" method="POST"
-                        class="space-y-4 relative z-10">
-                        <!-- FormSubmit Configuration -->
-                        <input type="hidden" name="_captcha" value="false">
-                        <input type="hidden" name="_subject" value="New Lead | Omeryigitler.com">
-                        <input type="hidden" name="_template" value="table">
-                        <input type="hidden" name="_next" value="https://omeryigitler.com/success.html">
+                    <form id="contact-form" class="space-y-4 relative z-10">
 
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <input type="text" name="name" placeholder="Your Name" required
@@ -671,30 +673,68 @@
                             db.collection('stats').doc('daily').set({ [today]: increment }, { merge: true })
                                 .catch(err => console.log("Daily tracking error:", err));
 
+                            // --- FORM SUBMISSION LOGIC (The "Taurus" Hybrid System) ---
                             const contactForm = document.getElementById('contact-form');
                             if (contactForm) {
+                                // Clean up form attributes just in case
+                                contactForm.removeAttribute('action');
+                                contactForm.removeAttribute('method');
+                                contactForm.action = ""; // Force clear
+
                                 contactForm.addEventListener('submit', async (e) => {
                                     e.preventDefault();
-                                    const btn = document.getElementById('submit-btn');
-                                    const originalText = btn.innerText;
-                                    btn.innerText = 'SENDING...';
+                                    e.stopPropagation(); // Stop any other listeners
 
-                                    // Get Data
-                                    const formData = new FormData(contactForm);
-                                    const data = {
-                                        name: formData.get('name'),
-                                        email: formData.get('email'),
-                                        message: formData.get('message'),
-                                        timestamp: new Date(),
-                                        status: 'new' // for admin panel
+                                    // 1. UI Feedback (Loading)
+                                    const submitBtn = contactForm.querySelector('button[type="submit"]');
+                                    const originalText = submitBtn.innerText;
+                                    submitBtn.innerText = 'SENDING...';
+                                    submitBtn.disabled = true;
+                                    submitBtn.classList.add('opacity-50', 'cursor-not-allowed');
+
+                                    // 2. Data Collection
+                                    const name = document.getElementById('name').value;
+                                    const email = document.getElementById('email').value;
+                                    const message = document.getElementById('message').value;
+
+                                    // Get secure values from Radio Buttons (Budget/Type if they exist)
+                                    // Assuming you might have radio buttons named 'budget' or similar in the form layout
+                                    const budgetInput = document.querySelector('input[name="budget"]:checked');
+                                    const budget = budgetInput ? budgetInput.value : 'Not Specified';
+
+                                    const formData = {
+                                        name: name,
+                                        email: email,
+                                        message: message,
+                                        budget: budget,
+                                        status: 'new', // For Admin Panel
+                                        timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                                        source: 'website_contact_form'
                                     };
 
                                     try {
-                                        // Save to Firestore
-                                        await db.collection('messages').add(data);
+                                        // 3. Primary: SAVE TO FIRESTORE (Source of Truth)
+                                        await db.collection('messages').add(formData);
+                                        console.log("Message saved to Firestore.");
 
-                                        // Then submit to FormSubmit to handle email & redirect to success page
-                                        contactForm.submit();
+                                        // 4. Secondary: NOTIFY ADMIN (EmailJS)
+                                        // We don't block the user if mail fails. Data is already safe in DB.
+                                        try {
+                                            // Replace these placeholders with your actual EmailJS IDs
+                                            // Service ID, Template ID, Parameters
+                                            await emailjs.send("service_z24kvj8", "template_frpxeef", {
+                                                from_name: name,
+                                                from_email: email,
+                                                message: message + `\n\nBudget: ${budget}`,
+                                                reply_to: email
+                                            });
+                                            console.log("Admin notification sent.");
+                                        } catch (mailError) {
+                                            console.warn("Email notification failed, but data is safe in DB:", mailError);
+                                        }
+
+                                        // 5. Success Redirect
+                                        window.location.href = 'success.html';
 
                                     } catch (error) {
                                         console.error("Error adding document: ", error);
