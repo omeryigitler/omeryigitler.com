@@ -386,22 +386,113 @@
                 firebase.initializeApp(window.firebaseConfig);
                 db = firebase.firestore();
                 console.log("Firebase initialized");
-                loadMessages();
-                loadStats();
+                loadMessages(); // Load table
+                setupRealtimeListeners(); // Live counters
             } else {
                 console.warn("Please update firebase-config.js with your keys.");
-                // alert("Demo Mode: Please set up Firebase in assets/js/firebase-config.js");
             }
         });
 
+        // Use Realtime Listener for Stats to make it instant across tabs/devices
+        function setupRealtimeListeners() {
+            if (!db) return;
+
+            db.collection('messages').onSnapshot(snapshot => {
+                let unreadCount = 0;
+                let recentHtml = '';
+                const sortedDocs = snapshot.docs.sort((a, b) => b.data().timestamp - a.data().timestamp); // client-side sort for simplicity with listeners
+
+                sortedDocs.forEach(doc => {
+                    const data = doc.data();
+                    if (data.status === 'new') unreadCount++;
+                });
+
+                // 1. UPDATE BADGES (Menu & Bell)
+                const menuBadge = document.querySelector('#nav-messages span');
+                const bellDot = document.querySelector('.bg-red-500.rounded-full'); // Notification Dot
+
+                if (menuBadge) {
+                    menuBadge.innerText = unreadCount;
+                    // Hide badge if 0
+                    menuBadge.style.display = unreadCount > 0 ? 'inline-flex' : 'none';
+                }
+
+                if (bellDot) {
+                    bellDot.style.display = unreadCount > 0 ? 'block' : 'none';
+                }
+
+                // 2. UPDATE DASHBOARD CARD (Pending Messages)
+                const dashCount = document.getElementById('stat-total-messages');
+                const dashLabel = dashCount?.nextElementSibling;
+                if (dashCount) dashCount.innerText = unreadCount;
+                if (dashLabel) dashLabel.innerText = "Pending Messages";
+
+                // 3. UPDATE RECENT LEADS (Right Panel) - Show mainly new ones
+                const recentContainer = document.getElementById('recent-leads-container');
+                if (recentContainer) {
+                    // Take top 3
+                    const top3 = sortedDocs.slice(0, 3);
+
+                    if (top3.length > 0) {
+                        let html = '';
+                        top3.forEach(doc => {
+                            const d = doc.data();
+                            const isNew = d.status === 'new';
+                            const name = d.name || 'Anonymous';
+                            const initials = name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+
+                            // Calc time
+                            const now = new Date();
+                            const date = d.timestamp ? new Date(d.timestamp.seconds * 1000) : new Date();
+                            const diffMins = Math.floor((now - date) / 60000);
+                            let timeStr = diffMins + 'm';
+                            if (diffMins > 60) timeStr = Math.floor(diffMins / 60) + 'h';
+                            if (diffMins > 1440) timeStr = Math.floor(diffMins / 1440) + 'd';
+
+                            html += `
+                                <div onclick="switchTab('messages')" class="flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 transition-colors cursor-pointer group">
+                                    <div class="w-10 h-10 rounded-full flex items-center justify-center text-xs font-bold border transition-all ${isNew ? 'bg-taurusGold text-black border-taurusGold shadow-[0_0_10px_rgba(255,215,0,0.3)]' : 'bg-white/5 text-gray-400 border-white/10'}">
+                                        ${initials}
+                                    </div>
+                                    <div class="${isNew ? 'opacity-100' : 'opacity-60'}">
+                                        <h4 class="text-sm font-bold text-white group-hover:text-taurusGold transition-colors">${name}</h4>
+                                        <p class="text-xs text-gray-500 truncate w-32">${d.message || ''}</p>
+                                    </div>
+                                    <span class="ml-auto text-[10px] ${isNew ? 'text-taurusGold' : 'text-gray-600'}">${timeStr}</span>
+                                </div>
+                            `;
+                        });
+                        recentContainer.innerHTML = html;
+                    } else {
+                        recentContainer.innerHTML = '<p class="text-xs text-gray-500 p-4">No leads yet.</p>';
+                    }
+                }
+
+                // Also update Total View Stats (Not realtime, but reload on snapshot is fine)
+                loadViewStats();
+
+            }, error => {
+                console.error("Listener error:", error);
+            });
+        }
+
+        async function loadViewStats() {
+            if (!db) return;
+            try {
+                const docRef = await db.collection('stats').doc('global').get();
+                let views = 0;
+                if (docRef.exists) views = docRef.data().views || 0;
+                const viewEl = document.getElementById('stat-total-views');
+                if (viewEl) viewEl.innerText = views;
+            } catch (e) { console.log(e); }
+        }
+
         async function loadMessages() {
             if (!db) return;
+            // We'll use onSnapshot here too for the table to enable instant updates
             const tbody = document.querySelector('#view-messages tbody');
 
-            try {
-                // Get messages ordered by date
-                const snapshot = await db.collection('messages').orderBy('timestamp', 'desc').get();
-
+            db.collection('messages').orderBy('timestamp', 'desc').onSnapshot(snapshot => {
                 if (snapshot.empty) {
                     tbody.innerHTML = '<tr><td colspan="5" class="p-6 text-center text-gray-500">No messages found.</td></tr>';
                     return;
@@ -410,103 +501,54 @@
                 let html = '';
                 snapshot.forEach(doc => {
                     const data = doc.data();
+                    const isNew = data.status === 'new';
                     const date = data.timestamp ? new Date(data.timestamp.seconds * 1000).toLocaleDateString() : 'N/A';
 
+                    // Styling based on status
+                    const rowClass = isNew ? "bg-white/5 border-l-2 border-l-taurusGold" : "opacity-60 hover:opacity-100";
+                    const textClass = isNew ? "text-white font-bold" : "text-gray-400 font-normal";
+                    const badge = isNew
+                        ? `<span class="px-2 py-1 rounded bg-blue-500/20 text-blue-400 text-[10px] font-bold uppercase shadow-[0_0_10px_rgba(59,130,246,0.3)]">NEW</span>`
+                        : `<span class="px-2 py-1 rounded bg-gray-800 text-gray-500 text-[10px] font-bold uppercase">READ</span>`;
+
                     html += `
-                        <tr class="border-b border-white/5 hover:bg-white/5 transition-colors group">
-                            <td class="p-6"><span class="px-2 py-1 rounded ${data.status === 'new' ? 'bg-blue-500/20 text-blue-400' : 'bg-gray-700 text-gray-400'} text-[10px] font-bold uppercase">${data.status}</span></td>
-                            <td class="p-6 font-bold text-white">${data.name || 'Anonymous'} <span class="block text-xs text-gray-600 font-normal">${data.email || ''}</span></td>
-                            <td class="p-6">${(data.message || '').substring(0, 50)}...</td>
-                            <td class="p-6 text-gray-500">${date}</td>
-                            <td class="p-6 text-right">
-                                <button onclick="deleteMessage('${doc.id}')" class="p-2 rounded hover:bg-red-500/20 hover:text-red-500 transition-colors"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                        <tr class="border-b border-white/5 hover:bg-white/10 transition-all group ${rowClass}">
+                            <td class="p-6">${badge}</td>
+                            <td class="p-6 ${textClass}">${data.name || 'Anonymous'} <span class="block text-xs text-gray-600 font-normal">${data.email || ''}</span></td>
+                            <td class="p-6 text-sm ${textClass}">${(data.message || '').substring(0, 60)}...</td>
+                            <td class="p-6 text-xs text-gray-500">${date}</td>
+                            <td class="p-6 text-right flex items-center justify-end gap-2">
+                                <button onclick="toggleMessageStatus('${doc.id}', '${data.status}')" class="p-2 rounded hover:bg-white/10 transition-colors" title="${isNew ? 'Mark as Read' : 'Mark as Unread'}">
+                                    <i data-lucide="${isNew ? 'check-circle' : 'mail'}" class="w-4 h-4 ${isNew ? 'text-green-400' : 'text-gray-400'}"></i>
+                                </button>
+                                <button onclick="deleteMessage('${doc.id}')" class="p-2 rounded hover:bg-red-500/20 hover:text-red-500 transition-colors" title="Delete">
+                                    <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                </button>
                             </td>
                         </tr>
                     `;
                 });
 
                 tbody.innerHTML = html;
-                lucide.createIcons(); // Refresh icons for new elements
+                lucide.createIcons();
+            });
+        }
 
-            } catch (err) {
-                console.error("Error loading messages:", err);
-            }
+        async function toggleMessageStatus(id, currentStatus) {
+            const newStatus = currentStatus === 'new' ? 'read' : 'new';
+            try {
+                await db.collection('messages').doc(id).update({ status: newStatus });
+                // No need to reload, onSnapshot handles UI
+            } catch (e) { console.error(e); }
         }
 
         async function deleteMessage(id) {
             if (!confirm("Delete this message?")) return;
             try {
                 await db.collection('messages').doc(id).delete();
-                loadMessages(); // Refresh
-            } catch (e) {
-                console.error(e);
-            }
+            } catch (e) { console.error(e); }
         }
 
-        async function loadStats() {
-            if (!db) return;
-
-            try {
-                // 1. Get TOTAL MESSAGES & RECENT LEADS in one query if possible, but distinct queries are easier
-                const msgsSnapshot = await db.collection('messages').orderBy('timestamp', 'desc').get();
-                const totalMessages = msgsSnapshot.size;
-
-                // Update Badge and Card
-                const badge = document.querySelector('#nav-messages span');
-                if (badge) badge.innerText = totalMessages;
-                document.getElementById('stat-total-messages').innerText = totalMessages;
-
-                // 2. Get TOTAL IMPRESSIONS (Page Views)
-                const docRef = await db.collection('stats').doc('global').get();
-                let views = 0;
-                if (docRef.exists) {
-                    views = docRef.data().views || 0;
-                }
-                document.getElementById('stat-total-views').innerText = views;
-
-                // 3. Populate RECENT LEADS (Right Panel)
-                const recentContainer = document.getElementById('recent-leads-container');
-                if (recentContainer && !msgsSnapshot.empty) {
-                    let recentHtml = '';
-                    // Take first 3
-                    const recentDocs = msgsSnapshot.docs.slice(0, 3);
-
-                    recentDocs.forEach(doc => {
-                        const d = doc.data();
-                        // Format time (e.g. "2m", "1h") - Simple approximation
-                        const now = new Date();
-                        const date = d.timestamp ? new Date(d.timestamp.seconds * 1000) : new Date();
-                        const diffMins = Math.floor((now - date) / 60000);
-                        let timeStr = diffMins + 'm';
-                        if (diffMins > 60) timeStr = Math.floor(diffMins / 60) + 'h';
-                        if (diffMins > 1440) timeStr = Math.floor(diffMins / 1440) + 'd';
-
-                        // Initials
-                        const name = d.name || 'Anonymous';
-                        const initials = name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
-
-                        recentHtml += `
-                            <div onclick="switchTab('messages')" class="flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 transition-colors cursor-pointer group">
-                                <div class="w-10 h-10 rounded-full bg-gradient-to-br from-gray-700 to-black flex items-center justify-center text-xs font-bold border border-white/10 group-hover:border-taurusGold/50 text-white group-hover:text-taurusGold transition-all">
-                                    ${initials}
-                                </div>
-                                <div>
-                                    <h4 class="text-sm font-bold text-white group-hover:text-taurusGold transition-colors">${name}</h4>
-                                    <p class="text-xs text-gray-500 truncate w-32">${d.message || 'No message'}</p>
-                                </div>
-                                <span class="ml-auto text-[10px] text-gray-600">${timeStr}</span>
-                            </div>
-                        `;
-                    });
-                    recentContainer.innerHTML = recentHtml;
-                } else if (recentContainer) {
-                    recentContainer.innerHTML = '<p class="text-xs text-gray-500 p-4">No leads yet.</p>';
-                }
-
-            } catch (err) {
-                console.error("Stats Error:", err);
-            }
-        }
 
         // --- UI LOGIC ---
         function switchTab(tabId) {
