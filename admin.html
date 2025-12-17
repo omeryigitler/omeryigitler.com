@@ -9,7 +9,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <link
-        href="https://fonts.googleapis.com/css2?family=Syncopate:wght@400;700&family=Manrope:wght@300;400;600;800&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Syncopate:wght@400;700&family=Manrope:wght@300;400;500;600;700&display=swap"
         rel="stylesheet">
 
     <script>
@@ -24,6 +24,8 @@
                         obsidian: '#050505',
                         taurusGold: '#FFD700',
                         deepSpace: '#0B1120',
+                        glass: 'rgba(255, 255, 255, 0.03)',
+                        glassBorder: 'rgba(255, 255, 255, 0.08)',
                     },
                     backgroundImage: {
                         'symmetry-grid': "radial-gradient(circle at center, transparent 0%, #050505 100%), linear-gradient(rgba(255, 215, 0, 0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 215, 0, 0.03) 1px, transparent 1px)",
@@ -37,92 +39,394 @@
             background-size: 100% 100%, 40px 40px, 40px 40px;
         }
 
-        .glass-card {
-            background: rgba(11, 17, 32, 0.6);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.08);
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #050505;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #333;
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #FFD700;
+        }
+
+        .nav-item.active {
+            background: rgba(255, 215, 0, 0.1);
+            color: #FFD700;
+            border-right: 2px solid #FFD700;
+        }
+
+        .fade-in {
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
     </style>
 </head>
 
-<body class="bg-obsidian text-white font-body min-h-screen flex flex-col">
+<body class="bg-obsidian text-white font-body h-screen flex overflow-hidden">
 
-    <div class="fixed inset-0 w-full h-full grid-bg bg-symmetry-grid -z-10 opacity-40"></div>
+    <div class="fixed inset-0 w-full h-full grid-bg bg-symmetry-grid -z-10 opacity-30"></div>
 
-    <!-- Header -->
-    <header class="border-b border-white/10 bg-black/50 backdrop-blur-md sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
-            <div class="flex items-center gap-3">
-                <div
-                    class="w-8 h-8 rounded-full bg-taurusGold flex items-center justify-center text-black font-bold text-xs">
-                    ÖY</div>
-                <span class="font-display font-bold text-sm tracking-wider">Admin Panel</span>
+    <!-- SIDEBAR -->
+    <aside
+        class="w-64 bg-deepSpace/50 backdrop-blur-xl border-r border-glassBorder flex flex-col hidden md:flex relative z-10 transition-all">
+        <!-- Brand -->
+        <div class="h-20 flex items-center px-8 border-b border-glassBorder">
+            <div
+                class="w-8 h-8 rounded-full bg-taurusGold flex items-center justify-center text-black font-bold text-xs mr-3 shadow-[0_0_15px_rgba(255,215,0,0.4)]">
+                ÖY</div>
+            <span class="font-display font-bold text-sm tracking-wider">NEXUS</span>
+        </div>
+
+        <!-- Navigation -->
+        <nav class="flex-1 py-8 space-y-2">
+            <button onclick="switchTab('dashboard')" id="nav-dashboard"
+                class="nav-item w-full flex items-center px-8 py-4 text-gray-400 hover:text-white hover:bg-white/5 transition-all text-xs font-bold uppercase tracking-widest active">
+                <i data-lucide="layout-dashboard" class="w-4 h-4 mr-3"></i> Dashboard
+            </button>
+            <button onclick="switchTab('messages')" id="nav-messages"
+                class="nav-item w-full flex items-center px-8 py-4 text-gray-400 hover:text-white hover:bg-white/5 transition-all text-xs font-bold uppercase tracking-widest">
+                <i data-lucide="mail" class="w-4 h-4 mr-3"></i> Inbox <span
+                    class="ml-auto bg-taurusGold text-black px-1.5 py-0.5 rounded text-[9px]">3</span>
+            </button>
+            <button onclick="switchTab('projects')" id="nav-projects"
+                class="nav-item w-full flex items-center px-8 py-4 text-gray-400 hover:text-white hover:bg-white/5 transition-all text-xs font-bold uppercase tracking-widest">
+                <i data-lucide="folder-kanban" class="w-4 h-4 mr-3"></i> Projects
+            </button>
+            <button onclick="switchTab('settings')" id="nav-settings"
+                class="nav-item w-full flex items-center px-8 py-4 text-gray-400 hover:text-white hover:bg-white/5 transition-all text-xs font-bold uppercase tracking-widest">
+                <i data-lucide="settings" class="w-4 h-4 mr-3"></i> System
+            </button>
+        </nav>
+
+        <!-- Footer -->
+        <div class="p-6 border-t border-glassBorder">
+            <div class="flex items-center gap-3 mb-4">
+                <div class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+                <span class="text-[10px] text-gray-500 uppercase tracking-widest">Server Online</span>
             </div>
             <button onclick="window.location.href='index.html'"
-                class="text-xs text-gray-400 hover:text-white transition-colors uppercase tracking-widest">Logout</button>
+                class="flex items-center text-red-400 text-xs font-bold uppercase tracking-wider hover:text-red-300 transition-colors">
+                <i data-lucide="log-out" class="w-3 h-3 mr-2"></i> Terminate
+            </button>
         </div>
-    </header>
+    </aside>
 
-    <main class="flex-grow p-6 md:p-10 max-w-7xl mx-auto w-full">
+    <!-- MOBILE HEADER -->
+    <div
+        class="md:hidden fixed top-0 w-full h-16 bg-deepSpace/90 backdrop-blur-md border-b border-glassBorder flex items-center justify-between px-6 z-50">
+        <span class="font-display font-bold text-sm">NEXUS ADMIN</span>
+        <button class="text-white"><i data-lucide="menu"></i></button>
+    </div>
 
-        <div class="mb-10">
-            <h1 class="text-3xl font-display font-bold text-white mb-2">Welcome Back, Chef.</h1>
-            <p class="text-gray-400 text-sm">System is nominal. Updates pending.</p>
-        </div>
+    <!-- MAIN CONTENT -->
+    <main class="flex-1 flex flex-col relative overflow-hidden">
 
-        <!-- Placeholder Content -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <!-- Stat 1 -->
-            <div class="glass-card p-6 rounded-2xl relative overflow-hidden group">
-                <div class="absolute right-0 top-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-                    <i data-lucide="users" class="w-16 h-16 text-taurusGold"></i>
+        <!-- Top Bar -->
+        <header
+            class="h-20 border-b border-glassBorder bg-black/20 backdrop-blur-sm flex items-center justify-between px-8 hidden md:flex">
+            <h2 id="page-title" class="font-display text-lg font-bold text-white">Dashboard Overview</h2>
+            <div class="flex items-center gap-4">
+                <button
+                    class="w-10 h-10 rounded-full border border-glassBorder bg-white/5 flex items-center justify-center hover:bg-white/10 hover:border-taurusGold/30 transition-all relative">
+                    <i data-lucide="bell" class="w-4 h-4 text-gray-400"></i>
+                    <span class="absolute top-2 right-2 w-1.5 h-1.5 bg-red-500 rounded-full"></span>
+                </button>
+                <div
+                    class="w-10 h-10 rounded-full bg-gradient-to-br from-taurusGold to-amber-700 flex items-center justify-center text-black font-bold">
+                    ÖY
                 </div>
-                <h3 class="text-gray-500 text-xs font-bold uppercase tracking-widest mb-2">Total Visits</h3>
-                <p class="text-3xl font-display font-bold text-white">12,405</p>
-                <div class="mt-4 text-green-400 text-xs flex items-center gap-1">
-                    <i data-lucide="trending-up" class="w-3 h-3"></i> +12% this week
+            </div>
+        </header>
+
+        <!-- Content Area -->
+        <div class="flex-1 overflow-y-auto p-6 md:p-10 scroll-smooth">
+
+            <!-- DASHBOARD VIEW -->
+            <div id="view-dashboard" class="space-y-8 fade-in">
+                <!-- Stats Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                    <!-- Stat Card -->
+                    <div
+                        class="p-6 rounded-2xl bg-white/5 border border-glassBorder hover:border-taurusGold/30 transition-all group">
+                        <div class="flex justify-between items-start mb-4">
+                            <div
+                                class="p-2 bg-taurusGold/10 rounded-lg text-taurusGold group-hover:bg-taurusGold group-hover:text-black transition-colors">
+                                <i data-lucide="eye" class="w-5 h-5"></i>
+                            </div>
+                            <span class="text-green-400 text-xs font-bold flex items-center gap-1">+24% <i
+                                    data-lucide="arrow-up" class="w-3 h-3"></i></span>
+                        </div>
+                        <h3 class="text-2xl font-display font-bold text-white">12.4k</h3>
+                        <p class="text-gray-500 text-xs uppercase tracking-wider mt-1">Total Impressions</p>
+                    </div>
+
+                    <div
+                        class="p-6 rounded-2xl bg-white/5 border border-glassBorder hover:border-taurusGold/30 transition-all group">
+                        <div class="flex justify-between items-start mb-4">
+                            <div
+                                class="p-2 bg-blue-500/10 rounded-lg text-blue-400 group-hover:bg-blue-500 group-hover:text-white transition-colors">
+                                <i data-lucide="message-square" class="w-5 h-5"></i>
+                            </div>
+                            <span class="text-green-400 text-xs font-bold flex items-center gap-1">+8 <i
+                                    data-lucide="arrow-up" class="w-3 h-3"></i></span>
+                        </div>
+                        <h3 class="text-2xl font-display font-bold text-white">142</h3>
+                        <p class="text-gray-500 text-xs uppercase tracking-wider mt-1">Total Messages</p>
+                    </div>
+
+                    <div
+                        class="p-6 rounded-2xl bg-white/5 border border-glassBorder hover:border-taurusGold/30 transition-all group">
+                        <div class="flex justify-between items-start mb-4">
+                            <div
+                                class="p-2 bg-purple-500/10 rounded-lg text-purple-400 group-hover:bg-purple-500 group-hover:text-white transition-colors">
+                                <i data-lucide="briefcase" class="w-5 h-5"></i>
+                            </div>
+                        </div>
+                        <h3 class="text-2xl font-display font-bold text-white">8</h3>
+                        <p class="text-gray-500 text-xs uppercase tracking-wider mt-1">Active Projects</p>
+                    </div>
+
+                    <div
+                        class="p-6 rounded-2xl bg-white/5 border border-glassBorder hover:border-taurusGold/30 transition-all group">
+                        <div class="flex justify-between items-start mb-4">
+                            <div
+                                class="p-2 bg-green-500/10 rounded-lg text-green-400 group-hover:bg-green-500 group-hover:text-white transition-colors">
+                                <i data-lucide="activity" class="w-5 h-5"></i>
+                            </div>
+                            <span class="text-xs font-bold text-green-500">99.9%</span>
+                        </div>
+                        <h3 class="text-2xl font-display font-bold text-white">Stable</h3>
+                        <p class="text-gray-500 text-xs uppercase tracking-wider mt-1">System Health</p>
+                    </div>
+                </div>
+
+                <!-- Recent Activity & Chart Placeholder -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div
+                        class="lg:col-span-2 p-8 rounded-2xl bg-white/5 border border-glassBorder relative overflow-hidden">
+                        <h3 class="font-display text-white mb-6">Traffic Analysis</h3>
+                        <!-- Fake Chart Bars -->
+                        <div class="flex items-end justify-between h-48 gap-2 opacity-80">
+                            <div class="w-full bg-white/5 rounded-t hover:bg-taurusGold transition-colors h-[40%]">
+                            </div>
+                            <div class="w-full bg-white/5 rounded-t hover:bg-taurusGold transition-colors h-[60%]">
+                            </div>
+                            <div class="w-full bg-white/5 rounded-t hover:bg-taurusGold transition-colors h-[30%]">
+                            </div>
+                            <div class="w-full bg-white/5 rounded-t hover:bg-taurusGold transition-colors h-[80%]">
+                            </div>
+                            <div
+                                class="w-full bg-taurusGold/20 rounded-t hover:bg-taurusGold transition-colors h-[50%]">
+                            </div>
+                            <div class="w-full bg-white/5 rounded-t hover:bg-taurusGold transition-colors h-[75%]">
+                            </div>
+                            <div class="w-full bg-white/5 rounded-t hover:bg-taurusGold transition-colors h-[90%]">
+                            </div>
+                        </div>
+                        <div class="flex justify-between text-[10px] text-gray-500 mt-2 uppercase tracking-wider">
+                            <span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span>
+                        </div>
+                    </div>
+
+                    <div class="p-8 rounded-2xl bg-white/5 border border-glassBorder">
+                        <h3 class="font-display text-white mb-6">Recent Leads</h3>
+                        <div class="space-y-4">
+                            <!-- Item -->
+                            <div
+                                class="flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 transition-colors cursor-pointer group">
+                                <div
+                                    class="w-10 h-10 rounded-full bg-gradient-to-br from-gray-700 to-black flex items-center justify-center text-xs font-bold">
+                                    JD</div>
+                                <div>
+                                    <h4
+                                        class="text-sm font-bold text-white group-hover:text-taurusGold transition-colors">
+                                        John Doe</h4>
+                                    <p class="text-xs text-gray-500">Project Inquiry - E-comm...</p>
+                                </div>
+                                <span class="ml-auto text-[10px] text-gray-600">2m</span>
+                            </div>
+                            <!-- Item -->
+                            <div
+                                class="flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 transition-colors cursor-pointer group">
+                                <div
+                                    class="w-10 h-10 rounded-full bg-gradient-to-br from-gray-700 to-black flex items-center justify-center text-xs font-bold">
+                                    AS</div>
+                                <div>
+                                    <h4
+                                        class="text-sm font-bold text-white group-hover:text-taurusGold transition-colors">
+                                        Alice Smith</h4>
+                                    <p class="text-xs text-gray-500">Design System Help...</p>
+                                </div>
+                                <span class="ml-auto text-[10px] text-gray-600">1h</span>
+                            </div>
+                            <!-- Item -->
+                            <div
+                                class="flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 transition-colors cursor-pointer group">
+                                <div
+                                    class="w-10 h-10 rounded-full bg-gradient-to-br from-gray-700 to-black flex items-center justify-center text-xs font-bold">
+                                    MK</div>
+                                <div>
+                                    <h4
+                                        class="text-sm font-bold text-white group-hover:text-taurusGold transition-colors">
+                                        Mehmet Kaya</h4>
+                                    <p class="text-xs text-gray-500">Teklif İsteği...</p>
+                                </div>
+                                <span class="ml-auto text-[10px] text-gray-600">4h</span>
+                            </div>
+                        </div>
+                        <button onclick="switchTab('messages')"
+                            class="w-full mt-6 py-3 rounded-xl border border-white/10 text-xs font-bold uppercase tracking-widest hover:bg-taurusGold hover:text-black transition-colors">View
+                            All</button>
+                    </div>
                 </div>
             </div>
 
-            <!-- Stat 2 -->
-            <div class="glass-card p-6 rounded-2xl relative overflow-hidden group">
-                <div class="absolute right-0 top-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-                    <i data-lucide="mail" class="w-16 h-16 text-blue-400"></i>
-                </div>
-                <h3 class="text-gray-500 text-xs font-bold uppercase tracking-widest mb-2">New Messages</h3>
-                <p class="text-3xl font-display font-bold text-white">8</p>
-                <div class="mt-4 text-gray-400 text-xs">
-                    Pending review
+            <!-- MESSAGES VIEW -->
+            <div id="view-messages" class="hidden space-y-6 fade-in">
+                <div class="w-full bg-white/5 border border-glassBorder rounded-2xl overflow-hidden">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr
+                                class="bg-white/5 border-b border-white/5 text-[10px] font-bold uppercase tracking-widest text-gray-400">
+                                <th class="p-6">Status</th>
+                                <th class="p-6">Sender</th>
+                                <th class="p-6">Subject</th>
+                                <th class="p-6">Date</th>
+                                <th class="p-6 text-right">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody class="text-sm text-gray-300">
+                            <!-- Row 1 -->
+                            <tr class="border-b border-white/5 hover:bg-white/5 transition-colors group">
+                                <td class="p-6"><span
+                                        class="px-2 py-1 rounded bg-blue-500/20 text-blue-400 text-[10px] font-bold uppercase">New</span>
+                                </td>
+                                <td class="p-6 font-bold text-white">John Doe <span
+                                        class="block text-xs text-gray-600 font-normal">john@example.com</span></td>
+                                <td class="p-6">Looking for a comprehensive E-commerce redesign for my...</td>
+                                <td class="p-6 text-gray-500">Oct 24, 2024</td>
+                                <td class="p-6 text-right">
+                                    <button
+                                        class="p-2 rounded hover:bg-white/10 hover:text-taurusGold transition-colors"><i
+                                            data-lucide="eye" class="w-4 h-4"></i></button>
+                                </td>
+                            </tr>
+                            <!-- Row 2 -->
+                            <tr class="border-b border-white/5 hover:bg-white/5 transition-colors group">
+                                <td class="p-6"><span
+                                        class="px-2 py-1 rounded bg-green-500/20 text-green-400 text-[10px] font-bold uppercase">Replied</span>
+                                </td>
+                                <td class="p-6 font-bold text-white">Alice Smith <span
+                                        class="block text-xs text-gray-600 font-normal">alice@studio.io</span></td>
+                                <td class="p-6">Collaboration on a new fintech project...</td>
+                                <td class="p-6 text-gray-500">Oct 22, 2024</td>
+                                <td class="p-6 text-right">
+                                    <button
+                                        class="p-2 rounded hover:bg-white/10 hover:text-taurusGold transition-colors"><i
+                                            data-lucide="eye" class="w-4 h-4"></i></button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
 
-            <!-- Stat 3 (Maintenance) -->
-            <div class="glass-card p-6 rounded-2xl relative overflow-hidden group">
-                <div class="absolute right-0 top-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-                    <i data-lucide="server" class="w-16 h-16 text-purple-400"></i>
+            <!-- PROJECTS VIEW -->
+            <div id="view-projects" class="hidden text-center py-20 fade-in">
+                <div class="w-20 h-20 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <i data-lucide="folder-kanban" class="w-10 h-10 text-gray-600"></i>
                 </div>
-                <h3 class="text-gray-500 text-xs font-bold uppercase tracking-widest mb-2">Server Status</h3>
-                <p class="text-3xl font-display font-bold text-white">Online</p>
-                <div class="mt-4 text-green-400 text-xs flex items-center gap-1">
-                    <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span> Stable
+                <h3 class="text-xl font-bold text-white">Project Manager</h3>
+                <p class="text-gray-500 mt-2 text-sm">Connect a Database to manage dynamic projects.</p>
+                <button
+                    class="mt-8 px-8 py-3 bg-taurusGold text-black font-bold uppercase tracking-widest text-xs rounded-full hover:bg-white transition-colors">
+                    Integrate CMS
+                </button>
+            </div>
+
+            <!-- SETTINGS VIEW -->
+            <div id="view-settings" class="hidden max-w-2xl fade-in">
+                <div class="bg-white/5 border border-glassBorder rounded-2xl p-8 mb-6">
+                    <h3 class="text-white font-bold mb-6 flex items-center gap-2">
+                        <i data-lucide="shield" class="w-5 h-5 text-taurusGold"></i> Security
+                    </h3>
+
+                    <div class="flex items-center justify-between py-6 border-b border-white/5">
+                        <div>
+                            <h4 class="text-sm font-bold text-white">Pattern Lock</h4>
+                            <p class="text-xs text-gray-500">Current pattern: "L" shape</p>
+                        </div>
+                        <button
+                            class="px-4 py-2 rounded bg-white/5 border border-white/10 text-xs font-bold hover:bg-white/10 hover:text-taurusGold transition-colors">
+                            Change Pattern
+                        </button>
+                    </div>
+
+                    <div class="flex items-center justify-between py-6">
+                        <div>
+                            <h4 class="text-sm font-bold text-white">Emergency Lockdown</h4>
+                            <p class="text-xs text-gray-500">Disable all admin access points</p>
+                        </div>
+                        <button
+                            class="px-4 py-2 rounded bg-red-500/10 border border-red-500/20 text-red-500 text-xs font-bold hover:bg-red-500 hover:text-white transition-colors">
+                            Lockdown
+                        </button>
+                    </div>
                 </div>
             </div>
+
         </div>
-
-        <div class="mt-10 p-12 glass-card rounded-3xl text-center border-dashed border-2 border-white/5">
-            <div class="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-4">
-                <i data-lucide="construction" class="w-8 h-8 text-gray-500"></i>
-            </div>
-            <h2 class="text-xl font-bold text-white mb-2">Module Under Construction</h2>
-            <p class="text-gray-400 text-sm max-w-md mx-auto">
-                The full admin capabilities are currently being deployed. Check back later for complete database access.
-            </p>
-        </div>
-
     </main>
 
     <script>
         lucide.createIcons();
+
+        function switchTab(tabId) {
+            // Update Nav
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active', 'text-white'));
+            const activeNav = document.getElementById('nav-' + tabId);
+            if (activeNav) {
+                activeNav.classList.add('active', 'text-white');
+            }
+
+            // Update View
+            const views = ['dashboard', 'messages', 'projects', 'settings'];
+            views.forEach(v => {
+                document.getElementById('view-' + v).classList.add('hidden');
+            });
+
+            const activeView = document.getElementById('view-' + tabId);
+            if (activeView) {
+                activeView.classList.remove('hidden');
+            }
+
+            // Update Title
+            const titles = {
+                'dashboard': 'Dashboard Overview',
+                'messages': 'Inbox & Communications',
+                'projects': 'Project Management',
+                'settings': 'System Configuration'
+            };
+            document.getElementById('page-title').innerText = titles[tabId];
+        }
     </script>
 </body>
 
