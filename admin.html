@@ -238,23 +238,9 @@
                     <div
                         class="lg:col-span-2 p-8 rounded-2xl bg-white/5 border border-glassBorder relative overflow-hidden">
                         <h3 class="font-display text-white mb-6">Traffic Analysis</h3>
-                        <!-- Fake Chart Bars -->
-                        <div class="flex items-end justify-between h-48 gap-2 opacity-80">
-                            <div class="w-full bg-white/5 rounded-t hover:bg-taurusGold transition-colors h-[40%]">
-                            </div>
-                            <div class="w-full bg-white/5 rounded-t hover:bg-taurusGold transition-colors h-[60%]">
-                            </div>
-                            <div class="w-full bg-white/5 rounded-t hover:bg-taurusGold transition-colors h-[30%]">
-                            </div>
-                            <div class="w-full bg-white/5 rounded-t hover:bg-taurusGold transition-colors h-[80%]">
-                            </div>
-                            <div
-                                class="w-full bg-taurusGold/20 rounded-t hover:bg-taurusGold transition-colors h-[50%]">
-                            </div>
-                            <div class="w-full bg-white/5 rounded-t hover:bg-taurusGold transition-colors h-[75%]">
-                            </div>
-                            <div class="w-full bg-white/5 rounded-t hover:bg-taurusGold transition-colors h-[90%]">
-                            </div>
+                        <div class="flex items-end justify-between gap-2 h-48 mt-4" id="traffic-chart-bars">
+                            <!-- Dynamic Bars Loaded Here -->
+                            <p class="text-xs text-gray-500 w-full text-center self-center">Loading traffic data...</p>
                         </div>
                         <div class="flex justify-between text-[10px] text-gray-500 mt-2 uppercase tracking-wider">
                             <span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span>
@@ -387,12 +373,74 @@
                 firebase.initializeApp(window.firebaseConfig);
                 db = firebase.firestore();
                 console.log("Firebase initialized");
-                loadMessages(); // Load table
                 setupRealtimeListeners(); // Live counters
+                loadTrafficChart(); // Chart
             } else {
                 console.warn("Please update firebase-config.js with your keys.");
             }
         });
+
+        // --- CHART LOGIC ---
+        async function loadTrafficChart() {
+            if (!db) return;
+            const container = document.getElementById('traffic-chart-bars');
+            if (!container) return;
+
+            try {
+                // 1. Get Daily Stats
+                const doc = await db.collection('stats').doc('daily').get();
+                const data = doc.exists ? doc.data() : {};
+
+                // 2. Prepare Last 7 Days
+                const days = [];
+                const counts = [];
+                const labels = [];
+                const dayNames = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
+
+                for (let i = 6; i >= 0; i--) {
+                    const d = new Date();
+                    d.setDate(d.getDate() - i);
+                    const key = d.toISOString().split('T')[0];
+                    const count = data[key] || 0;
+
+                    days.push(key);
+                    counts.push(count);
+                    labels.push(dayNames[d.getDay()]);
+                }
+
+                // 3. Render Bars
+                const max = Math.max(...counts, 10); // Minimum scale of 10 to prevent 1 visit looking huge
+
+                let html = '';
+                counts.forEach((count, i) => {
+                    const heightPct = (count / max) * 100;
+                    const isToday = i === 6; // Last one is today
+
+                    html += `
+                        <div class="flex flex-col items-center gap-2 flex-1 group relative">
+                            <!-- Tooltip -->
+                            <div class="absolute -top-8 bg-white text-black text-[10px] font-bold px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-20 pointer-events-none">
+                                ${count} Visits
+                            </div>
+                            
+                            <!-- Bar Container -->
+                            <div class="w-full h-32 flex items-end rounded-lg overflow-hidden bg-white/5 relative">
+                                <!-- Bar -->
+                                <div style="height: ${heightPct}%;" 
+                                     class="w-full ${isToday ? 'bg-taurusGold shadow-[0_0_15px_rgba(255,215,0,0.3)]' : 'bg-white/20 group-hover:bg-white/40'} transition-all duration-500 rounded-t-sm relative">
+                                </div>
+                            </div>
+                            
+                            <!-- Label -->
+                            <span class="text-[10px] ${isToday ? 'text-taurusGold font-bold' : 'text-gray-600'} uppercase tracking-wider">${labels[i]}</span>
+                        </div>
+                    `;
+                });
+
+                container.innerHTML = html;
+
+            } catch (e) { console.error("Chart Error:", e); }
+        }
 
         // Use Realtime Listener for Stats to make it instant across tabs/devices
         function setupRealtimeListeners() {

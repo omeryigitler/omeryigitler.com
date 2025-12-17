@@ -661,9 +661,15 @@
 
                             // Track Page View (Real Impressions)
                             const increment = firebase.firestore.FieldValue.increment(1);
-                            // Use set with merge to create document if it doesn't exist
+
+                            // 1. Global Counter
                             db.collection('stats').doc('global').set({ views: increment }, { merge: true })
                                 .catch(err => console.log("Tracking error:", err));
+
+                            // 2. Daily Counter (For Traffic Chart)
+                            const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+                            db.collection('stats').doc('daily').set({ [today]: increment }, { merge: true })
+                                .catch(err => console.log("Daily tracking error:", err));
 
                             const contactForm = document.getElementById('contact-form');
                             if (contactForm) {
