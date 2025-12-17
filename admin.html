@@ -85,19 +85,18 @@
     <div class="fixed inset-0 w-full h-full grid-bg bg-symmetry-grid -z-10 opacity-30"></div>
 
     <!-- SIDEBAR -->
-    <aside
-        class="w-72 bg-deepSpace/50 backdrop-blur-xl border-r border-glassBorder flex flex-col hidden md:flex relative z-10 transition-all">
+    <aside class="w-72 bg-deepSpace/50 backdrop-blur-xl border-r border-glassBorder flex flex-col hidden md:flex z-50">
         <!-- Brand -->
         <div class="h-20 flex items-center justify-center px-6 border-b border-glassBorder">
             <span
-                class="font-display font-bold text-base tracking-widest text-taurusGold lowercase drop-shadow-[0_10px_20px_rgba(0,0,0,1)]">omeryigitler.com</span>
+                class="font-display font-bold text-3xl tracking-[0.2em] text-white drop-shadow-[0_0_15px_rgba(255,255,255,0.5)]">XENUS</span>
         </div>
 
         <!-- Navigation -->
         <nav class="flex-1 py-8 space-y-2">
             <button onclick="switchTab('dashboard')" id="nav-dashboard"
-                class="nav-item w-full flex items-center px-8 py-4 text-gray-400 hover:text-white hover:bg-white/5 transition-all text-xs font-bold uppercase tracking-widest active">
-                <i data-lucide="layout-dashboard" class="w-4 h-4 mr-3"></i> Dashboard
+                class="nav-item active w-full flex items-center px-8 py-4 text-gray-400 hover:text-white hover:bg-white/5 transition-all text-xs font-bold uppercase tracking-widest border-l-2 border-transparent hover:border-taurusGold">
+                <i data-lucide="layout-grid" class="w-4 h-4 mr-3"></i> Dashboard
             </button>
             <button onclick="switchTab('messages')" id="nav-messages"
                 class="nav-item w-full flex items-center px-8 py-4 text-gray-400 hover:text-white hover:bg-white/5 transition-all text-xs font-bold uppercase tracking-widest">
