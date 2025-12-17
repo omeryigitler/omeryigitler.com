@@ -818,6 +818,9 @@
             const data = messagesMap[id];
             if (!data) return;
 
+            // Mark as READ automatically
+            db.collection('messages').doc(id).update({ status: 'read' }).catch(err => console.error("Auto-read error:", err));
+
             // Switch to Projects Tab
             switchTab('projects');
 
