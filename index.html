@@ -680,24 +680,13 @@
                                         // Save to Firestore
                                         await db.collection('messages').add(data);
 
-                                        // Then submit to FormSubmit (Optional: remove this if you only want Firebase)
-                                        // For now, let's just show success to avoid redirect
-                                        // contactForm.submit(); // If you want email too, uncomment this.
-
-                                        // Success State
-                                        btn.innerText = 'MESSAGE SENT';
-                                        btn.classList.add('bg-green-500', 'text-white');
-                                        contactForm.reset();
-
-                                        setTimeout(() => {
-                                            btn.innerText = originalText;
-                                            btn.classList.remove('bg-green-500', 'text-white');
-                                        }, 3000);
+                                        // Then submit to FormSubmit to handle email & redirect to success page
+                                        contactForm.submit();
 
                                     } catch (error) {
                                         console.error("Error adding document: ", error);
-                                        btn.innerText = 'ERROR';
-                                        btn.classList.add('bg-red-500');
+                                        // Still try to submit form even if DB fails, so user doesn't get stuck
+                                        contactForm.submit();
                                     }
                                 });
                             }
