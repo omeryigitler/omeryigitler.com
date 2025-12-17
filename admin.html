@@ -784,10 +784,14 @@
             } catch (e) { console.error("Save Error", e); }
         }
 
-        // --- EXISTING MODAL LOGIC (Kept as is) ---
+        // --- MODAL LOGIC ---
+        let currentOpenedMessageId = null;
+
         function openMessageModal(id) {
             const data = messagesMap[id];
             if (!data) return;
+
+            currentOpenedMessageId = id; // Store ID for conversion
 
             // Populate Modal
             document.getElementById('modal-name').innerText = data.name || 'Anonymous';
@@ -799,8 +803,28 @@
             document.getElementById('message-modal').classList.remove('hidden');
         }
 
+        function convertMessageToProject(id) {
+            // Close message modal if open
+            closeMessageModal();
+            const data = messagesMap[id];
+            if (!data) return;
+
+            // Switch to Projects Tab
+            switchTab('projects');
+
+            // Open Project Modal (New Mode)
+            openProjectModal();
+
+            // Pre-fill Data
+            document.getElementById('p-client').value = data.name || '';
+            document.getElementById('p-email').value = data.email || '';
+            document.getElementById('p-requests').value = data.message || ''; // Map message body to requests
+            // Default active is already set by HTML select default
+        }
+
         function closeMessageModal() {
             document.getElementById('message-modal').classList.add('hidden');
+            currentOpenedMessageId = null;
         }
 
         // Close modal on outside click
@@ -846,9 +870,13 @@
             </div>
 
             <!-- Footer -->
-            <div class="p-6 border-t border-white/5 bg-white/5 flex justify-end">
+            <div class="p-6 border-t border-white/5 bg-white/5 flex justify-end gap-4">
+                <button onclick="convertMessageToProject(currentOpenedMessageId)"
+                    class="px-6 py-3 rounded-xl border border-taurusGold/50 text-taurusGold font-bold text-xs uppercase tracking-widest hover:bg-taurusGold hover:text-black transition-all flex items-center gap-2">
+                    <i data-lucide="briefcase" class="w-4 h-4"></i> Convert to Project
+                </button>
                 <button onclick="closeMessageModal()"
-                    class="px-6 py-3 rounded-xl bg-taurusGold text-black font-bold text-xs uppercase tracking-widest hover:bg-white hover:scale-105 transition-all">
+                    class="px-6 py-3 rounded-xl bg-white/10 text-white font-bold text-xs uppercase tracking-widest hover:bg-white hover:text-black hover:scale-105 transition-all">
                     Close
                 </button>
             </div>
