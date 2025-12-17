@@ -645,9 +645,67 @@
                             Send Request
                         </button>
                     </form>
-
-
                 </div>
+
+                <!-- Firebase SDKs -->
+                <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+                <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+                <script src="assets/js/firebase-config.js"></script>
+                <script>
+                    document.addEventListener('DOMContentLoaded', () => {
+                        // Initialize Firebase
+                        if (window.firebaseConfig && window.firebaseConfig.apiKey !== "BURAYA_API_KEY_GELECEK") {
+                            firebase.initializeApp(window.firebaseConfig);
+                            const db = firebase.firestore();
+
+                            const contactForm = document.getElementById('contact-form');
+                            if (contactForm) {
+                                contactForm.addEventListener('submit', async (e) => {
+                                    e.preventDefault();
+                                    const btn = document.getElementById('submit-btn');
+                                    const originalText = btn.innerText;
+                                    btn.innerText = 'SENDING...';
+
+                                    // Get Data
+                                    const formData = new FormData(contactForm);
+                                    const data = {
+                                        name: formData.get('name'),
+                                        email: formData.get('email'),
+                                        message: formData.get('message'),
+                                        timestamp: new Date(),
+                                        status: 'new' // for admin panel
+                                    };
+
+                                    try {
+                                        // Save to Firestore
+                                        await db.collection('messages').add(data);
+
+                                        // Then submit to FormSubmit (Optional: remove this if you only want Firebase)
+                                        // For now, let's just show success to avoid redirect
+                                        // contactForm.submit(); // If you want email too, uncomment this.
+
+                                        // Success State
+                                        btn.innerText = 'MESSAGE SENT';
+                                        btn.classList.add('bg-green-500', 'text-white');
+                                        contactForm.reset();
+
+                                        setTimeout(() => {
+                                            btn.innerText = originalText;
+                                            btn.classList.remove('bg-green-500', 'text-white');
+                                        }, 3000);
+
+                                    } catch (error) {
+                                        console.error("Error adding document: ", error);
+                                        btn.innerText = 'ERROR';
+                                        btn.classList.add('bg-red-500');
+                                    }
+                                });
+                            }
+                        } else {
+                            console.warn("Firebase config not set.");
+                        }
+                    });
+                </script>
 
                 <!-- Tile 2: Visual System Status (Right) -->
                 <div

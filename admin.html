@@ -407,9 +407,92 @@
         </div>
     </main>
 
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="assets/js/firebase-config.js"></script>
+
     <script>
         lucide.createIcons();
 
+        // --- FIREBASE LOGIC ---
+        let db;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            if (window.firebaseConfig && window.firebaseConfig.apiKey !== "BURAYA_API_KEY_GELECEK") {
+                firebase.initializeApp(window.firebaseConfig);
+                db = firebase.firestore();
+                console.log("Firebase initialized");
+                loadMessages();
+                loadStats();
+            } else {
+                console.warn("Please update firebase-config.js with your keys.");
+                // alert("Demo Mode: Please set up Firebase in assets/js/firebase-config.js");
+            }
+        });
+
+        async function loadMessages() {
+            if (!db) return;
+            const tbody = document.querySelector('#view-messages tbody');
+
+            try {
+                // Get messages ordered by date
+                const snapshot = await db.collection('messages').orderBy('timestamp', 'desc').get();
+
+                if (snapshot.empty) {
+                    tbody.innerHTML = '<tr><td colspan="5" class="p-6 text-center text-gray-500">No messages found.</td></tr>';
+                    return;
+                }
+
+                let html = '';
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    const date = data.timestamp ? new Date(data.timestamp.seconds * 1000).toLocaleDateString() : 'N/A';
+
+                    html += `
+                        <tr class="border-b border-white/5 hover:bg-white/5 transition-colors group">
+                            <td class="p-6"><span class="px-2 py-1 rounded ${data.status === 'new' ? 'bg-blue-500/20 text-blue-400' : 'bg-gray-700 text-gray-400'} text-[10px] font-bold uppercase">${data.status}</span></td>
+                            <td class="p-6 font-bold text-white">${data.name || 'Anonymous'} <span class="block text-xs text-gray-600 font-normal">${data.email || ''}</span></td>
+                            <td class="p-6">${(data.message || '').substring(0, 50)}...</td>
+                            <td class="p-6 text-gray-500">${date}</td>
+                            <td class="p-6 text-right">
+                                <button onclick="deleteMessage('${doc.id}')" class="p-2 rounded hover:bg-red-500/20 hover:text-red-500 transition-colors"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                            </td>
+                        </tr>
+                    `;
+                });
+
+                tbody.innerHTML = html;
+                lucide.createIcons(); // Refresh icons for new elements
+
+            } catch (err) {
+                console.error("Error loading messages:", err);
+            }
+        }
+
+        async function deleteMessage(id) {
+            if (!confirm("Delete this message?")) return;
+            try {
+                await db.collection('messages').doc(id).delete();
+                loadMessages(); // Refresh
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        async function loadStats() {
+            if (!db) return;
+            // Simple counter for now
+            const snapshot = await db.collection('messages').get();
+            const count = snapshot.size;
+
+            // Update the "Total Messages" card (assuming it's the 2nd one or by ID, let's just find by text content manually or add IDs later)
+            // For now, let's update the badge in Sidebar
+            const badge = document.querySelector('#nav-messages span');
+            if (badge) badge.innerText = count;
+        }
+
+        // --- UI LOGIC ---
         function switchTab(tabId) {
             // Update Nav
             document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active', 'text-white'));
@@ -437,6 +520,9 @@
                 'settings': 'System Configuration'
             };
             document.getElementById('page-title').innerText = titles[tabId];
+
+            // Reload data if switching to messages
+            if (tabId === 'messages') loadMessages();
         }
 
         function toggleRole() {
