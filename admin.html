@@ -85,23 +85,26 @@
     <div class="fixed inset-0 w-full h-full grid-bg bg-symmetry-grid -z-10 opacity-30"></div>
 
     <!-- SIDEBAR -->
-    <aside class="w-72 bg-deepSpace/50 backdrop-blur-xl border-r border-glassBorder flex flex-col hidden md:flex z-50">
+    <aside
+        class="w-72 bg-deepSpace/50 backdrop-blur-xl border-r border-glassBorder flex flex-col hidden md:flex relative z-10 transition-all">
         <!-- Brand -->
         <div class="h-20 flex items-center justify-center px-6 border-b border-glassBorder">
-            <span
-                class="font-display font-bold text-3xl tracking-[0.2em] text-white drop-shadow-[0_0_15px_rgba(255,255,255,0.5)]">XENUS</span>
+            <div class="px-4 py-2 bg-black/40 border border-glassBorder rounded-lg shadow-lg">
+                <span
+                    class="font-display font-bold text-base tracking-widest text-taurusGold lowercase drop-shadow-[0_0_8px_rgba(255,215,0,0.6)]">omeryigitler.com</span>
+            </div>
         </div>
 
         <!-- Navigation -->
         <nav class="flex-1 py-8 space-y-2">
             <button onclick="switchTab('dashboard')" id="nav-dashboard"
-                class="nav-item active w-full flex items-center px-8 py-4 text-gray-400 hover:text-white hover:bg-white/5 transition-all text-xs font-bold uppercase tracking-widest border-l-2 border-transparent hover:border-taurusGold">
-                <i data-lucide="layout-grid" class="w-4 h-4 mr-3"></i> Dashboard
+                class="nav-item w-full flex items-center px-8 py-4 text-gray-400 hover:text-white hover:bg-white/5 transition-all text-xs font-bold uppercase tracking-widest active">
+                <i data-lucide="layout-dashboard" class="w-4 h-4 mr-3"></i> Dashboard
             </button>
             <button onclick="switchTab('messages')" id="nav-messages"
                 class="nav-item w-full flex items-center px-8 py-4 text-gray-400 hover:text-white hover:bg-white/5 transition-all text-xs font-bold uppercase tracking-widest">
-                <i data-lucide="mail" class="w-4 h-4 mr-3"></i> Inbox <span id="nav-msg-badge"
-                    class="ml-auto bg-taurusGold text-black px-1.5 py-0.5 rounded text-[9px]">0</span>
+                <i data-lucide="mail" class="w-4 h-4 mr-3"></i> Inbox <span
+                    class="ml-auto bg-taurusGold text-black px-1.5 py-0.5 rounded text-[9px]">3</span>
             </button>
             <button onclick="switchTab('projects')" id="nav-projects"
                 class="nav-item w-full flex items-center px-8 py-4 text-gray-400 hover:text-white hover:bg-white/5 transition-all text-xs font-bold uppercase tracking-widest">
@@ -168,53 +171,61 @@
         <div class="flex-1 overflow-y-auto p-6 md:p-10 scroll-smooth">
 
             <!-- DASHBOARD VIEW -->
-            <div id="view-dashboard" class="space-y-10 fade-in">
-
-                <!-- Welcome Section (Restored) -->
-                <div>
-                    <h1 class="text-3xl font-display font-bold text-white mb-2">Welcome Back, Chef.</h1>
-                    <p class="text-gray-400 text-sm">System is nominal. Real-time data feed active.</p>
-                </div>
-
-                <!-- Stats Grid (Original Design) -->
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <!-- Stat 1: Visits -->
+            <div id="view-dashboard" class="space-y-8 fade-in">
+                <!-- Stats Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                    <!-- Stat Card -->
                     <div
-                        class="glass-card p-6 rounded-2xl relative overflow-hidden group border border-glassBorder bg-white/5 hover:border-taurusGold/30 transition-all">
-                        <div class="absolute right-0 top-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-                            <i data-lucide="users" class="w-16 h-16 text-taurusGold"></i>
+                        class="p-6 rounded-2xl bg-white/5 border border-glassBorder hover:border-taurusGold/30 transition-all group">
+                        <div class="flex justify-between items-start mb-4">
+                            <div
+                                class="p-2 bg-taurusGold/10 rounded-lg text-taurusGold group-hover:bg-taurusGold group-hover:text-black transition-colors">
+                                <i data-lucide="eye" class="w-5 h-5"></i>
+                            </div>
+                            <span class="text-green-400 text-xs font-bold flex items-center gap-1">+24% <i
+                                    data-lucide="arrow-up" class="w-3 h-3"></i></span>
                         </div>
-                        <h3 class="text-gray-500 text-xs font-bold uppercase tracking-widest mb-2">Total Visits</h3>
-                        <p id="stat-total-visits" class="text-3xl font-display font-bold text-white">0</p>
-                        <div class="mt-4 text-green-400 text-xs flex items-center gap-1">
-                            <i data-lucide="trending-up" class="w-3 h-3"></i> +Live Tracking
-                        </div>
+                        <h3 class="text-2xl font-display font-bold text-white">12.4k</h3>
+                        <p class="text-gray-500 text-xs uppercase tracking-wider mt-1">Total Impressions</p>
                     </div>
 
-                    <!-- Stat 2: Messages -->
                     <div
-                        class="glass-card p-6 rounded-2xl relative overflow-hidden group border border-glassBorder bg-white/5 hover:border-taurusGold/30 transition-all">
-                        <div class="absolute right-0 top-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-                            <i data-lucide="mail" class="w-16 h-16 text-blue-400"></i>
+                        class="p-6 rounded-2xl bg-white/5 border border-glassBorder hover:border-taurusGold/30 transition-all group">
+                        <div class="flex justify-between items-start mb-4">
+                            <div
+                                class="p-2 bg-blue-500/10 rounded-lg text-blue-400 group-hover:bg-blue-500 group-hover:text-white transition-colors">
+                                <i data-lucide="message-square" class="w-5 h-5"></i>
+                            </div>
+                            <span class="text-green-400 text-xs font-bold flex items-center gap-1">+8 <i
+                                    data-lucide="arrow-up" class="w-3 h-3"></i></span>
                         </div>
-                        <h3 class="text-gray-500 text-xs font-bold uppercase tracking-widest mb-2">New Messages</h3>
-                        <p id="total-messages-count" class="text-3xl font-display font-bold text-white">0</p>
-                        <div class="mt-4 text-gray-400 text-xs">
-                            Pending review from Inbox
-                        </div>
+                        <h3 class="text-2xl font-display font-bold text-white">142</h3>
+                        <p class="text-gray-500 text-xs uppercase tracking-wider mt-1">Total Messages</p>
                     </div>
 
-                    <!-- Stat 3: Server -->
                     <div
-                        class="glass-card p-6 rounded-2xl relative overflow-hidden group border border-glassBorder bg-white/5 hover:border-taurusGold/30 transition-all">
-                        <div class="absolute right-0 top-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-                            <i data-lucide="server" class="w-16 h-16 text-purple-400"></i>
+                        class="p-6 rounded-2xl bg-white/5 border border-glassBorder hover:border-taurusGold/30 transition-all group">
+                        <div class="flex justify-between items-start mb-4">
+                            <div
+                                class="p-2 bg-purple-500/10 rounded-lg text-purple-400 group-hover:bg-purple-500 group-hover:text-white transition-colors">
+                                <i data-lucide="briefcase" class="w-5 h-5"></i>
+                            </div>
                         </div>
-                        <h3 class="text-gray-500 text-xs font-bold uppercase tracking-widest mb-2">Server Status</h3>
-                        <p class="text-3xl font-display font-bold text-white">Online</p>
-                        <div class="mt-4 text-green-400 text-xs flex items-center gap-1">
-                            <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span> Stable Connectivity
+                        <h3 class="text-2xl font-display font-bold text-white">8</h3>
+                        <p class="text-gray-500 text-xs uppercase tracking-wider mt-1">Active Projects</p>
+                    </div>
+
+                    <div
+                        class="p-6 rounded-2xl bg-white/5 border border-glassBorder hover:border-taurusGold/30 transition-all group">
+                        <div class="flex justify-between items-start mb-4">
+                            <div
+                                class="p-2 bg-green-500/10 rounded-lg text-green-400 group-hover:bg-green-500 group-hover:text-white transition-colors">
+                                <i data-lucide="activity" class="w-5 h-5"></i>
+                            </div>
+                            <span class="text-xs font-bold text-green-500">99.9%</span>
                         </div>
+                        <h3 class="text-2xl font-display font-bold text-white">Stable</h3>
+                        <p class="text-gray-500 text-xs uppercase tracking-wider mt-1">System Health</p>
                     </div>
                 </div>
 
@@ -313,8 +324,37 @@
                                 <th class="p-6 text-right">Action</th>
                             </tr>
                         </thead>
-                        <tbody id="messages-table-body" class="text-sm text-gray-300">
-                            <!-- Data will be loaded via JS -->
+                        <tbody class="text-sm text-gray-300">
+                            <!-- Row 1 -->
+                            <tr class="border-b border-white/5 hover:bg-white/5 transition-colors group">
+                                <td class="p-6"><span
+                                        class="px-2 py-1 rounded bg-blue-500/20 text-blue-400 text-[10px] font-bold uppercase">New</span>
+                                </td>
+                                <td class="p-6 font-bold text-white">John Doe <span
+                                        class="block text-xs text-gray-600 font-normal">john@example.com</span></td>
+                                <td class="p-6">Looking for a comprehensive E-commerce redesign for my...</td>
+                                <td class="p-6 text-gray-500">Oct 24, 2024</td>
+                                <td class="p-6 text-right">
+                                    <button
+                                        class="p-2 rounded hover:bg-white/10 hover:text-taurusGold transition-colors"><i
+                                            data-lucide="eye" class="w-4 h-4"></i></button>
+                                </td>
+                            </tr>
+                            <!-- Row 2 -->
+                            <tr class="border-b border-white/5 hover:bg-white/5 transition-colors group">
+                                <td class="p-6"><span
+                                        class="px-2 py-1 rounded bg-green-500/20 text-green-400 text-[10px] font-bold uppercase">Replied</span>
+                                </td>
+                                <td class="p-6 font-bold text-white">Alice Smith <span
+                                        class="block text-xs text-gray-600 font-normal">alice@studio.io</span></td>
+                                <td class="p-6">Collaboration on a new fintech project...</td>
+                                <td class="p-6 text-gray-500">Oct 22, 2024</td>
+                                <td class="p-6 text-right">
+                                    <button
+                                        class="p-2 rounded hover:bg-white/10 hover:text-taurusGold transition-colors"><i
+                                            data-lucide="eye" class="w-4 h-4"></i></button>
+                                </td>
+                            </tr>
                         </tbody>
                     </table>
                 </div>
@@ -407,74 +447,6 @@
                 roleText.innerText = 'Supervisor';
             }
         }
-    </script>
-
-    <!-- FIREBASE DATA FETCHING -->
-    <script type="module">
-        import { getMessages, getVisitCount } from './assets/js/firebase-config.js';
-
-        // 1. SECURITY CHECK (Simple Client-Side Guard)
-        if (!sessionStorage.getItem('admin_session')) {
-            window.location.href = 'gateway.html';
-        }
-
-        async function loadDashboardData() {
-            console.log("Loading dashboard data...");
-            try {
-                // Fetch Data in Parallel
-                const [messages, visits] = await Promise.all([
-                    getMessages(),
-                    getVisitCount()
-                ]);
-
-                // 1. Update Message Stats
-                document.getElementById('total-messages-count').innerText = messages.length;
-                document.getElementById('nav-msg-badge').innerText = messages.length;
-
-                // 2. Update Visit Stats
-                // Update element with id="stat-visits" (Need to add ID to HTML first, but JS runs after DOM)
-                // Let's target by finding the h3 directly or add ID in a separate clean step. 
-                // For now, let's assume I add ID to the visit h3.
-                const visitEl = document.getElementById('stat-total-visits');
-                if (visitEl) visitEl.innerText = visits;
-
-                // 3. Populate Table
-                const tbody = document.getElementById('messages-table-body');
-                tbody.innerHTML = ''; // Clear fake data
-
-                if (messages.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="5" class="p-6 text-center text-gray-500">No messages found.</td></tr>';
-                    return;
-                }
-
-                messages.forEach(msg => {
-                    const date = msg.timestamp ? new Date(msg.timestamp.seconds * 1000).toLocaleDateString() : 'Just now';
-                    const row = `
-                        <tr class="border-b border-white/5 hover:bg-white/5 transition-colors group">
-                            <td class="p-6"><span class="px-2 py-1 rounded bg-blue-500/20 text-blue-400 text-[10px] font-bold uppercase">${msg.status || 'New'}</span></td>
-                            <td class="p-6 font-bold text-white">${msg.name} <span class="block text-xs text-gray-600 font-normal">${msg.email}</span></td>
-                            <td class="p-6 text-gray-300 line-clamp-1">${msg.message.substring(0, 50)}...</td>
-                            <td class="p-6 text-gray-500">${date}</td>
-                            <td class="p-6 text-right">
-                                <button onclick="alert('${msg.message}')" class="p-2 rounded hover:bg-white/10 hover:text-taurusGold transition-colors"><i data-lucide="eye" class="w-4 h-4"></i></button>
-                            </td>
-                        </tr>
-                    `;
-                    tbody.innerHTML += row;
-                });
-
-                // Re-init icons for new elements
-                lucide.createIcons();
-
-            } catch (error) {
-                console.error("Error loading data:", error);
-
-                // Allow access even if data fails, or handle graceful degradation
-            }
-        }
-
-        // Load on start
-        loadDashboardData();
     </script>
 </body>
 
