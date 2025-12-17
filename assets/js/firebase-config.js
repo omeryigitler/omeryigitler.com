@@ -1,16 +1,16 @@
 // Firebase Configuration
-// Lütfen kendi Firebase Proje ayarlarınızla bu kısmı doldurun.
-// Firebase Console -> Project Settings -> General -> Your Apps -> Config
+// Ömer Yiğitler - Web App
+// Bu dosya global 'firebaseConfig' değişkenini tanımlar.
 
 const firebaseConfig = {
-    apiKey: "BURAYA_API_KEY_GELECEK",
-    authDomain: "BURAYA_AUTH_DOMAIN_GELECEK",
-    projectId: "BURAYA_PROJECT_ID_GELECEK",
-    storageBucket: "BURAYA_STORAGE_BUCKET_GELECEK",
-    messagingSenderId: "BURAYA_MESSAGING_SENDER_ID",
-    appId: "BURAYA_APP_ID"
+    apiKey: "AIzaSyC0DAIT0cVPD4WFpfgqrn0lfb-kyFRsnWM",
+    authDomain: "omeryigitler-5abfb.firebaseapp.com",
+    projectId: "omeryigitler-5abfb",
+    storageBucket: "omeryigitler-5abfb.firebasestorage.app",
+    messagingSenderId: "1082547983896",
+    appId: "1:1082547983896:web:ac493bc4092f6cdae7156d",
+    measurementId: "G-FX3R67T7S7"
 };
 
-// Bu dosya HTML sayfalarında script olarak yüklenecek
-// ve 'firebaseConfig' değişkenini erişilebilir kılacak.
+// Global erişim için window nesnesine ata
 window.firebaseConfig = firebaseConfig;
