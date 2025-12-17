@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard | Ömer YİĞİTLER</title>
+    <link rel="icon" href="assets/favicon1.svg" type="image/svg+xml">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Syncopate:wght@400;700&family=Manrope:wght@300;400;600;800&display=swap"
+        rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        display: ['"Syncopate"', 'sans-serif'],
+                        body: ['"Manrope"', 'sans-serif'],
+                    },
+                    colors: {
+                        obsidian: '#050505',
+                        taurusGold: '#FFD700',
+                        deepSpace: '#0B1120',
+                    },
+                    backgroundImage: {
+                        'symmetry-grid': "radial-gradient(circle at center, transparent 0%, #050505 100%), linear-gradient(rgba(255, 215, 0, 0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 215, 0, 0.03) 1px, transparent 1px)",
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .grid-bg {
+            background-size: 100% 100%, 40px 40px, 40px 40px;
+        }
+
+        .glass-card {
+            background: rgba(11, 17, 32, 0.6);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+    </style>
+</head>
+
+<body class="bg-obsidian text-white font-body min-h-screen flex flex-col">
+
+    <div class="fixed inset-0 w-full h-full grid-bg bg-symmetry-grid -z-10 opacity-40"></div>
+
+    <!-- Header -->
+    <header class="border-b border-white/10 bg-black/50 backdrop-blur-md sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div
+                    class="w-8 h-8 rounded-full bg-taurusGold flex items-center justify-center text-black font-bold text-xs">
+                    ÖY</div>
+                <span class="font-display font-bold text-sm tracking-wider">Admin Panel</span>
+            </div>
+            <button onclick="window.location.href='index.html'"
+                class="text-xs text-gray-400 hover:text-white transition-colors uppercase tracking-widest">Logout</button>
+        </div>
+    </header>
+
+    <main class="flex-grow p-6 md:p-10 max-w-7xl mx-auto w-full">
+
+        <div class="mb-10">
+            <h1 class="text-3xl font-display font-bold text-white mb-2">Welcome Back, Chef.</h1>
+            <p class="text-gray-400 text-sm">System is nominal. Updates pending.</p>
+        </div>
+
+        <!-- Placeholder Content -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <!-- Stat 1 -->
+            <div class="glass-card p-6 rounded-2xl relative overflow-hidden group">
+                <div class="absolute right-0 top-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                    <i data-lucide="users" class="w-16 h-16 text-taurusGold"></i>
+                </div>
+                <h3 class="text-gray-500 text-xs font-bold uppercase tracking-widest mb-2">Total Visits</h3>
+                <p class="text-3xl font-display font-bold text-white">12,405</p>
+                <div class="mt-4 text-green-400 text-xs flex items-center gap-1">
+                    <i data-lucide="trending-up" class="w-3 h-3"></i> +12% this week
+                </div>
+            </div>
+
+            <!-- Stat 2 -->
+            <div class="glass-card p-6 rounded-2xl relative overflow-hidden group">
+                <div class="absolute right-0 top-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                    <i data-lucide="mail" class="w-16 h-16 text-blue-400"></i>
+                </div>
+                <h3 class="text-gray-500 text-xs font-bold uppercase tracking-widest mb-2">New Messages</h3>
+                <p class="text-3xl font-display font-bold text-white">8</p>
+                <div class="mt-4 text-gray-400 text-xs">
+                    Pending review
+                </div>
+            </div>
+
+            <!-- Stat 3 (Maintenance) -->
+            <div class="glass-card p-6 rounded-2xl relative overflow-hidden group">
+                <div class="absolute right-0 top-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                    <i data-lucide="server" class="w-16 h-16 text-purple-400"></i>
+                </div>
+                <h3 class="text-gray-500 text-xs font-bold uppercase tracking-widest mb-2">Server Status</h3>
+                <p class="text-3xl font-display font-bold text-white">Online</p>
+                <div class="mt-4 text-green-400 text-xs flex items-center gap-1">
+                    <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span> Stable
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-10 p-12 glass-card rounded-3xl text-center border-dashed border-2 border-white/5">
+            <div class="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i data-lucide="construction" class="w-8 h-8 text-gray-500"></i>
+            </div>
+            <h2 class="text-xl font-bold text-white mb-2">Module Under Construction</h2>
+            <p class="text-gray-400 text-sm max-w-md mx-auto">
+                The full admin capabilities are currently being deployed. Check back later for complete database access.
+            </p>
+        </div>
+
+    </main>
+
+    <script>
+        lucide.createIcons();
+    </script>
+</body>
+
+</html>
