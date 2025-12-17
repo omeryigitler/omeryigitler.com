@@ -3,15 +3,16 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebas
 import { getFirestore, collection, addDoc, getDocs, orderBy, query, limit } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 // -------------------------------------------------------------
-// DİKKAT: AŞAĞIDAKİ BİLGİLERİ KENDİ FIREBASE PROJENLE DEĞİŞTİR
+// FIREBASE CONFIGURATION
 // -------------------------------------------------------------
 const firebaseConfig = {
-    apiKey: "BURAYA_FIREBASE_API_KEY_GELECEK",
-    authDomain: "BURAYA_PROJECT_ID.firebaseapp.com",
-    projectId: "BURAYA_PROJECT_ID",
-    storageBucket: "BURAYA_PROJECT_ID.appspot.com",
-    messagingSenderId: "BURAYA_SENDER_ID",
-    appId: "BURAYA_APP_ID"
+    apiKey: "AIzaSyC0DAIT0cVPD4WFpfgqrn0lfb-kyFRsnWM",
+    authDomain: "omeryigitler-5abfb.firebaseapp.com",
+    projectId: "omeryigitler-5abfb",
+    storageBucket: "omeryigitler-5abfb.firebasestorage.app",
+    messagingSenderId: "1082547983896",
+    appId: "1:1082547983896:web:ac493bc4092f6cdae7156d",
+    measurementId: "G-FX3R67T7S7"
 };
 
 // Initialize Firebase
@@ -38,13 +39,18 @@ async function saveMessage(name, email, message) {
 
 // Helper function to get messages
 async function getMessages() {
-    const q = query(collection(db, "messages"), orderBy("timestamp", "desc"));
-    const querySnapshot = await getDocs(q);
-    const messages = [];
-    querySnapshot.forEach((doc) => {
-        messages.push({ id: doc.id, ...doc.data() });
-    });
-    return messages;
+    try {
+        const q = query(collection(db, "messages"), orderBy("timestamp", "desc"));
+        const querySnapshot = await getDocs(q);
+        const messages = [];
+        querySnapshot.forEach((doc) => {
+            messages.push({ id: doc.id, ...doc.data() });
+        });
+        return messages;
+    } catch (e) {
+        console.error("Error fetching messages:", e);
+        return [];
+    }
 }
 
 export { db, saveMessage, getMessages };
