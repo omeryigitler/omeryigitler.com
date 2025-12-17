@@ -319,6 +319,8 @@
                             class="px-6 py-2 rounded-md text-xs font-bold uppercase tracking-wider bg-taurusGold text-black transition-all">Active</button>
                         <button onclick="filterProjects('completed')" id="filter-completed"
                             class="px-6 py-2 rounded-md text-xs font-bold uppercase tracking-wider text-gray-400 hover:text-white transition-all">Completed</button>
+                        <button onclick="filterProjects('all')" id="filter-all"
+                            class="px-6 py-2 rounded-md text-xs font-bold uppercase tracking-wider text-gray-400 hover:text-white transition-all">All</button>
                     </div>
                     <button onclick="openProjectModal()"
                         class="px-6 py-3 bg-white/5 border border-taurusGold/50 text-taurusGold hover:bg-taurusGold hover:text-black rounded-lg text-xs font-bold uppercase tracking-widest transition-all flex items-center gap-2">
@@ -673,7 +675,8 @@
                     const data = doc.data();
                     // Filter logic
                     const status = data.status || 'active';
-                    if (status !== currentProjectFilter) return;
+
+                    if (currentProjectFilter !== 'all' && status !== currentProjectFilter) return;
 
                     count++;
                     const progress = data.completion || 0;
@@ -720,16 +723,19 @@
         function filterProjects(status) {
             currentProjectFilter = status;
             // Update Buttons
-            const activeBtn = document.getElementById('filter-active');
-            const completedBtn = document.getElementById('filter-completed');
+            const ids = ['active', 'completed', 'all'];
 
-            if (status === 'active') {
-                activeBtn.className = "px-6 py-2 rounded-md text-xs font-bold uppercase tracking-wider bg-taurusGold text-black transition-all";
-                completedBtn.className = "px-6 py-2 rounded-md text-xs font-bold uppercase tracking-wider text-gray-400 hover:text-white transition-all";
-            } else {
-                activeBtn.className = "px-6 py-2 rounded-md text-xs font-bold uppercase tracking-wider text-gray-400 hover:text-white transition-all";
-                completedBtn.className = "px-6 py-2 rounded-md text-xs font-bold uppercase tracking-wider bg-green-500 text-black transition-all";
-            }
+            ids.forEach(id => {
+                const btn = document.getElementById('filter-' + id);
+                if (id === status) {
+                    btn.className = "px-6 py-2 rounded-md text-xs font-bold uppercase tracking-wider bg-taurusGold text-black transition-all";
+                    if (id === 'completed') btn.classList.replace('bg-taurusGold', 'bg-green-500'); // Green for completed
+                    if (id === 'all') btn.classList.replace('bg-taurusGold', 'bg-white'); // White for all
+                } else {
+                    btn.className = "px-6 py-2 rounded-md text-xs font-bold uppercase tracking-wider text-gray-400 hover:text-white transition-all";
+                }
+            });
+
             loadProjects(); // Refetch/Re-render
         }
 
