@@ -169,13 +169,19 @@
         <div class="flex-1 overflow-y-auto p-6 md:p-10 scroll-smooth">
 
             <!-- DASHBOARD VIEW -->
-            <div id="view-dashboard" class="space-y-8 fade-in">
-                <!-- Stats Grid -->
-                <!-- Stats Grid -->
+            <div id="view-dashboard" class="space-y-10 fade-in">
+
+                <!-- Welcome Section (Restored) -->
+                <div>
+                    <h1 class="text-3xl font-display font-bold text-white mb-2">Welcome Back, Chef.</h1>
+                    <p class="text-gray-400 text-sm">System is nominal. Real-time data feed active.</p>
+                </div>
+
+                <!-- Stats Grid (Original Design) -->
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <!-- Stat Card 1: Total Visits -->
+                    <!-- Stat 1: Visits -->
                     <div
-                        class="glass-card p-6 rounded-2xl bg-white/5 border border-glassBorder relative overflow-hidden group hover:border-taurusGold/30 transition-all">
+                        class="glass-card p-6 rounded-2xl relative overflow-hidden group border border-glassBorder bg-white/5 hover:border-taurusGold/30 transition-all">
                         <div class="absolute right-0 top-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
                             <i data-lucide="users" class="w-16 h-16 text-taurusGold"></i>
                         </div>
@@ -186,29 +192,29 @@
                         </div>
                     </div>
 
-                    <!-- Stat Card 2: Messages -->
+                    <!-- Stat 2: Messages -->
                     <div
-                        class="glass-card p-6 rounded-2xl bg-white/5 border border-glassBorder relative overflow-hidden group hover:border-taurusGold/30 transition-all">
+                        class="glass-card p-6 rounded-2xl relative overflow-hidden group border border-glassBorder bg-white/5 hover:border-taurusGold/30 transition-all">
                         <div class="absolute right-0 top-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
                             <i data-lucide="mail" class="w-16 h-16 text-blue-400"></i>
                         </div>
-                        <h3 class="text-gray-500 text-xs font-bold uppercase tracking-widest mb-2">Total Messages</h3>
+                        <h3 class="text-gray-500 text-xs font-bold uppercase tracking-widest mb-2">New Messages</h3>
                         <p id="total-messages-count" class="text-3xl font-display font-bold text-white">0</p>
                         <div class="mt-4 text-gray-400 text-xs">
-                            Inbox Synced
+                            Pending review from Inbox
                         </div>
                     </div>
 
-                    <!-- Stat Card 3: System Status -->
+                    <!-- Stat 3: Server -->
                     <div
-                        class="glass-card p-6 rounded-2xl bg-white/5 border border-glassBorder relative overflow-hidden group hover:border-taurusGold/30 transition-all">
+                        class="glass-card p-6 rounded-2xl relative overflow-hidden group border border-glassBorder bg-white/5 hover:border-taurusGold/30 transition-all">
                         <div class="absolute right-0 top-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
                             <i data-lucide="server" class="w-16 h-16 text-purple-400"></i>
                         </div>
                         <h3 class="text-gray-500 text-xs font-bold uppercase tracking-widest mb-2">Server Status</h3>
                         <p class="text-3xl font-display font-bold text-white">Online</p>
                         <div class="mt-4 text-green-400 text-xs flex items-center gap-1">
-                            <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span> Stable
+                            <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span> Stable Connectivity
                         </div>
                     </div>
                 </div>
