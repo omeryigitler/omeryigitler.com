@@ -144,7 +144,7 @@
             class="h-20 border-b border-glassBorder bg-black/20 backdrop-blur-sm flex items-center justify-between px-8 hidden md:flex">
             <h2 id="page-title" class="font-display text-lg font-bold text-white">Dashboard Overview</h2>
             <div class="flex items-center gap-4">
-                <button
+                <button onclick="switchTab('messages')"
                     class="w-10 h-10 rounded-full border border-glassBorder bg-white/5 flex items-center justify-center hover:bg-white/10 hover:border-taurusGold/30 transition-all relative">
                     <i data-lucide="bell" class="w-4 h-4 text-gray-400"></i>
                     <span class="absolute top-2 right-2 w-1.5 h-1.5 bg-red-500 rounded-full"></span>
@@ -192,22 +192,22 @@
                         </div>
                     </div>
 
-                    <div
-                        class="p-6 rounded-2xl bg-white/5 border border-glassBorder hover:border-taurusGold/30 transition-all group">
+                    <div onclick="switchTab('messages')"
+                        class="p-6 rounded-2xl bg-white/5 border border-glassBorder hover:border-taurusGold/30 transition-all group cursor-pointer hover:bg-white/10">
                         <div class="flex justify-between items-start mb-4">
                             <div
                                 class="p-2 bg-blue-500/10 rounded-lg text-blue-400 group-hover:bg-blue-500 group-hover:text-white transition-colors">
                                 <i data-lucide="message-square" class="w-5 h-5"></i>
                             </div>
-                            <span class="text-green-400 text-xs font-bold flex items-center gap-1">+8 <i
-                                    data-lucide="arrow-up" class="w-3 h-3"></i></span>
+                            <span class="text-green-400 text-xs font-bold flex items-center gap-1">Live <i
+                                    data-lucide="zap" class="w-3 h-3"></i></span>
                         </div>
                         <h3 id="stat-total-messages" class="text-2xl font-display font-bold text-white">142</h3>
                         <p class="text-gray-500 text-xs uppercase tracking-wider mt-1">Total Messages</p>
                     </div>
 
-                    <div
-                        class="p-6 rounded-2xl bg-white/5 border border-glassBorder hover:border-taurusGold/30 transition-all group">
+                    <div onclick="switchTab('projects')"
+                        class="p-6 rounded-2xl bg-white/5 border border-glassBorder hover:border-taurusGold/30 transition-all group cursor-pointer hover:bg-white/10">
                         <div class="flex justify-between items-start mb-4">
                             <div
                                 class="p-2 bg-purple-500/10 rounded-lg text-purple-400 group-hover:bg-purple-500 group-hover:text-white transition-colors">
@@ -330,7 +330,7 @@
                 </div>
                 <h3 class="text-xl font-bold text-white">Project Manager</h3>
                 <p class="text-gray-500 mt-2 text-sm">Connect a Database to manage dynamic projects.</p>
-                <button
+                <button onclick="alert('CMS Module: Pending Integration')"
                     class="mt-8 px-8 py-3 bg-taurusGold text-black font-bold uppercase tracking-widest text-xs rounded-full hover:bg-white transition-colors">
                     Integrate CMS
                 </button>
@@ -348,7 +348,7 @@
                             <h4 class="text-sm font-bold text-white">Pattern Lock</h4>
                             <p class="text-xs text-gray-500">Current pattern: "L" shape</p>
                         </div>
-                        <button
+                        <button onclick="alert('Pattern change feature coming soon.')"
                             class="px-4 py-2 rounded bg-white/5 border border-white/10 text-xs font-bold hover:bg-white/10 hover:text-taurusGold transition-colors">
                             Change Pattern
                         </button>
@@ -359,7 +359,7 @@
                             <h4 class="text-sm font-bold text-white">Emergency Lockdown</h4>
                             <p class="text-xs text-gray-500">Disable all admin access points</p>
                         </div>
-                        <button
+                        <button onclick="alert('System Lockdown Simulation Initiated.')"
                             class="px-4 py-2 rounded bg-red-500/10 border border-red-500/20 text-red-500 text-xs font-bold hover:bg-red-500 hover:text-white transition-colors">
                             Lockdown
                         </button>
