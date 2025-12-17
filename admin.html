@@ -581,6 +581,9 @@
                             <td class="p-6 text-sm ${textClass}">${(data.message || '').substring(0, 60)}...</td>
                             <td class="p-6 text-xs text-gray-500">${date}</td>
                             <td class="p-6 text-right flex items-center justify-end gap-2" onclick="event.stopPropagation()">
+                                <button onclick="convertMessageToProject('${doc.id}')" class="p-2 rounded hover:bg-taurusGold/20 hover:text-taurusGold transition-colors" title="Convert to Project">
+                                    <i data-lucide="briefcase" class="w-4 h-4 text-taurusGold"></i>
+                                </button>
                                 <button onclick="toggleMessageStatus('${doc.id}', '${data.status}')" class="p-2 rounded hover:bg-white/10 transition-colors" title="${isNew ? 'Mark as Read' : 'Mark as Unread'}">
                                     <i data-lucide="${isNew ? 'check-circle' : 'mail'}" class="w-4 h-4 ${isNew ? 'text-green-400' : 'text-gray-400'}"></i>
                                 </button>
