@@ -40,7 +40,7 @@
         }
 
         ::-webkit-scrollbar {
-            width: 6px;
+            width: 4px;
         }
 
         ::-webkit-scrollbar-track {
@@ -49,17 +49,13 @@
 
         ::-webkit-scrollbar-thumb {
             background: #333;
-            border-radius: 3px;
-        }
-
-        ::-webkit-scrollbar-thumb:hover {
-            background: #FFD700;
+            border-radius: 2px;
         }
 
         .nav-item.active {
             background: rgba(255, 215, 0, 0.1);
             color: #FFD700;
-            border-right: 2px solid #FFD700;
+            border-left: 4px solid #FFD700;
         }
 
         .fade-in {
@@ -77,6 +73,39 @@
                 transform: translateY(0);
             }
         }
+
+        /* Full Screen Mobile Menu */
+        @media (max-width: 1023px) {
+            #sidebar-menu {
+                width: 100%;
+                height: 100%;
+                position: fixed;
+                top: 0;
+                left: 0;
+                transform: translateX(-100%);
+                z-index: 100;
+                background: #050505;
+            }
+
+            #sidebar-menu.open {
+                transform: translateX(0);
+            }
+        }
+
+        /* Card based inbox for mobile */
+        .message-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 1rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            transition: all 0.2s;
+        }
+
+        .message-card:active {
+            transform: scale(0.98);
+            background: rgba(255, 255, 255, 0.05);
+        }
     </style>
 </head>
 
@@ -86,62 +115,78 @@
 
     <!-- SIDEBAR -->
     <aside id="sidebar-menu"
-        class="w-72 bg-deepSpace/50 backdrop-blur-xl border-r border-glassBorder flex flex-col fixed md:relative z-[60] transition-all duration-300 -translate-x-full md:translate-x-0 md:flex">
-        <!-- Brand -->
-        <div class="h-20 flex items-center justify-center px-6 border-b border-glassBorder">
-            <div class="px-4 py-2 bg-black/40 border border-glassBorder rounded-lg shadow-lg">
-                <span
-                    class="font-display font-bold text-base tracking-widest text-taurusGold lowercase drop-shadow-[0_0_8px_rgba(255,215,0,0.6)]">omeryigitler.com</span>
+        class="bg-deepSpace/90 backdrop-blur-2xl border-r border-glassBorder flex flex-col fixed inset-0 lg:relative lg:w-72 lg:translate-x-0 -translate-x-full transition-all duration-300 z-[100] lg:z-10 h-full overflow-hidden">
+
+        <!-- Brand / Header (Mobile close button) -->
+        <div class="h-24 flex items-center justify-between px-8 border-b border-glassBorder">
+            <div class="flex items-center gap-3">
+                <img src="assets/favicon_taurus.png" alt="Logo" class="w-10 h-10 object-contain brightness-110">
+                <span class="font-display font-bold text-sm tracking-widest text-taurusGold lowercase">ÖY Admin</span>
             </div>
+            <!-- Close button for mobile -->
+            <button onclick="toggleSidebar()"
+                class="lg:hidden w-10 h-10 flex items-center justify-center rounded-full bg-white/5 text-white">
+                <i data-lucide="x"></i>
+            </button>
         </div>
 
         <!-- Navigation -->
-        <nav class="flex-1 py-8 space-y-2">
+        <nav class="flex-1 py-10 space-y-4 px-4 overflow-y-auto">
             <button onclick="switchTab('dashboard')" id="nav-dashboard"
-                class="hidden lg:flex nav-item w-full items-center px-8 py-4 text-gray-400 hover:text-white hover:bg-white/5 transition-all text-xs font-bold uppercase tracking-widest active">
-                <i data-lucide="layout-dashboard" class="w-4 h-4 mr-3"></i> Dashboard
+                class="nav-item w-full flex items-center px-6 py-4 text-gray-400 hover:text-white hover:bg-white/5 transition-all text-sm font-bold uppercase tracking-[0.2em] active">
+                <i data-lucide="layout-dashboard" class="w-5 h-5 mr-4"></i> Dashboard
             </button>
             <button onclick="switchTab('messages')" id="nav-messages"
-                class="nav-item w-full flex items-center px-8 py-4 text-gray-400 hover:text-white hover:bg-white/5 transition-all text-xs font-bold uppercase tracking-widest">
-                <i data-lucide="mail" class="w-4 h-4 mr-3"></i> Inbox <span
-                    class="ml-auto bg-taurusGold text-black px-1.5 py-0.5 rounded text-[9px]">3</span>
+                class="nav-item w-full flex items-center px-6 py-4 text-gray-400 hover:text-white hover:bg-white/5 transition-all text-sm font-bold uppercase tracking-[0.2em]">
+                <i data-lucide="mail" class="w-5 h-5 mr-4"></i> Inbox
+                <span class="ml-auto bg-taurusGold text-black px-2 py-0.5 rounded-full text-[10px] font-black">3</span>
             </button>
             <button onclick="switchTab('projects')" id="nav-projects"
-                class="hidden lg:flex nav-item w-full items-center px-8 py-4 text-gray-400 hover:text-white hover:bg-white/5 transition-all text-xs font-bold uppercase tracking-widest">
-                <i data-lucide="folder-kanban" class="w-4 h-4 mr-3"></i> Projects
+                class="nav-item w-full flex items-center px-6 py-4 text-gray-400 hover:text-white hover:bg-white/5 transition-all text-sm font-bold uppercase tracking-[0.2em]">
+                <i data-lucide="folder-kanban" class="w-5 h-5 mr-4"></i> Projects
             </button>
             <button onclick="switchTab('settings')" id="nav-settings"
-                class="hidden lg:flex nav-item w-full items-center px-8 py-4 text-gray-400 hover:text-white hover:bg-white/5 transition-all text-xs font-bold uppercase tracking-widest">
-                <i data-lucide="settings" class="w-4 h-4 mr-3"></i> System
+                class="nav-item w-full flex items-center px-6 py-4 text-gray-400 hover:text-white hover:bg-white/5 transition-all text-sm font-bold uppercase tracking-[0.2em]">
+                <i data-lucide="settings" class="w-5 h-5 mr-4"></i> System
             </button>
         </nav>
 
-        <!-- Footer -->
-        <div class="p-6 border-t border-glassBorder">
-            <div class="flex items-center gap-3 mb-4">
-                <div class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
-                <span class="text-[10px] text-gray-500 uppercase tracking-widest">Server Online</span>
+        <!-- Sidebar Footer -->
+        <div class="p-8 border-t border-glassBorder bg-black/20">
+            <div class="flex items-center gap-3 mb-6">
+                <div class="w-2.5 h-2.5 rounded-full bg-green-500 animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.6)]">
+                </div>
+                <span class="text-[10px] text-gray-500 uppercase font-black tracking-widest">System Online</span>
             </div>
             <button onclick="window.location.href='index.html'"
-                class="flex items-center text-red-400 text-xs font-bold uppercase tracking-wider hover:text-red-300 transition-colors">
-                <i data-lucide="log-out" class="w-3 h-3 mr-2"></i> Terminate
+                class="w-full flex items-center justify-center p-4 rounded-xl border border-red-500/20 bg-red-500/5 text-red-500 text-xs font-black uppercase tracking-widest hover:bg-red-500 hover:text-white transition-all">
+                <i data-lucide="log-out" class="w-4 h-4 mr-2"></i> Terminate Session
             </button>
         </div>
     </aside>
 
-    <!-- MOBILE HEADER -->
+    <!-- MOBILE TOP BAR -->
     <div
-        class="md:hidden fixed top-0 w-full h-16 bg-deepSpace/90 backdrop-blur-md border-b border-glassBorder flex items-center justify-between px-6 z-50">
-        <span class="font-display font-bold text-sm text-taurusGold lowercase tracking-wider">omeryigitler.com</span>
-        <button onclick="toggleSidebar()" class="text-white"><i data-lucide="menu"></i></button>
+        class="lg:hidden fixed top-0 w-full h-20 bg-obsidian/80 backdrop-blur-xl border-b border-glassBorder flex items-center justify-between px-6 z-50">
+        <div onclick="window.location.href='index.html'" class="flex items-center gap-2 cursor-pointer">
+            <img src="assets/favicon_taurus.png" alt="Logo" class="w-10 h-10 object-contain">
+            <div class="flex flex-col">
+                <span class="font-display font-bold text-xs text-taurusGold lowercase leading-none">Ömer Yiğitler</span>
+                <span class="text-[8px] text-gray-500 uppercase tracking-widest mt-0.5">Control Panel</span>
+            </div>
+        </div>
+        <button onclick="toggleSidebar()"
+            class="w-12 h-12 flex items-center justify-center rounded-2xl bg-white/5 border border-white/10 text-white active:scale-95 transition-transform">
+            <i data-lucide="menu"></i>
+        </button>
     </div>
 
     <!-- MAIN CONTENT -->
-    <main class="flex-1 flex flex-col relative overflow-hidden pt-16 md:pt-0">
+    <main class="flex-1 flex flex-col relative overflow-hidden pt-20 lg:pt-0">
 
         <!-- Top Bar (Desktop Only) -->
         <header
-            class="h-20 border-b border-glassBorder bg-black/20 backdrop-blur-sm flex items-center justify-between px-8 hidden md:flex">
+            class="h-20 border-b border-glassBorder bg-black/20 backdrop-blur-sm flex items-center justify-between px-8 hidden lg:flex">
             <h2 id="page-title" class="font-display text-lg font-bold text-white">Dashboard Overview</h2>
             <div class="flex items-center gap-4">
                 <button onclick="switchTab('messages')"
@@ -168,200 +213,233 @@
         </header>
 
         <!-- Content Area -->
-        <div class="flex-1 overflow-y-auto p-6 md:p-10 scroll-smooth">
+        <div class="flex-1 overflow-y-auto p-4 md:p-10 scroll-smooth">
 
             <!-- DASHBOARD VIEW -->
-            <div id="view-dashboard" class="hidden lg:block space-y-8 fade-in">
+            <div id="view-dashboard" class="space-y-8 fade-in">
                 <!-- Stats Grid -->
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
                     <!-- Stat Card -->
                     <div
-                        class="p-6 rounded-2xl bg-white/5 border border-glassBorder hover:border-taurusGold/30 transition-all group flex flex-col justify-between">
+                        class="p-6 rounded-3xl bg-white/5 border border-glassBorder hover:border-taurusGold/30 transition-all group flex flex-col justify-between">
                         <div>
-                            <div class="flex justify-between items-start mb-2">
+                            <div class="flex justify-between items-start mb-4">
                                 <div
-                                    class="p-2 bg-taurusGold/10 rounded-lg text-taurusGold group-hover:bg-taurusGold group-hover:text-black transition-colors">
-                                    <i data-lucide="eye" class="w-5 h-5"></i>
+                                    class="p-3 bg-taurusGold/10 rounded-2xl text-taurusGold group-hover:bg-taurusGold group-hover:text-black transition-colors">
+                                    <i data-lucide="eye" class="w-6 h-6"></i>
                                 </div>
                                 <span class="text-green-400 text-xs font-bold flex items-center gap-1">+24% <i
                                         data-lucide="arrow-up" class="w-3 h-3"></i></span>
                             </div>
-                            <h3 id="stat-total-views" class="text-3xl font-display font-bold text-white">...</h3>
-                            <p class="text-gray-500 text-xs font-bold uppercase tracking-widest mt-1">Total Visits</p>
-                        </div>
-                        <div class="mt-4 text-green-400 text-xs flex items-center gap-1">
-                            <i data-lucide="trending-up" class="w-3 h-3"></i> +1 this session
+                            <h3 id="stat-total-views" class="text-4xl font-display font-bold text-white">...</h3>
+                            <p class="text-gray-500 text-[10px] font-black uppercase tracking-[0.2em] mt-2">Total Visits
+                            </p>
                         </div>
                     </div>
+
                     <div onclick="switchTab('messages')"
-                        class="p-6 rounded-2xl bg-white/5 border border-glassBorder hover:border-taurusGold/30 transition-all group cursor-pointer hover:bg-white/10">
+                        class="p-6 rounded-3xl bg-white/5 border border-glassBorder hover:border-taurusGold/30 transition-all group cursor-pointer hover:bg-white/10">
                         <div class="flex justify-between items-start mb-4">
                             <div
-                                class="p-2 bg-blue-500/10 rounded-lg text-blue-400 group-hover:bg-blue-500 group-hover:text-white transition-colors">
-                                <i data-lucide="message-square" class="w-5 h-5"></i>
+                                class="p-3 bg-blue-500/10 rounded-2xl text-blue-400 group-hover:bg-blue-500 group-hover:text-white transition-colors">
+                                <i data-lucide="message-square" class="w-6 h-6"></i>
                             </div>
-                            <span class="text-green-400 text-xs font-bold flex items-center gap-1">Live <i
-                                    data-lucide="zap" class="w-3 h-3"></i></span>
+                            <span
+                                class="text-green-400 text-[10px] font-black uppercase tracking-widest flex items-center gap-1">Live
+                                <i data-lucide="zap" class="w-3 h-3"></i></span>
                         </div>
-                        <h3 id="stat-total-messages" class="text-2xl font-display font-bold text-white">142</h3>
-                        <p class="text-gray-500 text-xs uppercase tracking-wider mt-1">Total Messages</p>
+                        <h3 id="stat-total-messages" class="text-4xl font-display font-bold text-white">...</h3>
+                        <p class="text-gray-500 text-[10px] font-black uppercase tracking-[0.2em] mt-2">New Messages</p>
                     </div>
 
                     <div onclick="switchTab('projects')"
-                        class="p-6 rounded-2xl bg-white/5 border border-glassBorder hover:border-taurusGold/30 transition-all group cursor-pointer hover:bg-white/10">
+                        class="p-6 rounded-3xl bg-white/5 border border-glassBorder hover:border-taurusGold/30 transition-all group cursor-pointer hover:bg-white/10">
                         <div class="flex justify-between items-start mb-4">
                             <div
-                                class="p-2 bg-purple-500/10 rounded-lg text-purple-400 group-hover:bg-purple-500 group-hover:text-white transition-colors">
-                                <i data-lucide="briefcase" class="w-5 h-5"></i>
+                                class="p-3 bg-purple-500/10 rounded-2xl text-purple-400 group-hover:bg-purple-500 group-hover:text-white transition-colors">
+                                <i data-lucide="briefcase" class="w-6 h-6"></i>
                             </div>
                         </div>
-                        <h3 class="text-2xl font-display font-bold text-white">1</h3>
-                        <p class="text-gray-500 text-xs uppercase tracking-wider mt-1">Active Projects</p>
+                        <h3 class="text-4xl font-display font-bold text-white">1</h3>
+                        <p class="text-gray-500 text-[10px] font-black uppercase tracking-[0.2em] mt-2">Active Projects
+                        </p>
                     </div>
 
                     <div
-                        class="p-6 rounded-2xl bg-white/5 border border-glassBorder hover:border-taurusGold/30 transition-all group">
+                        class="p-6 rounded-3xl bg-white/5 border border-glassBorder hover:border-taurusGold/30 transition-all group">
                         <div class="flex justify-between items-start mb-4">
                             <div
-                                class="p-2 bg-green-500/10 rounded-lg text-green-400 group-hover:bg-green-500 group-hover:text-white transition-colors">
-                                <i data-lucide="activity" class="w-5 h-5"></i>
+                                class="p-3 bg-green-500/10 rounded-2xl text-green-400 group-hover:bg-green-500 group-hover:text-white transition-colors">
+                                <i data-lucide="activity" class="w-6 h-6"></i>
                             </div>
-                            <span class="text-xs font-bold text-green-500">99.9%</span>
+                            <span class="text-xs font-bold text-green-500 shadow-sm">99.9%</span>
                         </div>
-                        <h3 class="text-2xl font-display font-bold text-white">Stable</h3>
-                        <p class="text-gray-500 text-xs uppercase tracking-wider mt-1">System Health</p>
+                        <h3 class="text-4xl font-display font-bold text-white uppercase text-xl">Stable</h3>
+                        <p class="text-gray-500 text-[10px] font-black uppercase tracking-[0.2em] mt-2">Sys Health</p>
                     </div>
                 </div>
 
-                <!-- Recent Activity & Chart Placeholder -->
+                <!-- Recent Activity & Chart -->
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     <div
-                        class="lg:col-span-2 p-8 rounded-2xl bg-white/5 border border-glassBorder relative overflow-hidden">
-                        <h3 class="font-display text-white mb-6">Traffic Analysis</h3>
-                        <div class="flex items-end justify-between gap-2 h-48 mt-4" id="traffic-chart-bars">
-                            <!-- Dynamic Bars Loaded Here -->
-                            <p class="text-xs text-gray-500 w-full text-center self-center">Loading traffic data...</p>
+                        class="lg:col-span-2 p-6 md:p-8 rounded-3xl bg-white/5 border border-glassBorder relative overflow-hidden">
+                        <div class="flex items-center justify-between mb-8">
+                            <h3 class="font-display text-white text-sm font-bold uppercase tracking-widest">Traffic
+                                Analysis</h3>
+                            <span
+                                class="text-[10px] text-gray-500 uppercase tracking-widest bg-white/5 px-3 py-1 rounded-full border border-white/5">Weekly
+                                Report</span>
                         </div>
-                        <div class="flex justify-between text-[10px] text-gray-500 mt-2 uppercase tracking-wider">
+                        <div class="flex items-end justify-between gap-1.5 h-48 mt-4 overflow-x-auto pb-2"
+                            id="traffic-chart-bars">
+                            <!-- Dynamic Bars Loaded Here -->
+                            <p
+                                class="text-xs text-gray-500 w-full text-center self-center uppercase tracking-widest opacity-50">
+                                Syncing Intelligence...</p>
+                        </div>
+                        <div
+                            class="flex justify-between text-[9px] text-gray-600 mt-4 uppercase tracking-[0.3em] font-black italic">
                             <span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span>
                         </div>
+
+                        <!-- Decorative background elements -->
+                        <div class="absolute -bottom-8 -right-8 w-32 h-32 bg-taurusGold/5 rounded-full blur-3xl"></div>
                     </div>
 
-                    <div class="p-8 rounded-2xl bg-white/5 border border-glassBorder">
-                        <h3 class="font-display text-white mb-6">Recent Leads</h3>
-                        <div class="space-y-4" id="recent-leads-container">
+                    <div class="p-6 md:p-8 rounded-3xl bg-white/5 border border-glassBorder flex flex-col">
+                        <div class="flex items-center justify-between mb-8">
+                            <h3 class="font-display text-white text-sm font-bold uppercase tracking-widest">Recent Leads
+                            </h3>
+                            <i data-lucide="zap" class="w-4 h-4 text-taurusGold animate-pulse"></i>
+                        </div>
+                        <div class="space-y-3 flex-1" id="recent-leads-container">
                             <!-- Dynamic Content Loaded via JS -->
-                            <p class="text-gray-500 text-xs">Loading leads...</p>
+                            <div
+                                class="flex items-center gap-3 p-4 rounded-2xl bg-white/5 border border-white/5 animate-pulse">
+                                <div class="w-10 h-10 rounded-full bg-white/10"></div>
+                                <div class="flex-1 space-y-2">
+                                    <div class="h-3 bg-white/10 rounded w-2/3"></div>
+                                    <div class="h-2 bg-white/5 rounded w-1/2"></div>
+                                </div>
+                            </div>
                         </div>
                         <button onclick="switchTab('messages')"
-                            class="w-full mt-6 py-3 rounded-xl border border-white/10 text-xs font-bold uppercase tracking-widest hover:bg-taurusGold hover:text-black transition-colors">View
-                            All</button>
+                            class="w-full mt-6 py-4 rounded-2xl border border-white/10 text-[10px] font-black uppercase tracking-[0.3em] hover:bg-taurusGold hover:text-black hover:border-taurusGold transition-all active:scale-95">Enter
+                            Communications Area</button>
                     </div>
                 </div>
             </div>
 
             <!-- MESSAGES VIEW -->
             <div id="view-messages" class="hidden space-y-6 fade-in">
-                <div class="w-full bg-white/5 border border-glassBorder rounded-2xl overflow-hidden">
+                <!-- Message Headers (Desktop) / Summary (Mobile) -->
+                <div class="flex flex-col md:flex-row justify-between items-end md:items-center gap-4 mb-2">
+                    <div>
+                        <h2 class="text-2xl font-display font-bold text-white">Communications</h2>
+                        <p class="text-[10px] text-gray-500 uppercase tracking-widest mt-1">Live Intelligence Feed</p>
+                    </div>
+                    <div
+                        class="flex items-center gap-2 bg-white/5 p-1 rounded-xl border border-white/10 w-full md:w-auto">
+                        <button
+                            class="flex-1 md:px-4 py-2 rounded-lg bg-taurusGold text-black text-[10px] font-black uppercase tracking-widest transition-all">All
+                            Messages</button>
+                        <button
+                            class="flex-1 md:px-4 py-2 rounded-lg text-gray-400 text-[10px] font-black uppercase tracking-widest hover:text-white transition-all">Unread</button>
+                    </div>
+                </div>
+
+                <!-- Desktop Table View -->
+                <div
+                    class="hidden lg:block w-full bg-white/5 border border-glassBorder rounded-3xl overflow-hidden backdrop-blur-md">
                     <table class="w-full text-left border-collapse">
                         <thead>
                             <tr
-                                class="bg-white/5 border-b border-white/5 text-[10px] font-bold uppercase tracking-widest text-gray-400">
-                                <th class="p-4 md:p-6">Status</th>
-                                <th class="p-4 md:p-6">Sender</th>
-                                <th class="p-4 md:p-6 hidden md:table-cell">Subject</th>
-                                <th class="p-4 md:p-6 hidden lg:table-cell">Date</th>
-                                <th class="p-4 md:p-6 text-right">Action</th>
+                                class="bg-white/5 border-b border-white/5 text-[10px] font-black uppercase tracking-[0.2em] text-gray-500">
+                                <th class="p-6">Status</th>
+                                <th class="p-6">Sender Intelligence</th>
+                                <th class="p-6">Subject / Payload</th>
+                                <th class="p-6">Timeline</th>
+                                <th class="p-6 text-right">Operations</th>
                             </tr>
                         </thead>
-                        <tbody class="text-sm text-gray-300">
-                            <!-- Row 1 -->
-                            <tr class="border-b border-white/5 hover:bg-white/5 transition-colors group">
-                                <td class="p-6"><span
-                                        class="px-2 py-1 rounded bg-blue-500/20 text-blue-400 text-[10px] font-bold uppercase">New</span>
-                                </td>
-                                <td class="p-6 font-bold text-white">John Doe <span
-                                        class="block text-xs text-gray-600 font-normal">john@example.com</span></td>
-                                <td class="p-6">Looking for a comprehensive E-commerce redesign for my...</td>
-                                <td class="p-6 text-gray-500">Oct 24, 2024</td>
-                                <td class="p-6 text-right">
-                                    <button
-                                        class="p-2 rounded hover:bg-white/10 hover:text-taurusGold transition-colors"><i
-                                            data-lucide="eye" class="w-4 h-4"></i></button>
-                                </td>
-                            </tr>
-                            <!-- Row 2 -->
-                            <tr class="border-b border-white/5 hover:bg-white/5 transition-colors group">
-                                <td class="p-6"><span
-                                        class="px-2 py-1 rounded bg-green-500/20 text-green-400 text-[10px] font-bold uppercase">Replied</span>
-                                </td>
-                                <td class="p-6 font-bold text-white">Alice Smith <span
-                                        class="block text-xs text-gray-600 font-normal">alice@studio.io</span></td>
-                                <td class="p-6">Collaboration on a new fintech project...</td>
-                                <td class="p-6 text-gray-500">Oct 22, 2024</td>
-                                <td class="p-6 text-right">
-                                    <button
-                                        class="p-2 rounded hover:bg-white/10 hover:text-taurusGold transition-colors"><i
-                                            data-lucide="eye" class="w-4 h-4"></i></button>
-                                </td>
-                            </tr>
+                        <tbody id="messages-tbody-desktop" class="text-sm text-gray-300">
+                            <!-- JS Loaded -->
                         </tbody>
                     </table>
+                </div>
+
+                <!-- Mobile/Tablet Card View -->
+                <div id="messages-mobile-container" class="lg:hidden space-y-4">
+                    <!-- JS Loaded -->
                 </div>
             </div>
 
             <!-- PROJECTS VIEW -->
-            <div id="view-projects" class="hidden lg:flex fade-in h-full flex flex-col">
+            <div id="view-projects" class="hidden fade-in flex flex-col h-full">
                 <!-- Toolbar -->
-                <div class="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
-                    <div class="flex bg-white/5 rounded-lg p-1 border border-white/10">
-                        <button onclick="filterProjects('active')" id="filter-active"
-                            class="px-6 py-2 rounded-md text-xs font-bold uppercase tracking-wider bg-taurusGold text-black transition-all">Active</button>
-                        <button onclick="filterProjects('completed')" id="filter-completed"
-                            class="px-6 py-2 rounded-md text-xs font-bold uppercase tracking-wider text-gray-400 hover:text-white transition-all">Completed</button>
-                        <button onclick="filterProjects('all')" id="filter-all"
-                            class="px-6 py-2 rounded-md text-xs font-bold uppercase tracking-wider text-gray-400 hover:text-white transition-all">All</button>
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-6">
+                    <div>
+                        <h2 class="text-2xl font-display font-bold text-white">Project Matrix</h2>
+                        <p class="text-[10px] text-gray-500 uppercase tracking-widest mt-1">Operational Lifecycle
+                            Management</p>
                     </div>
-                    <button onclick="openProjectModal()"
-                        class="px-6 py-3 bg-white/5 border border-taurusGold/50 text-taurusGold hover:bg-taurusGold hover:text-black rounded-lg text-xs font-bold uppercase tracking-widest transition-all flex items-center gap-2">
-                        <i data-lucide="plus" class="w-4 h-4"></i> New Project
-                    </button>
+                    <div class="flex flex-wrap items-center gap-3 w-full md:w-auto">
+                        <div class="flex bg-white/5 rounded-2xl p-1 border border-white/10 flex-1 md:flex-none">
+                            <button onclick="filterProjects('active')" id="filter-active"
+                                class="flex-1 px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest bg-taurusGold text-black transition-all">Active</button>
+                            <button onclick="filterProjects('completed')" id="filter-completed"
+                                class="flex-1 px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest text-gray-400 hover:text-white transition-all">Archived</button>
+                        </div>
+                        <button onclick="openProjectModal()"
+                            class="flex-1 md:flex-none px-6 py-2.5 bg-taurusGold/10 border border-taurusGold/30 text-taurusGold hover:bg-taurusGold hover:text-black rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2">
+                            <i data-lucide="plus" class="w-4 h-4"></i> Deploy New
+                        </button>
+                    </div>
                 </div>
 
                 <!-- Projects Grid -->
-                <div id="projects-grid"
-                    class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pb-20 overflow-y-auto">
-                    <!-- Dynamic Project Cards Will Appear Here -->
+                <div id="projects-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 pb-20">
+                    <!-- Dynamic Project Cards -->
                 </div>
             </div>
 
             <!-- SETTINGS VIEW -->
-            <div id="view-settings" class="hidden max-w-2xl fade-in">
-                <div class="bg-white/5 border border-glassBorder rounded-2xl p-8 mb-6">
-                    <h3 class="text-white font-bold mb-6 flex items-center gap-2">
-                        <i data-lucide="shield" class="w-5 h-5 text-taurusGold"></i> Security
-                    </h3>
+            <div id="view-settings" class="hidden fade-in">
+                <div class="max-w-3xl mx-auto space-y-6">
+                    <div class="bg-white/5 border border-glassBorder rounded-3xl p-6 md:p-10 backdrop-blur-xl">
+                        <h3 class="text-white font-display text-lg font-bold mb-8 flex items-center gap-3">
+                            <i data-lucide="shield" class="w-6 h-6 text-taurusGold"></i> Security Protocols
+                        </h3>
 
-                    <div class="flex items-center justify-between py-6 border-b border-white/5">
-                        <div>
-                            <h4 class="text-sm font-bold text-white">Pattern Lock</h4>
-                            <p class="text-xs text-gray-500">Current pattern: "L" shape</p>
-                        </div>
-                        <button onclick="alert('Pattern change feature coming soon.')"
-                            class="px-4 py-2 rounded bg-white/5 border border-white/10 text-xs font-bold hover:bg-white/10 hover:text-taurusGold transition-colors">
-                            Change Pattern
-                        </button>
-                    </div>
+                        <div class="space-y-4">
+                            <div
+                                class="flex flex-col md:flex-row md:items-center justify-between p-6 rounded-2xl bg-white/5 border border-white/5 gap-4">
+                                <div>
+                                    <h4 class="text-sm font-bold text-white uppercase tracking-widest">Pattern Lock
+                                        Bio-Auth</h4>
+                                    <p class="text-xs text-gray-500 mt-1 italic">Current sequence: Tactical "L" Vector
+                                    </p>
+                                </div>
+                                <button onclick="alert('Encryption re-keying coming soon.')"
+                                    class="w-full md:w-auto px-6 py-3 rounded-xl bg-white/5 border border-white/10 text-[10px] font-black uppercase tracking-widest hover:bg-taurusGold hover:text-black hover:border-taurusGold transition-all">
+                                    Update Vector
+                                </button>
+                            </div>
 
-                    <div class="flex items-center justify-between py-6">
-                        <div>
-                            <h4 class="text-sm font-bold text-white">Emergency Lockdown</h4>
-                            <p class="text-xs text-gray-500">Disable all admin access points</p>
+                            <div
+                                class="flex flex-col md:flex-row md:items-center justify-between p-6 rounded-2xl bg-red-500/5 border border-red-500/10 gap-4">
+                                <div>
+                                    <h4 class="text-sm font-bold text-red-400 uppercase tracking-widest">Emergency
+                                        Nullify</h4>
+                                    <p class="text-xs text-red-500/60 mt-1 italic">Immediate destruction of all session
+                                        tokens</p>
+                                </div>
+                                <button onclick="alert('System Lockdown Simulation Initiated.')"
+                                    class="w-full md:w-auto px-6 py-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-500 text-[10px] font-black uppercase tracking-widest hover:bg-red-500 hover:text-white transition-all">
+                                    Execute Lockdown
+                                </button>
+                            </div>
                         </div>
-                        <button onclick="alert('System Lockdown Simulation Initiated.')"
-                            class="px-4 py-2 rounded bg-red-500/10 border border-red-500/20 text-red-500 text-xs font-bold hover:bg-red-500 hover:text-white transition-colors">
-                            Lockdown
-                        </button>
                     </div>
                 </div>
             </div>
@@ -377,264 +455,40 @@
     <script>
         lucide.createIcons();
 
-        // --- FIREBASE LOGIC ---
+        // --- GLOBAL STATE ---
         let db;
+        let messagesMap = {};
 
         document.addEventListener('DOMContentLoaded', () => {
             if (window.firebaseConfig && window.firebaseConfig.apiKey !== "BURAYA_API_KEY_GELECEK") {
                 firebase.initializeApp(window.firebaseConfig);
                 db = firebase.firestore();
-                console.log("Firebase initialized");
-                setupRealtimeListeners(); // Live counters
-                loadTrafficChart(); // Chart
+                console.log("Intelligence System Initialized");
+                setupRealtimeListeners();
+                loadTrafficChart();
 
-                // Auto-switch to Messages on Mobile/Tablet
-                if (window.innerWidth < 1024) {
-                    switchTab('messages');
-                } else {
-                    switchTab('dashboard'); // Default for desktop
-                }
+                // Smart initial view
+                switchTab('dashboard');
             }
         });
-
-        // --- CHART LOGIC ---
-        async function loadTrafficChart() {
-            if (!db) return;
-            const container = document.getElementById('traffic-chart-bars');
-            if (!container) return;
-
-            try {
-                // 1. Get Daily Stats
-                const doc = await db.collection('stats').doc('daily').get();
-                const data = doc.exists ? doc.data() : {};
-
-                // 2. Prepare Last 7 Days
-                const days = [];
-                const counts = [];
-                const labels = [];
-                const dayNames = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
-
-                for (let i = 6; i >= 0; i--) {
-                    const d = new Date();
-                    d.setDate(d.getDate() - i);
-                    const key = d.toISOString().split('T')[0];
-                    const count = data[key] || 0;
-
-                    days.push(key);
-                    counts.push(count);
-                    labels.push(dayNames[d.getDay()]);
-                }
-
-                // 3. Render Bars
-                const max = Math.max(...counts, 10); // Minimum scale of 10 to prevent 1 visit looking huge
-
-                let html = '';
-                counts.forEach((count, i) => {
-                    const heightPct = (count / max) * 100;
-                    const isToday = i === 6; // Last one is today
-
-                    html += `
-                        <div class="flex flex-col items-center gap-2 flex-1 group relative">
-                            <!-- Tooltip -->
-                            <div class="absolute -top-8 bg-white text-black text-[10px] font-bold px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-20 pointer-events-none">
-                                ${count} Visits
-                            </div>
-                            
-                            <!-- Bar Container -->
-                            <div class="w-full h-32 flex items-end rounded-lg overflow-hidden bg-white/5 relative">
-                                <!-- Bar -->
-                                <div style="height: ${heightPct}%;" 
-                                     class="w-full ${isToday ? 'bg-taurusGold shadow-[0_0_15px_rgba(255,215,0,0.3)]' : 'bg-white/20 group-hover:bg-white/40'} transition-all duration-500 rounded-t-sm relative">
-                                </div>
-                            </div>
-                            
-                            <!-- Label -->
-                            <span class="text-[10px] ${isToday ? 'text-taurusGold font-bold' : 'text-gray-600'} uppercase tracking-wider">${labels[i]}</span>
-                        </div>
-                    `;
-                });
-
-                container.innerHTML = html;
-
-            } catch (e) { console.error("Chart Error:", e); }
-        }
-
-        // Use Realtime Listener for Stats to make it instant across tabs/devices
-        function setupRealtimeListeners() {
-            if (!db) return;
-
-            db.collection('messages').onSnapshot(snapshot => {
-                let unreadCount = 0;
-                let recentHtml = '';
-                const sortedDocs = snapshot.docs.sort((a, b) => b.data().timestamp - a.data().timestamp); // client-side sort for simplicity with listeners
-
-                sortedDocs.forEach(doc => {
-                    const data = doc.data();
-                    if (data.status === 'new') unreadCount++;
-                });
-
-                // 1. UPDATE BADGES (Menu & Bell)
-                const menuBadge = document.querySelector('#nav-messages span');
-                const bellDot = document.querySelector('.bg-red-500.rounded-full'); // Notification Dot
-
-                if (menuBadge) {
-                    menuBadge.innerText = unreadCount;
-                    // Hide badge if 0
-                    menuBadge.style.display = unreadCount > 0 ? 'inline-flex' : 'none';
-                }
-
-                if (bellDot) {
-                    bellDot.style.display = unreadCount > 0 ? 'block' : 'none';
-                }
-
-                // 2. UPDATE DASHBOARD CARD (Pending Messages)
-                const dashCount = document.getElementById('stat-total-messages');
-                const dashLabel = dashCount?.nextElementSibling;
-                if (dashCount) dashCount.innerText = unreadCount;
-                if (dashLabel) dashLabel.innerText = "Pending Messages";
-
-                // 3. UPDATE RECENT LEADS (Right Panel) - Show mainly new ones
-                const recentContainer = document.getElementById('recent-leads-container');
-                if (recentContainer) {
-                    // Take top 3
-                    const top3 = sortedDocs.slice(0, 3);
-
-                    if (top3.length > 0) {
-                        let html = '';
-                        top3.forEach(doc => {
-                            const d = doc.data();
-                            const isNew = d.status === 'new';
-                            const name = d.name || 'Anonymous';
-                            const initials = name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
-
-                            // Calc time
-                            const now = new Date();
-                            const date = d.timestamp ? new Date(d.timestamp.seconds * 1000) : new Date();
-                            const diffMins = Math.floor((now - date) / 60000);
-                            let timeStr = diffMins + 'm';
-                            if (diffMins > 60) timeStr = Math.floor(diffMins / 60) + 'h';
-                            if (diffMins > 1440) timeStr = Math.floor(diffMins / 1440) + 'd';
-
-                            html += `
-                                <div onclick="switchTab('messages')" class="flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 transition-colors cursor-pointer group">
-                                    <div class="w-10 h-10 rounded-full flex items-center justify-center text-xs font-bold border transition-all ${isNew ? 'bg-taurusGold text-black border-taurusGold shadow-[0_0_10px_rgba(255,215,0,0.3)]' : 'bg-white/5 text-gray-400 border-white/10'}">
-                                        <i data-lucide="user" class="w-5 h-5"></i>
-                                    </div>
-                                    <div class="${isNew ? 'opacity-100' : 'opacity-60'}">
-                                        <h4 class="text-sm font-bold text-white group-hover:text-taurusGold transition-colors">${name}</h4>
-                                        <p class="text-xs text-gray-500 truncate w-32">${d.message || ''}</p>
-                                    </div>
-                                    <span class="ml-auto text-[10px] ${isNew ? 'text-taurusGold' : 'text-gray-600'}">${timeStr}</span>
-                                </div>
-                            `;
-                        });
-                        recentContainer.innerHTML = html;
-                    } else {
-                        recentContainer.innerHTML = '<p class="text-xs text-gray-500 p-4">No leads yet.</p>';
-                    }
-                    // RE-RENDER ICONS for dynamic content
-                    lucide.createIcons();
-                }
-
-                // Also update Total View Stats (Not realtime, but reload on snapshot is fine)
-                loadViewStats();
-
-            }, error => {
-                console.error("Listener error:", error);
-            });
-        }
-
-        async function loadViewStats() {
-            if (!db) return;
-            try {
-                const docRef = await db.collection('stats').doc('global').get();
-                let views = 0;
-                if (docRef.exists) views = docRef.data().views || 0;
-                const viewEl = document.getElementById('stat-total-views');
-                if (viewEl) viewEl.innerText = views;
-            } catch (e) { console.log(e); }
-        }
-
-        async function loadMessages() {
-            if (!db) return;
-            // We'll use onSnapshot here too for the table to enable instant updates
-            const tbody = document.querySelector('#view-messages tbody');
-
-            db.collection('messages').orderBy('timestamp', 'desc').onSnapshot(snapshot => {
-                if (snapshot.empty) {
-                    tbody.innerHTML = '<tr><td colspan="5" class="p-6 text-center text-gray-500">No messages found.</td></tr>';
-                    return;
-                }
-
-                messagesMap = {}; // Reset cache
-                let html = '';
-                snapshot.forEach(doc => {
-                    const data = doc.data();
-                    messagesMap[doc.id] = data; // Store for modal
-                    const isNew = data.status === 'new';
-                    const date = data.timestamp ? new Date(data.timestamp.seconds * 1000).toLocaleDateString() : 'N/A';
-
-                    // Styling based on status
-                    const rowClass = isNew ? "bg-white/5 border-l-2 border-l-taurusGold" : "opacity-60 hover:opacity-100";
-                    const textClass = isNew ? "text-white font-bold" : "text-gray-400 font-normal";
-                    const badge = isNew
-                        ? `<span class="px-2 py-1 rounded bg-blue-500/20 text-blue-400 text-[10px] font-bold uppercase shadow-[0_0_10px_rgba(59,130,246,0.3)]">NEW</span>`
-                        : `<span class="px-2 py-1 rounded bg-gray-800 text-gray-500 text-[10px] font-bold uppercase">READ</span>`;
-
-                    html += `
-                        <tr onclick="openMessageModal('${doc.id}')" class="border-b border-white/5 hover:bg-white/10 transition-all group ${rowClass} cursor-pointer">
-                            <td class="p-4 md:p-6">${badge}</td>
-                            <td class="p-4 md:p-6 ${textClass} max-w-[120px] md:max-w-none truncate">${data.name || 'Anonymous'} <span class="block text-[10px] text-gray-600 font-normal truncate">${data.email || ''}</span></td>
-                            <td class="p-4 md:p-6 text-sm ${textClass} hidden md:table-cell">${(data.message || '').substring(0, 40)}...</td>
-                            <td class="p-4 md:p-6 text-xs text-gray-500 hidden lg:table-cell">${date}</td>
-                            <td class="p-4 md:p-6 text-right" onclick="event.stopPropagation()">
-                                <div class="flex items-center justify-end gap-1 md:gap-2">
-                                    <button onclick="convertMessageToProject('${doc.id}')" class="p-2 rounded hover:bg-taurusGold/20 hover:text-taurusGold transition-colors hidden md:block" title="Convert to Project">
-                                        <i data-lucide="briefcase" class="w-4 h-4 text-taurusGold"></i>
-                                    </button>
-                                    <button onclick="toggleMessageStatus('${doc.id}', '${data.status}')" class="p-2 rounded hover:bg-white/10 transition-colors" title="${isNew ? 'Mark as Read' : 'Mark as Unread'}">
-                                        <i data-lucide="${isNew ? 'check-circle' : 'mail'}" class="w-4 h-4 ${isNew ? 'text-green-400' : 'text-gray-400'}"></i>
-                                    </button>
-                                    <button onclick="deleteMessage('${doc.id}')" class="p-2 rounded hover:bg-red-500/20 hover:text-red-500 transition-colors" title="Delete">
-                                        <i data-lucide="trash-2" class="w-4 h-4"></i>
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
-                    `;
-                });
-
-                tbody.innerHTML = html;
-                lucide.createIcons();
-            });
-        }
-
-        async function toggleMessageStatus(id, currentStatus) {
-            const newStatus = currentStatus === 'new' ? 'read' : 'new';
-            try {
-                await db.collection('messages').doc(id).update({ status: newStatus });
-                // No need to reload, onSnapshot handles UI
-            } catch (e) { console.error(e); }
-        }
-
-        async function deleteMessage(id) {
-            if (!confirm("Delete this message?")) return;
-            try {
-                await db.collection('messages').doc(id).delete();
-            } catch (e) { console.error(e); }
-        }
-
 
         // --- UI LOGIC ---
         function toggleSidebar() {
             const sidebar = document.getElementById('sidebar-menu');
             sidebar.classList.toggle('-translate-x-full');
+            sidebar.classList.toggle('open');
+
+            // Body scroll lock on mobile
+            if (window.innerWidth < 1024) {
+                document.body.style.overflow = sidebar.classList.contains('open') ? 'hidden' : '';
+            }
         }
 
         function switchTab(tabId) {
             // Close sidebar on mobile after selection
-            if (window.innerWidth < 768) {
-                document.getElementById('sidebar-menu').classList.add('-translate-x-full');
+            const sidebar = document.getElementById('sidebar-menu');
+            if (sidebar.classList.contains('open')) {
+                toggleSidebar();
             }
 
             // Update Nav
@@ -647,7 +501,8 @@
             // Update View
             const views = ['dashboard', 'messages', 'projects', 'settings'];
             views.forEach(v => {
-                document.getElementById('view-' + v).classList.add('hidden');
+                const el = document.getElementById('view-' + v);
+                if (el) el.classList.add('hidden');
             });
 
             const activeView = document.getElementById('view-' + tabId);
@@ -655,137 +510,285 @@
                 activeView.classList.remove('hidden');
             }
 
-            // Update Title
+            // Update Title (Desktop only or shared)
             const titles = {
                 'dashboard': 'Dashboard Overview',
-                'messages': 'Inbox & Communications',
-                'projects': 'Project Management',
-                'settings': 'System Configuration'
+                'messages': 'Communications Hub',
+                'projects': 'Operational Matrix',
+                'settings': 'Security Protocols'
             };
-            document.getElementById('page-title').innerText = titles[tabId];
+            const titleEl = document.getElementById('page-title');
+            if (titleEl) titleEl.innerText = titles[tabId];
 
-            // Reload data if switching to messages
+            // Load relevant data
             if (tabId === 'messages') loadMessages();
             if (tabId === 'projects') loadProjects();
         }
 
-        function toggleRole() {
-            const roleText = document.getElementById('role-text');
-            if (roleText.innerText === 'Supervisor') {
-                roleText.innerText = 'Admin';
-            } else {
-                roleText.innerText = 'Supervisor';
-            }
+        // --- DATA LOADERS ---
+        async function loadMessages() {
+            if (!db) return;
+            const desktopBody = document.getElementById('messages-tbody-desktop');
+            const mobileContainer = document.getElementById('messages-mobile-container');
+
+            db.collection('messages').orderBy('timestamp', 'desc').onSnapshot(snapshot => {
+                if (snapshot.empty) {
+                    desktopBody.innerHTML = '<tr><td colspan="5" class="p-10 text-center text-gray-500 uppercase tracking-widest text-[10px]">Neural link empty. No messages.</td></tr>';
+                    mobileContainer.innerHTML = '<div class="p-10 text-center text-gray-600 uppercase tracking-widest text-[10px]">No incoming signals found.</div>';
+                    return;
+                }
+
+                messagesMap = {};
+                let desktopHtml = '';
+                let mobileHtml = '';
+
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    const id = doc.id;
+                    messagesMap[id] = data;
+
+                    const isNew = data.status === 'new';
+                    const date = data.timestamp ? new Date(data.timestamp.seconds * 1000).toLocaleDateString() : 'N/A';
+
+                    // Desktop Row
+                    desktopHtml += `
+                        <tr onclick="openMessageModal('${id}')" class="border-b border-white/5 hover:bg-white/5 transition-all group cursor-pointer ${isNew ? 'bg-taurusGold/[0.02]' : ''}">
+                            <td class="p-6">
+                                ${isNew ? '<span class="px-2 py-0.5 rounded-full bg-taurusGold text-black text-[9px] font-black uppercase">New</span>' : '<span class="px-2 py-0.5 rounded-full bg-white/5 text-gray-500 text-[9px] font-black uppercase">Read</span>'}
+                            </td>
+                            <td class="p-6">
+                                <div class="font-bold text-white">${data.name || 'Anonymous'}</div>
+                                <div class="text-[10px] text-gray-500">${data.email || ''}</div>
+                            </td>
+                            <td class="p-6 text-gray-400 text-xs">
+                                <div class="truncate max-w-sm">${data.message || 'No content...'}</div>
+                            </td>
+                            <td class="p-6 text-gray-600 text-[10px] font-mono">${date}</td>
+                            <td class="p-6 text-right" onclick="event.stopPropagation()">
+                                <div class="flex items-center justify-end gap-1">
+                                    <button onclick="convertMessageToProject('${id}')" class="p-2 rounded-lg hover:bg-taurusGold/20 text-taurusGold transition-colors"><i data-lucide="briefcase" class="w-4 h-4"></i></button>
+                                    <button onclick="deleteMessage('${id}')" class="p-2 rounded-lg hover:bg-red-500/20 text-red-500 transition-colors"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+
+                    // Mobile Card
+                    mobileHtml += `
+                        <div onclick="openMessageModal('${id}')" class="message-card relative overflow-hidden active:scale-95 transition-all border ${isNew ? 'border-taurusGold/30 bg-taurusGold/[0.03]' : 'border-white/5 bg-white/[0.02]'}">
+                            ${isNew ? '<div class="absolute top-0 right-0 p-1"><div class="w-1.5 h-1.5 bg-taurusGold rounded-full animate-pulse"></div></div>' : ''}
+                            <div class="flex items-center gap-3 mb-3">
+                                <div class="w-10 h-10 rounded-full flex items-center justify-center bg-white/5 border border-white/10 text-taurusGold font-black text-xs">
+                                    ${(data.name || 'A').charAt(0).toUpperCase()}
+                                </div>
+                                <div>
+                                    <h4 class="font-bold text-sm text-white">${data.name || 'Anonymous'}</h4>
+                                    <p class="text-[10px] text-taurusGold/60">${data.email || ''}</p>
+                                </div>
+                                <span class="ml-auto text-[9px] text-gray-600 font-mono">${date}</span>
+                            </div>
+                            <p class="text-xs text-gray-400 line-clamp-2 italic">"${data.message || 'No content...'}"</p>
+                        </div>
+                    `;
+                });
+
+                desktopBody.innerHTML = desktopHtml;
+                mobileContainer.innerHTML = mobileHtml;
+                lucide.createIcons();
+            });
         }
-        // --- PROJECT MANAGEMENT LOGIC ---
-        let currentProjectFilter = 'active';
 
         async function loadProjects() {
             if (!db) return;
             const container = document.getElementById('projects-grid');
 
             db.collection('projects').onSnapshot(snapshot => {
-                let html = '';
-                let count = 0;
+                if (snapshot.empty) {
+                    container.innerHTML = '<div class="col-span-full py-20 text-center text-gray-500 uppercase tracking-widest text-xs">No active deployments.</div>';
+                    return;
+                }
 
+                let html = '';
                 snapshot.forEach(doc => {
                     const data = doc.data();
-                    // Filter logic
                     const status = data.status || 'active';
-
                     if (currentProjectFilter !== 'all' && status !== currentProjectFilter) return;
 
-                    count++;
-                    const progress = data.completion || 0;
-
                     html += `
-                        <div class="bg-white/5 border border-glassBorder rounded-2xl p-6 hover:border-taurusGold/50 transition-all group flex flex-col h-full relative overflow-hidden">
-                            <div class="absolute top-0 left-0 w-1 h-full ${status === 'active' ? 'bg-taurusGold' : 'bg-green-500'}"></div>
-                            
-                            <!-- Header -->
-                            <div class="flex justify-between items-start mb-4 pl-3">
-                                <div>
-                                    <h3 class="text-lg font-display font-bold text-white group-hover:text-taurusGold transition-colors">${data.projectName}</h3>
-                                    <p class="text-xs text-gray-500 flex items-center gap-1 mt-1"><i data-lucide="user" class="w-3 h-3"></i> ${data.clientName}</p>
+                        <div onclick="openProjectModal('${doc.id}')" class="group bg-white/5 border border-glassBorder rounded-3xl p-6 hover:border-taurusGold/30 transition-all cursor-pointer relative overflow-hidden active:scale-95">
+                            <!-- Status Indicator -->
+                            <div class="absolute top-0 right-0 p-4">
+                                <span class="px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest ${status === 'active' ? 'bg-taurusGold text-black' : 'bg-green-500/20 text-green-400 border border-green-500/30'}">
+                                    ${status}
+                                </span>
+                            </div>
+
+                            <div class="flex flex-col h-full pt-4">
+                                <h3 class="text-lg font-display font-bold text-white group-hover:text-taurusGold transition-colors mb-2">${data.projectName || 'Untitled'}</h3>
+                                <div class="flex items-center gap-2 mb-6">
+                                    <div class="w-2 h-2 rounded-full bg-taurusGold opacity-50"></div>
+                                    <span class="text-[10px] text-gray-500 uppercase tracking-widest font-bold">${data.clientName || 'Private Client'}</span>
                                 </div>
-                                <span class="px-2 py-1 rounded text-[10px] font-bold uppercase ${status === 'active' ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20' : 'bg-green-500/10 text-green-400 border border-green-500/20'}">${status}</span>
-                            </div>
 
-                            <!-- Progress Snippet -->
-                            <div class="mb-6 pl-3">
-                                <p class="text-[10px] text-gray-400 uppercase tracking-widest mb-2">Latest Action</p>
-                                <p class="text-sm text-gray-300 line-clamp-2">${(data.done || 'No updates yet.').split('\n')[0]}</p>
-                            </div>
-
-                            <!-- Foofer / Actions -->
-                            <div class="mt-auto pt-4 border-t border-white/5 flex justify-between items-center pl-3">
-                                <span class="text-xs text-gray-600 font-mono">${new Date().toLocaleDateString()}</span>
-                                <button onclick="openProjectModal('${doc.id}')" class="px-4 py-2 rounded bg-white/5 hover:bg-white/10 text-xs font-bold text-white border border-white/10 transition-colors">
-                                    Manage
-                                </button>
+                                <div class="mt-auto pt-6 border-t border-white/5 flex items-center justify-between">
+                                    <span class="text-[9px] text-gray-600 font-mono italic">Operational Data Ready</span>
+                                    <div class="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center group-hover:bg-taurusGold group-hover:text-black transition-all">
+                                        <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     `;
                 });
 
-                if (count === 0) {
-                    container.innerHTML = `<div class="col-span-3 text-center py-20 text-gray-600">No ${currentProjectFilter} projects found.</div>`;
-                } else {
-                    container.innerHTML = html;
-                    lucide.createIcons();
-                }
+                container.innerHTML = html || '<div class="col-span-full py-20 text-center text-gray-500 uppercase tracking-widest text-xs">No projects in this category.</div>';
+                lucide.createIcons();
             });
         }
 
-        function filterProjects(status) {
-            currentProjectFilter = status;
-            // Update Buttons
-            const ids = ['active', 'completed', 'all'];
+        async function loadTrafficChart() {
+            if (!db) return;
+            const container = document.getElementById('traffic-chart-bars');
+            if (!container) return;
 
-            ids.forEach(id => {
-                const btn = document.getElementById('filter-' + id);
-                if (id === status) {
-                    btn.className = "px-6 py-2 rounded-md text-xs font-bold uppercase tracking-wider bg-taurusGold text-black transition-all";
-                    if (id === 'completed') btn.classList.replace('bg-taurusGold', 'bg-green-500'); // Green for completed
-                    if (id === 'all') btn.classList.replace('bg-taurusGold', 'bg-white'); // White for all
-                } else {
-                    btn.className = "px-6 py-2 rounded-md text-xs font-bold uppercase tracking-wider text-gray-400 hover:text-white transition-all";
+            try {
+                const doc = await db.collection('stats').doc('daily').get();
+                const data = doc.exists ? doc.data() : {};
+                const counts = [];
+                const labels = [];
+                const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+                for (let i = 6; i >= 0; i--) {
+                    const d = new Date();
+                    d.setDate(d.getDate() - i);
+                    const key = d.toISOString().split('T')[0];
+                    counts.push(data[key] || 0);
+                    labels.push(dayNames[d.getDay()]);
                 }
-            });
 
-            loadProjects(); // Refetch/Re-render
+                const max = Math.max(...counts, 10);
+                let html = '';
+                counts.forEach((count, i) => {
+                    const heightPct = (count / max) * 100;
+                    const isToday = i === 6;
+
+                    html += `
+                        <div class="flex flex-col items-center gap-2 flex-1 group">
+                            <div class="w-full h-32 flex items-end rounded-xl overflow-hidden bg-white/5 relative">
+                                <div style="height: ${heightPct}%;" 
+                                     class="w-full ${isToday ? 'bg-taurusGold shadow-[0_0_20px_rgba(255,215,0,0.4)]' : 'bg-white/10 group-hover:bg-white/20'} transition-all duration-700 rounded-t-lg">
+                                </div>
+                                <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all">
+                                    <span class="text-[10px] font-black text-white">${count}</span>
+                                </div>
+                            </div>
+                            <span class="text-[9px] ${isToday ? 'text-taurusGold font-black' : 'text-gray-600'} uppercase tracking-widest">${labels[i]}</span>
+                        </div>
+                    `;
+                });
+                container.innerHTML = html;
+            } catch (e) { console.error("Chart Logic Error", e); }
+        }
+
+        function setupRealtimeListeners() {
+            if (!db) return;
+            db.collection('messages').onSnapshot(snapshot => {
+                let unreadCount = 0;
+                snapshot.forEach(doc => { if (doc.data().status === 'new') unreadCount++; });
+
+                const bgBadge = document.querySelector('#nav-messages span');
+                if (bgBadge) {
+                    bgBadge.innerText = unreadCount;
+                    bgBadge.style.display = unreadCount > 0 ? 'inline-flex' : 'none';
+                }
+                const statMsg = document.getElementById('stat-total-messages');
+                if (statMsg) statMsg.innerText = unreadCount;
+
+                loadViewStats();
+            });
+        }
+
+        async function loadViewStats() {
+            if (!db) return;
+            const doc = await db.collection('stats').doc('global').get();
+            const views = doc.exists ? doc.data().views || 0 : 0;
+            const el = document.getElementById('stat-total-views');
+            if (el) el.innerText = views;
+        }
+
+        async function toggleMessageStatus(id, currentStatus) {
+            const newStatus = currentStatus === 'new' ? 'read' : 'new';
+            await db.collection('messages').doc(id).update({ status: newStatus });
+        }
+
+        async function deleteMessage(id) {
+            if (!confirm("Confirm neutralization of this data record?")) return;
+            await db.collection('messages').doc(id).delete();
+        }
+
+        function toggleRole() {
+            const el = document.getElementById('role-text');
+            el.innerText = el.innerText === 'Supervisor' ? 'Admin' : 'Supervisor';
+        }
+
+        function openMessageModal(id) {
+            const data = messagesMap[id];
+            if (!data) return;
+
+            // Mark as READ immediately
+            if (data.status === 'new') toggleMessageStatus(id, 'new');
+
+            document.getElementById('modal-name').innerText = data.name || 'Unknown Entity';
+            document.getElementById('modal-email').innerText = data.email || 'No address';
+            document.getElementById('modal-date').innerText = data.timestamp ? new Date(data.timestamp.seconds * 1000).toLocaleString() : 'N/A';
+            document.getElementById('modal-message').innerText = data.message || 'Transmission empty.';
+            document.getElementById('message-modal').classList.remove('hidden');
+        }
+
+        function closeMessageModal() {
+            document.getElementById('message-modal').classList.add('hidden');
+        }
+
+        function convertMessageToProject(id) {
+            closeMessageModal();
+            const data = messagesMap[id];
+            if (!data) return;
+            switchTab('projects');
+            openProjectModal();
+            document.getElementById('p-client').value = data.name || '';
+            document.getElementById('p-email').value = data.email || '';
+            document.getElementById('p-requests').value = data.message || '';
         }
 
         let editingProjectId = null;
-
         async function openProjectModal(id = null) {
             editingProjectId = id;
-            document.getElementById('project-modal').classList.remove('hidden');
+            const modal = document.getElementById('project-modal');
+            modal.classList.remove('hidden');
+            document.body.style.overflow = 'hidden'; // Lock background
+
             const form = document.getElementById('project-form');
             form.reset();
 
             if (id) {
-                // Edit Mode - Fetch Data
-                try {
-                    const doc = await db.collection('projects').doc(id).get();
-                    const data = doc.data();
-
-                    document.getElementById('p-client').value = data.clientName || '';
-                    document.getElementById('p-email').value = data.clientEmail || '';
-                    document.getElementById('p-name').value = data.projectName || '';
-                    document.getElementById('p-status').value = data.status || 'active';
-                    document.getElementById('p-done').value = data.done || '';
-                    document.getElementById('p-todo').value = data.todo || '';
-                    document.getElementById('p-requests').value = data.requests || '';
-                    document.getElementById('p-modal-title').innerText = "Edit Project";
-                } catch (e) { console.error(e); }
+                const doc = await db.collection('projects').doc(id).get();
+                const d = doc.data();
+                document.getElementById('p-client').value = d.clientName || '';
+                document.getElementById('p-email').value = d.clientEmail || '';
+                document.getElementById('p-name').value = d.projectName || '';
+                document.getElementById('p-status').value = d.status || 'active';
+                document.getElementById('p-done').value = d.done || '';
+                document.getElementById('p-todo').value = d.todo || '';
+                document.getElementById('p-requests').value = d.requests || '';
+                document.getElementById('p-modal-title').innerText = "Mission Update";
             } else {
-                document.getElementById('p-modal-title').innerText = "New Project";
+                document.getElementById('p-modal-title').innerText = "New Deployment";
             }
         }
 
         function closeProjectModal() {
             document.getElementById('project-modal').classList.add('hidden');
+            document.body.style.overflow = '';
         }
 
         async function saveProject() {
@@ -799,99 +802,58 @@
                 requests: document.getElementById('p-requests').value,
                 timestamp: firebase.firestore.FieldValue.serverTimestamp()
             };
-
-            try {
-                if (editingProjectId) {
-                    await db.collection('projects').doc(editingProjectId).update(data);
-                } else {
-                    await db.collection('projects').add(data);
-                }
-                closeProjectModal();
-            } catch (e) { console.error("Save Error", e); }
+            if (editingProjectId) await db.collection('projects').doc(editingProjectId).update(data);
+            else await db.collection('projects').add(data);
+            closeProjectModal();
         }
 
-        // --- MODAL LOGIC ---
-        let currentOpenedMessageId = null;
-
-        function openMessageModal(id) {
-            const data = messagesMap[id];
-            if (!data) return;
-
-            currentOpenedMessageId = id; // Store ID for conversion
-
-            // Populate Modal
-            document.getElementById('modal-name').innerText = data.name || 'Anonymous';
-            document.getElementById('modal-email').innerText = data.email || '';
-            document.getElementById('modal-date').innerText = data.timestamp ? new Date(data.timestamp.seconds * 1000).toLocaleString() : 'N/A';
-            document.getElementById('modal-message').innerText = data.message || '';
-
-            // Show Modal
-            document.getElementById('message-modal').classList.remove('hidden');
+        let currentProjectFilter = 'active';
+        function filterProjects(s) {
+            currentProjectFilter = s;
+            document.getElementById('filter-active').className = s === 'active' ? 'flex-1 px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest bg-taurusGold text-black transition-all' : 'flex-1 px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest text-gray-400 hover:text-white transition-all';
+            document.getElementById('filter-completed').className = s === 'completed' ? 'flex-1 px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest bg-taurusGold text-black transition-all' : 'flex-1 px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest text-gray-400 hover:text-white transition-all';
+            loadProjects();
         }
 
-        function convertMessageToProject(id) {
-            // Close message modal if open
-            closeMessageModal();
-            const data = messagesMap[id];
-            if (!data) return;
-
-            // Mark as READ automatically
-            db.collection('messages').doc(id).update({ status: 'read' }).catch(err => console.error("Auto-read error:", err));
-
-            // Switch to Projects Tab
-            switchTab('projects');
-
-            // Open Project Modal (New Mode)
-            openProjectModal();
-
-            // Pre-fill Data
-            document.getElementById('p-client').value = data.name || '';
-            document.getElementById('p-email').value = data.email || '';
-            document.getElementById('p-requests').value = data.message || ''; // Map message body to requests
-            // Default active is already set by HTML select default
-        }
-
-        function closeMessageModal() {
-            document.getElementById('message-modal').classList.add('hidden');
-            currentOpenedMessageId = null;
-        }
-
-        // Close modal on outside click
-        window.onclick = function (event) {
-            const modal = document.getElementById('message-modal');
-            if (event.target === modal) {
-                closeMessageModal();
-            }
+        // Outside click close
+        window.onclick = (e) => {
+            if (e.target.id === 'message-modal') closeMessageModal();
+            if (e.target.id === 'project-modal') closeProjectModal();
         }
     </script>
 
     <!-- Message Detail Modal -->
     <div id="message-modal"
-        class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm transition-opacity duration-300">
+        class="fixed inset-0 z-[110] hidden flex items-center justify-center lg:p-4 bg-black/90 lg:bg-black/80 backdrop-blur-md transition-opacity duration-300">
         <div
-            class="glass-card w-full max-w-2xl rounded-2xl border border-glassBorder bg-[#0a0a0a] shadow-2xl overflow-hidden animate-fade-in-up">
+            class="glass-card w-full h-full lg:h-auto lg:max-w-2xl lg:rounded-3xl border-y lg:border border-glassBorder bg-[#0a0a0a] shadow-2xl overflow-hidden animate-fade-in-up flex flex-col">
             <!-- Header -->
             <div class="p-6 border-b border-white/5 flex justify-between items-center bg-white/5">
                 <h3 class="text-xl font-display font-bold text-white flex items-center gap-2">
-                    <i data-lucide="mail-open" class="w-5 h-5 text-taurusGold"></i> Message Details
+                    <i data-lucide="mail-open" class="w-5 h-5 text-taurusGold"></i> Dispatch Detail
                 </h3>
+                <button onclick="closeMessageModal()"
+                    class="lg:hidden w-10 h-10 flex items-center justify-center rounded-full bg-white/5 text-white">
+                    <i data-lucide="x"></i>
+                </button>
             </div>
 
             <!-- Content -->
-            <div class="p-8 space-y-6">
+            <div class="p-6 md:p-8 space-y-6 overflow-y-auto flex-1">
                 <!-- Sender Info -->
-                <div class="flex items-start justify-between">
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div>
-                        <h4 id="modal-name" class="text-lg font-bold text-white">Name</h4>
-                        <p id="modal-email" class="text-sm text-taurusGold">email@example.com</p>
+                        <h4 id="modal-name" class="text-xl font-bold text-white">Name</h4>
+                        <p id="modal-email" class="text-sm text-taurusGold font-mono">email@example.com</p>
                     </div>
                     <span id="modal-date"
-                        class="text-xs text-gray-500 font-mono bg-white/5 px-3 py-1 rounded-full">Date</span>
+                        class="text-[10px] text-gray-500 font-mono bg-white/5 px-4 py-1.5 rounded-full border border-white/5 self-start md:self-center">Date</span>
                 </div>
 
                 <!-- Message Body -->
-                <div class="bg-white/5 rounded-xl p-6 border border-white/5 max-h-[60vh] overflow-y-auto">
-                    <p class="text-gray-400 text-xs uppercase tracking-widest mb-3">Message Content</p>
+                <div class="bg-white/5 rounded-2xl p-6 border border-white/5">
+                    <p class="text-[10px] text-gray-500 uppercase tracking-[0.2em] mb-4 font-black">Transmission Payload
+                    </p>
                     <p id="modal-message" class="text-gray-300 text-sm leading-relaxed whitespace-pre-wrap font-sans">
                         ...
                     </p>
@@ -899,101 +861,104 @@
             </div>
 
             <!-- Footer -->
-            <div class="p-6 border-t border-white/5 bg-white/5 flex justify-end gap-4">
+            <div
+                class="p-6 border-t border-white/5 bg-black/40 backdrop-blur-xl flex flex-col md:flex-row justify-end gap-3">
                 <button onclick="convertMessageToProject(currentOpenedMessageId)"
-                    class="px-6 py-3 rounded-xl border border-taurusGold/50 text-taurusGold font-bold text-xs uppercase tracking-widest hover:bg-taurusGold hover:text-black transition-all flex items-center gap-2">
-                    <i data-lucide="briefcase" class="w-4 h-4"></i> Convert to Project
+                    class="order-last md:order-first w-full md:w-auto px-6 py-4 rounded-xl border border-taurusGold/50 text-taurusGold font-black text-[10px] uppercase tracking-widest hover:bg-taurusGold hover:text-black transition-all flex items-center justify-center gap-2">
+                    <i data-lucide="briefcase" class="w-4 h-4"></i> Initialize Project
                 </button>
                 <button onclick="closeMessageModal()"
-                    class="px-6 py-3 rounded-xl bg-white/10 text-white font-bold text-xs uppercase tracking-widest hover:bg-white hover:text-black hover:scale-105 transition-all">
-                    Close
+                    class="w-full md:w-auto px-6 py-4 rounded-xl bg-white/5 text-white font-black text-[10px] uppercase tracking-widest border border-white/10 hover:bg-white hover:text-black transition-all">
+                    Archive View
                 </button>
             </div>
         </div>
     </div>
+
     <!-- Project Modal -->
     <div id="project-modal"
-        class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm transition-opacity duration-300">
+        class="fixed inset-0 z-[110] hidden flex items-center justify-center lg:p-4 bg-black/90 lg:bg-black/80 backdrop-blur-md transition-opacity duration-300">
         <div
-            class="glass-card w-full max-w-4xl rounded-2xl border border-glassBorder bg-[#0a0a0a] shadow-2xl overflow-hidden animate-fade-in-up h-[90vh] flex flex-col">
+            class="glass-card w-full h-full lg:h-[90vh] lg:max-w-4xl lg:rounded-3xl border-y lg:border border-glassBorder bg-[#0a0a0a] shadow-2xl overflow-hidden animate-fade-in-up flex flex-col">
             <!-- Header -->
             <div class="p-6 border-b border-white/5 flex justify-between items-center bg-white/5 flex-shrink-0">
                 <h3 id="p-modal-title" class="text-xl font-display font-bold text-white flex items-center gap-2">
-                    New Project
+                    New Deployment
                 </h3>
                 <button onclick="closeProjectModal()"
-                    class="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-gray-400 hover:text-white transition-colors">
-                    <i data-lucide="x" class="w-4 h-4"></i>
+                    class="w-10 h-10 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-gray-400 hover:text-white transition-colors">
+                    <i data-lucide="x" class="w-5 h-5"></i>
                 </button>
             </div>
 
             <!-- Scrollable Content -->
-            <div class="p-8 overflow-y-auto flex-1">
-                <form id="project-form" class="space-y-8">
+            <div class="p-6 md:p-10 overflow-y-auto flex-1">
+                <form id="project-form" class="space-y-10">
                     <!-- Section 1: Basics -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                         <div class="space-y-4">
                             <h4
-                                class="text-taurusGold text-xs font-bold uppercase tracking-widest border-b border-white/10 pb-2">
-                                Client Details</h4>
-                            <input id="p-client" type="text" placeholder="Client Name"
-                                class="w-full bg-white/5 border border-white/10 rounded-lg p-3 text-white focus:outline-none focus:border-taurusGold transition-colors">
-                            <input id="p-email" type="email" placeholder="Client Email / Contact"
-                                class="w-full bg-white/5 border border-white/10 rounded-lg p-3 text-white focus:outline-none focus:border-taurusGold transition-colors">
+                                class="text-taurusGold text-[10px] font-black uppercase tracking-[0.2em] border-b border-white/5 pb-2">
+                                Client Intelligence</h4>
+                            <input id="p-client" type="text" placeholder="Identity / Organization"
+                                class="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-sm text-white focus:outline-none focus:border-taurusGold transition-colors placeholder:text-gray-600">
+                            <input id="p-email" type="email" placeholder="Communication Channel"
+                                class="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-sm text-white focus:outline-none focus:border-taurusGold transition-colors placeholder:text-gray-600">
                         </div>
                         <div class="space-y-4">
                             <h4
-                                class="text-taurusGold text-xs font-bold uppercase tracking-widest border-b border-white/10 pb-2">
-                                Project Info</h4>
-                            <input id="p-name" type="text" placeholder="Project Title"
-                                class="w-full bg-white/5 border border-white/10 rounded-lg p-3 text-white focus:outline-none focus:border-taurusGold transition-colors">
+                                class="text-taurusGold text-[10px] font-black uppercase tracking-[0.2em] border-b border-white/5 pb-2">
+                                Operation Blueprint</h4>
+                            <input id="p-name" type="text" placeholder="Mission Name"
+                                class="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-sm text-white focus:outline-none focus:border-taurusGold transition-colors placeholder:text-gray-600">
                             <select id="p-status"
-                                class="w-full bg-white/5 border border-white/10 rounded-lg p-3 text-white focus:outline-none focus:border-taurusGold transition-colors">
-                                <option value="active">Active</option>
-                                <option value="completed">Completed</option>
+                                class="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-sm text-white focus:outline-none focus:border-taurusGold transition-colors appearance-none cursor-pointer">
+                                <option value="active">Operational: Active</option>
+                                <option value="completed">Operational: Archived</option>
                             </select>
                         </div>
                     </div>
 
                     <!-- Section 2: Work Log -->
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <div class="bg-green-500/5 rounded-xl p-4 border border-green-500/10 h-64 flex flex-col">
+                    <div class="grid grid-cols-1 gap-6 md:grid-cols-3">
+                        <div class="flex flex-col gap-3">
                             <label
-                                class="text-green-500 text-xs font-bold uppercase tracking-widest mb-2 flex items-center gap-2"><i
-                                    data-lucide="check-circle" class="w-3 h-3"></i> Completed</label>
+                                class="text-green-500 text-[10px] font-black uppercase tracking-widest flex items-center gap-2"><i
+                                    data-lucide="check-circle" class="w-3 h-3"></i> Executed</label>
                             <textarea id="p-done"
-                                class="flex-1 bg-transparent border-none text-gray-300 text-sm focus:outline-none resize-none"
-                                placeholder="- Task 1 finished..."></textarea>
+                                class="w-full min-h-[180px] bg-white/5 border border-white/10 rounded-xl p-4 text-sm text-gray-300 focus:outline-none focus:border-green-500 transition-colors resize-none"
+                                placeholder="Alpha phase complete..."></textarea>
                         </div>
 
-                        <div class="bg-blue-500/5 rounded-xl p-4 border border-blue-500/10 h-64 flex flex-col">
+                        <div class="flex flex-col gap-3">
                             <label
-                                class="text-blue-500 text-xs font-bold uppercase tracking-widest mb-2 flex items-center gap-2"><i
-                                    data-lucide="loader" class="w-3 h-3"></i> To Do / Roadmap</label>
+                                class="text-blue-500 text-[10px] font-black uppercase tracking-widest flex items-center gap-2"><i
+                                    data-lucide="zap" class="w-3 h-3"></i> Roadmap</label>
                             <textarea id="p-todo"
-                                class="flex-1 bg-transparent border-none text-gray-300 text-sm focus:outline-none resize-none"
-                                placeholder="- Next task..."></textarea>
+                                class="w-full min-h-[180px] bg-white/5 border border-white/10 rounded-xl p-4 text-sm text-gray-300 focus:outline-none focus:border-blue-500 transition-colors resize-none"
+                                placeholder="Initializing beta..."></textarea>
                         </div>
 
-                        <div class="bg-taurusGold/5 rounded-xl p-4 border border-taurusGold/10 h-64 flex flex-col">
+                        <div class="flex flex-col gap-3">
                             <label
-                                class="text-taurusGold text-xs font-bold uppercase tracking-widest mb-2 flex items-center gap-2"><i
-                                    data-lucide="message-square" class="w-3 h-3"></i> Client Requests</label>
+                                class="text-taurusGold text-[10px] font-black uppercase tracking-widest flex items-center gap-2"><i
+                                    data-lucide="message-square" class="w-3 h-3"></i> Feedback</label>
                             <textarea id="p-requests"
-                                class="flex-1 bg-transparent border-none text-gray-300 text-sm focus:outline-none resize-none"
-                                placeholder="- User wants darker mode..."></textarea>
+                                class="w-full min-h-[180px] bg-white/5 border border-white/10 rounded-xl p-4 text-sm text-gray-300 focus:outline-none focus:border-taurusGold transition-colors resize-none"
+                                placeholder="Client signal detected..."></textarea>
                         </div>
                     </div>
                 </form>
             </div>
 
             <!-- Footer -->
-            <div class="p-6 border-t border-white/5 bg-white/5 flex justify-end gap-4 flex-shrink-0">
+            <div
+                class="p-6 border-t border-white/5 bg-black/40 backdrop-blur-xl flex flex-col md:flex-row justify-end gap-3 flex-shrink-0">
                 <button onclick="closeProjectModal()"
-                    class="px-6 py-3 rounded-xl border border-white/10 text-gray-400 font-bold text-xs uppercase tracking-widest hover:bg-white/10 transition-all">Cancel</button>
+                    class="w-full md:w-auto px-8 py-4 rounded-xl border border-white/10 text-gray-500 font-black text-[10px] uppercase tracking-widest hover:bg-white/5 transition-all">Cancel</button>
                 <button onclick="saveProject()"
-                    class="px-6 py-3 rounded-xl bg-taurusGold text-black font-bold text-xs uppercase tracking-widest hover:bg-white hover:scale-105 transition-all">Save
-                    Project</button>
+                    class="w-full md:w-auto px-10 py-4 rounded-xl bg-taurusGold text-black font-black text-[10px] uppercase tracking-widest hover:bg-white hover:scale-[1.02] transition-all">Synchronize
+                    Data</button>
             </div>
         </div>
     </div>
