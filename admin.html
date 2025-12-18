@@ -585,9 +585,9 @@
 
                     // Desktop Row
                     desktopHtml += `
-                        <tr onclick="openMessageModal('${id}')" class="border-b border-white/5 hover:bg-white/5 transition-all group cursor-pointer ${isNew ? 'bg-taurusGold/[0.02]' : ''}">
+                        <tr onclick="openMessageModal('${id}')" class="border-b border-white/5 hover:bg-white/5 transition-all group cursor-pointer">
                             <td class="p-6">
-                                ${isNew ? '<span class="px-2 py-0.5 rounded-full bg-taurusGold text-black text-[9px] font-black uppercase">Unread</span>' : '<span class="px-2 py-0.5 rounded-full bg-white/5 text-gray-500 text-[9px] font-black uppercase">Archived</span>'}
+                                ${isNew ? '<span class="px-2 py-0.5 rounded-full border border-taurusGold/50 text-taurusGold text-[9px] font-black uppercase">Unread</span>' : '<span class="px-2 py-0.5 rounded-full bg-white/5 text-gray-500 text-[9px] font-black uppercase">Archived</span>'}
                             </td>
                             <td class="p-6">
                                 <div class="font-bold text-white">${data.name || 'Anonymous'}</div>
@@ -609,7 +609,7 @@
 
                     // Mobile Card
                     mobileHtml += `
-                        <div onclick="openMessageModal('${id}')" class="message-card relative overflow-hidden active:scale-95 transition-all border ${isNew ? 'border-taurusGold/50 bg-taurusGold/[0.08] ring-1 ring-taurusGold/20' : 'border-white/5 bg-white/[0.02]'}">
+                        <div onclick="openMessageModal('${id}')" class="message-card relative overflow-hidden active:scale-95 transition-all border ${isNew ? 'border-taurusGold bg-white/[0.02] ring-1 ring-taurusGold/20' : 'border-white/5 bg-white/[0.02]'}">
                             ${isNew ? '<div class="absolute top-0 right-0 p-2"><div class="w-2 h-2 bg-taurusGold rounded-full animate-pulse shadow-[0_0_8px_rgba(255,215,0,0.6)]"></div></div>' : ''}
                             <div class="flex items-center gap-4 mb-4">
                                 <div class="w-12 h-12 rounded-full flex items-center justify-center bg-white/5 border border-white/10 text-taurusGold shadow-lg">
