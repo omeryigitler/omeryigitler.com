@@ -191,7 +191,7 @@
             <div class="glass-search flex items-center gap-3 px-4 py-3 rounded-xl group">
                 <i data-lucide="command"
                     class="w-4 h-4 text-gray-600 group-focus-within:text-taurusGold transition-colors"></i>
-                <input type="text" placeholder="Global Command..."
+                <input type="text" oninput="handleGlobalSearch(this.value)" placeholder="Global Command..."
                     class="bg-transparent border-none outline-none text-[10px] text-gray-400 placeholder:text-gray-700 font-bold uppercase tracking-widest w-full">
             </div>
         </div>
@@ -555,7 +555,9 @@
             }
         }
 
+        let activeTab = 'dashboard';
         function switchTab(tabId) {
+            activeTab = tabId;
             // Close sidebar on mobile after selection
             const sidebar = document.getElementById('sidebar-menu');
             if (sidebar.classList.contains('open')) {
@@ -598,6 +600,14 @@
 
         // --- DATA LOADERS ---
         let currentMessageFilter = 'all';
+        let searchQuery = '';
+
+        function handleGlobalSearch(val) {
+            searchQuery = val.toLowerCase().trim();
+            if (activeTab === 'messages') loadMessages();
+            if (activeTab === 'projects') loadProjects();
+        }
+
         function filterMessages(f) {
             currentMessageFilter = f;
             document.getElementById('filter-all-messages').className = f === 'all' ? 'px-6 py-2 rounded-lg bg-taurusGold text-black text-[10px] font-black uppercase tracking-widest whitespace-nowrap transition-all' : 'px-6 py-2 rounded-lg text-gray-400 text-[10px] font-black uppercase tracking-widest whitespace-nowrap hover:text-white transition-all';
@@ -649,6 +659,10 @@
                         `;
                         leadsCount++;
                     }
+
+                    // Global Search Filter
+                    const searchSource = `${data.name || ''} ${data.email || ''} ${data.message || ''}`.toLowerCase();
+                    if (searchQuery && !searchSource.includes(searchQuery)) return;
 
                     // Filtering for Messages View
                     if (currentMessageFilter === 'unread' && !isNew) return;
@@ -724,6 +738,11 @@
                 let html = '';
                 snapshot.forEach(doc => {
                     const data = doc.data();
+
+                    // Global Search Filter
+                    const searchSource = `${data.projectName || ''} ${data.clientName || ''} ${data.clientEmail || ''}`.toLowerCase();
+                    if (searchQuery && !searchSource.includes(searchQuery)) return;
+
                     const status = data.status || 'active';
                     if (currentProjectFilter !== 'all' && status !== currentProjectFilter) return;
 
