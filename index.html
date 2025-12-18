@@ -1096,24 +1096,33 @@
                 let sifirlamaZamanlayicisi;
 
                 gizliButon.addEventListener('click', (e) => {
-                    // Eğer logoya tıklayınca anasayfaya gitmesini İSTEMİYORSAN, alttaki satırın başındaki // işaretlerini kaldır.
+                    // Sayfa yenilenmesini engelle ama fonksiyonelliği çalıştır
                     e.preventDefault();
 
                     tiklamaSayisi++;
+
+                    // 1. TEK TIKLAMADA HOME (SAYFA BAŞI) ETKİSİ
+                    if (tiklamaSayisi === 1) {
+                        window.scrollTo({
+                            top: 0,
+                            behavior: 'smooth'
+                        });
+                    }
 
                     // 2. 3 KERE TIKLANDI MI KONTROLÜ
                     if (tiklamaSayisi === 3) {
                         // Başarılı! Güvenlik paneline (Pattern Lock) yönlendirir.
                         window.location.href = 'gateway.html';
                         tiklamaSayisi = 0;
+                        return;
                     }
 
                     // 3. SÜREYİ SIFIRLAMA
-                    // Eğer 500 milisaniye (yarım saniye) içinde tekrar tıklanmazsa sayacı sıfırla.
+                    // Eğer 600 milisaniye içinde tekrar tıklanmazsa sayacı sıfırla.
                     clearTimeout(sifirlamaZamanlayicisi);
                     sifirlamaZamanlayicisi = setTimeout(() => {
                         tiklamaSayisi = 0;
-                    }, 500);
+                    }, 600);
                 });
             }
         });

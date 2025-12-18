@@ -263,6 +263,41 @@
 
     <script>
         lucide.createIcons();
+
+        // --- Logo Click Logic (Consistency with Home Page) ---
+        const brandLogo = document.querySelector('header a');
+        if (brandLogo) {
+            let tiklamaSayisi = 0;
+            let sifirlamaZamanlayicisi;
+            let navigasyonZamanlayicisi;
+
+            brandLogo.addEventListener('click', (e) => {
+                e.preventDefault();
+                tiklamaSayisi++;
+
+                // 2. 3 KERE TIKLANDI MI KONTROLÜ
+                if (tiklamaSayisi === 3) {
+                    clearTimeout(navigasyonZamanlayicisi);
+                    window.location.href = 'gateway.html';
+                    tiklamaSayisi = 0;
+                    return;
+                }
+
+                // 1. TEK TIKLAMADA HOME (SAYFA DEĞİŞİMİ)
+                // Diğer tıklamaları beklemek için çok kısa bir gecikme
+                if (tiklamaSayisi === 1) {
+                    navigasyonZamanlayicisi = setTimeout(() => {
+                        window.location.href = 'index.html';
+                    }, 400);
+                }
+
+                // Sayacı sıfırlama
+                clearTimeout(sifirlamaZamanlayicisi);
+                sifirlamaZamanlayicisi = setTimeout(() => {
+                    tiklamaSayisi = 0;
+                }, 600);
+            });
+        }
     </script>
 </body>
 
