@@ -137,6 +137,31 @@
             border-radius: 0.5rem;
         }
 
+        /* Search Highlight Animation */
+        @keyframes highlight-blink {
+
+            0%,
+            40%,
+            80%,
+            100% {
+                background: transparent;
+                color: inherit;
+            }
+
+            20%,
+            60% {
+                background: #FFD700;
+                color: #000;
+            }
+        }
+
+        .search-highlight {
+            animation: highlight-blink 1.5s ease-in-out;
+            padding: 0 2px;
+            border-radius: 2px;
+            font-weight: bold;
+        }
+
         /* Glass Search Bar */
         .glass-search {
             background: rgba(255, 255, 255, 0.02);
@@ -191,7 +216,8 @@
             <div class="glass-search flex items-center gap-3 px-4 py-3 rounded-xl group">
                 <i data-lucide="command"
                     class="w-4 h-4 text-gray-600 group-focus-within:text-taurusGold transition-colors"></i>
-                <input type="text" oninput="handleGlobalSearch(this.value)" placeholder="Global Command..."
+                <input type="text" oninput="handleGlobalSearch(this.value)" onkeydown="handleSearchKeyDown(event)"
+                    placeholder="Global Command..."
                     class="bg-transparent border-none outline-none text-[10px] text-gray-400 placeholder:text-gray-700 font-bold uppercase tracking-widest w-full">
             </div>
         </div>
@@ -601,11 +627,29 @@
         // --- DATA LOADERS ---
         let currentMessageFilter = 'all';
         let searchQuery = '';
+        let isEnterPressed = false;
 
         function handleGlobalSearch(val) {
             searchQuery = val.toLowerCase().trim();
             if (activeTab === 'messages') loadMessages();
             if (activeTab === 'projects') loadProjects();
+        }
+
+        function handleSearchKeyDown(e) {
+            if (e.key === 'Enter') {
+                isEnterPressed = true;
+                if (activeTab === 'messages') loadMessages();
+                if (activeTab === 'projects') loadProjects();
+                setTimeout(() => { isEnterPressed = false; }, 2000);
+            }
+        }
+
+        function highlightMatch(text, query) {
+            if (!query || !isEnterPressed) return text;
+            try {
+                const regex = new RegExp(`(${query})`, 'gi');
+                return String(text).replace(regex, '<span class="search-highlight">$1</span>');
+            } catch (e) { return text; }
         }
 
         function filterMessages(f) {
@@ -674,11 +718,11 @@
                                 ${isNew ? '<span class="px-2 py-0.5 rounded-full border border-taurusGold/50 text-taurusGold text-[9px] font-black uppercase">Unread</span>' : '<span class="px-2 py-0.5 rounded-full bg-white/5 text-gray-500 text-[9px] font-black uppercase">Archived</span>'}
                             </td>
                             <td class="p-6">
-                                <div class="font-bold text-white">${data.name || 'Anonymous'}</div>
-                                <div class="text-[10px] text-gray-500">${data.email || ''}</div>
+                                <div class="font-bold text-white">${highlightMatch(data.name || 'Anonymous', searchQuery)}</div>
+                                <div class="text-[10px] text-gray-500">${highlightMatch(data.email || '', searchQuery)}</div>
                             </td>
                             <td class="p-6 text-gray-400 text-xs">
-                                <div class="truncate max-w-sm">${data.message || 'No content...'}</div>
+                                <div class="truncate max-sm">${highlightMatch(data.message || 'No content...', searchQuery)}</div>
                             </td>
                             <td class="p-6 text-gray-600 text-[10px] font-mono">${date}</td>
                             <td class="p-6 text-right" onclick="event.stopPropagation()">
@@ -700,12 +744,12 @@
                                     <i data-lucide="user" class="w-6 h-6"></i>
                                 </div>
                                 <div class="flex-1 min-w-0">
-                                    <h4 class="font-bold text-sm ${isNew ? 'text-white' : 'text-gray-300'} truncate">${data.name || 'Anonymous'}</h4>
-                                    <p class="text-[10px] text-taurusGold/70 font-mono truncate">${data.email || ''}</p>
+                                    <h4 class="font-bold text-sm ${isNew ? 'text-white' : 'text-gray-300'} truncate">${highlightMatch(data.name || 'Anonymous', searchQuery)}</h4>
+                                    <p class="text-[10px] text-taurusGold/70 font-mono truncate">${highlightMatch(data.email || '', searchQuery)}</p>
                                 </div>
                                 <span class="text-[9px] text-gray-500 font-mono self-start mt-1">${date}</span>
                             </div>
-                            <p class="text-xs ${isNew ? 'text-gray-200 font-medium' : 'text-gray-500'} line-clamp-2 leading-relaxed italic mb-4">"${data.message || 'No content...'}"</p>
+                            <p class="text-xs ${isNew ? 'text-gray-200 font-medium' : 'text-gray-500'} line-clamp-2 leading-relaxed italic mb-4">"${highlightMatch(data.message || 'No content...', searchQuery)}"</p>
                             
                             <div class="pt-4 border-t border-white/5 flex items-center justify-between" onclick="event.stopPropagation()">
                                 <div class="flex items-center gap-1">
@@ -756,10 +800,10 @@
                             </div>
 
                             <div class="flex flex-col h-full pt-4">
-                                <h3 class="text-lg font-display font-bold text-white group-hover:text-taurusGold transition-colors mb-2">${data.projectName || 'Untitled'}</h3>
+                                <h3 class="text-lg font-display font-bold text-white group-hover:text-taurusGold transition-colors mb-2">${highlightMatch(data.projectName || 'Untitled', searchQuery)}</h3>
                                 <div class="flex items-center gap-2 mb-6">
                                     <div class="w-2 h-2 rounded-full bg-taurusGold opacity-50"></div>
-                                    <span class="text-[10px] text-gray-500 uppercase tracking-widest font-bold">${data.clientName || 'Private Client'}</span>
+                                    <span class="text-[10px] text-gray-500 uppercase tracking-widest font-bold">${highlightMatch(data.clientName || 'Private Client', searchQuery)}</span>
                                 </div>
 
                                 <div class="mt-auto pt-6 border-t border-white/5 flex items-center justify-between">
