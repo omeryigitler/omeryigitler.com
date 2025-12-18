@@ -121,11 +121,12 @@
         <div class="h-24 flex items-center justify-between px-8 border-b border-glassBorder">
             <div class="flex items-center gap-3">
                 <img src="assets/favicon_taurus.png" alt="Logo" class="w-10 h-10 object-contain brightness-110">
-                <span class="font-display font-bold text-sm tracking-widest text-taurusGold lowercase">ÖY Admin</span>
+                <span class="font-display font-bold text-sm tracking-widest text-taurusGold lowercase">Ömer
+                    Yiğitler</span>
             </div>
             <!-- Close button for mobile -->
             <button onclick="toggleSidebar()"
-                class="lg:hidden w-10 h-10 flex items-center justify-center rounded-full bg-white/5 text-white">
+                class="lg:hidden w-10 h-10 flex items-center justify-center rounded-full bg-white/5 text-white hover:bg-taurusGold hover:text-black transition-colors">
                 <i data-lucide="x"></i>
             </button>
         </div>
@@ -139,7 +140,7 @@
             <button onclick="switchTab('messages')" id="nav-messages"
                 class="nav-item w-full flex items-center px-6 py-4 text-gray-400 hover:text-white hover:bg-white/5 transition-all text-sm font-bold uppercase tracking-[0.2em]">
                 <i data-lucide="mail" class="w-5 h-5 mr-4"></i> Inbox
-                <span class="ml-auto bg-taurusGold text-black px-2 py-0.5 rounded-full text-[10px] font-black">3</span>
+                <span class="ml-auto bg-taurusGold text-black px-2 py-0.5 rounded-full text-[10px] font-black">0</span>
             </button>
             <button onclick="switchTab('projects')" id="nav-projects"
                 class="nav-item w-full flex items-center px-6 py-4 text-gray-400 hover:text-white hover:bg-white/5 transition-all text-sm font-bold uppercase tracking-[0.2em]">
@@ -575,19 +576,20 @@
 
                     // Mobile Card
                     mobileHtml += `
-                        <div onclick="openMessageModal('${id}')" class="message-card relative overflow-hidden active:scale-95 transition-all border ${isNew ? 'border-taurusGold/30 bg-taurusGold/[0.03]' : 'border-white/5 bg-white/[0.02]'}">
-                            ${isNew ? '<div class="absolute top-0 right-0 p-1"><div class="w-1.5 h-1.5 bg-taurusGold rounded-full animate-pulse"></div></div>' : ''}
-                            <div class="flex items-center gap-3 mb-3">
-                                <div class="w-10 h-10 rounded-full flex items-center justify-center bg-white/5 border border-white/10 text-taurusGold font-black text-xs">
-                                    ${(data.name || 'A').charAt(0).toUpperCase()}
+                        <div onclick="openMessageModal('${id}')" class="message-card relative overflow-hidden active:scale-95 transition-all border ${isNew ? 'border-taurusGold/50 bg-taurusGold/[0.08] ring-1 ring-taurusGold/20' : 'border-white/5 bg-white/[0.02]'}">
+                            ${isNew ? '<div class="absolute top-0 right-0 p-2"><div class="w-2 h-2 bg-taurusGold rounded-full animate-pulse shadow-[0_0_8px_rgba(255,215,0,0.6)]"></div></div>' : ''}
+                            <div class="flex items-center gap-4 mb-4">
+                                <div class="w-12 h-12 rounded-full flex items-center justify-center bg-white/5 border border-white/10 text-taurusGold shadow-lg">
+                                    <i data-lucide="user" class="w-6 h-6"></i>
                                 </div>
-                                <div>
-                                    <h4 class="font-bold text-sm text-white">${data.name || 'Anonymous'}</h4>
-                                    <p class="text-[10px] text-taurusGold/60">${data.email || ''}</p>
+                                <div class="flex-1 min-w-0">
+                                    <h4 class="font-bold text-sm ${isNew ? 'text-white' : 'text-gray-300'} truncate">${data.name || 'Anonymous'}</h4>
+                                    <p class="text-[10px] text-taurusGold/70 font-mono truncate">${data.email || ''}</p>
                                 </div>
-                                <span class="ml-auto text-[9px] text-gray-600 font-mono">${date}</span>
+                                <span class="text-[9px] text-gray-500 font-mono self-start mt-1">${date}</span>
                             </div>
-                            <p class="text-xs text-gray-400 line-clamp-2 italic">"${data.message || 'No content...'}"</p>
+                            <p class="text-xs ${isNew ? 'text-gray-200 font-medium' : 'text-gray-500'} line-clamp-2 leading-relaxed italic">"${data.message || 'No content...'}"</p>
+                            ${isNew ? '<div class="mt-3 flex justify-end"><span class="text-[8px] font-black uppercase tracking-widest text-taurusGold">Unread Transmission</span></div>' : ''}
                         </div>
                     `;
                 });
