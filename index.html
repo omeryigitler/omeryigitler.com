@@ -5,8 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ömer YİĞİTLER | Custom Web Design & Development Services</title>
-    <link rel="icon" href="assets/favicon1.svg" type="image/svg+xml">
-    <link rel="icon" href="assets/favicon.png" type="image/png">
+    <link rel="icon" href="assets/favicon_taurus.png" type="image/png">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <link
@@ -149,7 +148,6 @@
         class="fixed top-0 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-deepSpace rounded-full blur-[150px] -z-10 opacity-60">
     </div>
 
-    <!-- Modern Floating Glass Header -->
     <!-- Modern Floating Glass Header -->
     <header class="fixed top-6 left-1/2 -translate-x-1/2 z-50 w-[95%] max-w-5xl">
         <div
@@ -395,7 +393,6 @@
             <div class="flex flex-col md:flex-row items-center gap-12 w-full">
 
                 <!-- Text Content -->
-                <!-- Text Content -->
                 <div class="w-full flex-1 text-left">
                     <span
                         class="px-4 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-[10px] font-bold uppercase tracking-widest mb-6 inline-block">
@@ -415,7 +412,6 @@
                     </a>
                 </div>
 
-                <!-- Visual (ClickPilot-Style Device Insights) -->
                 <!-- Visual (ClickPilot-Style Device Insights) -->
                 <div class="w-full flex-1 relative">
                     <div
@@ -636,12 +632,13 @@
                     <form id="contact-form" class="space-y-4 relative z-10">
 
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <input type="text" name="name" placeholder="Your Name" required
+                            <input type="text" id="name" name="name" placeholder="Your Name" required
                                 class="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-taurusGold/50 focus:bg-black/40 transition-all text-sm">
-                            <input type="email" name="email" placeholder="Email Address" required
+                            <input type="email" id="email" name="email" placeholder="Email Address" required
                                 class="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-taurusGold/50 focus:bg-black/40 transition-all text-sm">
                         </div>
-                        <textarea name="message" rows="3" placeholder="Tell us about the project..." required
+                        <textarea id="message" name="message" rows="3" placeholder="Tell us about the project..."
+                            required
                             class="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-taurusGold/50 focus:bg-black/40 transition-all text-sm resize-none"></textarea>
 
                         <button type="submit" id="submit-btn"
@@ -651,101 +648,109 @@
                     </form>
                 </div>
 
-                <!-- Firebase SDKs -->
+                <!-- Firebase & Contact Logic -->
                 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
                 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
                 <script src="assets/js/firebase-config.js"></script>
                 <script>
                     document.addEventListener('DOMContentLoaded', () => {
-                        // Initialize Firebase
-                        if (window.firebaseConfig && window.firebaseConfig.apiKey !== "BURAYA_API_KEY_GELECEK") {
-                            firebase.initializeApp(window.firebaseConfig);
-                            const db = firebase.firestore();
+                        let db = null;
+                        const contactForm = document.getElementById('contact-form');
 
-                            // Track Page View (Real Impressions)
-                            const increment = firebase.firestore.FieldValue.increment(1);
+                        // 1. INITIALIZE FIREBASE SAFELY
+                        if (window.firebaseConfig && window.firebaseConfig.apiKey && window.firebaseConfig.apiKey !== "BURAYA_API_KEY_GELECEK") {
+                            try {
+                                if (!firebase.apps.length) {
+                                    firebase.initializeApp(window.firebaseConfig);
+                                }
+                                db = firebase.firestore();
+                                console.log("System Tracking: Active");
 
-                            // 1. Global Counter
-                            db.collection('stats').doc('global').set({ views: increment }, { merge: true })
-                                .catch(err => console.log("Tracking error:", err));
+                                // Global Counter
+                                db.collection('stats').doc('global').set({
+                                    views: firebase.firestore.FieldValue.increment(1)
+                                }, { merge: true }).catch(e => console.warn("Global stat error:", e));
 
-                            // 2. Daily Counter (For Traffic Chart)
-                            const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
-                            db.collection('stats').doc('daily').set({ [today]: increment }, { merge: true })
-                                .catch(err => console.log("Daily tracking error:", err));
-
-                            // --- FORM SUBMISSION LOGIC (The "Taurus" Hybrid System) ---
-                            const contactForm = document.getElementById('contact-form');
-                            if (contactForm) {
-                                // Clean up form attributes just in case
-                                contactForm.removeAttribute('action');
-                                contactForm.removeAttribute('method');
-                                contactForm.action = ""; // Force clear
-
-                                contactForm.addEventListener('submit', async (e) => {
-                                    e.preventDefault();
-                                    e.stopPropagation(); // Stop any other listeners
-
-                                    // 1. UI Feedback (Loading)
-                                    const submitBtn = contactForm.querySelector('button[type="submit"]');
-                                    const originalText = submitBtn.innerText;
-                                    submitBtn.innerText = 'SENDING...';
-                                    submitBtn.disabled = true;
-                                    submitBtn.classList.add('opacity-50', 'cursor-not-allowed');
-
-                                    // 2. Data Collection
-                                    const name = document.getElementById('name').value;
-                                    const email = document.getElementById('email').value;
-                                    const message = document.getElementById('message').value;
-
-                                    // Get secure values from Radio Buttons (Budget/Type if they exist)
-                                    // Assuming you might have radio buttons named 'budget' or similar in the form layout
-                                    const budgetInput = document.querySelector('input[name="budget"]:checked');
-                                    const budget = budgetInput ? budgetInput.value : 'Not Specified';
-
-                                    const formData = {
-                                        name: name,
-                                        email: email,
-                                        message: message,
-                                        budget: budget,
-                                        status: 'new', // For Admin Panel
-                                        timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-                                        source: 'website_contact_form'
-                                    };
-
-                                    try {
-                                        // 3. Primary: SAVE TO FIRESTORE (Source of Truth)
-                                        await db.collection('messages').add(formData);
-                                        console.log("Message saved to Firestore.");
-
-                                        // 4. Secondary: NOTIFY ADMIN (EmailJS)
-                                        // We don't block the user if mail fails. Data is already safe in DB.
-                                        try {
-                                            // Replace these placeholders with your actual EmailJS IDs
-                                            // Service ID, Template ID, Parameters
-                                            await emailjs.send("service_z24kvj8", "template_frpxeef", {
-                                                from_name: name,
-                                                from_email: email,
-                                                message: message + `\n\nBudget: ${budget}`,
-                                                reply_to: email
-                                            });
-                                            console.log("Admin notification sent.");
-                                        } catch (mailError) {
-                                            console.warn("Email notification failed, but data is safe in DB:", mailError);
-                                        }
-
-                                        // 5. Success Redirect
-                                        window.location.href = 'success.html';
-
-                                    } catch (error) {
-                                        console.error("Error adding document: ", error);
-                                        // Still try to submit form even if DB fails, so user doesn't get stuck
-                                        contactForm.submit();
-                                    }
-                                });
+                            } catch (error) {
+                                console.error("Firebase System Error:", error);
                             }
                         } else {
-                            console.warn("Firebase config not set.");
+                            console.warn("Firebase Config: Incomplete or Missing");
+                        }
+
+                        // 2. FORM SUBMISSION HANDLER
+                        if (contactForm) {
+                            contactForm.addEventListener('submit', async (e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+
+                                const submitBtn = document.getElementById('submit-btn');
+                                const originalText = submitBtn.innerText;
+
+                                // UI Loading State
+                                submitBtn.innerText = 'PROCESSING...';
+                                submitBtn.disabled = true;
+                                submitBtn.style.opacity = '0.7';
+
+                                // Collect Data
+                                const nameVal = document.getElementById('name').value;
+                                const emailVal = document.getElementById('email').value;
+                                const messageVal = document.getElementById('message').value;
+
+                                const budgetInput = document.querySelector('input[name="budget"]:checked');
+                                const budgetVal = budgetInput ? budgetInput.value : 'Not Specified';
+
+                                let submissionSuccess = false;
+
+                                // --- TASK A: SAVE TO FIRESTORE ---
+                                if (db) {
+                                    try {
+                                        await db.collection('messages').add({
+                                            name: nameVal,
+                                            email: emailVal,
+                                            message: messageVal,
+                                            budget: budgetVal,
+                                            status: 'new',
+                                            timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                                            source: 'website_main_form'
+                                        });
+                                        console.log("Database: Entry Created");
+                                        submissionSuccess = true;
+                                    } catch (dbError) {
+                                        console.error("Database Error:", dbError);
+                                    }
+                                }
+
+                                // --- TASK B: EMAIL NOTIFICATION (EmailJS) ---
+                                try {
+                                    if (typeof emailjs !== 'undefined') {
+                                        await emailjs.send("service_z24kvj8", "template_frpxeef", {
+                                            from_name: nameVal,
+                                            from_email: emailVal,
+                                            message: messageVal + `\n\nBudget: ${budgetVal}`,
+                                            reply_to: emailVal
+                                        });
+                                        console.log("Notification: Dispatched");
+                                        submissionSuccess = true; // Mark success if email sent even if DB failed
+                                    } else {
+                                        console.warn("Notification: EmailJS SDK not found");
+                                    }
+                                } catch (mailError) {
+                                    console.error("Notification Error:", mailError);
+                                }
+
+                                // --- TASK C: REDIRECT OR FALLBACK ---
+                                if (submissionSuccess) {
+                                    window.location.href = 'success.html';
+                                } else {
+                                    // Extreme Fallback: Native reload if everything failed
+                                    console.error("System Crash: All submission methods failed.");
+                                    submitBtn.innerText = "ERROR - RETRY";
+                                    submitBtn.disabled = false;
+                                    submitBtn.style.opacity = '1';
+                                    alert("Submission error. Please try again or contact directly via email.");
+                                }
+                            });
                         }
                     });
                 </script>
