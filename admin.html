@@ -376,11 +376,11 @@
                         <thead>
                             <tr
                                 class="bg-white/5 border-b border-white/5 text-[10px] font-black uppercase tracking-[0.2em] text-gray-500">
-                                <th class="p-6 w-24 whitespace-nowrap">STATUS</th>
-                                <th class="p-6 w-48 whitespace-nowrap">SENDER</th>
-                                <th class="p-6 w-auto">MESSAGE</th>
-                                <th class="p-6 w-32 whitespace-nowrap">DATE</th>
-                                <th class="p-6 w-40 text-right whitespace-nowrap">ACTIONS</th>
+                                <th class="p-4 w-[10%]">STATUS</th>
+                                <th class="p-4 w-[20%]">SENDER</th>
+                                <th class="p-4 w-[40%]">MESSAGE</th>
+                                <th class="p-4 w-[15%]">DATE</th>
+                                <th class="p-4 w-[15%] text-right">ACTIONS</th>
                             </tr>
                         </thead>
                         <tbody id="messages-tbody-desktop" class="text-sm text-gray-300">
@@ -656,18 +656,18 @@
                     // Desktop Row
                     desktopHtml += `
                         <tr onclick="openMessageModal('${id}')" class="border-b border-white/5 hover:bg-white/5 transition-all group cursor-pointer">
-                            <td class="p-6">
+                            <td class="p-4">
                                 ${isNew ? '<span class="px-2 py-0.5 rounded-full border border-taurusGold/50 text-taurusGold text-[9px] font-black uppercase">Unread</span>' : '<span class="px-2 py-0.5 rounded-full bg-white/5 text-gray-500 text-[9px] font-black uppercase">Archived</span>'}
                             </td>
-                            <td class="p-6">
-                                <div class="font-bold text-white truncate w-40" title="${data.name || 'Anonymous'}">${highlightMatch(data.name || 'Anonymous', searchQuery)}</div>
-                                <div class="text-[10px] text-gray-500 truncate w-40" title="${data.email || ''}">${highlightMatch(data.email || '', searchQuery)}</div>
+                            <td class="p-4">
+                                <div class="font-bold text-white truncate w-full max-w-[150px]" title="${data.name || 'Anonymous'}">${highlightMatch(data.name || 'Anonymous', searchQuery)}</div>
+                                <div class="text-[10px] text-gray-500 truncate w-full max-w-[150px]" title="${data.email || ''}">${highlightMatch(data.email || '', searchQuery)}</div>
                             </td>
-                            <td class="p-6 text-gray-400 text-xs">
-                                <div class="truncate max-w-xs" title="${data.message || ''}">${highlightMatch(data.message || 'No content...', searchQuery)}</div>
+                            <td class="p-4 text-gray-400 text-xs">
+                                <div class="truncate w-full max-w-[300px]" title="${data.message || ''}">${highlightMatch(data.message || 'No content...', searchQuery)}</div>
                             </td>
-                            <td class="p-6 text-gray-600 text-[10px] font-mono">${date}</td>
-                            <td class="p-6 text-right" onclick="event.stopPropagation()">
+                            <td class="p-4 text-gray-600 text-[10px] font-mono truncate">${date}</td>
+                            <td class="p-4 text-right" onclick="event.stopPropagation()">
                                 <div class="flex items-center justify-end gap-1">
                                     <button onclick="toggleMessageStatus('${id}', '${data.status}')" title="${isNew ? 'Mark as Read' : 'Mark as Unread'}" style="display:inline-flex !important" class="p-2 rounded-lg hover:bg-white/10 text-gray-400 hover:text-white transition-colors"><i data-lucide="${isNew ? 'mail-open' : 'mail'}" class="w-4 h-4"></i></button>
                                     <button onclick="deleteMessage('${id}')" title="Delete Signal" style="display:inline-flex !important" class="p-2 rounded-lg hover:bg-red-500/20 text-red-500 transition-colors"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
