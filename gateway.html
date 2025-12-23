@@ -6,128 +6,93 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Security Gateway | Ömer YİĞİTLER</title>
     <link rel="icon" href="assets/favicon1.svg" type="image/svg+xml">
-    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="assets/css/styles.css" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
     <link
         href="https://fonts.googleapis.com/css2?family=Syncopate:wght@400;700&family=Manrope:wght@300;400;600;800&display=swap"
         rel="stylesheet">
 
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: {
-                        display: ['"Syncopate"', 'sans-serif'],
-                        body: ['"Manrope"', 'sans-serif'],
-                    },
-                    colors: {
-                        obsidian: '#050505',
-                        taurusGold: '#FFD700',
-                        deepSpace: '#0B1120',
-                    },
-                    backgroundImage: {
-                        'symmetry-grid': "radial-gradient(circle at center, transparent 0%, #050505 100%), linear-gradient(rgba(255, 215, 0, 0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 215, 0, 0.03) 1px, transparent 1px)",
-                    },
-                    animation: {
-                        'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-                    }
-                }
-            }
-        }
-    </script>
 
-    <style>
-        .grid-bg {
-            background-size: 100% 100%, 40px 40px, 40px 40px;
-        }
 
-        .crystal-panel {
-            background: rgba(11, 17, 32, 0.6);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            box-shadow: 0 20px 50px -10px rgba(0, 0, 0, 0.8);
-        }
+    /* Pattern Lock Styles */
+    #pattern-container {
+    position: relative;
+    width: 300px;
+    height: 300px;
+    margin: 0 auto;
+    touch-action: none;
+    /* Prevent scrolling on mobile */
+    }
 
-        /* Pattern Lock Styles */
-        #pattern-container {
-            position: relative;
-            width: 300px;
-            height: 300px;
-            margin: 0 auto;
-            touch-action: none;
-            /* Prevent scrolling on mobile */
-        }
+    .dot {
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 2px solid rgba(255, 215, 0, 0.3);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    transition: all 0.3s ease;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    }
 
-        .dot {
-            position: absolute;
-            width: 20px;
-            height: 20px;
-            background: rgba(255, 255, 255, 0.1);
-            border: 2px solid rgba(255, 215, 0, 0.3);
-            border-radius: 50%;
-            transform: translate(-50%, -50%);
-            transition: all 0.3s ease;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
+    .dot::after {
+    content: '';
+    width: 6px;
+    height: 6px;
+    background: #FFD700;
+    border-radius: 50%;
+    opacity: 0.5;
+    transition: all 0.3s ease;
+    }
 
-        .dot::after {
-            content: '';
-            width: 6px;
-            height: 6px;
-            background: #FFD700;
-            border-radius: 50%;
-            opacity: 0.5;
-            transition: all 0.3s ease;
-        }
+    .dot.active {
+    background: rgba(255, 215, 0, 0.2);
+    border-color: #FFD700;
+    box-shadow: 0 0 15px rgba(255, 215, 0, 0.4);
+    }
 
-        .dot.active {
-            background: rgba(255, 215, 0, 0.2);
-            border-color: #FFD700;
-            box-shadow: 0 0 15px rgba(255, 215, 0, 0.4);
-        }
+    .dot.active::after {
+    opacity: 1;
+    transform: scale(1.5);
+    }
 
-        .dot.active::after {
-            opacity: 1;
-            transform: scale(1.5);
-        }
+    .dot.error {
+    border-color: #ef4444;
+    background: rgba(239, 68, 68, 0.2);
+    box-shadow: 0 0 15px rgba(239, 68, 68, 0.4);
+    }
 
-        .dot.error {
-            border-color: #ef4444;
-            background: rgba(239, 68, 68, 0.2);
-            box-shadow: 0 0 15px rgba(239, 68, 68, 0.4);
-        }
+    .dot.error::after {
+    background: #ef4444;
+    }
 
-        .dot.error::after {
-            background: #ef4444;
-        }
+    #line-svg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 10;
+    }
 
-        #line-svg {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            z-index: 10;
-        }
+    path {
+    stroke: #FFD700;
+    stroke-width: 3;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    fill: none;
+    filter: drop-shadow(0 0 5px rgba(255, 215, 0, 0.5));
+    }
 
-        path {
-            stroke: #FFD700;
-            stroke-width: 3;
-            stroke-linecap: round;
-            stroke-linejoin: round;
-            fill: none;
-            filter: drop-shadow(0 0 5px rgba(255, 215, 0, 0.5));
-        }
-
-        path.error {
-            stroke: #ef4444;
-            filter: drop-shadow(0 0 5px rgba(239, 68, 68, 0.5));
-        }
+    path.error {
+    stroke: #ef4444;
+    filter: drop-shadow(0 0 5px rgba(239, 68, 68, 0.5));
+    }
     </style>
 </head>
 

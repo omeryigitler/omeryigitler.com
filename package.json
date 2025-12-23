@@ -1,5 +1,29 @@
 {
   "dependencies": {
     "vercel": "^50.1.0"
+  },
+  "name": "omeryigitler.com",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build:css": "npx tailwindcss -i ./src/input.css -o ./assets/css/styles.css --minify",
+    "watch:css": "npx tailwindcss -i ./src/input.css -o ./assets/css/styles.css --watch",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/omeryigitler/omeryigitler.com.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/omeryigitler/omeryigitler.com/issues"
+  },
+  "homepage": "https://github.com/omeryigitler/omeryigitler.com#readme",
+  "devDependencies": {
+    "tailwindcss": "^3.4.19"
   }
 }

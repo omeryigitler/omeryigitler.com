@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ömer YİĞİTLER | Custom Web Design & Development Services</title>
     <link rel="icon" href="assets/favicon_taurus.png" type="image/png">
-    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="assets/css/styles.css" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
     <link
         href="https://fonts.googleapis.com/css2?family=Syncopate:wght@400;700&family=Manrope:wght@300;400;600;800&display=swap"
@@ -59,81 +59,14 @@
     }
     </script>
 
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: {
-                        display: ['"Syncopate"', 'sans-serif'], // Fütüristik ve geniş başlıklar
-                        body: ['"Manrope"', 'sans-serif'], // Okunaklı ve geometrik gövde
-                    },
-                    colors: {
-                        obsidian: '#050505',   // En koyu siyah
-                        deepSpace: '#0B1120',  // Derin lacivert
-                        taurusGold: '#FFD700', // Boğa'ya özel Altın Sarısı (Neon yerine daha tok)
-                        cyberGray: '#1E293B',
-                    },
-                    backgroundImage: {
-                        'symmetry-grid': "radial-gradient(circle at center, transparent 0%, #050505 100%), linear-gradient(rgba(255, 215, 0, 0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 215, 0, 0.03) 1px, transparent 1px)",
-                    },
-                    animation: {
-                        'hover-glow': 'hoverGlow 4s ease-in-out infinite',
-                        'float-center': 'floatCenter 6s ease-in-out infinite',
-                        'scan-line': 'scanLine 5s linear infinite',
-                    },
-                    keyframes: {
-                        hoverGlow: {
-                            '0%, 100%': { borderColor: 'rgba(255, 255, 255, 0.1)' },
-                            '50%': { borderColor: 'rgba(255, 215, 0, 0.5)', boxShadow: '0 0 30px rgba(255, 215, 0, 0.1)' },
-                        },
-                        floatCenter: {
-                            '0%, 100%': { transform: 'translateY(0)' },
-                            '50%': { transform: 'translateY(-15px)' }, // Daha kontrollü, az hareket
-                        },
-                        scanLine: {
-                            '0%': { transform: 'translateY(-100%)' },
-                            '100%': { transform: 'translateY(500%)' }
-                        }
-                    }
-                }
-            }
-        }
-    </script>
 
-    <style>
-        /* Mükemmel Simetri için Izgara Arka Planı */
-        .grid-bg {
-            background-size: 100% 100%, 40px 40px, 40px 40px;
-        }
-
-        /* Glassmorphism - Daha Sert ve Keskin (Kristal) */
-        .crystal-panel {
-            background: rgba(11, 17, 32, 0.6);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            box-shadow: 0 20px 50px -10px rgba(0, 0, 0, 0.8);
-        }
-
-        /* Başlıklarda Boşluk Kullanımı (Tracking) */
-        .widest-heading {
-            letter-spacing: 0.2em;
-        }
-
-        /* Dikey Çizgi */
-        .vertical-line {
-            width: 1px;
-            height: 100px;
-            background: linear-gradient(to bottom, transparent, #FFD700, transparent);
-        }
-    </style>
     <!-- EmailJS SDK -->
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
     <script type="text/javascript">
-            (function () {
-                // https://dashboard.emailjs.com/admin/account
-                emailjs.init("V1YT-CYD1Y7eX0BIE");
-            })();
+        (function () {
+            // https://dashboard.emailjs.com/admin/account
+            emailjs.init("V1YT-CYD1Y7eX0BIE");
+        })();
     </script>
 </head>
 

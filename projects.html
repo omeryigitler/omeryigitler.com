@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Projects | Ömer Yiğitler</title>
     <link rel="icon" href="assets/favicon_taurus.png" type="image/png">
-    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="assets/css/styles.css" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
     <link
         href="https://fonts.googleapis.com/css2?family=Syncopate:wght@400;700&family=Manrope:wght@300;400;600;800&display=swap"
@@ -35,60 +35,7 @@
     <!-- Canonical URL -->
     <link rel="canonical" href="https://omeryigitler.com/projects.html">
 
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: {
-                        display: ['"Syncopate"', 'sans-serif'],
-                        body: ['"Manrope"', 'sans-serif'],
-                    },
-                    colors: {
-                        obsidian: '#050505',
-                        deepSpace: '#0B1120',
-                        taurusGold: '#FFD700',
-                        cyberGray: '#1E293B',
-                    },
-                    backgroundImage: {
-                        'symmetry-grid': "radial-gradient(circle at center, transparent 0%, #050505 100%), linear-gradient(rgba(255, 215, 0, 0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 215, 0, 0.03) 1px, transparent 1px)",
-                    },
-                    animation: {
-                        'hover-glow': 'hoverGlow 4s ease-in-out infinite',
-                        'float-center': 'floatCenter 6s ease-in-out infinite',
-                        'scan-line': 'scanLine 6s linear infinite',
-                    },
-                    keyframes: {
-                        hoverGlow: {
-                            '0%, 100%': { borderColor: 'rgba(255, 255, 255, 0.1)' },
-                            '50%': { borderColor: 'rgba(255, 215, 0, 0.5)', boxShadow: '0 0 30px rgba(255, 215, 0, 0.1)' },
-                        },
-                        floatCenter: {
-                            '0%, 100%': { transform: 'translateY(0)' },
-                            '50%': { transform: 'translateY(-15px)' },
-                        },
-                        scanLine: {
-                            '0%': { transform: 'translateY(-100%)' },
-                            '100%': { transform: 'translateY(100vh)' }
-                        }
-                    }
-                }
-            }
-        }
-    </script>
 
-    <style>
-        .grid-bg {
-            background-size: 100% 100%, 40px 40px, 40px 40px;
-        }
-
-        .crystal-panel {
-            background: rgba(11, 17, 32, 0.6);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            box-shadow: 0 20px 50px -10px rgba(0, 0, 0, 0.8);
-        }
-    </style>
 </head>
 
 <body
