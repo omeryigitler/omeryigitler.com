@@ -374,7 +374,7 @@
 
                 <!-- Desktop Table View -->
                 <div
-                    class="hidden lg:block w-full bg-white/5 border border-glassBorder rounded-3xl overflow-x-auto backdrop-blur-md">
+                    class="hidden lg:block w-full bg-white/5 border border-glassBorder rounded-3xl overflow-hidden backdrop-blur-md">
                     <table class="w-full text-left border-collapse min-w-[800px]">
                         <thead>
                             <tr
@@ -662,16 +662,15 @@
                                 ${isNew ? '<span class="px-2 py-0.5 rounded-full border border-taurusGold/50 text-taurusGold text-[9px] font-black uppercase">Unread</span>' : '<span class="px-2 py-0.5 rounded-full bg-white/5 text-gray-500 text-[9px] font-black uppercase">Archived</span>'}
                             </td>
                             <td class="p-6">
-                                <div class="font-bold text-white">${highlightMatch(data.name || 'Anonymous', searchQuery)}</div>
-                                <div class="text-[10px] text-gray-500">${highlightMatch(data.email || '', searchQuery)}</div>
+                                <div class="font-bold text-white truncate w-40" title="${data.name || 'Anonymous'}">${highlightMatch(data.name || 'Anonymous', searchQuery)}</div>
+                                <div class="text-[10px] text-gray-500 truncate w-40" title="${data.email || ''}">${highlightMatch(data.email || '', searchQuery)}</div>
                             </td>
                             <td class="p-6 text-gray-400 text-xs">
-                                <div class="truncate max-sm">${highlightMatch(data.message || 'No content...', searchQuery)}</div>
+                                <div class="truncate max-w-xs" title="${data.message || ''}">${highlightMatch(data.message || 'No content...', searchQuery)}</div>
                             </td>
                             <td class="p-6 text-gray-600 text-[10px] font-mono">${date}</td>
                             <td class="p-6 text-right" onclick="event.stopPropagation()">
                                 <div class="flex items-center justify-end gap-1">
-                                    <button onclick="convertMessageToProject('${id}')" title="Convert to Project" style="display:inline-flex !important" class="p-2 rounded-lg hover:bg-taurusGold/20 text-taurusGold transition-colors"><i data-lucide="briefcase" class="w-4 h-4"></i></button>
                                     <button onclick="toggleMessageStatus('${id}', '${data.status}')" title="${isNew ? 'Mark as Read' : 'Mark as Unread'}" style="display:inline-flex !important" class="p-2 rounded-lg hover:bg-white/10 text-gray-400 hover:text-white transition-colors"><i data-lucide="${isNew ? 'mail-open' : 'mail'}" class="w-4 h-4"></i></button>
                                     <button onclick="deleteMessage('${id}')" title="Delete Signal" style="display:inline-flex !important" class="p-2 rounded-lg hover:bg-red-500/20 text-red-500 transition-colors"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
                                 </div>
