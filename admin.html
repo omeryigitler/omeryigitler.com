@@ -379,11 +379,11 @@
                         <thead>
                             <tr
                                 class="bg-white/5 border-b border-white/5 text-[10px] font-black uppercase tracking-[0.2em] text-gray-500">
-                                <th class="p-6">Status</th>
-                                <th class="p-6">Sender Intelligence</th>
-                                <th class="p-6">Subject / Payload</th>
-                                <th class="p-6">Timeline</th>
-                                <th class="p-6 text-right">Operations</th>
+                                <th class="p-6">STATUS</th>
+                                <th class="p-6">SENDER</th>
+                                <th class="p-6">MESSAGE</th>
+                                <th class="p-6">DATE</th>
+                                <th class="p-6 text-right">ACTIONS</th>
                             </tr>
                         </thead>
                         <tbody id="messages-tbody-desktop" class="text-sm text-gray-300">
@@ -671,9 +671,9 @@
                             <td class="p-6 text-gray-600 text-[10px] font-mono">${date}</td>
                             <td class="p-6 text-right" onclick="event.stopPropagation()">
                                 <div class="flex items-center justify-end gap-1">
-                                    <button onclick="convertMessageToProject('${id}')" title="Convert to Project" class="p-2 rounded-lg hover:bg-taurusGold/20 text-taurusGold transition-colors"><i data-lucide="briefcase" class="w-4 h-4"></i></button>
-                                    <button onclick="toggleMessageStatus('${id}', '${data.status}')" title="${isNew ? 'Mark as Read' : 'Mark as Unread'}" class="p-2 rounded-lg hover:bg-white/10 text-gray-400 hover:text-white transition-colors"><i data-lucide="${isNew ? 'mail-open' : 'mail'}" class="w-4 h-4"></i></button>
-                                    <button onclick="deleteMessage('${id}')" title="Delete Signal" class="p-2 rounded-lg hover:bg-red-500/20 text-red-500 transition-colors"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                                    <button onclick="convertMessageToProject('${id}')" title="Convert to Project" style="display:inline-flex !important" class="p-2 rounded-lg hover:bg-taurusGold/20 text-taurusGold transition-colors"><i data-lucide="briefcase" class="w-4 h-4"></i></button>
+                                    <button onclick="toggleMessageStatus('${id}', '${data.status}')" title="${isNew ? 'Mark as Read' : 'Mark as Unread'}" style="display:inline-flex !important" class="p-2 rounded-lg hover:bg-white/10 text-gray-400 hover:text-white transition-colors"><i data-lucide="${isNew ? 'mail-open' : 'mail'}" class="w-4 h-4"></i></button>
+                                    <button onclick="deleteMessage('${id}')" title="Delete Signal" style="display:inline-flex !important" class="p-2 rounded-lg hover:bg-red-500/20 text-red-500 transition-colors"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
                                 </div>
                             </td>
                         </tr>
