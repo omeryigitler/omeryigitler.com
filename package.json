@@ -9,6 +9,7 @@
   "scripts": {
     "build:css": "npx tailwindcss -i ./src/input.css -o ./assets/css/styles.css --minify",
     "watch:css": "npx tailwindcss -i ./src/input.css -o ./assets/css/styles.css --watch",
+    "build": "npm run build:css",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
