@@ -618,25 +618,34 @@
                         let db = null;
                         const contactForm = document.getElementById('contact-form');
 
-                        // 1. INITIALIZE FIREBASE SAFELY
-                        if (window.firebaseConfig && window.firebaseConfig.apiKey && window.firebaseConfig.apiKey !== "BURAYA_API_KEY_GELECEK") {
-                            try {
+                        // 1. INITIALIZE FIREBASE
+                        try {
+                            console.log("🔍 Checking Firebase Config...");
+
+                            if (typeof firebase === 'undefined') {
+                                console.error("❌ Firebase SDK not loaded!");
+                            } else if (!window.firebaseConfig) {
+                                console.error("❌ Firebase config not found!");
+                            } else {
+                                console.log("✅ Firebase Config found:", window.firebaseConfig.projectId);
+
                                 if (!firebase.apps.length) {
                                     firebase.initializeApp(window.firebaseConfig);
+                                    console.log("✅ Firebase initialized");
                                 }
+
                                 db = firebase.firestore();
-                                console.log("System Tracking: Active");
+                                console.log("✅ Firestore connected");
 
                                 // Global Counter
                                 db.collection('stats').doc('global').set({
                                     views: firebase.firestore.FieldValue.increment(1)
-                                }, { merge: true }).catch(e => console.warn("Global stat error:", e));
-
-                            } catch (error) {
-                                console.error("Firebase System Error:", error);
+                                }, { merge: true }).then(() => {
+                                    console.log("✅ Stats updated");
+                                }).catch(e => console.warn("⚠️ Stats error:", e));
                             }
-                        } else {
-                            console.warn("Firebase Config: Incomplete or Missing");
+                        } catch (error) {
+                            console.error("❌ Firebase Init Error:", error);
                         }
 
                         // 2. FORM SUBMISSION HANDLER WITH RATE LIMITING
