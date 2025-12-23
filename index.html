@@ -574,6 +574,11 @@
                             required
                             class="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-taurusGold/50 focus:bg-black/40 transition-all text-sm resize-none"></textarea>
 
+                        <!-- 🍯 HONEYPOT: Hidden field to catch bots (DO NOT REMOVE) -->
+                        <input type="text" name="website" id="honeypot-trap" placeholder="Your Website (Optional)"
+                            style="position: absolute; left: -9999px; top: -9999px; width: 1px; height: 1px; opacity: 0;"
+                            tabindex="-1" autocomplete="off" aria-hidden="true">
+
                         <button type="submit" id="submit-btn"
                             class="w-full py-4 rounded-xl bg-taurusGold text-black font-bold uppercase tracking-widest text-xs hover:bg-white hover:scale-[1.02] active:scale-95 transition-all duration-300 shadow-[0_0_20px_-5px_rgba(255,215,0,0.3)]">
                             Send Request
@@ -611,7 +616,7 @@
                             console.warn("Firebase Config: Incomplete or Missing");
                         }
 
-                        // 2. FORM SUBMISSION HANDLER
+                        // 2. FORM SUBMISSION HANDLER WITH RATE LIMITING
                         if (contactForm) {
                             contactForm.addEventListener('submit', async (e) => {
                                 e.preventDefault();
@@ -619,6 +624,26 @@
 
                                 const submitBtn = document.getElementById('submit-btn');
                                 const originalText = submitBtn.innerText;
+
+                                // SECURITY: Rate Limiting Check (3 submissions per hour)
+                                const RATE_LIMIT = 3;
+                                const TIME_WINDOW = 60 * 60 * 1000; // 1 hour in milliseconds
+                                const now = Date.now();
+
+                                // Get submission history from localStorage
+                                let submissions = JSON.parse(localStorage.getItem('formSubmissions') || '[]');
+
+                                // Remove submissions older than 1 hour
+                                submissions = submissions.filter(timestamp => now - timestamp < TIME_WINDOW);
+
+                                // Check if rate limit exceeded
+                                if (submissions.length >= RATE_LIMIT) {
+                                    const oldestSubmission = Math.min(...submissions);
+                                    const waitTime = Math.ceil((TIME_WINDOW - (now - oldestSubmission)) / 1000 / 60); // minutes
+
+                                    alert(`Security Limit Reached: You can only submit ${RATE_LIMIT} messages per hour. Please try again in ${waitTime} minute(s).`);
+                                    return;
+                                }
 
                                 // UI Loading State
                                 submitBtn.innerText = 'PROCESSING...';
@@ -630,8 +655,22 @@
                                 const emailVal = document.getElementById('email').value;
                                 const messageVal = document.getElementById('message').value;
 
-                                const budgetInput = document.querySelector('input[name="budget"]:checked');
-                                const budgetVal = budgetInput ? budgetInput.value : 'Not Specified';
+                                // 🍯 SECURITY: Honeypot Bot Detection
+                                const honeypotVal = document.getElementById('honeypot-trap').value;
+                                if (honeypotVal !== '') {
+                                    // Bot detected! Silently reject submission
+                                    console.log('🚫 Bot submission blocked via honeypot');
+                                    submitBtn.innerText = 'ERROR - PLEASE TRY AGAIN';
+                                    submitBtn.disabled = false;
+                                    submitBtn.style.opacity = '1';
+
+                                    // Show generic error to not alert the bot
+                                    setTimeout(() => {
+                                        alert('There was an error processing your request. Please refresh and try again.');
+                                        location.reload();
+                                    }, 500);
+                                    return;
+                                }
 
                                 let submissionSuccess = false;
 
@@ -642,7 +681,6 @@
                                             name: nameVal,
                                             email: emailVal,
                                             message: messageVal,
-                                            budget: budgetVal,
                                             status: 'new',
                                             timestamp: firebase.firestore.FieldValue.serverTimestamp(),
                                             source: 'website_main_form'
@@ -660,7 +698,7 @@
                                         await emailjs.send("service_z24kvj8", "template_frpxeef", {
                                             from_name: nameVal,
                                             from_email: emailVal,
-                                            message: messageVal + `\n\nBudget: ${budgetVal}`,
+                                            message: messageVal,
                                             reply_to: emailVal
                                         });
                                         console.log("Notification: Dispatched");
@@ -674,6 +712,10 @@
 
                                 // --- TASK C: REDIRECT OR FALLBACK ---
                                 if (submissionSuccess) {
+                                    // SECURITY: Record successful submission for rate limiting
+                                    submissions.push(now);
+                                    localStorage.setItem('formSubmissions', JSON.stringify(submissions));
+
                                     window.location.href = 'success.html';
                                 } else {
                                     // Extreme Fallback: Native reload if everything failed

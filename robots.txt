@@ -1,11 +1,13 @@
 User-agent: *
 Allow: /
 
+# Block all admin and sensitive areas
+Disallow: /admin.html
+Disallow: /gateway.html
+Disallow: /assets/js/firebase-config.js
+
 # Sitemap
 Sitemap: https://omeryigitler.com/sitemap.xml
-
-# Disallow admin or sensitive areas (if any in future)
-# Disallow: /admin/
 
 # Crawl-delay (optional, helps prevent server overload)
 Crawl-delay: 1
