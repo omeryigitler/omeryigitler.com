@@ -659,12 +659,12 @@
                             <td class="p-4">
                                 ${isNew ? '<span class="px-2 py-0.5 rounded-full border border-taurusGold/50 text-taurusGold text-[9px] font-black uppercase">Unread</span>' : '<span class="px-2 py-0.5 rounded-full bg-white/5 text-gray-500 text-[9px] font-black uppercase">Archived</span>'}
                             </td>
-                            <td class="p-4">
-                                <div class="font-bold text-white truncate w-full max-w-[150px]" title="${data.name || 'Anonymous'}">${highlightMatch(data.name || 'Anonymous', searchQuery)}</div>
-                                <div class="text-[10px] text-gray-500 truncate w-full max-w-[150px]" title="${data.email || ''}">${highlightMatch(data.email || '', searchQuery)}</div>
+                            <td class="p-4 max-w-0">
+                                <div class="font-bold text-white truncate w-full" title="${data.name || 'Anonymous'}">${highlightMatch(data.name || 'Anonymous', searchQuery)}</div>
+                                <div class="text-[10px] text-gray-500 truncate w-full" title="${data.email || ''}">${highlightMatch(data.email || '', searchQuery)}</div>
                             </td>
-                            <td class="p-4 text-gray-400 text-xs">
-                                <div class="truncate w-full max-w-[300px]" title="${data.message || ''}">${highlightMatch(data.message || 'No content...', searchQuery)}</div>
+                            <td class="p-4 max-w-0 text-gray-400 text-xs">
+                                <div class="truncate w-full" title="${data.message || ''}">${highlightMatch(data.message || 'No content...', searchQuery)}</div>
                             </td>
                             <td class="p-4 text-gray-600 text-[10px] font-mono truncate">${date}</td>
                             <td class="p-4 text-right" onclick="event.stopPropagation()">
