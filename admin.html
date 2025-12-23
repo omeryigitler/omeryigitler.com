@@ -486,15 +486,6 @@
         let currentOpenedMessageId = null;
 
         document.addEventListener('DOMContentLoaded', () => {
-            // ... (rest of listener)
-        });
-
-        // ... (rest of UI logic)
-
-        function openMessageModal(id) {
-            currentOpenedMessageId = id;
-            const data = messagesMap[id];
-            if (!data) return;
             if (window.firebaseConfig && window.firebaseConfig.apiKey !== "BURAYA_API_KEY_GELECEK") {
                 firebase.initializeApp(window.firebaseConfig);
                 db = firebase.firestore();
@@ -861,6 +852,7 @@
         }
 
         function openMessageModal(id) {
+            currentOpenedMessageId = id;
             const data = messagesMap[id];
             if (!data) return;
 
