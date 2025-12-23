@@ -374,16 +374,16 @@
 
                 <!-- Desktop Table View -->
                 <div
-                    class="hidden lg:block w-full bg-white/5 border border-glassBorder rounded-3xl overflow-hidden backdrop-blur-md">
-                    <table class="w-full text-left border-collapse">
+                    class="hidden lg:block w-full bg-white/5 border border-glassBorder rounded-3xl overflow-x-auto backdrop-blur-md">
+                    <table class="w-full text-left border-collapse min-w-[800px]">
                         <thead>
                             <tr
                                 class="bg-white/5 border-b border-white/5 text-[10px] font-black uppercase tracking-[0.2em] text-gray-500">
-                                <th class="p-6">STATUS</th>
-                                <th class="p-6">SENDER</th>
-                                <th class="p-6">MESSAGE</th>
-                                <th class="p-6">DATE</th>
-                                <th class="p-6 text-right">ACTIONS</th>
+                                <th class="p-6 w-24 whitespace-nowrap">STATUS</th>
+                                <th class="p-6 w-48 whitespace-nowrap">SENDER</th>
+                                <th class="p-6 w-auto">MESSAGE</th>
+                                <th class="p-6 w-32 whitespace-nowrap">DATE</th>
+                                <th class="p-6 w-40 text-right whitespace-nowrap">ACTIONS</th>
                             </tr>
                         </thead>
                         <tbody id="messages-tbody-desktop" class="text-sm text-gray-300">
