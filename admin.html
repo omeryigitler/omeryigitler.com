@@ -181,7 +181,7 @@
                 </div>
                 <span class="text-[10px] text-gray-500 uppercase font-black tracking-widest">System Online</span>
             </div>
-            <button onclick="window.location.href='index.html'"
+            <button onclick="firebase.auth().signOut().then(() => window.location.href='gateway.html')"
                 class="w-full flex items-center justify-center p-4 rounded-xl border border-red-500/20 bg-red-500/5 text-red-500 text-xs font-black uppercase tracking-widest hover:bg-red-500 hover:text-white transition-all">
                 <i data-lucide="log-out" class="w-4 h-4 mr-2"></i> Terminate Session
             </button>
@@ -474,6 +474,7 @@
     <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <script src="assets/js/firebase-config.js"></script>
 
     <script>
@@ -487,16 +488,28 @@
             if (window.firebaseConfig && window.firebaseConfig.apiKey !== "BURAYA_API_KEY_GELECEK") {
                 firebase.initializeApp(window.firebaseConfig);
                 db = firebase.firestore();
-                console.log("Intelligence System Initialized");
-                setupRealtimeListeners();
-                loadTrafficChart();
 
-                // Live Metadata Update
-                setInterval(() => {
-                    const ping = Math.floor(Math.random() * 15) + 12;
-                    const metaEl = document.getElementById('live-metadata');
-                    if (metaEl) metaEl.innerText = `MS-Pulse: ${ping}ms`;
-                }, 3000);
+                // SECURITY: Check authentication state
+                firebase.auth().onAuthStateChanged((user) => {
+                    if (user) {
+                        // User is authenticated - grant access
+                        console.log("✅ Authenticated access verified");
+                        console.log("Intelligence System Initialized");
+                        setupRealtimeListeners();
+                        loadTrafficChart();
+
+                        // Live Metadata Update
+                        setInterval(() => {
+                            const ping = Math.floor(Math.random() * 15) + 12;
+                            const metaEl = document.getElementById('live-metadata');
+                            if (metaEl) metaEl.innerText = `MS-Pulse: ${ping}ms`;
+                        }, 3000);
+                    } else {
+                        // User is NOT authenticated - redirect to gateway
+                        console.warn("⛔ Unauthorized access attempt - redirecting to gateway");
+                        window.location.href = 'gateway.html';
+                    }
+                });
             }
         });
 

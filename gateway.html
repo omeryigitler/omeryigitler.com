@@ -22,6 +22,11 @@
         href="https://fonts.googleapis.com/css2?family=Syncopate:wght@400;700&family=Manrope:wght@300;400;600;800&display=swap"
         rel="stylesheet">
 
+    <!-- Firebase SDK for Authentication -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="assets/js/firebase-config.js"></script>
+
     <style>
         /* Pattern Lock Styles */
         #pattern-container {
@@ -374,7 +379,7 @@
                 }
             }
 
-            function success() {
+            async function success() {
                 // Clear failed attempts on successful login
                 clearAttempts();
 
@@ -392,10 +397,24 @@
                     document.getElementById('success-msg').classList.remove('hidden');
                 }, 300);
 
-                setTimeout(() => {
-                    // REDIRECT TO ADMIN DASHBOARD
-                    window.location.href = 'admin.html';
-                }, 1500);
+                // SECURITY: Authenticate with Firebase before granting access
+                try {
+                    if (firebase.apps.length === 0) {
+                        firebase.initializeApp(window.firebaseConfig);
+                    }
+
+                    console.log('🔐 Authenticating admin access...');
+                    await firebase.auth().signInAnonymously();
+                    console.log('✅ Admin access granted');
+
+                    setTimeout(() => {
+                        window.location.href = 'admin.html';
+                    }, 1500);
+                } catch (error) {
+                    console.error('❌ Auth error:', error);
+                    alert('Authentication failed. Please try again.');
+                    location.reload();
+                }
             }
 
             function error() {
