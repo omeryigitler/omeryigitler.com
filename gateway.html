@@ -6,6 +6,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Security Gateway | Ömer YİĞİTLER</title>
     <link rel="icon" href="assets/favicon1.svg" type="image/svg+xml">
+
+    <!-- Google Analytics 4 -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-516666531"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { dataLayer.push(arguments); }
+        gtag('js', new Date());
+        gtag('config', 'G-516666531');
+    </script>
+
     <link href="assets/css/styles.css" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
     <link
@@ -145,6 +155,10 @@
         const CORRECT_PATTERN = [0, 3, 6, 7, 8]; // "L" shape (Top-Left -> Bottom-Left -> Bottom-Right)
         const GRID_SIZE = 3;
 
+        // SECURITY: Attempt Limiting
+        const MAX_ATTEMPTS = 3;
+        const LOCKOUT_DURATION = 5 * 60 * 1000; // 5 minutes in milliseconds
+
         // --- LOGIC ---
         const container = document.getElementById('pattern-container');
         const svg = document.getElementById('line-svg');
@@ -154,194 +168,273 @@
         let currentPath = [];
         let pattern = [];
 
-        // Initialize Dots
-        const spacing = 100; // px
-        const offset = 50; // padding inside container
+        // Check if locked out
+        function checkLockout() {
+            const lockoutData = JSON.parse(localStorage.getItem('patternLockout') || '{}');
+            const now = Date.now();
 
-        for (let i = 0; i < 9; i++) {
-            const row = Math.floor(i / 3);
-            const col = i % 3;
+            if (lockoutData.lockedUntil && now < lockoutData.lockedUntil) {
+                const remainingMs = lockoutData.lockedUntil - now;
+                const remainingMin = Math.ceil(remainingMs / 1000 / 60);
 
-            const dot = document.createElement('div');
-            dot.classList.add('dot');
-            dot.dataset.index = i;
-
-            // Layout (Absolute positioning)
-            const x = col * spacing + offset;
-            const y = row * spacing + offset;
-            dot.style.left = x + 'px';
-            dot.style.top = y + 'px';
-
-            container.appendChild(dot);
-            dots.push({ el: dot, x, y, index: i });
-        }
-
-        svg.appendChild(pLine);
-
-        // Interaction Handlers
-        function startPattern(e) {
-            e.preventDefault();
-            resetPattern();
-            isDragging = true;
-            handleInput(e);
-        }
-
-        function movePattern(e) {
-            if (!isDragging) return;
-            e.preventDefault();
-            handleInput(e, true);
-        }
-
-        function endPattern(e) {
-            if (!isDragging) return;
-            isDragging = false;
-            checkPattern();
-        }
-
-        function handleInput(e, isMove = false) {
-            let clientX, clientY;
-            if (e.touches) {
-                clientX = e.touches[0].clientX;
-                clientY = e.touches[0].clientY;
-            } else {
-                clientX = e.clientX;
-                clientY = e.clientY;
+                // Show lockout message
+                document.getElementById('main-panel').innerHTML = `
+                    <div class="text-center p-8">
+                        <i data-lucide="shield-alert" class="w-16 h-16 text-red-500 mx-auto mb-4"></i>
+                        <h2 class="font-display text-2xl text-red-500 font-bold mb-4">Access Temporarily Locked</h2>
+                        <p class="text-gray-400 text-sm mb-2">Too many failed attempts.</p>
+                        <p class="text-taurusGold font-bold text-lg">${remainingMin} minute(s) remaining</p>
+                    </div>
+                `;
+                lucide.createIcons();
+                return true;
             }
 
-            // Get coordinates relative to container
-            const rect = container.getBoundingClientRect();
-            const relX = clientX - rect.left;
-            const relY = clientY - rect.top;
+            return false;
+        }
 
-            // Check collision with dots
-            if (!isMove) {
-                // For click/start, standard hit testing
-                dots.forEach(dot => {
-                    const dx = relX - dot.x;
-                    const dy = relY - dot.y;
-                    if (Math.hypot(dx, dy) < 30) { // 30px hit radius
-                        addDot(dot);
-                    }
-                });
+        // Track failed attempts
+        function recordFailedAttempt() {
+            const lockoutData = JSON.parse(localStorage.getItem('patternLockout') || '{}');
+            const now = Date.now();
+
+            // Reset if lockout expired
+            if (lockoutData.lockedUntil && now >= lockoutData.lockedUntil) {
+                lockoutData.attempts = 0;
+                lockoutData.lockedUntil = null;
+            }
+
+            lockoutData.attempts = (lockoutData.attempts || 0) + 1;
+
+            if (lockoutData.attempts >= MAX_ATTEMPTS) {
+                lockoutData.lockedUntil = now + LOCKOUT_DURATION;
+                localStorage.setItem('patternLockout', JSON.stringify(lockoutData));
+
+                // Reload page to show lockout
+                setTimeout(() => location.reload(), 1000);
             } else {
-                // For drag, update the "current line" to mouse position
-                updateLine(relX, relY);
+                localStorage.setItem('patternLockout', JSON.stringify(lockoutData));
 
-                // And check collisions
-                dots.forEach(dot => {
-                    const dx = relX - dot.x;
-                    const dy = relY - dot.y;
-                    if (Math.hypot(dx, dy) < 30) {
-                        addDot(dot);
-                    }
-                });
+                // Show warning
+                const attemptsLeft = MAX_ATTEMPTS - lockoutData.attempts;
+                showAttemptWarning(attemptsLeft);
             }
         }
 
-        function addDot(dot) {
-            if (pattern.includes(dot.index)) return;
+        function showAttemptWarning(attemptsLeft) {
+            const warning = document.createElement('div');
+            warning.className = 'fixed top-4 left-1/2 -translate-x-1/2 bg-red-500/10 border border-red-500/30 text-red-500 px-6 py-3 rounded-lg z-50 animate-bounce';
+            warning.innerHTML = `<strong>Warning:</strong> ${attemptsLeft} attempt(s) remaining`;
+            document.body.appendChild(warning);
 
-            pattern.push(dot.index);
-            dot.el.classList.add('active');
-
-            // Navigator Vibrate for feedback (Android mostly)
-            if (navigator.vibrate) navigator.vibrate(20);
-
-            // Redraw path connecting only the locked dots
-            renderPath();
+            setTimeout(() => warning.remove(), 3000);
         }
 
-        function updateLine(mouseX, mouseY) {
-            // Draw lines between confirmed dots, PLUS a line to the current mouse pos
-            if (pattern.length === 0) return;
-
-            let d = '';
-            pattern.forEach((idx, i) => {
-                const dot = dots[idx];
-                d += (i === 0 ? 'M' : 'L') + dot.x + ',' + dot.y + ' ';
-            });
-
-            // Add line to cursor
-            d += 'L' + mouseX + ',' + mouseY;
-
-            pLine.setAttribute('d', d);
+        // Clear attempts on successful login
+        function clearAttempts() {
+            localStorage.removeItem('patternLockout');
         }
 
-        function renderPath() {
-            let d = '';
-            pattern.forEach((idx, i) => {
-                const dot = dots[idx];
-                d += (i === 0 ? 'M' : 'L') + dot.x + ',' + dot.y + ' ';
-            });
-            pLine.setAttribute('d', d);
-        }
+        // Check lockout on page load
+        if (checkLockout()) {
+            // Locked out, don't initialize pattern
+        } else {
 
-        function checkPattern() {
-            // Remove the trailing line segment to mouse
-            renderPath();
+            // Initialize Dots
+            const spacing = 100; // px
+            const offset = 50; // padding inside container
 
-            const isCorrect = JSON.stringify(pattern) === JSON.stringify(CORRECT_PATTERN);
+            for (let i = 0; i < 9; i++) {
+                const row = Math.floor(i / 3);
+                const col = i % 3;
 
-            if (isCorrect) {
-                success();
-            } else {
-                error();
+                const dot = document.createElement('div');
+                dot.classList.add('dot');
+                dot.dataset.index = i;
+
+                // Layout (Absolute positioning)
+                const x = col * spacing + offset;
+                const y = row * spacing + offset;
+                dot.style.left = x + 'px';
+                dot.style.top = y + 'px';
+
+                container.appendChild(dot);
+                dots.push({ el: dot, x, y, index: i });
             }
-        }
 
-        function success() {
-            pLine.style.stroke = '#4ade80'; // Green
-            dots.forEach(d => {
-                if (pattern.includes(d.index)) {
-                    d.el.style.borderColor = '#4ade80';
-                    d.el.style.backgroundColor = 'rgba(74, 222, 128, 0.2)';
+            svg.appendChild(pLine);
+
+            // Interaction Handlers
+            function startPattern(e) {
+                e.preventDefault();
+                resetPattern();
+                isDragging = true;
+                handleInput(e);
+            }
+
+            function movePattern(e) {
+                if (!isDragging) return;
+                e.preventDefault();
+                handleInput(e, true);
+            }
+
+            function endPattern(e) {
+                if (!isDragging) return;
+                isDragging = false;
+                checkPattern();
+            }
+
+            function handleInput(e, isMove = false) {
+                let clientX, clientY;
+                if (e.touches) {
+                    clientX = e.touches[0].clientX;
+                    clientY = e.touches[0].clientY;
+                } else {
+                    clientX = e.clientX;
+                    clientY = e.clientY;
                 }
-            });
 
-            document.getElementById('main-panel').classList.add('scale-0', 'opacity-0');
-            setTimeout(() => {
-                document.getElementById('main-panel').style.display = 'none';
-                document.getElementById('success-msg').classList.remove('hidden');
-            }, 300);
+                // Get coordinates relative to container
+                const rect = container.getBoundingClientRect();
+                const relX = clientX - rect.left;
+                const relY = clientY - rect.top;
 
-            setTimeout(() => {
-                // REDIRECT TO ADMIN DASHBOARD
-                window.location.href = 'admin.html';
-            }, 1500);
-        }
+                // Check collision with dots
+                if (!isMove) {
+                    // For click/start, standard hit testing
+                    dots.forEach(dot => {
+                        const dx = relX - dot.x;
+                        const dy = relY - dot.y;
+                        if (Math.hypot(dx, dy) < 30) { // 30px hit radius
+                            addDot(dot);
+                        }
+                    });
+                } else {
+                    // For drag, update the "current line" to mouse position
+                    updateLine(relX, relY);
 
-        function error() {
-            pLine.classList.add('error');
-            dots.forEach(d => {
-                if (pattern.includes(d.index)) d.el.classList.add('error');
-            });
+                    // And check collisions
+                    dots.forEach(dot => {
+                        const dx = relX - dot.x;
+                        const dy = relY - dot.y;
+                        if (Math.hypot(dx, dy) < 30) {
+                            addDot(dot);
+                        }
+                    });
+                }
+            }
 
-            // Vibrate error
-            if (navigator.vibrate) navigator.vibrate([50, 50, 50]);
+            function addDot(dot) {
+                if (pattern.includes(dot.index)) return;
 
-            setTimeout(resetPattern, 500);
-        }
+                pattern.push(dot.index);
+                dot.el.classList.add('active');
 
-        function resetPattern() {
-            pattern = [];
-            pLine.setAttribute('d', '');
-            pLine.classList.remove('error');
-            pLine.style.stroke = '';
-            dots.forEach(d => {
-                d.el.classList.remove('active', 'error');
-                d.el.style.borderColor = '';
-                d.el.style.backgroundColor = '';
-            });
-        }
+                // Navigator Vibrate for feedback (Android mostly)
+                if (navigator.vibrate) navigator.vibrate(20);
 
-        // Event Listeners
-        container.addEventListener('mousedown', startPattern);
-        window.addEventListener('mousemove', movePattern);
-        window.addEventListener('mouseup', endPattern);
+                // Redraw path connecting only the locked dots
+                renderPath();
+            }
 
-        container.addEventListener('touchstart', startPattern, { passive: false });
-        window.addEventListener('touchmove', movePattern, { passive: false });
-        window.addEventListener('touchend', endPattern);
+            function updateLine(mouseX, mouseY) {
+                // Draw lines between confirmed dots, PLUS a line to the current mouse pos
+                if (pattern.length === 0) return;
+
+                let d = '';
+                pattern.forEach((idx, i) => {
+                    const dot = dots[idx];
+                    d += (i === 0 ? 'M' : 'L') + dot.x + ',' + dot.y + ' ';
+                });
+
+                // Add line to cursor
+                d += 'L' + mouseX + ',' + mouseY;
+
+                pLine.setAttribute('d', d);
+            }
+
+            function renderPath() {
+                let d = '';
+                pattern.forEach((idx, i) => {
+                    const dot = dots[idx];
+                    d += (i === 0 ? 'M' : 'L') + dot.x + ',' + dot.y + ' ';
+                });
+                pLine.setAttribute('d', d);
+            }
+
+            function checkPattern() {
+                // Remove the trailing line segment to mouse
+                renderPath();
+
+                const isCorrect = JSON.stringify(pattern) === JSON.stringify(CORRECT_PATTERN);
+
+                if (isCorrect) {
+                    success();
+                } else {
+                    error();
+                }
+            }
+
+            function success() {
+                // Clear failed attempts on successful login
+                clearAttempts();
+
+                pLine.style.stroke = '#4ade80'; // Green
+                dots.forEach(d => {
+                    if (pattern.includes(d.index)) {
+                        d.el.style.borderColor = '#4ade80';
+                        d.el.style.backgroundColor = 'rgba(74, 222, 128, 0.2)';
+                    }
+                });
+
+                document.getElementById('main-panel').classList.add('scale-0', 'opacity-0');
+                setTimeout(() => {
+                    document.getElementById('main-panel').style.display = 'none';
+                    document.getElementById('success-msg').classList.remove('hidden');
+                }, 300);
+
+                setTimeout(() => {
+                    // REDIRECT TO ADMIN DASHBOARD
+                    window.location.href = 'admin.html';
+                }, 1500);
+            }
+
+            function error() {
+                // Record failed attempt
+                recordFailedAttempt();
+
+                pLine.classList.add('error');
+                dots.forEach(d => {
+                    if (pattern.includes(d.index)) d.el.classList.add('error');
+                });
+
+                // Vibrate error
+                if (navigator.vibrate) navigator.vibrate([50, 50, 50]);
+
+                setTimeout(resetPattern, 500);
+            }
+
+            function resetPattern() {
+                pattern = [];
+                pLine.setAttribute('d', '');
+                pLine.classList.remove('error');
+                pLine.style.stroke = '';
+                dots.forEach(d => {
+                    d.el.classList.remove('active', 'error');
+                    d.el.style.borderColor = '';
+                    d.el.style.backgroundColor = '';
+                });
+            }
+
+            // Event Listeners
+            container.addEventListener('mousedown', startPattern);
+            window.addEventListener('mousemove', movePattern);
+            window.addEventListener('mouseup', endPattern);
+
+            container.addEventListener('touchstart', startPattern, { passive: false });
+            window.addEventListener('touchmove', movePattern, { passive: false });
+            window.addEventListener('touchend', endPattern);
+        } // Close lockout check
 
     </script>
 </body>
