@@ -862,10 +862,12 @@
             const data = messagesMap[id];
             if (!data) return;
             switchTab('projects');
-            openProjectModal();
-            document.getElementById('p-client').value = data.name || '';
-            document.getElementById('p-email').value = data.email || '';
-            document.getElementById('p-requests').value = data.message || '';
+            // Pass data object to modal instead of filling after form.reset()
+            openProjectModalWithData({
+                client: data.name || '',
+                email: data.email || '',
+                requests: data.message || ''
+            });
         }
 
         let editingProjectId = null;
@@ -892,6 +894,24 @@
             } else {
                 document.getElementById('p-modal-title').innerText = "New Deployment";
             }
+        }
+
+        // Helper function to open project modal with pre-filled data
+        function openProjectModalWithData(data) {
+            editingProjectId = null;
+            const modal = document.getElementById('project-modal');
+            modal.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+
+            const form = document.getElementById('project-form');
+            form.reset();
+
+            // Fill fields AFTER reset
+            if (data.client) document.getElementById('p-client').value = data.client;
+            if (data.email) document.getElementById('p-email').value = data.email;
+            if (data.requests) document.getElementById('p-requests').value = data.requests;
+
+            document.getElementById('p-modal-title').innerText = "New Deployment";
         }
 
         function closeProjectModal() {
