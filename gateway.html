@@ -107,6 +107,44 @@
             stroke: #ef4444;
             filter: drop-shadow(0 0 5px rgba(239, 68, 68, 0.5));
         }
+
+        @keyframes shake-fix {
+
+            0%,
+            100% {
+                transform: translateX(0);
+            }
+
+            25% {
+                transform: translateX(-8px);
+            }
+
+            75% {
+                transform: translateX(8px);
+            }
+        }
+
+        .animate-shake {
+            animation: shake-fix 0.2s ease-in-out 0s 2;
+        }
+
+        @keyframes pulse-slow {
+
+            0%,
+            100% {
+                opacity: 0.3;
+                transform: scale(1);
+            }
+
+            50% {
+                opacity: 0.6;
+                transform: scale(1.05);
+            }
+        }
+
+        .animate-pulse-slow {
+            animation: pulse-slow 3s ease-in-out infinite;
+        }
     </style>
 </head>
 
@@ -120,7 +158,7 @@
         class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-taurusGold rounded-full blur-[150px] -z-10 opacity-5">
     </div>
 
-    <div class="crystal-panel p-8 md:p-12 rounded-3xl w-full max-w-md text-center transform transition-all duration-500 scale-100 opacity-100"
+    <div class="crystal-panel p-8 md:p-12 rounded-3xl w-full max-w-md text-center transform transition-all duration-500 scale-100 opacity-100 relative"
         id="main-panel">
 
         <div class="mb-8">
@@ -226,12 +264,38 @@
         }
 
         function showAttemptWarning(attemptsLeft) {
-            const warning = document.createElement('div');
-            warning.className = 'fixed top-4 left-1/2 -translate-x-1/2 bg-red-500/10 border border-red-500/30 text-red-500 px-6 py-3 rounded-lg z-50 animate-bounce';
-            warning.innerHTML = `<strong>Warning:</strong> ${attemptsLeft} attempt(s) remaining`;
-            document.body.appendChild(warning);
+            const panel = document.getElementById('main-panel');
 
-            setTimeout(() => warning.remove(), 3000);
+            // Remove existing warnings if any
+            const existing = panel.querySelectorAll('.warning-toast');
+            existing.forEach(e => e.remove());
+
+            const warning = document.createElement('div');
+
+            // NEW: Warning stays INSIDE panel at the top
+            warning.className = 'warning-toast w-full mb-4 bg-red-500/10 backdrop-blur-md border border-red-500/20 text-red-500 px-4 py-2 rounded-full animate-bounce flex items-center justify-center gap-2 shadow-[0_4px_20px_rgba(239,68,68,0.1)]';
+            warning.style.fontSize = '10px';
+            warning.style.fontWeight = '900';
+            warning.style.textTransform = 'uppercase';
+            warning.style.letterSpacing = '0.1em';
+
+            warning.innerHTML = `<i data-lucide="alert-triangle" style="width:12px; height:12px"></i> Warning: ${attemptsLeft} attempt(s) remaining`;
+
+            // NEW: Insert at the BEGINNING of the panel (before first child)
+            panel.insertBefore(warning, panel.firstChild);
+
+            lucide.createIcons();
+
+            // Shake effect on the panel
+            panel.classList.add('animate-shake');
+            setTimeout(() => panel.classList.remove('animate-shake'), 500);
+
+            // Fade out and remove
+            setTimeout(() => {
+                warning.style.opacity = '0';
+                warning.style.transition = 'opacity 0.5s ease';
+                setTimeout(() => warning.remove(), 500);
+            }, 3000);
         }
 
         // Clear attempts on successful login

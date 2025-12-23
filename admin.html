@@ -105,6 +105,54 @@
             border-color: rgba(255, 215, 0, 0.3);
             box-shadow: 0 0 20px rgba(255, 215, 0, 0.05);
         }
+
+        /* --- BULLETPROOF INBOX TABLE --- */
+        .inbox-table-fixed {
+            table-layout: fixed !important;
+            width: 100% !important;
+            border-collapse: collapse !important;
+        }
+
+        /* Force Column Widths */
+        .w-status {
+            width: 110px !important;
+        }
+
+        .w-sender {
+            width: 20% !important;
+        }
+
+        .w-message {
+            width: auto !important;
+        }
+
+        .w-date {
+            width: 110px !important;
+        }
+
+        .w-actions {
+            width: 100px !important;
+        }
+
+        /* Truncation Guarantee */
+        .force-truncate {
+            display: block !important;
+            width: 100% !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+            white-space: nowrap !important;
+        }
+
+        /* Clean TD Behavior */
+        .inbox-table-fixed td {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            vertical-align: middle;
+        }
+
+        /* Mobile specific adjustments inside media queries if needed, 
+           but these classes are primarily for the Desktop Desk View Table */
     </style>
 </head>
 
@@ -372,15 +420,15 @@
                 <!-- Desktop Table View -->
                 <div
                     class="hidden lg:block w-full bg-white/5 border border-glassBorder rounded-3xl overflow-hidden backdrop-blur-md">
-                    <table class="w-full text-left border-collapse table-fixed">
+                    <table class="inbox-table-fixed text-left">
                         <thead>
                             <tr
                                 class="bg-white/5 border-b border-white/5 text-[10px] font-black uppercase tracking-[0.2em] text-gray-500">
-                                <th class="p-4 w-[10%]">STATUS</th>
-                                <th class="p-4 w-[20%]">SENDER</th>
-                                <th class="p-4 w-[40%]">MESSAGE</th>
-                                <th class="p-4 w-[15%]">DATE</th>
-                                <th class="p-4 w-[15%] text-right">ACTIONS</th>
+                                <th class="p-4 w-status">STATUS</th>
+                                <th class="p-4 w-sender">SENDER</th>
+                                <th class="p-4 w-message">MESSAGE</th>
+                                <th class="p-4 w-date">DATE</th>
+                                <th class="p-4 w-actions text-right">ACTIONS</th>
                             </tr>
                         </thead>
                         <tbody id="messages-tbody-desktop" class="text-sm text-gray-300">
@@ -656,18 +704,18 @@
                     // Desktop Row
                     desktopHtml += `
                         <tr onclick="openMessageModal('${id}')" class="border-b border-white/5 hover:bg-white/5 transition-all group cursor-pointer">
-                            <td class="p-4">
+                            <td class="p-4 w-status">
                                 ${isNew ? '<span class="px-2 py-0.5 rounded-full border border-taurusGold/50 text-taurusGold text-[9px] font-black uppercase">Unread</span>' : '<span class="px-2 py-0.5 rounded-full bg-white/5 text-gray-500 text-[9px] font-black uppercase">Archived</span>'}
                             </td>
-                            <td class="p-4 max-w-0">
-                                <div class="font-bold text-white truncate w-full" title="${data.name || 'Anonymous'}">${highlightMatch(data.name || 'Anonymous', searchQuery)}</div>
-                                <div class="text-[10px] text-gray-500 truncate w-full" title="${data.email || ''}">${highlightMatch(data.email || '', searchQuery)}</div>
+                            <td class="p-4 w-sender">
+                                <div class="font-bold text-white force-truncate" title="${data.name || 'Anonymous'}">${highlightMatch(data.name || 'Anonymous', searchQuery)}</div>
+                                <div class="text-[10px] text-gray-500 force-truncate" title="${data.email || ''}">${highlightMatch(data.email || '', searchQuery)}</div>
                             </td>
-                            <td class="p-4 max-w-0 text-gray-400 text-xs">
-                                <div class="truncate w-full" title="${data.message || ''}">${highlightMatch(data.message || 'No content...', searchQuery)}</div>
+                            <td class="p-4 w-message text-gray-400 text-xs">
+                                <div class="force-truncate" title="${data.message || ''}">${highlightMatch(data.message || 'No content...', searchQuery)}</div>
                             </td>
-                            <td class="p-4 text-gray-600 text-[10px] font-mono truncate">${date}</td>
-                            <td class="p-4 text-right" onclick="event.stopPropagation()">
+                            <td class="p-4 w-date text-gray-600 text-[10px] font-mono">${date}</td>
+                            <td class="p-4 w-actions text-right" onclick="event.stopPropagation()">
                                 <div class="flex items-center justify-end gap-1">
                                     <button onclick="toggleMessageStatus('${id}', '${data.status}')" title="${isNew ? 'Mark as Read' : 'Mark as Unread'}" style="display:inline-flex !important" class="p-2 rounded-lg hover:bg-white/10 text-gray-400 hover:text-white transition-colors"><i data-lucide="${isNew ? 'mail-open' : 'mail'}" class="w-4 h-4"></i></button>
                                     <button onclick="deleteMessage('${id}')" title="Delete Signal" style="display:inline-flex !important" class="p-2 rounded-lg hover:bg-red-500/20 text-red-500 transition-colors"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
