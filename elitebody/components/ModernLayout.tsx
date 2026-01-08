@@ -125,7 +125,7 @@ const ModernLayout: React.FC<ModernLayoutProps> = ({ lang, setLang }) => {
         </div>
 
         {/* Main Grid - Stats & Terminal */}
-        <div className="grid lg:grid-cols-[1fr,1.3fr] gap-12 items-start mb-16">
+        <div className="grid lg:grid-cols-2 gap-12 items-start mb-16">
           {/* Left - Stats Form */}
           <div className="modern-card glow-card p-8 md:p-10 space-y-8 relative overflow-hidden group border-blue-500/20 h-full">
             <div className="absolute top-0 right-0 w-48 h-48 bg-blue-500/5 blur-[60px] -mr-24 -mt-24 group-hover:bg-blue-500/10 transition-colors pointer-events-none"></div>
