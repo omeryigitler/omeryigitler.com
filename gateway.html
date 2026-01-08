@@ -5,7 +5,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Security Gateway | Ömer YİĞİTLER</title>
-    <link rel="icon" href="assets/favicon1.svg" type="image/svg+xml">
+    <link rel="icon" href="assets/favicon_taurus.png" type="image/png">
+    <script src="assets/js/system-modals.js?v=V7"></script>
 
     <!-- Google Analytics 4 -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-516666531"></script>
@@ -476,7 +477,7 @@
                     }, 1500);
                 } catch (error) {
                     console.error('❌ Auth error:', error);
-                    alert('Authentication failed. Please try again.');
+                    await systemAlert('AUTH FAILED', 'Authentication failed. Please try again.', 'shield-x');
                     location.reload();
                 }
             }
@@ -519,6 +520,26 @@
         } // Close lockout check
 
     </script>
+    <!-- System Modal -->
+    <div id="system-modal"
+        class="fixed inset-0 z-[200] hidden items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+        <div class="glass-panel p-8 md:p-12 max-w-sm w-full text-center scale-95 opacity-0 transition-all duration-300"
+            id="system-modal-content">
+            <div id="modal-icon-container"
+                class="w-16 h-16 rounded-full border-2 border-taurusGold flex items-center justify-center mx-auto mb-6 shadow-[0_0_20px_rgba(255,215,0,0.2)]">
+                <i id="modal-icon" data-lucide="info" class="w-8 h-8 text-taurusGold"></i>
+            </div>
+            <h3 id="modal-title" class="font-display text-xl font-bold text-white mb-4 uppercase tracking-wider">SYSTEM
+                ALERT</h3>
+            <p id="modal-message" class="text-gray-400 text-[11px] mb-8 leading-relaxed">Message details go here.</p>
+            <div class="flex gap-3 justify-center">
+                <button id="modal-cancel-btn"
+                    class="hidden px-6 py-2.5 rounded-full border border-white/10 text-gray-500 font-bold text-[10px] uppercase tracking-widest hover:bg-white/5 transition-all">Cancel</button>
+                <button id="modal-confirm-btn"
+                    class="px-8 py-2.5 bg-taurusGold text-black font-bold text-[10px] uppercase tracking-widest rounded-full hover:bg-white transition-all shadow-lg">Confirm</button>
+            </div>
+        </div>
+    </div>
 </body>
 
 </html>

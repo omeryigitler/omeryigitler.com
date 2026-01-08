@@ -26,6 +26,7 @@
 
     <link href="assets/css/styles.css" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="assets/js/system-modals.js?v=V7"></script>
     <link
         href="https://fonts.googleapis.com/css2?family=Syncopate:wght@400;700&family=Manrope:wght@300;400;600;800&display=swap"
         rel="stylesheet">
@@ -35,7 +36,7 @@
         content="web design, web development, custom websites, mobile-first, responsive design, small business websites, Malta, Ömer Yiğitler">
     <meta name="author" content="Ömer YİĞİTLER">
     <meta name="theme-color" content="#050505">
-    <meta name="app-version" content="VERSION_FINAL_FIX_EMAILJS">
+    <meta name="app-version" content="V7_SYNERGY_UPDATE">
     <meta name="description"
         content="Premium web design and development for small businesses in Malta. Custom-coded, mobile-first websites that drive customers. Designed by Ömer Yiğitler.">
 
@@ -637,12 +638,19 @@
                                 db = firebase.firestore();
                                 console.log("✅ Firestore connected");
 
-                                // Global Counter
-                                db.collection('stats').doc('global').set({
-                                    views: firebase.firestore.FieldValue.increment(1)
-                                }, { merge: true }).then(() => {
-                                    console.log("✅ Stats updated");
-                                }).catch(e => console.warn("⚠️ Stats error:", e));
+                                // Global & Daily Counters
+                                const batch = db.batch();
+                                const today = new Date().toISOString().split('T')[0];
+
+                                const globalRef = db.collection('stats').doc('global');
+                                const dailyRef = db.collection('stats').doc('daily');
+
+                                batch.set(globalRef, { views: firebase.firestore.FieldValue.increment(1) }, { merge: true });
+                                batch.set(dailyRef, { [today]: firebase.firestore.FieldValue.increment(1) }, { merge: true });
+
+                                batch.commit()
+                                    .then(() => console.log("✅ Stats synchronized (Global & Daily)"))
+                                    .catch(e => console.warn("⚠️ Stats sync error:", e));
                             }
                         } catch (error) {
                             console.error("❌ Firebase Init Error:", error);
@@ -673,7 +681,7 @@
                                     const oldestSubmission = Math.min(...submissions);
                                     const waitTime = Math.ceil((TIME_WINDOW - (now - oldestSubmission)) / 1000 / 60); // minutes
 
-                                    alert(`Security Limit Reached: You can only submit ${RATE_LIMIT} messages per hour. Please try again in ${waitTime} minute(s).`);
+                                    await systemAlert('SECURITY LIMIT', `Security Limit Reached: You can only submit ${RATE_LIMIT} messages per hour. Please try again in ${waitTime} minute(s).`, 'shield-alert');
                                     return;
                                 }
 
@@ -697,8 +705,8 @@
                                     submitBtn.style.opacity = '1';
 
                                     // Show generic error to not alert the bot
-                                    setTimeout(() => {
-                                        alert('There was an error processing your request. Please refresh and try again.');
+                                    setTimeout(async () => {
+                                        await systemAlert('SYSTEM ERROR', 'There was an error processing your request. Please refresh and try again.', 'alert-circle');
                                         location.reload();
                                     }, 500);
                                     return;
@@ -755,7 +763,9 @@
                                     submitBtn.innerText = "ERROR - RETRY";
                                     submitBtn.disabled = false;
                                     submitBtn.style.opacity = '1';
-                                    alert("Submission error. Please try again or contact directly via email.");
+                                    await systemAlert('SUBMISSION ERROR', "Submission error. Please try again or contact directly via email.", 'mail-warning');
+                                    // Wait, it had a double alert/reload logic. Let me simplify.
+                                    location.reload();
                                 }
                             });
                         }
@@ -1136,6 +1146,26 @@
     </script>
 
 
+    <!-- System Modal -->
+    <div id="system-modal"
+        class="fixed inset-0 z-[200] hidden items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+        <div class="glass-panel p-8 md:p-12 max-w-sm w-full text-center scale-95 opacity-0 transition-all duration-300"
+            id="system-modal-content">
+            <div id="modal-icon-container"
+                class="w-16 h-16 rounded-full border-2 border-taurusGold flex items-center justify-center mx-auto mb-6 shadow-[0_0_20px_rgba(255,215,0,0.2)]">
+                <i id="modal-icon" data-lucide="info" class="w-8 h-8 text-taurusGold"></i>
+            </div>
+            <h3 id="modal-title" class="font-display text-xl font-bold text-white mb-4 uppercase tracking-wider">SYSTEM
+                ALERT</h3>
+            <p id="modal-message" class="text-gray-400 text-[11px] mb-8 leading-relaxed">Message details go here.</p>
+            <div class="flex gap-3 justify-center">
+                <button id="modal-cancel-btn"
+                    class="hidden px-6 py-2.5 rounded-full border border-white/10 text-gray-500 font-bold text-[10px] uppercase tracking-widest hover:bg-white/5 transition-all">Cancel</button>
+                <button id="modal-confirm-btn"
+                    class="px-8 py-2.5 bg-taurusGold text-black font-bold text-[10px] uppercase tracking-widest rounded-full hover:bg-white transition-all shadow-lg">Confirm</button>
+            </div>
+        </div>
+    </div>
 </body>
 
 </html>

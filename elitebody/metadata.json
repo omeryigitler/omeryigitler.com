@@ -1,0 +1,7 @@
+{
+  "name": "Legacy to Legend: Body Transformation",
+  "description": "A high-concept fitness coaching platform that transitions from a 1990s hacker aesthetic to a sleek, modern, AI-powered transformation engine.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
