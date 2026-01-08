@@ -178,8 +178,24 @@
                         <div
                             class="relative w-[340px] h-[200px] md:w-[480px] md:h-[280px] transition-all duration-700 group-hover:scale-105 cursor-pointer">
                             <!-- Screen -->
+                            <!-- Screen 1: Retro (v1) - Default Visible -->
                             <div
-                                class="absolute inset-0 bg-gray-800 rounded-lg border border-gray-700 shadow-2xl overflow-hidden flex flex-col z-10 transition-transform duration-500 group-hover:-translate-x-12">
+                                class="absolute inset-0 bg-gray-800 rounded-lg border border-gray-600 shadow-2xl overflow-hidden flex flex-col z-10 transition-transform duration-500 group-hover:-translate-x-12">
+                                <div
+                                    class="h-6 bg-[#008080] flex items-start px-1 border-b border-white box-border justify-between">
+                                    <span class="text-white text-[10px] py-1 px-1 font-bold">LEGACY CORE 1.0</span>
+                                </div>
+                                <div
+                                    class="flex-1 bg-[#008080] relative flex items-center justify-center overflow-hidden">
+                                    <img src="assets/elite-retro.png" alt="Elite Body Retro UI"
+                                        class="w-full h-full object-cover object-top opacity-100 transition-opacity duration-500">
+                                </div>
+                            </div>
+
+                            <!-- Second Screen (Retro Pop-out on Hover) -->
+                            <!-- Screen 2: Modern (v2) - Slides out on Hover -->
+                            <div
+                                class="hidden md:flex absolute inset-0 bg-gray-800 rounded-lg border border-gray-700 shadow-2xl overflow-hidden flex-col z-0 scale-90 translate-x-12 translate-y-6 opacity-40 blur-[2px] transition-all duration-500 group-hover:opacity-100 group-hover:blur-0 group-hover:translate-x-24 group-hover:rotate-3">
                                 <div
                                     class="h-6 bg-gray-900 flex items-center px-3 space-x-1.5 border-b border-gray-700">
                                     <div class="w-2 h-2 rounded-full bg-red-500"></div>
@@ -189,21 +205,6 @@
                                 <div
                                     class="flex-1 bg-gray-900 relative flex items-center justify-center overflow-hidden">
                                     <img src="assets/elite-modern.png" alt="Elite Body Modern UI"
-                                        class="w-full h-full object-cover object-top opacity-90 transition-opacity duration-500 group-hover:opacity-100">
-                                </div>
-                            </div>
-
-                            <!-- Second Screen (Retro Pop-out on Hover) -->
-                            <div
-                                class="hidden md:flex absolute inset-0 bg-gray-800 rounded-lg border border-gray-600 shadow-2xl overflow-hidden flex-col z-0 scale-90 translate-x-12 translate-y-6 opacity-40 blur-[2px] transition-all duration-500 group-hover:opacity-100 group-hover:blur-0 group-hover:translate-x-24 group-hover:rotate-3">
-                                <div
-                                    class="h-6 bg-[#008080] flex items-start px-1 border-b border-white box-border justify-between">
-                                    <span class="text-white text-[10px] py-1 px-1 font-bold">VÜCUT GELİŞTİRME OS
-                                        v1.0</span>
-                                </div>
-                                <div
-                                    class="flex-1 bg-[#008080] relative flex items-center justify-center overflow-hidden">
-                                    <img src="assets/elite-retro.png" alt="Elite Body Retro UI"
                                         class="w-full h-full object-cover object-top">
                                 </div>
                             </div>
