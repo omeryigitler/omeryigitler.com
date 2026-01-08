@@ -9,7 +9,7 @@ import { Language } from './translations';
 const App: React.FC = () => {
   const [isModern, setIsModern] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
-  const [lang, setLang] = useState<Language>('tr');
+  const [lang, setLang] = useState<Language>('en');
 
   const handleExecute = useCallback(() => {
     setIsTransitioning(true);
