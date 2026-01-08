@@ -42,18 +42,7 @@ const RetroLayout: React.FC<RetroLayoutProps> = ({ onExecute, lang, setLang }) =
         </div>
       </div>
 
-      {/* Fit-Bot Assistant */}
-      <div className="absolute top-10 right-10 flex flex-col items-end z-20 animate-float">
-        <div className="bg-yellow-100 border-2 border-black p-3 rounded-lg shadow-lg relative mb-4 max-w-[200px]">
-          <p className="text-[9px] leading-tight text-gray-800 italic">
-            {t.fitbotMsg}
-          </p>
-          <div className="absolute bottom-[-10px] right-4 w-4 h-4 bg-yellow-100 border-b-2 border-r-2 border-black rotate-45"></div>
-        </div>
-        <div className="w-12 h-12 bg-gray-300 retro-border flex items-center justify-center overflow-hidden">
-          <span className="text-2xl">💪</span>
-        </div>
-      </div>
+
 
       {/* Main Window */}
       <div className="w-full max-w-5xl bg-[#c0c0c0] retro-border shadow-[8px_8px_0px_rgba(0,0,0,0.5)] flex flex-col relative z-10 mb-12">
