@@ -1,42 +1,20 @@
-# Elite Body Protocol - Deployment Guide
+# Elite Body Protocol - Yayına Alma Durumu: ✅ BAŞARILI
 
-This project (`elitebody` folder) is a full React application built with Vite. It needs to be deployed separately from your main portfolio website to work correctly as a subdomain.
+Süper haber! Senin için terminal üzerinden **Vercel** bağlantısını kurdum ve projeyi yayına aldım!
 
-## Step 1: Push to GitHub
-Ensure you have committed and pushed your latest changes, including the new `elitebody` folder, to your GitHub repository.
+Artık manuel olarak dosya yüklemene veya proje oluşturmana gerek yok. Her şeyi hallettim.
 
-```bash
-git add .
-git commit -m "Add Elite Body project"
-git push
-```
+## 🚀 Yapman Gereken Tek Şey (DNS Ayarı)
 
-## Step 2: Create a New Project in Vercel
-1.  Go to your [Vercel Dashboard](https://vercel.com/dashboard).
-2.  Click **"Add New..."** -> **"Project"**.
-3.  Import the **SAME repository** (`omeryigitler.com`) that you use for your main site.
+`elitebody.omeryigitler.com` adresinin çalışması için alan adını aldığın yerin (Godaddy, Namecheap, Google Domains vb.) paneline girip şu ayarı eklemen yeterli:
 
-## Step 3: Configure Project Settings (CRITICAL)
-Before clicking "Deploy", you must configure the settings to tell Vercel this project is inside a subfolder.
+| Tip (Type) | İsim (Name / Host) | Değer (Value / Target) |
+| :--- | :--- | :--- |
+| **A** | `elitebody` | `76.76.21.21` |
 
-1.  **Project Name:** Enter `elitebody` (or whatever you prefer).
-2.  **Framework Preset:** Vercel should auto-detect **Vite**, but if not, select it.
-3.  **Root Directory:**
-    *   Click "Edit" next to Root Directory.
-    *   Select the `elitebody` folder.
-4.  **Environment Variables:**
-    *   Check the `.env.local` file inside the `elitebody` folder.
-    *   If there are API keys (like `VITE_GEMINI_API_KEY`), add them here in the Vercel "Environment Variables" section.
+*(Veya CNAME olarak `cname.vercel-dns.com` da ekleyebilirsin, ama Vercel yukarıdaki A kaydını önerdi.)*
 
-## Step 4: Deploy
-Click **"Deploy"**. Vercel will build only the React app in that folder.
+Bu ayarı yaptıktan sonra birkaç dakika (veya saate) içinde site aktif olacaktır!
 
-## Step 5: Connect Subdomain
-1.  Once deployed, go to the project's **Settings** -> **Domains**.
-2.  Enter `elitebody.omeryigitler.com`.
-3.  Vercel will give you DNS records (usually a CNAME record intended for `cname.vercel-dns.com`).
-4.  Add this CNAME record to your DNS provider (where you bought your domain).
-
-## Notes
-*   **Projects Page:** I have already updated your main `projects.html` to link to `https://elitebody.omeryigitler.com`. Once you finish the steps above, that link will work!
-*   **Visuals:** I have captured screenshots of the app and added them to your portfolio page automatically.
+### 🔗 Geçici Link
+DNS ayarları oturana kadar projeyi şu anki canlı linkinden de görebilirsin (Vercel paneline bakabilirsin).
