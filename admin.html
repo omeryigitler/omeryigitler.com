@@ -603,6 +603,31 @@
         let messagesMap = {};
         let currentOpenedMessageId = null;
 
+        // Helper: Format Referrer Source
+        function getReferrerInfo(ref) {
+            if (!ref || ref === 'Direct') return { label: 'Direct Entry', icon: 'zap' };
+
+            const url = ref.toLowerCase();
+            if (url.includes('instagram.com')) return { label: 'Instagram', icon: 'instagram' };
+            if (url.includes('facebook.com') || url.includes('fb.com')) return { label: 'Facebook', icon: 'facebook' };
+            if (url.includes('t.co') || url.includes('twitter.com') || url.includes('x.com')) return { label: 'X (Twitter)', icon: 'twitter' };
+            if (url.includes('linkedin.com')) return { label: 'LinkedIn', icon: 'linkedin' };
+            if (url.includes('youtube.com') || url.includes('youtu.be')) return { label: 'YouTube', icon: 'youtube' };
+            if (url.includes('google.')) return { label: 'Google Search', icon: 'search' };
+            if (url.includes('tiktok.com')) return { label: 'TikTok', icon: 'music-2' };
+            if (url.includes('reddit.com')) return { label: 'Reddit', icon: 'message-square' };
+            if (url.includes('whatsapp.com') || url.includes('wa.me')) return { label: 'WhatsApp', icon: 'phone' };
+            if (url.includes('mail.') || url.includes('outlook') || url.includes('gmail')) return { label: 'Email', icon: 'mail' };
+            if (url.includes('github.com')) return { label: 'GitHub', icon: 'github' };
+
+            try {
+                const domain = new URL(ref).hostname.replace('www.', '');
+                return { label: domain, icon: 'external-link' };
+            } catch (e) {
+                return { label: 'External Link', icon: 'link' };
+            }
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
             if (window.firebaseConfig && window.firebaseConfig.apiKey !== "BURAYA_API_KEY_GELECEK") {
                 firebase.initializeApp(window.firebaseConfig);
@@ -1016,6 +1041,8 @@
                         minute: '2-digit',
                         second: '2-digit'
                     });
+                    const refInfo = getReferrerInfo(visit.referrer || 'Direct');
+
                     historyHtml += `
                         <div class="flex items-start gap-4 p-4 rounded-xl bg-white/5 border border-white/5 hover:border-taurusGold/20 transition-all">
                             <div class="flex flex-col items-center gap-2">
@@ -1024,15 +1051,18 @@
                                 </div>
                                 ${idx < data.history.length - 1 ? '<div class="w-0.5 h-8 bg-taurusGold/20"></div>' : ''}
                             </div>
-                            <div class="flex-1">
+                            <div class="flex-1 min-w-0">
                                 <div class="flex items-center gap-2 mb-1">
                                     <i data-lucide="file-text" class="w-4 h-4 text-gray-400"></i>
-                                    <span class="text-white font-mono text-sm">${visit.page || '/unknown'}</span>
+                                    <span class="text-white font-mono text-sm truncate">${visit.page || '/unknown'}</span>
                                 </div>
-                                <p class="text-xs text-gray-500 mb-2">${visit.title || 'Untitled Page'}</p>
-                                <div class="flex items-center gap-4 text-[10px] text-gray-600">
-                                    <span>⏰ ${time}</span>
-                                    <span>🔗 ${visit.referrer || 'Direct'}</span>
+                                <p class="text-xs text-gray-500 mb-2 truncate">${visit.title || 'Untitled Page'}</p>
+                                <div class="flex flex-wrap items-center gap-x-4 gap-y-2 text-[10px] text-gray-600">
+                                    <span class="flex items-center gap-1">⏰ ${time}</span>
+                                    <span class="flex items-center gap-1.5 p-1 px-2.5 rounded-full bg-taurusGold/10 text-taurusGold border border-taurusGold/20 font-bold uppercase tracking-wider text-[9px]">
+                                        <i data-lucide="${refInfo.icon}" class="w-2.5 h-2.5"></i>
+                                        source: ${refInfo.label}
+                                    </span>
                                 </div>
                             </div>
                         </div>
