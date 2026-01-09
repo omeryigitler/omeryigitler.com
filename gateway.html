@@ -234,7 +234,7 @@
             // LISTEN FOR APPROVAL (Polling Backend to Bypass Rules)
             const checkInterval = setInterval(async () => {
                 try {
-                    const res = await fetch(`/.netlify/functions/check_status?reqId=${REQ_ID}`);
+                    const res = await fetch(`/.netlify/functions/check_status?reqId=${REQ_ID}&t=${Date.now()}`);
                     const data = await res.json();
 
                     if (data.status === 'approved') {
