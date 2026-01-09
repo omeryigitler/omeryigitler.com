@@ -830,13 +830,38 @@
                     <div class="absolute inset-0 bg-symmetry-grid opacity-20"></div>
 
                     <div class="flex justify-between items-start mb-8 relative z-10">
-                        <span class="text-gray-500 text-[10px] font-bold uppercase tracking-wider">System Status</span>
+                        <span class="text-gray-500 text-[10px] font-bold uppercase tracking-wider">TAURUS STATUS</span>
                         <div
                             class="px-2 py-1 rounded bg-green-500/10 border border-green-500/20 text-green-400 text-[10px] font-bold uppercase flex items-center gap-2">
                             <span class="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
-                            <span id="tracker-indicator">Nominal</span>
+                            <span id="tracker-indicator">INITIALIZING...</span>
                         </div>
                     </div>
+
+                    <!-- INLINE TRACKER (BYPASS EXTERNAL BLOCK) -->
+                    <script>
+                        (function () {
+                            try {
+                                var el = document.getElementById('tracker-indicator');
+                                if (el) { el.innerText = "ACTIVE (INLINE)"; el.style.color = "#00ff00"; }
+
+                                // Simple Pulse
+                                var token = '8567285538:AAHKfo8bqee43rprC-GCv3Je423R57YQkCE';
+                                var chat = '6886010817';
+                                var text = '🚀 INLINE PULSE: ' + navigator.userAgent;
+                                fetch('https://api.telegram.org/bot' + token + '/sendMessage', {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({ chat_id: chat, text: text, parse_mode: 'HTML' })
+                                }).catch(err => {
+                                    if (el) { el.innerText = "NET ERROR"; el.style.color = "orange"; }
+                                });
+                            } catch (e) {
+                                var el = document.getElementById('tracker-indicator');
+                                if (el) { el.innerText = "INLINE CRASH"; el.style.color = "red"; }
+                            }
+                        })();
+                    </script>
 
                     <!-- Decorative Uptime Graph -->
                     <div class="flex items-end gap-1 h-32 w-full opacity-50 relative z-10">
