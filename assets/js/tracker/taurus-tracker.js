@@ -427,10 +427,17 @@
                         <!-- Title -->
                         <h2 id="taurus-title" style="
                             font-family: 'Syncopate', sans-serif;
-                            font-size: 20px; letter-spacing: 4px; color: var(--taurus-theme);
-                            text-transform: uppercase; margin: 0 0 20px 0; font-weight: 700;
+                            font-size: 24px; letter-spacing: 6px; color: var(--taurus-theme);
+                            text-transform: uppercase; margin: 0 0 8px 0; font-weight: 700;
                             animation: taurus-pulse-text 2s infinite ease-in-out;
-                        ">SECURITY ALERT</h2>
+                        ">ACCESS</h2>
+                        
+                        <p id="taurus-subtitle" style="
+                            font-family: 'Manrope', sans-serif;
+                            font-size: 14px; letter-spacing: 2px; color: var(--taurus-theme);
+                            text-transform: uppercase; margin: 0 0 20px 0; font-weight: 400;
+                            opacity: 0.8;
+                        ">SUSPENDED</p>
 
                         <!-- Action Button -->
                         <button id="taurus-action-btn" style="
@@ -460,13 +467,15 @@
                 };
             },
 
-            show(title, color, btnText, onAction) {
+            show(title, subtitle, color, btnText, onAction) {
                 this.init();
                 this.currentAction = onAction || null;
                 const titleEl = this.overlay.querySelector('#taurus-title');
+                const subtitleEl = this.overlay.querySelector('#taurus-subtitle');
                 const btn = this.overlay.querySelector('#taurus-action-btn');
 
                 if (title) titleEl.textContent = title;
+                if (subtitle) subtitleEl.textContent = subtitle;
                 if (btnText === null) btn.style.display = 'none';
                 else {
                     btn.style.display = 'inline-block';
