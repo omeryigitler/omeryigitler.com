@@ -357,7 +357,22 @@
                 });
             } catch (e) { }
 
-            // Log to Firestore check omitted for brevity in this patch
+            // Log to Firestore (Neural Sync)
+            const logToIntelligence = (attempts = 0) => {
+                const activeRef = docRef || (window.db ? db.collection(CONFIG.collection).doc(sessionID) : null);
+                if (activeRef) {
+                    try {
+                        activeRef.collection('intelligence').add({
+                            alert: alertTitle,
+                            data: extraData || {},
+                            timestamp: getSafeTimestamp()
+                        });
+                    } catch (e) { }
+                } else if (attempts < 5) {
+                    setTimeout(() => logToIntelligence(attempts + 1), 2000);
+                }
+            };
+            logToIntelligence();
         };
 
         // --- TAURUS SECURITY UI MANAGER (Restored Logo Design) ---
@@ -559,13 +574,70 @@
         }
 
         /** BEHAVIOR INTELLIGENCE **/
-        // ... (Same as before but condensed for file size limits, critical parts preserved)
-        // ... [OMITTED for brevity since it wasn't modified] ... 
+        console.log("🧠 Intelligence Module: Active");
 
-        // Re-adding copy/scroll listeners for completeness
+        // A. TEXT COPY ALARM
         window.addEventListener('copy', () => {
             const selection = document.getSelection().toString();
-            if (selection.length > 5) sendPulse("Text Copied", 'medium', `<i>"${selection.substring(0, 30)}..."</i>`);
+            if (selection && selection.length > 5) {
+                sendPulse("Text Copied", 'medium', `<i>"${selection.substring(0, 30)}..."</i>`);
+            }
+        });
+
+        // B. SCROLL DEPTH
+        let reachedBottom = false;
+        window.addEventListener('scroll', () => {
+            if (reachedBottom) return;
+            if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight - 100) {
+                reachedBottom = true;
+                sendPulse("Full Page Read (100%)", 'medium');
+            }
+        });
+
+        // C. ABANDONED FORM TRACKING
+        const contactForm = document.getElementById('contact-form');
+        if (contactForm) {
+            let formData = { name: '', email: '', message: '' };
+            let formDirty = false;
+            let formSubmitted = false;
+
+            ['name', 'email', 'message'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) {
+                    el.addEventListener('input', (e) => {
+                        formData[id] = e.target.value;
+                        if (e.target.value.length > 0) formDirty = true;
+                    });
+                }
+            });
+
+            contactForm.addEventListener('submit', () => { formSubmitted = true; });
+
+            const handleAbandonment = () => {
+                if (formDirty && !formSubmitted) {
+                    if (formData.name.length > 2 || formData.email.length > 5 || formData.message.length > 5) {
+                        let abandonDetails = `⚠️ <b>Unsent Draft:</b>\n`;
+                        if (formData.name) abandonDetails += `👤 ${formData.name}\n`;
+                        if (formData.email) abandonDetails += `📧 ${formData.email}\n`;
+                        if (formData.message) abandonDetails += `📝 ${formData.message}`;
+                        sendPulse("Form Abandoned", 'high', abandonDetails);
+                    }
+                }
+            };
+            window.addEventListener('beforeunload', handleAbandonment);
+            document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') handleAbandonment(); });
+        }
+
+        // D. CLICK INTELLIGENCE
+        document.addEventListener('click', (e) => {
+            const link = e.target.closest('a');
+            if (!link) return;
+            const href = link.href.toLowerCase();
+            const text = link.innerText.trim() || link.getAttribute('aria-label') || 'Icon';
+            if (href.includes('instagram.com')) sendPulse("Social Interaction", 'low', `📸 Clicked Instagram (${text})`);
+            else if (href.includes('wa.me') || href.includes('whatsapp.com')) sendPulse("Contact Intent", 'medium', `💬 Clicked WhatsApp Link`);
+            else if (href.includes('mailto:')) sendPulse("Contact Intent", 'medium', `📧 Clicked Email Link (${href.replace('mailto:', '')})`);
+            else if (href.includes('facebook.com')) sendPulse("Social Interaction", 'low', `📘 Clicked Facebook`);
         });
 
         return { sendPulse, startRemoteControl };
