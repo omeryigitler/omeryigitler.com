@@ -43,7 +43,8 @@ exports.handler = async (event, context) => {
                 'Expires': '0'
             },
             body: JSON.stringify({
-                action: doc.data().action || null
+                action: doc.data().action || null,
+                action_timestamp: doc.data().action_timestamp || null
             })
         };
 
