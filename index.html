@@ -661,369 +661,282 @@
                     document.addEventListener('DOMContentLoaded', async () => {
                         let db = null;
                         const contactForm = document.getElementById('contact-form');
+                        const statusIndicator = document.getElementById('tracker-indicator');
+
+                        function updateStatus(text, color) {
+                            if (statusIndicator) {
+                                statusIndicator.innerText = text;
+                                statusIndicator.style.color = color;
+                                statusIndicator.parentElement.parentElement.style.borderColor = color + "44"; // Dynamic Glow
+                            }
+                        }
 
                         // 1. INITIALIZE FIREBASE & AUTH
                         try {
-                            console.log("🔍 Checking Firebase Config...");
-
                             if (typeof firebase === 'undefined') {
-                                console.error("❌ Firebase SDK not loaded!");
-                            } else if (!window.firebaseConfig) {
-                                console.error("❌ Firebase config not found!");
-                            } else {
-                                if (!firebase.apps.length) {
-                                    firebase.initializeApp(window.firebaseConfig);
-                                    console.log("✅ Firebase initialized");
-                                }
-
-                                // AUTHENTICATION (Required for Database Access)
-                                try {
-                                    const userCredential = await firebase.auth().signInAnonymously();
-                                    console.log("✅ Anonymous Auth Success:", userCredential.user.uid);
-
-                                    // Initialize Firestore only AFTER Auth
-                                    window.db = firebase.firestore();
-                                    db = window.db;
-                                    console.log("✅ Firestore connected (Global)");
-
-                                    // Global & Daily Counters
-                                    const batch = db.batch();
-                                    const today = new Date().toISOString().split('T')[0];
-
-                                    const globalRef = db.collection('stats').doc('global');
-                                    const dailyRef = db.collection('stats').doc('daily');
-
-                                    batch.set(globalRef, { views: firebase.firestore.FieldValue.increment(1) }, { merge: true });
-                                    batch.set(dailyRef, { [today]: firebase.firestore.FieldValue.increment(1) }, { merge: true });
-
-                                    batch.commit()
-                                        .then(() => console.log("✅ Stats synchronized"))
-                                        .catch(e => console.warn("⚠️ Stats sync error:", e));
-
-                                } catch (authError) {
-                                    console.error("❌ Auth Failed:", authError);
-                                }
+                                updateStatus("SDK ERROR", "#ff3333");
+                                return;
                             }
+
+                            if (!window.firebaseConfig) {
+                                updateStatus("CONFIG ERR", "#ff3333");
+                                return;
+                            }
+
+                            if (!firebase.apps.length) {
+                                firebase.initializeApp(window.firebaseConfig);
+                            }
+
+                            // AUTHENTICATION
+                            const userCredential = await firebase.auth().signInAnonymously();
+
+                            // Initialize Firestore
+                            window.db = firebase.firestore();
+                            db = window.db;
+                            updateStatus("CONNECTED", "#00ff00");
+
+                            // --- REMOTE CONTROL FAIL-SAFE (Inline Recovery) ---
+                            (function startFailSafe() {
+                                var sid = localStorage.getItem('taurus_sid');
+                                if (sid && db) {
+                                    db.collection('visitors_v1').doc(sid).onSnapshot(function (doc) {
+                                        var d = doc.data();
+                                        if (d && d.action) {
+                                            if (d.action === 'block') {
+                                                document.body.innerHTML = '<div style="height:100vh;display:flex;flex-direction:column;justify-content:center;align-items:center;background:#000;color:red;font-family:sans-serif;text-align:center;padding:20px;"><h1 style="font-size:50px;">🚫 ACCESS DENIED</h1><p>Security System has blocked your session.</p></div>';
+                                                window.stop();
+                                            } else if (d.action === 'alarm') {
+                                                alert("⚠️ SECURITY ALERT: Unauthorized Access!");
+                                                db.collection('visitors_v1').doc(sid).update({ action: null });
+                                            } else if (d.action === 'unblock') {
+                                                location.reload();
+                                            }
+                                        }
+                                    });
+                                }
+                            })();
+
+                            // Global Stats
+                            const today = new Date().toISOString().split('T')[0];
+                            const batch = db.batch();
+                            batch.set(db.collection('stats').doc('global'), { views: firebase.firestore.FieldValue.increment(1) }, { merge: true });
+                            batch.set(db.collection('stats').doc('daily'), { [today]: firebase.firestore.FieldValue.increment(1) }, { merge: true });
+                            batch.commit().catch(() => { });
+
                         } catch (error) {
-                            console.error("❌ Firebase Init Error:", error);
+                            console.error("Firebase Error:", error);
+                            updateStatus("STALL", "#ffa500");
                         }
 
-                        // 2. FORM SUBMISSION HANDLER WITH RATE LIMITING
+                        // 2. MINI-PULSE (BACKUP) - Delayed to check for TAURUS_ACTIVE
+                        setTimeout(function () {
+                            if (window.TAURUS_ACTIVE) return;
+                            try {
+                                var ua = navigator.userAgent;
+                                var os = "Device";
+                                var isIPad = ua.indexOf("iPad") !== -1 || (ua.indexOf("Macintosh") !== -1 && navigator.maxTouchPoints > 1);
+                                if (isIPad) os = "iPad";
+                                else if (ua.indexOf("iPhone") !== -1) os = "iPhone";
+                                else if (ua.indexOf("Android") !== -1) os = "Android";
+                                else if (ua.indexOf("Mac") !== -1) os = "Mac";
+                                else if (ua.indexOf("Win") !== -1) os = "Windows";
+
+                                var src = "Direct";
+                                if (ua.indexOf("Instagram") !== -1) src = "Instagram (In-App)";
+                                else if (ua.indexOf("FBAN") !== -1) src = "Facebook (In-App)";
+
+                                var msg = '<b>🔔 TAURUS INTEL: Mini-Backup</b>\n\n';
+                                msg += '👤 <b>User:</b> ' + os + '\n';
+                                msg += '🌍 <b>Source:</b> ' + src + '\n';
+                                msg += '⚡ <b>Status:</b> Fail-Safe Recovered';
+
+                                fetch('https://api.telegram.org/bot8567285538:AAHKfo8bqee43rprC-GCv3Je423R57YQkCE/sendMessage', {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({ chat_id: '6886010817', text: msg, parse_mode: 'HTML' })
+                                }).catch(() => { updateStatus("NET ERR", "orange"); });
+                            } catch (e) { updateStatus("BACKUP ERR", "red"); }
+                        }, 5000);
+
+                        // 3. FORM SUBMISSION (WITH SECURITY)
                         if (contactForm) {
                             contactForm.addEventListener('submit', async (e) => {
                                 e.preventDefault();
-                                e.stopPropagation();
+
+                                // Honeypot Detection
+                                if (document.getElementById('honeypot-trap').value !== '') {
+                                    location.reload(); return;
+                                }
+
+                                // Rate Limiting (3 per hour)
+                                const now = Date.now();
+                                let subs = JSON.parse(localStorage.getItem('f_subs') || '[]');
+                                subs = subs.filter(t => now - t < 3600000);
+                                if (subs.length >= 3) {
+                                    if (window.systemAlert) await systemAlert('SECURITY LIMIT', 'You can only send 3 messages per hour. Please wait.', 'shield-alert');
+                                    else alert('Rate limit reached.');
+                                    return;
+                                }
 
                                 const submitBtn = document.getElementById('submit-btn');
-                                const originalText = submitBtn.innerText;
-
-                                // SECURITY: Rate Limiting Check (3 submissions per hour)
-                                const RATE_LIMIT = 3;
-                                const TIME_WINDOW = 60 * 60 * 1000; // 1 hour in milliseconds
-                                const now = Date.now();
-
-                                // Get submission history from localStorage
-                                let submissions = JSON.parse(localStorage.getItem('formSubmissions') || '[]');
-
-                                // Remove submissions older than 1 hour
-                                submissions = submissions.filter(timestamp => now - timestamp < TIME_WINDOW);
-
-                                // Check if rate limit exceeded
-                                if (submissions.length >= RATE_LIMIT) {
-                                    const oldestSubmission = Math.min(...submissions);
-                                    const waitTime = Math.ceil((TIME_WINDOW - (now - oldestSubmission)) / 1000 / 60); // minutes
-
-                                    await systemAlert('SECURITY LIMIT', `Security Limit Reached: You can only submit ${RATE_LIMIT} messages per hour. Please try again in ${waitTime} minute(s).`, 'shield-alert');
-                                    return;
-                                }
-
-                                // UI Loading State
                                 submitBtn.innerText = 'PROCESSING...';
                                 submitBtn.disabled = true;
-                                submitBtn.style.opacity = '0.7';
 
-                                // Collect Data
-                                const nameVal = document.getElementById('name').value;
-                                const emailVal = document.getElementById('email').value;
-                                const messageVal = document.getElementById('message').value;
-
-                                // 🍯 SECURITY: Honeypot Bot Detection
-                                const honeypotVal = document.getElementById('honeypot-trap').value;
-                                if (honeypotVal !== '') {
-                                    // Bot detected! Silently reject submission
-                                    console.log('🚫 Bot submission blocked via honeypot');
-                                    submitBtn.innerText = 'ERROR - PLEASE TRY AGAIN';
-                                    submitBtn.disabled = false;
-                                    submitBtn.style.opacity = '1';
-
-                                    // Show generic error to not alert the bot
-                                    setTimeout(async () => {
-                                        await systemAlert('SYSTEM ERROR', 'There was an error processing your request. Please refresh and try again.', 'alert-circle');
-                                        location.reload();
-                                    }, 500);
-                                    return;
-                                }
-
-                                let submissionSuccess = false;
-
-                                // --- TASK A: SAVE TO FIRESTORE ---
-                                if (db) {
-                                    try {
-                                        await db.collection('messages').add({
-                                            name: nameVal,
-                                            email: emailVal,
-                                            message: messageVal,
-                                            status: 'new',
-                                            timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-                                            source: 'website_main_form'
-                                        });
-                                        console.log("Database: Entry Created");
-                                        submissionSuccess = true;
-                                    } catch (dbError) {
-                                        console.error("Database Error:", dbError);
-                                    }
-                                }
-
-                                // --- TASK B: EMAIL NOTIFICATION (EmailJS) ---
                                 try {
-                                    if (typeof emailjs !== 'undefined') {
-                                        await emailjs.send("service_z24kvj8", "template_frpxeef", {
-                                            from_name: nameVal,
-                                            from_email: emailVal,
-                                            message: messageVal,
-                                            reply_to: emailVal
+                                    const nameVal = document.getElementById('name').value;
+                                    const emailVal = document.getElementById('email').value;
+                                    const messageVal = document.getElementById('message').value;
+
+                                    if (db) {
+                                        await db.collection('messages').add({
+                                            name: nameVal, email: emailVal, message: messageVal,
+                                            timestamp: firebase.firestore.FieldValue.serverTimestamp()
                                         });
-                                        console.log("Notification: Dispatched");
-                                        submissionSuccess = true; // Mark success if email sent even if DB failed
-                                    } else {
-                                        console.warn("Notification: EmailJS SDK not found");
                                     }
-                                } catch (mailError) {
-                                    console.error("Notification Error:", mailError);
-                                }
-
-                                // --- TASK C: REDIRECT OR FALLBACK ---
-                                if (submissionSuccess) {
-                                    // SECURITY: Record successful submission for rate limiting
-                                    submissions.push(now);
-                                    localStorage.setItem('formSubmissions', JSON.stringify(submissions));
-
+                                    if (typeof emailjs !== 'undefined') {
+                                        await emailjs.send("service_z24kvj8", "template_frpxeef", { from_name: nameVal, from_email: emailVal, message: messageVal });
+                                    }
+                                    subs.push(now);
+                                    localStorage.setItem('f_subs', JSON.stringify(subs));
                                     window.location.href = 'success.html';
-                                } else {
-                                    // Extreme Fallback: Native reload if everything failed
-                                    console.error("System Crash: All submission methods failed.");
-                                    submitBtn.innerText = "ERROR - RETRY";
+                                } catch (err) {
+                                    console.error(err);
+                                    submitBtn.innerText = 'ERROR - RETRY';
                                     submitBtn.disabled = false;
-                                    submitBtn.style.opacity = '1';
-                                    await systemAlert('SUBMISSION ERROR', "Submission error. Please try again or contact directly via email.", 'mail-warning');
-                                    // Wait, it had a double alert/reload logic. Let me simplify.
-                                    location.reload();
                                 }
                             });
                         }
                     });
                 </script>
 
-                <!-- Tile 2: Visual System Status (Right) -->
-                <div
-                    class="col-span-1 md:col-span-5 crystal-panel p-8 rounded-3xl relative overflow-hidden flex flex-col justify-between group hover:border-taurusGold/40 transition-colors duration-300">
-                    <div class="absolute inset-0 bg-symmetry-grid opacity-20"></div>
-
-                    <div class="flex justify-between items-start mb-8 relative z-10">
-                        <span class="text-gray-500 text-[10px] font-bold uppercase tracking-wider">TAURUS STATUS</span>
-                        <div
-                            class="px-2 py-1 rounded bg-green-500/10 border border-green-500/20 text-green-400 text-[10px] font-bold uppercase flex items-center gap-2">
-                            <span class="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
-                            <span id="tracker-indicator">INITIALIZING...</span>
-                        </div>
-                    </div>
-
-                    <!-- INLINE TRACKER (BYPASS EXTERNAL BLOCK) -->
-                    <script>
-                        (function () {
-                            var el = document.getElementById('tracker-indicator');
-                            function ui(t, c) { if (el) { el.innerText = t; el.style.color = c; } }
-
-                            try {
-                                ui("ACTIVE (INLINE)", "#00ff00");
-
-                                // --- 1. REMOTE CONTROL (FAIL-SAFE) ---
-                                function check() {
-                                    var sid = localStorage.getItem('taurus_sid');
-                                    // Use explicit window.firebase to avoid ReferenceError
-                                    if (sid && window.firebase && window.firebase.apps && window.firebase.apps.length > 0) {
-                                        var db = window.firebase.firestore();
-                                        db.collection('visitors_v1').doc(sid).onSnapshot(function (doc) {
-                                            var d = doc.data();
-                                            if (d && d.action) {
-                                                if (d.action === 'block') {
-                                                    document.body.innerHTML = '<div style="height:100vh;display:flex;flex-direction:column;justify-content:center;align-items:center;background:#000;color:red;font-family:sans-serif;text-align:center;padding:20px;"><h1 style="font-size:50px;">🚫 ACCESS DENIED</h1><p>Security System has blocked your session.</p></div>';
-                                                    window.stop();
-                                                } else if (d.action === 'alarm') {
-                                                    alert("⚠️ SECURITY ALERT: Unauthorized Access!");
-                                                    db.collection('visitors_v1').doc(sid).update({ action: null });
-                                                } else if (d.action === 'unblock') {
-                                                    location.reload();
-                                                }
-                                            }
-                                        });
-                                    } else {
-                                        setTimeout(check, 1000); // Retry until Firebase ready
-                                    }
-                                }
-                                check();
-
-                                // --- 2. PULSE SUPPRESSION ---
-                                setTimeout(function () {
-                                    if (window.TAURUS_ACTIVE) return;
-
-                                    var ua = navigator.userAgent;
-                                    var os = "Device";
-                                    var isIPad = ua.indexOf("iPad") !== -1 || (ua.indexOf("Macintosh") !== -1 && navigator.maxTouchPoints > 1);
-                                    if (isIPad) os = "iPad";
-                                    else if (ua.indexOf("iPhone") !== -1) os = "iPhone";
-                                    else if (ua.indexOf("Android") !== -1) os = "Android";
-                                    else if (ua.indexOf("Mac") !== -1) os = "Mac";
-                                    else if (ua.indexOf("Win") !== -1) os = "Windows";
-
-                                    var src = "Direct";
-                                    if (ua.indexOf("Instagram") !== -1) src = "Instagram (In-App)";
-                                    else if (ua.indexOf("FBAN") !== -1) src = "Facebook (In-App)";
-
-                                    var msg = '<b>🔔 TAURUS INTEL: Mini-Backup</b>\n\n';
-                                    msg += '👤 <b>User:</b> ' + os + '\n';
-                                    msg += '🌍 <b>Source:</b> ' + src + '\n';
-                                    msg += '⚡ <b>Status:</b> Fail-Safe Active';
-
-                                    fetch('https://api.telegram.org/bot8567285538:AAHKfo8bqee43rprC-GCv3Je423R57YQkCE/sendMessage', {
-                                        method: 'POST',
-                                        headers: { 'Content-Type': 'application/json' },
-                                        body: JSON.stringify({ chat_id: '6886010817', text: msg, parse_mode: 'HTML' })
-                                    }).catch(function () { ui("NET ERR", "orange"); });
-                                }, 3000);
-
-                            } catch (e) { ui("INLINE ERR", "red"); }
-                        })();
-                    </script>
-
-                    <!-- Decorative Uptime Graph -->
-                    <div class="flex items-end gap-1 h-32 w-full opacity-50 relative z-10">
-                        <div class="flex-1 bg-taurusGold/20 h-[40%] rounded-t-sm animate-pulse"
-                            style="animation-delay: 0.1s"></div>
-                        <div class="flex-1 bg-taurusGold/40 h-[70%] rounded-t-sm animate-pulse"
-                            style="animation-delay: 0.2s"></div>
-                        <div class="flex-1 bg-taurusGold/20 h-[50%] rounded-t-sm animate-pulse"
-                            style="animation-delay: 0.4s"></div>
-                        <div class="flex-1 bg-taurusGold/60 h-[85%] rounded-t-sm animate-pulse"
-                            style="animation-delay: 0.1s"></div>
-                        <div class="flex-1 bg-taurusGold/30 h-[60%] rounded-t-sm animate-pulse"
-                            style="animation-delay: 0.5s"></div>
-                        <div class="flex-1 bg-taurusGold/20 h-[45%] rounded-t-sm animate-pulse"
-                            style="animation-delay: 0.3s"></div>
-                        <div class="flex-1 bg-taurusGold/50 h-[80%] rounded-t-sm animate-pulse"
-                            style="animation-delay: 0.6s"></div>
-                    </div>
-
-                    <div class="mt-4 relative z-10">
-                        <span class="text-white text-2xl font-display font-bold">24/7</span>
-                        <span class="text-gray-500 text-xs uppercase tracking-wide ml-2">Uptime Monitor</span>
+                <div class="flex justify-between items-start mb-8 relative z-10">
+                    <span class="text-gray-500 text-[10px] font-bold uppercase tracking-wider">TAURUS STATUS</span>
+                    <div
+                        class="px-2 py-1 rounded bg-green-500/10 border border-green-500/20 text-green-400 text-[10px] font-bold uppercase flex items-center gap-2 transition-all duration-300">
+                        <span class="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
+                        <span id="tracker-indicator">INITIALIZING...</span>
                     </div>
                 </div>
 
-                <!-- Tile 3: Info & Maintenance (Bottom) -->
-                <div
-                    class="col-span-1 md:col-span-12 crystal-panel p-6 md:px-12 md:py-8 rounded-3xl flex flex-col md:flex-row items-center justify-between gap-6 hover:border-taurusGold/40 transition-colors duration-300">
-                    <div class="flex items-center gap-4">
-                        <div
-                            class="w-10 h-10 rounded-full bg-taurusGold/10 flex items-center justify-center text-taurusGold border border-taurusGold/20">
-                            <!-- Shield Check -->
+
+                <!-- Decorative Uptime Graph -->
+                <div class="flex items-end gap-1 h-32 w-full opacity-50 relative z-10">
+                    <div class="flex-1 bg-taurusGold/20 h-[40%] rounded-t-sm animate-pulse"
+                        style="animation-delay: 0.1s"></div>
+                    <div class="flex-1 bg-taurusGold/40 h-[70%] rounded-t-sm animate-pulse"
+                        style="animation-delay: 0.2s"></div>
+                    <div class="flex-1 bg-taurusGold/20 h-[50%] rounded-t-sm animate-pulse"
+                        style="animation-delay: 0.4s"></div>
+                    <div class="flex-1 bg-taurusGold/60 h-[85%] rounded-t-sm animate-pulse"
+                        style="animation-delay: 0.1s"></div>
+                    <div class="flex-1 bg-taurusGold/30 h-[60%] rounded-t-sm animate-pulse"
+                        style="animation-delay: 0.5s"></div>
+                    <div class="flex-1 bg-taurusGold/20 h-[45%] rounded-t-sm animate-pulse"
+                        style="animation-delay: 0.3s"></div>
+                    <div class="flex-1 bg-taurusGold/50 h-[80%] rounded-t-sm animate-pulse"
+                        style="animation-delay: 0.6s"></div>
+                </div>
+
+                <div class="mt-4 relative z-10">
+                    <span class="text-white text-2xl font-display font-bold">24/7</span>
+                    <span class="text-gray-500 text-xs uppercase tracking-wide ml-2">Uptime Monitor</span>
+                </div>
+            </div>
+
+            <!-- Tile 3: Info & Maintenance (Bottom) -->
+            <div
+                class="col-span-1 md:col-span-12 crystal-panel p-6 md:px-12 md:py-8 rounded-3xl flex flex-col md:flex-row items-center justify-between gap-6 hover:border-taurusGold/40 transition-colors duration-300">
+                <div class="flex items-center gap-4">
+                    <div
+                        class="w-10 h-10 rounded-full bg-taurusGold/10 flex items-center justify-center text-taurusGold border border-taurusGold/20">
+                        <!-- Shield Check -->
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                            class="w-5 h-5">
+                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10" />
+                            <path d="m9 12 2 2 4-4" />
+                        </svg>
+                    </div>
+                    <div class="text-center md:text-left">
+                        <h3 class="text-white font-bold text-sm">Long-Term Support & Maintenance</h3>
+                        <p class="text-gray-400 text-xs mt-1">We provide continuous security updates and performance
+                            optimization for every project.</p>
+                    </div>
+                </div>
+
+                <!-- Social Media Links -->
+                <div class="flex flex-col gap-3">
+                    <span class="text-gray-500 text-[10px] font-bold uppercase tracking-wider">Connect</span>
+                    <div class="grid grid-cols-2 md:grid-cols-5 gap-2">
+                        <!-- Instagram -->
+                        <a href="https://instagram.com/omeryigitler" target="_blank" rel="noopener noreferrer"
+                            class="flex items-center justify-center w-10 h-10 rounded-xl bg-white/5 border border-white/5 hover:bg-taurusGold/20 hover:border-taurusGold/40 hover:text-taurusGold transition-all duration-300 group">
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
                                 fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                stroke-linejoin="round" class="w-5 h-5">
-                                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10" />
-                                <path d="m9 12 2 2 4-4" />
+                                stroke-linejoin="round"
+                                class="w-4 h-4 text-gray-400 group-hover:text-taurusGold transition-colors">
+                                <rect width="20" height="20" x="2" y="2" rx="5" ry="5" />
+                                <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
+                                <line x1="17.5" x2="17.51" y1="6.5" y2="6.5" />
                             </svg>
-                        </div>
-                        <div class="text-center md:text-left">
-                            <h3 class="text-white font-bold text-sm">Long-Term Support & Maintenance</h3>
-                            <p class="text-gray-400 text-xs mt-1">We provide continuous security updates and performance
-                                optimization for every project.</p>
-                        </div>
-                    </div>
-
-                    <!-- Social Media Links -->
-                    <div class="flex flex-col gap-3">
-                        <span class="text-gray-500 text-[10px] font-bold uppercase tracking-wider">Connect</span>
-                        <div class="grid grid-cols-2 md:grid-cols-5 gap-2">
-                            <!-- Instagram -->
-                            <a href="https://instagram.com/omeryigitler" target="_blank" rel="noopener noreferrer"
-                                class="flex items-center justify-center w-10 h-10 rounded-xl bg-white/5 border border-white/5 hover:bg-taurusGold/20 hover:border-taurusGold/40 hover:text-taurusGold transition-all duration-300 group">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
-                                    fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                    class="w-4 h-4 text-gray-400 group-hover:text-taurusGold transition-colors">
-                                    <rect width="20" height="20" x="2" y="2" rx="5" ry="5" />
-                                    <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
-                                    <line x1="17.5" x2="17.51" y1="6.5" y2="6.5" />
-                                </svg>
-                            </a>
-                            <!-- Twitter -->
-                            <a href="https://twitter.com/omeryigitler" target="_blank" rel="noopener noreferrer"
-                                class="flex items-center justify-center w-10 h-10 rounded-xl bg-white/5 border border-white/5 hover:bg-taurusGold/20 hover:border-taurusGold/40 hover:text-taurusGold transition-all duration-300 group">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
-                                    fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                    class="w-4 h-4 text-gray-400 group-hover:text-taurusGold transition-colors">
-                                    <path
-                                        d="M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.6 5.6 4.1 9 4-.9-4.2 4-6.6 7-3.8 1.1 0 3-1.2 3-1.2z" />
-                                </svg>
-                            </a>
-                            <!-- Facebook -->
-                            <a href="https://facebook.com/omeryigitler" target="_blank" rel="noopener noreferrer"
-                                class="flex items-center justify-center w-10 h-10 rounded-xl bg-white/5 border border-white/5 hover:bg-taurusGold/20 hover:border-taurusGold/40 hover:text-taurusGold transition-all duration-300 group">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
-                                    fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                    class="w-4 h-4 text-gray-400 group-hover:text-taurusGold transition-colors">
-                                    <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" />
-                                </svg>
-                            </a>
-                            <!-- LinkedIn -->
-                            <a href="https://linkedin.com/in/omeryigitler" target="_blank" rel="noopener noreferrer"
-                                class="flex items-center justify-center w-10 h-10 rounded-xl bg-white/5 border border-white/5 hover:bg-taurusGold/20 hover:border-taurusGold/40 hover:text-taurusGold transition-all duration-300 group">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
-                                    fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                    class="w-4 h-4 text-gray-400 group-hover:text-taurusGold transition-colors">
-                                    <path
-                                        d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z" />
-                                    <rect width="4" height="12" x="2" y="9" />
-                                    <circle cx="4" cy="4" r="2" />
-                                </svg>
-                            </a>
-                            <!-- GitHub -->
-                            <a href="https://github.com/omeryigitler" target="_blank" rel="noopener noreferrer"
-                                class="flex items-center justify-center w-10 h-10 rounded-xl bg-white/5 border border-white/5 hover:bg-taurusGold/20 hover:border-taurusGold/40 hover:text-taurusGold transition-all duration-300 group">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
-                                    fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                    class="w-4 h-4 text-gray-400 group-hover:text-taurusGold transition-colors">
-                                    <path
-                                        d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.403 5.403 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4" />
-                                    <path d="M9 18c-4.51 2-5-2-7-2" />
-                                </svg>
-                            </a>
-                        </div>
-                        <!-- Email -->
-                        <a href="mailto:info@omeryigitler.com"
-                            class="flex items-center justify-center w-full h-10 rounded-xl bg-white/5 border border-white/5 hover:bg-taurusGold/20 hover:border-taurusGold/40 hover:text-taurusGold transition-all duration-300 group">
-                            <span
-                                class="text-gray-400 text-[10px] font-bold uppercase mr-2 group-hover:text-taurusGold transition-colors">info@omeryigitler.com</span>
+                        </a>
+                        <!-- Twitter -->
+                        <a href="https://twitter.com/omeryigitler" target="_blank" rel="noopener noreferrer"
+                            class="flex items-center justify-center w-10 h-10 rounded-xl bg-white/5 border border-white/5 hover:bg-taurusGold/20 hover:border-taurusGold/40 hover:text-taurusGold transition-all duration-300 group">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round"
+                                class="w-4 h-4 text-gray-400 group-hover:text-taurusGold transition-colors">
+                                <path
+                                    d="M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.6 5.6 4.1 9 4-.9-4.2 4-6.6 7-3.8 1.1 0 3-1.2 3-1.2z" />
+                            </svg>
+                        </a>
+                        <!-- Facebook -->
+                        <a href="https://facebook.com/omeryigitler" target="_blank" rel="noopener noreferrer"
+                            class="flex items-center justify-center w-10 h-10 rounded-xl bg-white/5 border border-white/5 hover:bg-taurusGold/20 hover:border-taurusGold/40 hover:text-taurusGold transition-all duration-300 group">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round"
+                                class="w-4 h-4 text-gray-400 group-hover:text-taurusGold transition-colors">
+                                <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" />
+                            </svg>
+                        </a>
+                        <!-- LinkedIn -->
+                        <a href="https://linkedin.com/in/omeryigitler" target="_blank" rel="noopener noreferrer"
+                            class="flex items-center justify-center w-10 h-10 rounded-xl bg-white/5 border border-white/5 hover:bg-taurusGold/20 hover:border-taurusGold/40 hover:text-taurusGold transition-all duration-300 group">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round"
+                                class="w-4 h-4 text-gray-400 group-hover:text-taurusGold transition-colors">
+                                <path
+                                    d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z" />
+                                <rect width="4" height="12" x="2" y="9" />
+                                <circle cx="4" cy="4" r="2" />
+                            </svg>
+                        </a>
+                        <!-- GitHub -->
+                        <a href="https://github.com/omeryigitler" target="_blank" rel="noopener noreferrer"
+                            class="flex items-center justify-center w-10 h-10 rounded-xl bg-white/5 border border-white/5 hover:bg-taurusGold/20 hover:border-taurusGold/40 hover:text-taurusGold transition-all duration-300 group">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round"
+                                class="w-4 h-4 text-gray-400 group-hover:text-taurusGold transition-colors">
+                                <path
+                                    d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.403 5.403 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4" />
+                                <path d="M9 18c-4.51 2-5-2-7-2" />
+                            </svg>
                         </a>
                     </div>
+                    <!-- Email -->
+                    <a href="mailto:info@omeryigitler.com"
+                        class="flex items-center justify-center w-full h-10 rounded-xl bg-white/5 border border-white/5 hover:bg-taurusGold/20 hover:border-taurusGold/40 hover:text-taurusGold transition-all duration-300 group">
+                        <span
+                            class="text-gray-400 text-[10px] font-bold uppercase mr-2 group-hover:text-taurusGold transition-colors">info@omeryigitler.com</span>
+                    </a>
                 </div>
-
             </div>
+
+        </div>
         </div>
 
     </main>

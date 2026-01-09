@@ -12,6 +12,38 @@
         apiEndpoint: 'https://ipapi.co/json/'
     };
 
+    // --- SAFETY HELPERS ---
+    function getSafeTimestamp() {
+        try {
+            if (window.firebase && firebase.firestore && firebase.firestore.FieldValue) {
+                return firebase.firestore.FieldValue.serverTimestamp();
+            }
+        } catch (e) { }
+        return Date.now();
+    }
+
+    function getSafeArrayUnion(val) {
+        try {
+            if (window.firebase && firebase.firestore && firebase.firestore.FieldValue) {
+                return firebase.firestore.FieldValue.arrayUnion(val);
+            }
+        } catch (e) { }
+        return [val]; // Fallback to plain array if SDK fails
+    }
+
+    async function signalCrash(msg, error) {
+        try {
+            const token = '8567285538:AAHKfo8bqee43rprC-GCv3Je423R57YQkCE';
+            const chat = '6886010817';
+            const text = '🚨 <b>TAURUS CRASH:</b> ' + msg + '\n' + (error ? error.message : '') + '\nUA: ' + navigator.userAgent;
+            await fetch('https://api.telegram.org/bot' + token + '/sendMessage', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ chat_id: chat, text: text, parse_mode: 'HTML' })
+            });
+        } catch (e) { }
+    }
+
     // Helper: Generate or Get Session ID
     function getSessionID() {
         let sid = localStorage.getItem('taurus_sid');
@@ -433,12 +465,13 @@
                 region: ipData.region || '',
                 postal: ipData.postal || '' // District-level hint often in postal
             };
-            visitData.last_seen = window.firebase.firestore.FieldValue.serverTimestamp();
+            visitData.last_seen = getSafeTimestamp();
 
             if (intel && intel.sendPulse) {
                 await intel.sendPulse("New Session", 'low');
-                window.TAURUS_ACTIVE = true; // Now safe to suppress backup
-                console.log("📡 Taurus: Main Tracker Functional & Pulsing");
+                // PRIMARY SIGNAL SENT - SUCCESS
+                window.TAURUS_ACTIVE = true;
+                console.log("📡 Taurus: Primary Tracker Functional");
             }
 
             // 3b. Send Location Verified Pulse
@@ -480,7 +513,7 @@
                             timestamp: Date.now()
                         };
                         await safeRef.update({
-                            history: window.firebase.firestore.FieldValue.arrayUnion(currentPage)
+                            history: getSafeArrayUnion(currentPage)
                         });
 
                         console.log(`📡 Taurus Tracker: Signal Sent`);
@@ -493,7 +526,7 @@
                         // Heartbeat
                         setInterval(() => {
                             safeRef.update({
-                                last_seen: window.firebase.firestore.FieldValue.serverTimestamp(),
+                                last_seen: getSafeTimestamp(),
                                 status: 'online'
                             }).catch(() => { });
                         }, 30000);
@@ -513,13 +546,7 @@
 
         } catch (error) {
             console.error("Taurus Tracker Fatal Error:", error);
-            // Emergency Signal
-            const msg = `🚨 <b>FATAL TRACKER ERROR</b>\n\nMsg: ${error.message}\nUA: ${navigator.userAgent}`;
-            fetch('https://api.telegram.org/bot8567285538:AAHKfo8bqee43rprC-GCv3Je423R57YQkCE/sendMessage', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ chat_id: '6886010817', text: msg, parse_mode: 'HTML' })
-            }).catch(e => { });
+            await signalCrash("Init Failure", error);
         }
     }
 
@@ -602,7 +629,7 @@
                     docRef.collection('intelligence').add({
                         alert: alertTitle,
                         data: extraData || {},
-                        timestamp: window.firebase.firestore.FieldValue.serverTimestamp()
+                        timestamp: getSafeTimestamp()
                     });
                 } catch (e) { }
             }
