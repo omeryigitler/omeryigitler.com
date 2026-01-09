@@ -373,5 +373,5 @@ ${t.nutritionText}
 - **${isTr ? 'Çarşamba' : 'Wednesday'}:** ${isTr ? 'Aktif Dinlenme / Kardiyo' : 'Active Recovery / Cardio'}
 - **${isTr ? 'Perşembe' : 'Thursday'}:** ${isTr ? 'Gün C (Bacak)' : 'Day C (Legs)'}
 - **${isTr ? 'Cuma' : 'Friday'}:** ${isTr ? 'Gün A (Üst Vücut Karışık)' : 'Day A (Upper Body Mix)'}
-- **${isTr ? 'Haftasonu' : 'Weekend'}:** ${isTr ? 'Tam Dinlenme (Recovery)' : 'Full Rest (Recovery)'}`; `;
+- **${isTr ? 'Haftasonu' : 'Weekend'}:** ${isTr ? 'Tam Dinlenme (Recovery)' : 'Full Rest (Recovery)'}`;
 };
