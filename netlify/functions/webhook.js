@@ -92,7 +92,7 @@ exports.handler = async (event, context) => {
 
                     await axios.post(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
                         chat_id: chatId,
-                        text: `✅ <b>Action:</b> ${action} applied to ${sessionID}`,
+                        text: `✅ <b>Action Applied:</b> ${action.toUpperCase()}`,
                         parse_mode: 'HTML'
                     });
                 } catch (error) {
