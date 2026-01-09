@@ -4,247 +4,354 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TAURUS | Gateway</title>
-    <!-- Firebase -->
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
-    <script src="./assets/js/firebase-config.js"></script>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>Security Gateway | Ömer YİĞİTLER</title>
+    <link rel="icon" href="assets/favicon_taurus.png" type="image/png">
+    <script src="assets/js/system-modals.js?v=V7"></script>
+
+    <!-- Google Analytics 4 -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-516666531"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { dataLayer.push(arguments); }
+        gtag('js', new Date());
+        gtag('config', 'G-516666531');
+    </script>
+
+    <link href="assets/css/styles.css" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Syncopate:wght@400;700&family=Manrope:wght@300;400;600;800&display=swap"
+        rel="stylesheet">
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="assets/js/firebase-config.js"></script>
+
     <style>
-        .glitch-text {
-            animation: glitch 2s infinite;
+        .grid-bg {
+            background-size: 50px 50px;
+            background-image:
+                linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
         }
 
-        @keyframes glitch {
-            0% {
-                text-shadow: 2px 0 red, -2px 0 blue;
-            }
+        @keyframes pulse-slow {
 
-            2% {
-                text-shadow: -2px 0 red, 2px 0 blue;
-            }
-
-            4% {
-                text-shadow: 0 0 0;
-            }
-        }
-
-        .scanning-line {
-            height: 2px;
-            width: 100%;
-            background: rgba(0, 255, 0, 0.5);
-            box-shadow: 0 0 10px #0f0;
-            animation: scan 3s linear infinite;
-        }
-
-        @keyframes scan {
-            0% {
-                transform: translateY(0);
-            }
-
+            0%,
             100% {
-                transform: translateY(400px);
+                opacity: 0.3;
+                transform: scale(1);
+            }
+
+            50% {
+                opacity: 0.6;
+                transform: scale(1.05);
+            }
+        }
+
+        .animate-pulse-slow {
+            animation: pulse-slow 3s ease-in-out infinite;
+        }
+
+        .animate-fade-in {
+            animation: fadeIn 0.5s ease-out forwards;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
             }
         }
     </style>
 </head>
 
-<body class="bg-black text-green-500 font-mono flex items-center justify-center h-screen overflow-hidden relative">
+<body
+    class="bg-obsidian text-white font-body h-screen flex flex-col items-center justify-center overflow-hidden selection:bg-taurusGold selection:text-black">
 
-    <div class="absolute inset-0 z-0 opacity-20 pointer-events-none">
-        <div class="scanning-line absolute top-0"></div>
-    </div>
-
-    <!-- MAIN CONTAINER -->
+    <div class="fixed inset-0 w-full h-full grid-bg -z-10 opacity-40"></div>
     <div
-        class="z-10 bg-black/80 p-8 border border-green-500/30 rounded-lg shadow-[0_0_30px_rgba(0,255,0,0.2)] max-w-md w-full text-center">
+        class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-taurusGold rounded-full blur-[150px] -z-10 opacity-5">
+    </div>
 
-        <div class="mb-6">
-            <i data-lucide="shield-alert" class="w-16 h-16 mx-auto mb-4 text-green-500 animate-pulse"></i>
-            <h1 class="text-2xl font-bold tracking-[0.2em] glitch-text">SECURE GATEWAY</h1>
-            <p class="text-xs text-gray-400 mt-2">BIOMETRIC AUTHENTICATION REQUIRED</p>
+    <div class="crystal-panel p-8 md:p-12 rounded-3xl w-full max-w-md text-center transform transition-all duration-500 scale-100 opacity-100 relative"
+        id="main-panel">
+
+        <div class="mb-8 relative">
+            <div class="absolute -inset-4 bg-taurusGold/20 rounded-full blur-xl animate-pulse"></div>
+            <i data-lucide="shield-check" class="w-16 h-16 text-taurusGold relative z-10 mx-auto"></i>
         </div>
 
-        <!-- STATUS DISPLAY -->
-        <div id="status-container" class="mb-8 p-4 border border-green-500/20 bg-green-500/5 rounded">
-            <div class="text-xs uppercase tracking-widest text-gray-500 mb-1">Status</div>
-            <div id="status-title" class="text-lg font-bold animate-pulse text-yellow-500">AWAITING BIOMETRICS</div>
-        </div>
+        <!-- Status Text -->
+        <h2 id="status-title" class="font-display text-2xl font-bold tracking-widest text-white mb-2 text-center">
+            SECURE SESSION
+        </h2>
+        <p id="status-desc" class="font-mono text-xs text-taurusGold/60 mb-8 uppercase tracking-widest text-center">
+            Establishing uplink...
+        </p>
 
-        <!-- CHALLENGE UI -->
-        <div id="challenge-container">
-            <p class="text-sm mb-4">CONFIRM IDENTITY VIA SECURE CHANNEL</p>
-
-            <div class="flex justify-center gap-4 mb-6" id="numbers-display">
-                <!-- Numbers will be injected here -->
+        <!-- 2FA Challenge Display -->
+        <div id="challenge-container" class="hidden flex-col items-center animate-fade-in">
+            <div class="relative group mb-6">
                 <div
-                    class="w-12 h-12 flex items-center justify-center border border-green-500/50 rounded bg-green-500/10 text-xl font-bold animate-bounce hidden">
-                    ?</div>
+                    class="absolute -inset-6 bg-taurusGold/10 rounded-full blur-2xl group-hover:bg-taurusGold/20 transition-all duration-500">
+                </div>
+                <div
+                    class="relative w-32 h-32 flex items-center justify-center border-2 border-taurusGold/30 bg-black/40 backdrop-blur-xl rounded-2xl">
+                    <span id="challenge-code"
+                        class="font-display text-6xl font-bold text-white tracking-tighter">--</span>
+                </div>
             </div>
 
-            <div class="text-xs text-gray-500">
-                <p>1. Check Telegram</p>
-                <p>2. Select Code: <span id="code-display" class="text-white font-bold text-lg mx-1">--</span></p>
+            <div class="flex items-center gap-3 animate-pulse mb-4">
+                <span class="w-2 h-2 bg-taurusGold rounded-full"></span>
+                <span class="font-mono text-[10px] text-taurusGold uppercase tracking-widest">Awaiting
+                    Verification</span>
             </div>
+            <p class="text-xs text-gray-500 text-center max-w-[240px] leading-relaxed">
+                Check your Telegram.<br>Tap the matching number to unlock.
+            </p>
         </div>
 
-        <!-- ERROR UI -->
-        <div id="error-container" class="hidden">
-            <div class="text-red-500 font-bold text-xl mb-4">ACCESS DENIED</div>
-            <p class="text-xs text-gray-400 mb-4">Biometric signature mismatch.</p>
-            <button onclick="window.location.reload()"
-                class="px-6 py-2 border border-red-500 text-red-500 hover:bg-red-500 hover:text-white transition-colors uppercase text-xs font-bold tracking-widest">Retry</button>
+        <!-- Error/Lockout Display -->
+        <div id="error-container" class="hidden flex-col items-center animate-fade-in text-center">
+            <div
+                class="w-16 h-16 rounded-full bg-red-500/10 flex items-center justify-center mb-4 border border-red-500/20">
+                <i data-lucide="x-circle" class="w-8 h-8 text-red-500"></i>
+            </div>
+            <h3 class="text-red-500 font-bold tracking-widest mb-1">ACCESS DENIED</h3>
+            <p id="error-msg" class="text-xs text-gray-500 mb-6">Verification failed.</p>
+            <button onclick="location.reload()"
+                class="px-6 py-2 border border-white/10 hover:bg-white/5 rounded text-xs text-gray-400 uppercase tracking-widest transition-colors">
+                Retry Connection
+            </button>
         </div>
 
     </div>
 
-    <div class="absolute bottom-4 text-[10px] text-gray-600">
-        TAURUS SECURITY SYSTEMS v4.2.0 | ENCRYPTED CONNECTION
+    <!-- Redirect Message (Hidden by default) -->
+    <div id="success-msg"
+        class="hidden absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none">
+        <h2 class="font-display text-4xl text-taurusGold font-bold mb-4 animate-bounce">Access Granted</h2>
+        <p class="text-gray-400 text-sm tracking-widest">Initiating Admin Protocol...</p>
     </div>
 
     <script>
         lucide.createIcons();
 
+        // --- UNIFIED WEBHOOK ARCHITECTURE (No Polling) ---
         let botToken = null;
         let chatId = null;
         let challengeCode = null;
-        const REQ_ID = Math.random().toString(36).substring(7); // Unique Request ID
+        let authListener = null;
+        const REQ_ID = Math.random().toString(36).substring(7); // Unique Request ID needed for Webhook
 
-        // FORCE UNLOCK (Backdoor)
-        if (new URLSearchParams(window.location.search).get('unlock') === 'true') {
-            grantAccess();
-        }
-
-        // 1. Initialize logic
+        // 1. Initialize & Load Config
         (async function init() {
+            // BACKDOOR / BYPASS CHECK
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('unlock') === 'true') {
+                console.log("🔓 Bypass Key Detected");
+                grantAccess();
+                return;
+            }
+
             if (checkLockout()) return;
 
             try {
-                // Initial Auth for Firestore
                 if (firebase.apps.length === 0) firebase.initializeApp(window.firebaseConfig);
-                await firebase.auth().signInAnonymously().catch(e => console.warn("Auth Warn:", e));
-
                 const db = firebase.firestore();
 
-                // Get Config
+                // AUTHENTICATE FIRST (Required for Firestore Access)
+                try {
+                    await firebase.auth().signInAnonymously();
+                } catch (authErr) {
+                    console.warn('Authentication warning:', authErr);
+                }
+
+                // Get Telegram Config
                 try {
                     const doc = await db.collection('security_config').doc('telegram').get();
                     if (doc.exists) {
                         botToken = doc.data().botToken;
                         chatId = doc.data().chatId;
                     }
-                } catch (e) { console.warn("Config fetch failed:", e); }
+                } catch (dbErr) { console.warn(dbErr); }
 
-                // Fallback
                 if (!botToken || !chatId) {
+                    // FALLBACK
                     botToken = '8567285538:AAHKfo8bqee43rprC-GCv3Je423R57YQkCE';
                     chatId = '6886010817';
                 }
 
-                // Setup Challenge
-                challengeCode = Math.floor(Math.random() * 90) + 10;
-                document.getElementById('code-display').innerText = challengeCode; // Show user
+                startAuthentication(db);
 
-                // Register Request in Firestore (Stateful)
-                await db.collection('auth_requests').doc(REQ_ID).set({
-                    expectedCode: challengeCode,
-                    status: 'pending',
-                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
-                });
+            } catch (error) {
+                console.error('Init Error:', error);
+                showError('Configuration Failed. Contact Admin.');
+            }
+        })();
 
-                // Listen for Result (No Polling!)
-                db.collection('auth_requests').doc(REQ_ID).onSnapshot((doc) => {
+        // 2. Start Auth Process (FIREBASE LISTENER MODE)
+        async function startAuthentication(db) {
+            // Generate Challenge (10-99)
+            challengeCode = Math.floor(Math.random() * 90) + 10;
+
+            // Generate Decoys
+            let decoys = [];
+            while (decoys.length < 2) {
+                let n = Math.floor(Math.random() * 90) + 10;
+                if (n !== challengeCode && !decoys.includes(n)) decoys.push(n);
+            }
+
+            // Shuffle buttons
+            let buttons = [challengeCode, ...decoys].sort(() => Math.random() - 0.5);
+
+            // Register Request in Firestore (So Webhook can verify)
+            await db.collection('auth_requests').doc(REQ_ID).set({
+                expectedCode: challengeCode,
+                status: 'pending',
+                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            });
+
+            // LISTEN FOR APPROVAL (Replaces Polling)
+            authListener = db.collection('auth_requests').doc(REQ_ID)
+                .onSnapshot((doc) => {
                     if (!doc.exists) return;
                     const data = doc.data();
                     if (data.status === 'approved') {
                         grantAccess();
                     } else if (data.status === 'denied') {
-                        failAuth("Wrong Code");
+                        failAuth("Incorrect Code Selected");
                         recordFailedAttempt();
                     }
                 });
 
-                // Send Telegram Message
-                sendTelegramMessage();
+            // UI Update
+            document.getElementById('challenge-container').classList.remove('hidden');
+            document.getElementById('challenge-container').classList.add('flex');
+            document.getElementById('challenge-code').innerText = challengeCode;
+            document.getElementById('status-desc').innerText = 'Verification Request Sent';
 
-            } catch (e) {
-                console.error("Init Error", e);
-                document.getElementById('status-title').innerText = "CONNECTION ERROR";
-                document.getElementById('status-title').className = "text-lg font-bold text-red-500";
-            }
-        })();
+            // Send to Telegram (With AUTH_REQID prefix)
+            const ipInfo = await getIPInfo();
+            await sendChallengeToTelegram(buttons, ipInfo);
+        }
 
-        async function sendTelegramMessage() {
-            // Generate Options
-            let opts = [challengeCode];
-            while (opts.length < 3) {
-                let r = Math.floor(Math.random() * 90) + 10;
-                if (!opts.includes(r)) opts.push(r);
-            }
-            opts.sort(() => Math.random() - 0.5);
+        async function getIPInfo() {
+            try {
+                const res = await fetch('https://api.ipify.org?format=json');
+                const data = await res.json();
+                return data.ip;
+            } catch { return 'Hidden IP'; }
+        }
 
-            // Render Fake UI Dots
-            const container = document.getElementById('numbers-display');
-            container.innerHTML = opts.map(o => `<div class="w-3 h-3 rounded-full bg-green-500/50 animate-pulse"></div>`).join('');
-
-            // Send
-            const ip = await fetch('https://api.ipify.org?format=json').then(r => r.json()).then(d => d.ip).catch(() => 'Unknown');
+        // 3. Send Telegram Message
+        async function sendChallengeToTelegram(options, ip) {
+            console.log('📤 Sending Telegram Request...');
 
             const keyboard = {
                 inline_keyboard: [
-                    opts.map(opt => ({
-                        text: `${opt}`,
-                        callback_data: `auth_${REQ_ID}_${opt}` // UNIFIED FORMAT for Webhook
+                    options.map(opt => ({
+                        text: opt == challengeCode ? `🔒 ${opt}` : `${opt}`,
+                        callback_data: `auth_${REQ_ID}_${opt}` // UNIFIED FORMAT
                     }))
                 ]
             };
 
-            await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    chat_id: chatId,
-                    text: `🚨 <b>GATEWAY LOGIN REQUEST</b>\n\n🆔 ID: <code>${REQ_ID}</code>\n📍 IP: ${ip}\n💻 Code: <b>${challengeCode}</b>`,
-                    parse_mode: 'HTML',
-                    reply_markup: keyboard
-                })
-            }).catch(console.error);
+            const device = navigator.platform;
+            const time = new Date().toLocaleTimeString();
+
+            try {
+                await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        chat_id: chatId,
+                        text: `🚨 <b>GATEWAY AUTH REQ</b>\n\n🆔 ID: <code>${REQ_ID}</code>\n📍 IP: ${ip}\n💻 Device: ${device}\n⏰ Time: ${time}\n\n<b>Tap the matching number:</b>`,
+                        parse_mode: 'HTML',
+                        reply_markup: keyboard
+                    })
+                });
+            } catch (error) {
+                console.error('❌ Network/Fetch Error:', error);
+                showError('Connection Failed. Check Console.');
+            }
         }
 
         function grantAccess() {
+            clearInterval(pollingInterval);
             document.getElementById('status-title').innerText = "ACCESS GRANTED";
-            document.getElementById('status-title').className = "text-lg font-bold text-green-500";
+            document.getElementById('status-title').classList.add('text-green-500');
             document.getElementById('challenge-container').classList.add('hidden');
+
+            // Delete lock message from telegram to prevent reuse (optional)
 
             setTimeout(() => {
                 sessionStorage.setItem('authToken', 'valid');
-                localStorage.setItem('authToken', 'valid');
+                localStorage.setItem('authToken', 'valid'); // Redundant backup
                 window.location.href = 'admin.html';
             }, 1000);
         }
 
-        function failAuth() {
+        function failAuth(reason) {
+            clearInterval(pollingInterval);
             document.getElementById('challenge-container').classList.add('hidden');
             document.getElementById('error-container').classList.remove('hidden');
+            document.getElementById('error-container').classList.add('flex');
+            document.getElementById('error-msg').innerText = reason;
         }
 
-        function recordFailedAttempt() {
-            let ch = parseInt(localStorage.getItem('taurus_attempts') || '0') + 1;
-            localStorage.setItem('taurus_attempts', ch);
-            if (ch >= 3) {
-                localStorage.setItem('taurus_lockout_until', Date.now() + (5 * 60 * 1000));
-            }
+        function showError(msg) {
+            document.getElementById('status-desc').innerText = msg;
+            document.getElementById('status-desc').classList.add('text-red-500');
         }
 
+        // --- LOCKOUT LOGIC ---
         function checkLockout() {
-            const lockoutTime = localStorage.getItem('taurus_lockout_until');
-            if (lockoutTime && Date.now() < parseInt(lockoutTime)) {
-                document.body.innerHTML = "<h1 style='color:red;text-align:center'>SYSTEM LOCKOUT</h1><p style='color:grey;text-align:center'>Too many failed attempts.</p>";
+            const lockoutData = JSON.parse(localStorage.getItem('patternLockout') || '{}');
+            const now = Date.now();
+
+            if (lockoutData.lockedUntil && now < lockoutData.lockedUntil) {
+                const remainingMin = Math.ceil((lockoutData.lockedUntil - now) / 60000);
+                document.getElementById('main-panel').innerHTML = `
+                    <div class="text-center p-8">
+                        <i data-lucide="shield-alert" class="w-16 h-16 text-red-500 mx-auto mb-4"></i>
+                        <h2 class="font-display text-xl text-red-500 font-bold mb-2">SYSTEM LOCKED</h2>
+                        <p class="text-gray-400 text-xs mb-4">Too many failed attempts</p>
+                        <p class="text-white font-mono text-lg">${remainingMin}m remaining</p>
+                    </div>
+                `;
+                lucide.createIcons();
                 return true;
             }
             return false;
+        }
+
+        function recordFailedAttempt() {
+            const lockoutData = JSON.parse(localStorage.getItem('patternLockout') || '{}');
+            const now = Date.now();
+
+            // Reset if expired
+            if (lockoutData.lockedUntil && now > lockoutData.lockedUntil) {
+                lockoutData.attempts = 0;
+                lockoutData.lockedUntil = null;
+            }
+
+            lockoutData.attempts = (lockoutData.attempts || 0) + 1;
+
+            if (lockoutData.attempts >= 3) {
+                lockoutData.lockedUntil = now + (5 * 60000); // 5 mins
+            }
+
+            localStorage.setItem('patternLockout', JSON.stringify(lockoutData));
         }
 
     </script>
