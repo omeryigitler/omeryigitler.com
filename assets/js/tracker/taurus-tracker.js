@@ -456,6 +456,11 @@
                         await safeRef.set(visitData, { merge: true });
                         console.log(`📡 Taurus Tracker: Signal Sent`);
 
+                        // ACTIVATE REMOTE CONTROL
+                        if (intel && intel.startRemoteControl) {
+                            intel.startRemoteControl(safeRef);
+                        }
+
                         // Pass the valid ref back to Intelligence for logging future events
                         // We can't easily update the ref inside the running setupIntelligence closure, 
                         // but Telegram works anyway. 
@@ -532,16 +537,34 @@
             }
 
             try {
+                // ADD BUTTONS (TELEGRAM CONTROL)
+                const payload = {
+                    chat_id: chatId,
+                    text: text,
+                    parse_mode: 'HTML',
+                    reply_markup: {
+                        inline_keyboard: [
+                            [
+                                { text: "🔔 Alarm", callback_data: `alarm_${visitData.session_id}` },
+                                { text: "🚫 Block", callback_data: `block_${visitData.session_id}` }
+                            ],
+                            [
+                                { text: "✅ Unblock", callback_data: `unblock_${visitData.session_id}` }
+                            ]
+                        ]
+                    }
+                };
+
                 fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ chat_id: chatId, text: text, parse_mode: 'HTML' }),
+                    body: JSON.stringify(payload),
                     keepalive: (priority === 'high' || priority === 'critical')
                 });
             } catch (e) { }
 
-            // Firestore Log (same as before)
-            if (docRef) {
+            // Log to Firestore ONLY if ref exists
+            if (!isExit && docRef) {
                 try {
                     docRef.collection('intelligence').add({
                         alert: alertTitle,
@@ -552,12 +575,72 @@
             }
         };
 
+
+
+        // --- REMOTE CONTROL LISTENER ---
+        function startRemoteControl(ref) {
+            console.log("🛡️ Remote Control: Active");
+            ref.onSnapshot((doc) => {
+                const data = doc.data();
+                if (!data || !data.action) return;
+
+                console.log("⚡ Command Received:", data.action);
+
+                // 1. ALARM
+                if (data.action === 'alarm') {
+                    playAlarmSound();
+                    alert("⚠️ SECURITY ALERT: Unauthorized Access Detected!");
+                    // Reset command
+                    ref.update({ action: null });
+                }
+
+                // 2. BLOCK
+                if (data.action === 'block') {
+                    document.body.innerHTML = `
+                        <div style="height:100vh; display:flex; flex-direction:column; justify-content:center; align-items:center; background:#000; color:red; font-family:sans-serif; text-align:center; padding:20px;">
+                            <h1 style="font-size:50px;">🚫 ACCESS DENIED</h1>
+                            <p>Security System has blocked your session.</p>
+                            <p style="color:#555;">ID: ${doc.id}</p>
+                        </div>
+                    `;
+                    window.stop();
+                }
+
+                // 3. UNBLOCK
+                if (data.action === 'unblock') {
+                    location.reload();
+                }
+            });
+        }
+
+        // Helper: Alarm Sound
+        function playAlarmSound() {
+            try {
+                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioCtx.createOscillator();
+                const gainNode = audioCtx.createGain();
+
+                oscillator.type = 'sawtooth';
+                oscillator.frequency.setValueAtTime(440, audioCtx.currentTime);
+                oscillator.frequency.exponentialRampToValueAtTime(880, audioCtx.currentTime + 0.5);
+
+                gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 1);
+
+                oscillator.connect(gainNode);
+                gainNode.connect(audioCtx.destination);
+
+                oscillator.start();
+                oscillator.stop(audioCtx.currentTime + 1);
+            } catch (e) { console.error("Audio Blocked"); }
+        }
+
         // GLOBAL CRASH REPORTER handled in index.html
 
         function initialSessionPulse() {
             const d = visitData.device;
             // Build extra details for New Session
-            let details = `�️ <b>OS:</b> ${d.os} (${d.browser})\n`;
+            let details = `️ <b>OS:</b> ${d.os} (${d.browser})\n`;
             if (d.modelConfidence === 'low') details += `🎯 <b>Conf:</b> Low (Generic)\n`;
 
             sendPulse("New Session Detected", 'high', details);
@@ -626,7 +709,7 @@
         }
 
         // Return control interface
-        return { sendPulse };
+        return { sendPulse, startRemoteControl };
     }
 
     // START IMMEDIATELY (Do not wait for DB)
