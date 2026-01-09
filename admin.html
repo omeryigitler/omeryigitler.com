@@ -953,13 +953,19 @@
                             <td class="p-4 align-middle text-xs text-taurusGold/80 font-mono tracking-tight">${d.location?.isp || 'Unknown Net'}</td>
                             <td class="p-4 align-middle text-xs text-gray-500 font-mono tracking-tight">${d.ip_masked || '---'}</td>
                             <td class="p-4 align-middle text-xs text-gray-300">
-                                <span class="flex items-center gap-2">
-                                    <i data-lucide="${d.device?.type === 'Mobile' ? 'smartphone' : (d.device?.type === 'Tablet' ? 'tablet' : 'monitor')}" class="w-3 h-3 opacity-60"></i>
-                                    ${d.device?.platform || 'Unknown OS'}
-                                </span>
+                                <div class="flex flex-col gap-1">
+                                    <div class="flex items-center gap-2">
+                                        <i data-lucide="${d.device?.type === 'Mobile' ? 'smartphone' : (d.device?.type === 'Tablet' ? 'tablet' : 'monitor')}" class="w-3 h-3 opacity-60"></i>
+                                        <span class="font-bold">${d.device?.model || d.device?.type || 'Unknown'}</span>
+                                    </div>
+                                    <div class="text-[10px] text-gray-500 flex items-center gap-3">
+                                        <span>🌐 ${d.device?.browser || 'Unknown'}</span>
+                                        <span>💿 ${d.device?.os || d.device?.platform || 'Unknown OS'}</span>
+                                    </div>
+                                </div>
                             </td>
                             <td class="p-4 align-middle text-xs text-gray-400 font-mono text-center">${d.history ? d.history.length : 1}</td>
-                            <td class="p-4 align-middle text-[10px] text-gray-600 font-mono">${new Date(lastSeenTime).toLocaleString()}</td>
+                            <td class="p-4 align-middle text-[10px] text-gray-600 font-mono">${new Date(lastSeenTime).toLocaleString('tr-TR')}</td>
                         </tr>
                     `;
                 });

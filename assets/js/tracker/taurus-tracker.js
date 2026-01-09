@@ -31,19 +31,75 @@
         return ip.substr(0, ip.lastIndexOf(':')) + ':****'; // IPv6 Simple Masking
     }
 
-    // Capture Device Info
+    // Capture Device Info (Enhanced with detailed parsing)
     function getDeviceInfo() {
         const ua = navigator.userAgent;
+
+        // Device Type Detection
         let deviceType = "Desktop";
         if (/Mobi|Android/i.test(ua)) deviceType = "Mobile";
         if (/iPad|Tablet/i.test(ua)) deviceType = "Tablet";
+
+        // Browser Detection
+        let browser = "Unknown";
+        if (ua.includes("Chrome") && !ua.includes("Edg")) browser = "Chrome";
+        else if (ua.includes("Safari") && !ua.includes("Chrome")) browser = "Safari";
+        else if (ua.includes("Firefox")) browser = "Firefox";
+        else if (ua.includes("Edg")) browser = "Edge";
+        else if (ua.includes("OPR") || ua.includes("Opera")) browser = "Opera";
+
+        // OS Detection (Human Readable)
+        let os = "Unknown OS";
+        if (ua.includes("Win")) os = "Windows";
+        else if (ua.includes("Mac") && !ua.includes("iPhone") && !ua.includes("iPad")) os = "macOS";
+        else if (ua.includes("Linux") && !ua.includes("Android")) os = "Linux";
+        else if (ua.includes("Android")) {
+            const match = ua.match(/Android\s([\d.]+)/);
+            os = match ? `Android ${match[1]}` : "Android";
+        }
+        else if (ua.includes("iPhone") || ua.includes("iPad")) {
+            const match = ua.match(/OS\s([\d_]+)/);
+            if (match) {
+                const version = match[1].replace(/_/g, '.');
+                os = ua.includes("iPad") ? `iPadOS ${version}` : `iOS ${version}`;
+            } else {
+                os = ua.includes("iPad") ? "iPadOS" : "iOS";
+            }
+        }
+
+        // Device Model (for mobile)
+        let deviceModel = "";
+        if (deviceType === "Mobile" || deviceType === "Tablet") {
+            // iPhone detection
+            if (ua.includes("iPhone")) {
+                deviceModel = "iPhone";
+                // Try to detect model (limited without jailbreak)
+                if (window.screen.height === 844) deviceModel = "iPhone 14/13";
+                else if (window.screen.height === 926) deviceModel = "iPhone 14 Pro Max";
+            }
+            // iPad detection  
+            else if (ua.includes("iPad")) {
+                deviceModel = "iPad";
+            }
+            // Android device name (often in UA)
+            else if (ua.includes("Android")) {
+                const deviceMatch = ua.match(/;\s([^;)]+)\sBuild/);
+                if (deviceMatch) deviceModel = deviceMatch[1];
+            }
+        } else {
+            // Desktop device info
+            deviceModel = os;
+        }
 
         return {
             userAgent: ua,
             platform: navigator.platform,
             language: navigator.language,
             screen: `${window.screen.width}x${window.screen.height}`,
-            type: deviceType
+            type: deviceType,
+            browser: browser,
+            os: os,
+            model: deviceModel
         };
     }
 
