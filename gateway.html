@@ -143,6 +143,16 @@
         <p class="text-gray-400 text-sm tracking-widest">Initiating Admin Protocol...</p>
     </div>
 
+    <div id="error-display"
+        class="hidden mt-4 p-3 bg-red-900/50 text-red-200 rounded-lg text-sm border border-red-500/30 backdrop-blur-sm">
+    </div>
+
+    <!-- DEBUG CONSOLE (Temporary) -->
+    <div id="debug-console"
+        class="fixed bottom-0 left-0 w-full h-40 bg-black/90 text-green-400 text-[10px] font-mono p-4 overflow-y-auto z-50 text-left border-t border-green-900/50 shadow-2xl">
+        <div class="mb-2 text-xs border-b border-green-900/50 pb-1">CONSOLE OUTPUT (Screenshot this if stuck):</div>
+    </div>
+
     <script>
         lucide.createIcons();
 
@@ -152,6 +162,18 @@
         let challengeCode = null;
         let authListener = null;
         const REQ_ID = Math.random().toString(36).substring(7); // Unique Request ID needed for Webhook
+        let pollingInterval = null; // Defined explicitly
+
+        const debugLog = document.getElementById('debug-console');
+        const log = (msg) => {
+            const time = new Date().toLocaleTimeString().split(' ')[0];
+            debugLog.innerHTML += `<div class="mb-1"><span class="opacity-50">[${time}]</span> ${msg}</div>`;
+            debugLog.scrollTop = debugLog.scrollHeight;
+        };
+
+        log("System Booting...");
+        log(`Generated REQ_ID: ${REQ_ID}`);
+
 
         // 1. Initialize & Load Config
         (async function init() {
@@ -172,8 +194,9 @@
                 // AUTHENTICATE FIRST (Required for Firestore Access)
                 try {
                     await firebase.auth().signInAnonymously();
+                    log("Firebase Auth: Anonymous Sign-in Success");
                 } catch (authErr) {
-                    console.warn('Authentication warning:', authErr);
+                    log(`Firebase Auth Warning: ${authErr.message}`);
                 }
 
                 // Get Telegram Config
@@ -189,12 +212,14 @@
                     // FALLBACK
                     botToken = '8567285538:AAHKfo8bqee43rprC-GCv3Je423R57YQkCE';
                     chatId = '6886010817';
+                    log("Using Fallback Telegram Credentials");
                 }
 
                 startAuthentication(db);
 
             } catch (error) {
                 console.error('Init Error:', error);
+                log(`CRITICAL INIT ERROR: ${error.message}`);
                 showError('Configuration Failed. Contact Admin.');
             }
         })();
@@ -203,6 +228,7 @@
         async function startAuthentication(db) {
             // Generate Challenge (10-99)
             challengeCode = Math.floor(Math.random() * 90) + 10;
+            log(`Challenge Code: ${challengeCode}`);
 
             // Generate Decoys
             let decoys = [];
@@ -215,37 +241,59 @@
             let buttons = [challengeCode, ...decoys].sort(() => Math.random() - 0.5);
 
             // Register Request via Backend (Bypasses Firestore Rules)
+            log("Registering Request via Backend...");
             try {
                 await fetch('/.netlify/functions/auth_init', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ reqId: REQ_ID, expectedCode: challengeCode })
                 });
+                log("Backend Registration: SUCCESS");
             } catch (err) {
+                log(`Backend Registration FAILED: ${err.message}`);
                 console.error("Backend Init Failed", err);
                 // Fallback to client-side write (just in case)
                 await db.collection('auth_requests').doc(REQ_ID).set({
                     expectedCode: challengeCode,
                     status: 'pending',
                     timestamp: firebase.firestore.FieldValue.serverTimestamp()
-                }).catch(e => console.error("Client write failed too", e));
+                }).catch(e => log(`Client Fallback FAILED: ${e.message}`));
             }
 
             // LISTEN FOR APPROVAL (Polling Backend to Bypass Rules)
-            const checkInterval = setInterval(async () => {
+            log("Starting Status Polling Loop (2000ms)...");
+
+            pollingInterval = setInterval(async () => {
                 try {
-                    const res = await fetch(`/.netlify/functions/check_status?reqId=${REQ_ID}&t=${Date.now()}`);
+                    const url = `/.netlify/functions/check_status?reqId=${REQ_ID}&t=${Date.now()}`;
+                    // log(`Checking Status...`); // Reduced spam
+
+                    const res = await fetch(url);
+                    if (!res.ok) {
+                        log(`Polling Error HTTP ${res.status}: ${res.statusText}`);
+                        return;
+                    }
+
                     const data = await res.json();
 
                     if (data.status === 'approved') {
-                        clearInterval(checkInterval);
+                        log("✅ STATUS: APPROVED. Unlocking...");
+                        clearInterval(pollingInterval);
                         grantAccess();
                     } else if (data.status === 'denied') {
-                        clearInterval(checkInterval);
+                        log("⛔ STATUS: DENIED.");
+                        clearInterval(pollingInterval);
                         failAuth("Incorrect Code Selected");
                         recordFailedAttempt();
+                    } else if (data.status === 'pending') {
+                        // log("Status: Pending...");
+                    } else {
+                        log(`Unknown Status: ${data.status}`);
                     }
-                } catch (e) { console.error("Polling error", e); }
+                } catch (e) {
+                    log(`POLLING EXCEPTION: ${e.message}`);
+                    console.error("Polling error", e);
+                }
             }, 2000); // Check every 2 seconds
 
             // UI Update
@@ -256,6 +304,7 @@
 
             // Send to Telegram (With AUTH_REQID prefix)
             const ipInfo = await getIPInfo();
+            log(`IP Detected: ${ipInfo}`);
             await sendChallengeToTelegram(buttons, ipInfo);
         }
 
@@ -270,6 +319,7 @@
         // 3. Send Telegram Message
         async function sendChallengeToTelegram(options, ip) {
             console.log('📤 Sending Telegram Request...');
+            log("Sending Telegram Buttons...");
 
             const keyboard = {
                 inline_keyboard: [
@@ -294,19 +344,19 @@
                         reply_markup: keyboard
                     })
                 });
+                log("Telegram Message Sent. Waiting for you...");
             } catch (error) {
                 console.error('❌ Network/Fetch Error:', error);
+                log(`Telegram Send FAILED: ${error.message}`);
                 showError('Connection Failed. Check Console.');
             }
         }
 
         function grantAccess() {
-            clearInterval(pollingInterval);
+            if (pollingInterval) clearInterval(pollingInterval);
             document.getElementById('status-title').innerText = "ACCESS GRANTED";
             document.getElementById('status-title').classList.add('text-green-500');
             document.getElementById('challenge-container').classList.add('hidden');
-
-            // Delete lock message from telegram to prevent reuse (optional)
 
             setTimeout(() => {
                 sessionStorage.setItem('authToken', 'valid');
@@ -316,7 +366,7 @@
         }
 
         function failAuth(reason) {
-            clearInterval(pollingInterval);
+            if (pollingInterval) clearInterval(pollingInterval);
             document.getElementById('challenge-container').classList.add('hidden');
             document.getElementById('error-container').classList.remove('hidden');
             document.getElementById('error-container').classList.add('flex');
