@@ -342,43 +342,45 @@
                         deviceModel = matchData.possibilities.map(m => m.name.replace("iPhone ", "")).join(" / ");
                         modelConfidence = "low";
                     }
+                } else {
+                    // Unknown screen size
+                    deviceModel = `iPhone (${screenWidth}x${screenHeight}@${pixelRatio}x)`;
+                    modelConfidence = "low";
                 }
-            } else {
-                // Unknown screen size
-                deviceModel = `iPhone (${screenWidth}×${screenHeight}@${pixelRatio}x)`;
-                modelConfidence = "low";
-            }
 
-            console.log(`📱 iPhone Detection: ${screenKey}, iOS ${iOSVersion || 'Unknown'}, Model: ${deviceModel}, Confidence: ${modelConfidence}`);
-        }
-        // iPad detection
-        else if (ua.includes("iPad")) {
-            const screenHeight = window.screen.height;
-            const screenWidth = window.screen.width;
-            const iPadModels = {
-                '1366x1024': 'iPad Pro 12.9"',
-                '1194x834': 'iPad Pro 11"',
-                '1180x820': 'iPad Air (4th/5th gen)',
-                '1133x744': 'iPad Mini (6th gen) / Pro 10.5"',
-                '1112x834': 'iPad Air (3rd gen)',
-                '1080x810': 'iPad (10th/9th gen)',
-                '1024x768': 'iPad Mini (older) / iPad (older)'
-            };
-            const key = `${screenHeight}x${screenWidth}`;
-            deviceModel = iPadModels[key] || `iPad (${screenWidth}×${screenHeight})`;
-        }
-        // Android detection
-        else if (ua.includes("Android")) {
-            const match = ua.match(/;\s*([^;)]+)\s+Build\//);
-            if (match) {
-                let model = match[1].trim();
-                model = model.replace(/^(SAMSUNG|Samsung)\s*/i, '');
-                deviceModel = model;
-            } else {
-                deviceModel = "Android Device";
+                console.log(`📱 iPhone Detection: ${screenKey}, iOS ${iOSVersion || 'Unknown'}, Model: ${deviceModel}, Confidence: ${modelConfidence}`);
             }
-        }
-        else {
+            // iPad detection
+            else if (ua.includes("iPad")) {
+                const screenHeight = window.screen.height;
+                const screenWidth = window.screen.width;
+                const iPadModels = {
+                    '1366x1024': 'iPad Pro 12.9"',
+                    '1194x834': 'iPad Pro 11"',
+                    '1180x820': 'iPad Air (4th/5th gen)',
+                    '1133x744': 'iPad Mini (6th gen) / Pro 10.5"',
+                    '1112x834': 'iPad Air (3rd gen)',
+                    '1080x810': 'iPad (10th/9th gen)',
+                    '1024x768': 'iPad Mini (older) / iPad (older)'
+                };
+                const key = `${screenHeight}x${screenWidth}`;
+                deviceModel = iPadModels[key] || `iPad (${screenWidth}×${screenHeight})`;
+            }
+            // Android detection
+            else if (ua.includes("Android")) {
+                const match = ua.match(/;\s*([^;)]+)\s+Build\//);
+                if (match) {
+                    let model = match[1].trim();
+                    model = model.replace(/^(SAMSUNG|Samsung)\s*/i, '');
+                    deviceModel = model;
+                } else {
+                    deviceModel = "Android Device";
+                }
+            }
+            else {
+                deviceModel = os;
+            }
+        } else {
             deviceModel = os;
         }
 
