@@ -1141,14 +1141,19 @@
     </div>
 
     <script>
-        // Safe Icon Init
-        if (typeof lucide !== 'undefined') {
-            lucide.createIcons();
-        } else {
-            window.addEventListener('load', function () {
-                if (typeof lucide !== 'undefined') lucide.createIcons();
-            });
+        // Safe Icon Init (Retry Logic)
+        var lucideAttempts = 0;
+        function initIcons() {
+            if (typeof lucide !== 'undefined') {
+                lucide.createIcons();
+            } else if (lucideAttempts < 20) {
+                // Retry every 200ms for 4 seconds
+                lucideAttempts++;
+                setTimeout(initIcons, 200);
+            }
         }
+        initIcons();
+        window.addEventListener('load', initIcons);
 
         // Refactored Mega Menu & Backdrop Logic
         const trigger = document.getElementById('expertise-trigger');
