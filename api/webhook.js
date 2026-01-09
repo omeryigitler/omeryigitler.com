@@ -1,13 +1,7 @@
-/**
- * TAURUS WEBHOOK BRIDGE (Vercel Serverless Version) v1.1
- * 
- * Telegram'daki "Loading" sorununu gidermek için optimize edildi.
- */
-
 const admin = require('firebase-admin');
 const axios = require('axios');
 
-// Initialize Firebase
+// Initialize Firebase (With Fallback Key for Vercel)
 if (!admin.apps.length) {
     admin.initializeApp({
         credential: admin.credential.cert({
@@ -19,14 +13,6 @@ if (!admin.apps.length) {
         })
     });
 }
-
-// ... Skipping context in replacement chunk ...
-
-await axios.post(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
-    chat_id: chatId,
-    text: `✅ <b>Action Applied:</b> ${action.toUpperCase()}`,
-    parse_mode: 'HTML'
-});
 
 const db = admin.firestore();
 const BOT_TOKEN = "8567285538:AAHKfo8bqee43rprC-GCv3Je423R57YQkCE";
@@ -40,7 +26,7 @@ module.exports = async (req, res) => {
         const data = callbackQuery.data;
         const chatId = callbackQuery.message.chat.id;
 
-        // --- NEW: AUTHENTICATION HANDLER ---
+        // --- AUTHENTICATION HANDLER ---
         if (data.startsWith('auth_')) {
             // Format: auth_REQID_CODE (e.g., auth_abc123_84)
             const parts = data.split('_');
@@ -83,26 +69,29 @@ module.exports = async (req, res) => {
             return res.status(200).send('OK');
         }
 
-        // --- EXISTING: TRACKER LOGIC (Alarm, Block, etc.) ---
+        // --- TRACKER LOGIC (Alarm, Block, etc.) ---
         const firstUnderscore = data.indexOf('_');
         if (firstUnderscore !== -1) {
             const action = data.substring(0, firstUnderscore);
             const sessionID = data.substring(firstUnderscore + 1);
 
             try {
+                // 1. Answer Callback (Stop Loading Spinner)
                 await axios.post(`https://api.telegram.org/bot${BOT_TOKEN}/answerCallbackQuery`, {
                     callback_query_id: callbackQuery.id,
                     text: `Command Received: ${action.toUpperCase()}`
                 });
 
+                // 2. Update Firestore
                 await db.collection('visitors_v1').doc(sessionID).update({
                     action: action,
                     action_timestamp: admin.firestore.FieldValue.serverTimestamp()
                 });
 
+                // 3. Send Confirmation Message (CLEAN - No IDs)
                 await axios.post(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
                     chat_id: chatId,
-                    text: `✅ <b>Action:</b> ${action} applied to ${sessionID}`,
+                    text: `✅ <b>Action Applied:</b> ${action.toUpperCase()}`,
                     parse_mode: 'HTML'
                 });
             } catch (error) {
@@ -111,4 +100,5 @@ module.exports = async (req, res) => {
         }
     }
 
+    return res.status(200).send('OK');
 };
