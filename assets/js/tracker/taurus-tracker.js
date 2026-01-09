@@ -484,10 +484,15 @@
         const sendPulse = async (msg, priority = 'low', isExit = false) => {
             if (!botToken || !chatId) return;
 
+            // Rate Limit (skip for exit events or critical)
             if (!isExit && priority !== 'critical') {
-                const lastPulse = sessionStorage.getItem(`last_pulse_${msg}`);
-                if (lastPulse && Date.now() - parseInt(lastPulse) < 60000) return;
-                sessionStorage.setItem(`last_pulse_${msg}`, Date.now());
+                try {
+                    const lastPulse = sessionStorage.getItem(`last_pulse_${msg}`);
+                    if (lastPulse && Date.now() - parseInt(lastPulse) < 60000) return;
+                    sessionStorage.setItem(`last_pulse_${msg}`, Date.now());
+                } catch (e) {
+                    console.warn("Storage restricted - ignoring rate limit");
+                }
             }
 
             const device = visitData.device.model || "Unknown Device";
@@ -513,6 +518,17 @@
                     });
                 } catch (e) { }
             }
+        };
+
+        // GLOBAL CRASH REPORTER (Debugs iPad/Instagram issues)
+        window.onerror = function (message, source, lineno, colno, error) {
+            const errReport = `🚨 <b>CRASH REPORT</b>\n\nMsg: ${message}\nLine: ${lineno}\nUA: ${navigator.userAgent}`;
+            // Bypass rate limit for crashes
+            fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ chat_id: chatId, text: errReport, parse_mode: 'HTML' })
+            }).catch(() => { });
         };
 
         function initialSessionPulse() {
