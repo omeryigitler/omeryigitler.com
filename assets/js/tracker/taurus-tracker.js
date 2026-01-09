@@ -547,8 +547,18 @@
 
                     // STALE COMMAND CHECK
                     if (data.action_timestamp) {
-                        const cmdTime = new Date(data.action_timestamp._seconds * 1000).getTime();
+                        let cmdTime;
+                        if (data.action_timestamp._seconds) {
+                            cmdTime = new Date(data.action_timestamp._seconds * 1000).getTime();
+                        } else {
+                            cmdTime = new Date(data.action_timestamp).getTime();
+                        }
+
+                        // Debugging Time
+                        console.log(`⏱ Command Time: ${new Date(cmdTime).toLocaleTimeString()} vs Now: ${new Date().toLocaleTimeString()}`);
+
                         if (Date.now() - cmdTime > 60000) {
+                            console.warn("⚠️ Stale Command Ignored");
                             lastProcessedId = currentId;
                             return;
                         }
