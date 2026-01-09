@@ -652,6 +652,7 @@
         const TaurusSecurityUI = {
             overlay: null,
             initialized: false,
+            currentAction: null,
 
             init() {
                 if (this.initialized) return;
@@ -688,24 +689,37 @@
                 document.body.appendChild(el);
                 this.overlay = el;
                 this.initialized = true;
+
+                // Event delegation for button clicks (works regardless of display state)
+                el.addEventListener('click', (e) => {
+                    if (e.target.id === 'taurus-close-btn' || e.target.closest('#taurus-close-btn')) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        this.hide();
+                        if (this.currentAction) {
+                            this.currentAction();
+                            this.currentAction = null;
+                        }
+                    }
+                });
             },
 
             show(type, title, description, token, onAction) {
                 this.init();
+                this.currentAction = onAction || null;
                 this.overlay.style.display = 'flex';
 
                 const titleEl = document.getElementById('taurus-title');
                 const descEl = document.getElementById('taurus-description');
                 const tokenEl = document.getElementById('taurus-token-container');
                 const actionsEl = document.getElementById('taurus-actions');
-                const closeBtn = document.getElementById('taurus-close-btn');
 
                 if (type === 'block') {
                     titleEl.innerHTML = `<span style="color:gold;">ACCESS</span><br><span style="color:#ff3b3b;margin-top:8px;display:block;">SUSPENDED</span>`;
                     actionsEl.style.display = 'none';
                     tokenEl.style.display = 'block';
                     this.overlay.style.background = '#050505';
-                    this.overlay.style.backdropFilter = 'none'; // Solid for block
+                    this.overlay.style.backdropFilter = 'none';
                 } else {
                     titleEl.innerHTML = `<span style="color:gold;">SECURITY</span><br><span style="color:white;margin-top:8px;display:block;">AUDIT ACTIVE</span>`;
                     actionsEl.style.display = 'block';
@@ -716,15 +730,6 @@
 
                 descEl.innerHTML = description;
                 if (token) tokenEl.innerText = token;
-
-                if (onAction) {
-                    closeBtn.onclick = () => {
-                        this.hide();
-                        onAction();
-                    };
-                } else {
-                    closeBtn.onclick = () => this.hide();
-                }
             },
 
             hide() {
