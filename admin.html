@@ -675,8 +675,12 @@
                 firebase.auth().onAuthStateChanged((user) => {
                     if (user) {
                         // User is authenticated - grant access
-                        console.log("✅ Authenticated access verified");
+                        console.log("✅ Authenticated access verified:", user.uid, "IsAnon:", user.isAnonymous);
                         console.log("Intelligence System Initialized");
+
+                        // Explicit Global DB assignment
+                        window.db = firebase.firestore();
+
                         setupRealtimeListeners();
                         loadTrafficChart();
 
@@ -1536,7 +1540,9 @@
         }
 
         function setupRealtimeListeners() {
-            if (!db) return;
+            if (!db) { console.error("DB Not Initialized"); return; }
+            console.log("Setting up realtime listeners...");
+
             db.collection('messages').onSnapshot(snapshot => {
                 let unreadCount = 0;
                 snapshot.forEach(doc => { if (doc.data().status === 'new') unreadCount++; });
@@ -1550,15 +1556,22 @@
                 if (statMsg) statMsg.innerText = unreadCount;
 
                 loadViewStats();
+            }, error => {
+                console.error("❌ Stats Listener Error:", error);
             });
         }
 
         async function loadViewStats() {
             if (!db) return;
-            const doc = await db.collection('stats').doc('global').get();
-            const views = doc.exists ? doc.data().views || 0 : 0;
-            const el = document.getElementById('stat-total-views');
-            if (el) el.innerText = views;
+            try {
+                const doc = await db.collection('stats').doc('global').get();
+                console.log("Stats Doc Exists:", doc.exists);
+                const views = doc.exists ? doc.data().views || 0 : 0;
+                const el = document.getElementById('stat-total-views');
+                if (el) el.innerText = views;
+            } catch (e) {
+                console.error("❌ loadViewStats Error:", e);
+            }
         }
 
         async function toggleMessageStatus(id, currentStatus) {
