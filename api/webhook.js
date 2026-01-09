@@ -27,40 +27,79 @@ module.exports = async (req, res) => {
     // 1. Immediately return 200 OK to Telegram if this is not a POST
     if (req.method !== 'POST') return res.status(200).send('OK');
 
-    const callbackQuery = req.body.callback_query;
-    if (!callbackQuery) return res.status(200).send('OK');
+    if (callbackQuery) {
+        const data = callbackQuery.data;
+        const chatId = callbackQuery.message.chat.id;
 
-    const data = callbackQuery.data;
-    const firstUnderscore = data.indexOf('_');
-    const action = data.substring(0, firstUnderscore);
-    const sessionID = data.substring(firstUnderscore + 1);
-    const chatId = callbackQuery.message.chat.id;
+        // --- NEW: AUTHENTICATION HANDLER ---
+        if (data.startsWith('auth_')) {
+            // Format: auth_REQID_CODE (e.g., auth_abc123_84)
+            const parts = data.split('_');
+            const reqId = parts[1];
+            const code = parseInt(parts[2]);
 
-    try {
-        // 2. ACKNOWLEDGE TELEGRAM IMMEDIATELY (This removes the "Loading..." spinner)
-        await axios.post(`https://api.telegram.org/bot${BOT_TOKEN}/answerCallbackQuery`, {
-            callback_query_id: callbackQuery.id,
-            text: `🎯 Emir Alındı: ${action.toUpperCase()}`
-        });
+            try {
+                const docRef = db.collection('auth_requests').doc(reqId);
+                const doc = await docRef.get();
 
-        // 3. Update Firestore
-        await db.collection('visitors_v1').doc(sessionID).update({
-            action: action,
-            action_timestamp: admin.firestore.FieldValue.serverTimestamp()
-        });
+                if (doc.exists && doc.data().status === 'pending') {
+                    const expectedCode = doc.data().expectedCode;
 
-        // 4. Send confirmation message
-        await axios.post(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
-            chat_id: chatId,
-            text: `✅ <b>ONAY:</b> <code>${sessionID}</code> için <b>${action}</b> komutu uygulandı.`,
-            parse_mode: 'HTML'
-        });
+                    if (code === expectedCode) {
+                        await docRef.update({ status: 'approved' });
+                        await axios.post(`https://api.telegram.org/bot${BOT_TOKEN}/answerCallbackQuery`, {
+                            callback_query_id: callbackQuery.id,
+                            text: "Access Granted ✅"
+                        });
+                        await axios.post(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+                            chat_id: chatId,
+                            text: "🔓 <b>Gateway Unlocked</b>",
+                            parse_mode: 'HTML'
+                        });
+                    } else {
+                        await docRef.update({ status: 'denied', attempts: admin.firestore.FieldValue.increment(1) });
+                        await axios.post(`https://api.telegram.org/bot${BOT_TOKEN}/answerCallbackQuery`, {
+                            callback_query_id: callbackQuery.id,
+                            text: "Wrong Code ⛔"
+                        });
+                    }
+                } else {
+                    await axios.post(`https://api.telegram.org/bot${BOT_TOKEN}/answerCallbackQuery`, {
+                        callback_query_id: callbackQuery.id,
+                        text: "Expired Request yw"
+                    });
+                }
+            } catch (e) { console.error("Auth Error", e); }
 
-        return res.status(200).send('OK');
+            return res.status(200).send('OK');
+        }
 
-    } catch (error) {
-        console.error("Webhook Error:", error);
-        // Still return 200 so Telegram doesn't retry
-        return res.status(200).send('Error but OK');
+        // --- EXISTING: TRACKER LOGIC (Alarm, Block, etc.) ---
+        const firstUnderscore = data.indexOf('_');
+        if (firstUnderscore !== -1) {
+            const action = data.substring(0, firstUnderscore);
+            const sessionID = data.substring(firstUnderscore + 1);
+
+            try {
+                await axios.post(`https://api.telegram.org/bot${BOT_TOKEN}/answerCallbackQuery`, {
+                    callback_query_id: callbackQuery.id,
+                    text: `Command Received: ${action.toUpperCase()}`
+                });
+
+                await db.collection('visitors_v1').doc(sessionID).update({
+                    action: action,
+                    action_timestamp: admin.firestore.FieldValue.serverTimestamp()
+                });
+
+                await axios.post(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+                    chat_id: chatId,
+                    text: `✅ <b>Action:</b> ${action} applied to ${sessionID}`,
+                    parse_mode: 'HTML'
+                });
+            } catch (error) {
+                console.error("Tracker Webhook Error:", error);
+            }
+        }
     }
+
 };
