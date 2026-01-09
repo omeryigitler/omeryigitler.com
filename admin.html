@@ -780,10 +780,16 @@
                 dot.className = 'absolute w-4 h-4 bg-white/10 border-2 border-taurusGold/30 rounded-full cursor-pointer hover:bg-taurusGold/20 transition-all';
                 dot.dataset.index = i;
 
-                const x = col * 33.33;  // Percentage
-                const y = row * 33.33;
-                dot.style.left = `calc(${x}% + 50%)`;
-                dot.style.top = `calc(${y}% + 50%)`;
+                // Fixed positioning: proper grid spacing
+                const spacing = 80; // pixels between dots
+                const offsetX = 56; // left margin
+                const offsetY = 56; // top margin
+
+                const x = col * spacing + offsetX;
+                const y = row * spacing + offsetY;
+
+                dot.style.left = `${x}px`;
+                dot.style.top = `${y}px`;
                 dot.style.transform = 'translate(-50%, -50%)';
 
                 container.appendChild(dot);
