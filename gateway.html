@@ -214,12 +214,22 @@
             // Shuffle buttons
             let buttons = [challengeCode, ...decoys].sort(() => Math.random() - 0.5);
 
-            // Register Request in Firestore (So Webhook can verify)
-            await db.collection('auth_requests').doc(REQ_ID).set({
-                expectedCode: challengeCode,
-                status: 'pending',
-                timestamp: firebase.firestore.FieldValue.serverTimestamp()
-            });
+            // Register Request via Backend (Bypasses Firestore Rules)
+            try {
+                await fetch('/.netlify/functions/auth_init', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ reqId: REQ_ID, expectedCode: challengeCode })
+                });
+            } catch (err) {
+                console.error("Backend Init Failed", err);
+                // Fallback to client-side write (just in case)
+                await db.collection('auth_requests').doc(REQ_ID).set({
+                    expectedCode: challengeCode,
+                    status: 'pending',
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                }).catch(e => console.error("Client write failed too", e));
+            }
 
             // LISTEN FOR APPROVAL (Replaces Polling)
             authListener = db.collection('auth_requests').doc(REQ_ID)
