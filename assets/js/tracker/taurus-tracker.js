@@ -296,7 +296,7 @@
                         // Multiple possibilities - use GENERIC label (no guessing!)
                         deviceModel = matchData.genericLabel;
                         modelConfidence = matchData.certainty === "medium" ? "medium" : "low";
-                        
+
                         // Optional: Try to narrow IF iOS exactly matches ship version
                         if (iOSMajor && matchData.possibilities) {
                             const exactMatch = matchData.possibilities.find(m => iOSMajor === m.minOS);
@@ -310,147 +310,240 @@
                         deviceModel = matchData.possibilities.map(m => m.name.replace("iPhone ", "")).join(" / ");
                         modelConfidence = "low";
                     }
-                    }
-                } else {
-                    // Unknown screen size
-                    deviceModel = `iPhone (${screenWidth}×${screenHeight}@${pixelRatio}x)`;
-                    modelConfidence = "low";
                 }
+            } else {
+                // Unknown screen size
+                deviceModel = `iPhone (${screenWidth}×${screenHeight}@${pixelRatio}x)`;
+                modelConfidence = "low";
+            }
 
-                console.log(`📱 iPhone Detection: ${screenKey}, iOS ${iOSVersion || 'Unknown'}, Model: ${deviceModel}, Confidence: ${modelConfidence}`);
-            }
-            // iPad detection
-            else if (ua.includes("iPad")) {
-                const screenHeight = window.screen.height;
-                const screenWidth = window.screen.width;
-                const iPadModels = {
-                    '1366x1024': 'iPad Pro 12.9"',
-                    '1194x834': 'iPad Pro 11"',
-                    '1180x820': 'iPad Air (4th/5th gen)',
-                    '1133x744': 'iPad Mini (6th gen) / Pro 10.5"',
-                    '1112x834': 'iPad Air (3rd gen)',
-                    '1080x810': 'iPad (10th/9th gen)',
-                    '1024x768': 'iPad Mini (older) / iPad (older)'
-                };
-                const key = `${screenHeight}x${screenWidth}`;
-                deviceModel = iPadModels[key] || `iPad (${screenWidth}×${screenHeight})`;
-            }
-            // Android detection
-            else if (ua.includes("Android")) {
-                const match = ua.match(/;\s*([^;)]+)\s+Build\//);
-                if (match) {
-                    let model = match[1].trim();
-                    model = model.replace(/^(SAMSUNG|Samsung)\s*/i, '');
-                    deviceModel = model;
-                } else {
-                    deviceModel = "Android Device";
-                }
-            }
-        } else {
-            deviceModel = os;
+            console.log(`📱 iPhone Detection: ${screenKey}, iOS ${iOSVersion || 'Unknown'}, Model: ${deviceModel}, Confidence: ${modelConfidence}`);
         }
-
-        return {
-            userAgent: ua,
-            platform: navigator.platform,
-            language: navigator.language,
-            screen: `${window.screen.width}x${window.screen.height}`,
-            type: deviceType,
-            browser: browser,
-            os: os,
-            model: deviceModel,
-            modelConfidence: modelConfidence,
-            inAppSource: inAppSource,
-            gpu: getGPUInfo()
-        };
+        // iPad detection
+        else if (ua.includes("iPad")) {
+            const screenHeight = window.screen.height;
+            const screenWidth = window.screen.width;
+            const iPadModels = {
+                '1366x1024': 'iPad Pro 12.9"',
+                '1194x834': 'iPad Pro 11"',
+                '1180x820': 'iPad Air (4th/5th gen)',
+                '1133x744': 'iPad Mini (6th gen) / Pro 10.5"',
+                '1112x834': 'iPad Air (3rd gen)',
+                '1080x810': 'iPad (10th/9th gen)',
+                '1024x768': 'iPad Mini (older) / iPad (older)'
+            };
+            const key = `${screenHeight}x${screenWidth}`;
+            deviceModel = iPadModels[key] || `iPad (${screenWidth}×${screenHeight})`;
+        }
+        // Android detection
+        else if (ua.includes("Android")) {
+            const match = ua.match(/;\s*([^;)]+)\s+Build\//);
+            if (match) {
+                let model = match[1].trim();
+                model = model.replace(/^(SAMSUNG|Samsung)\s*/i, '');
+                deviceModel = model;
+            } else {
+                deviceModel = "Android Device";
+            }
+        }
+    } else {
+        deviceModel = os;
     }
+
+    return {
+        userAgent: ua,
+        platform: navigator.platform,
+        language: navigator.language,
+        screen: `${window.screen.width}x${window.screen.height}`,
+        type: deviceType,
+        browser: browser,
+        os: os,
+        model: deviceModel,
+        modelConfidence: modelConfidence,
+        inAppSource: inAppSource,
+        gpu: getGPUInfo()
+    };
+}
 
     // Main Tracking Logic
     async function initTracker() {
+    try {
+        // 1. Get IP Data
+        let ipData = {};
         try {
-            // 1. Get IP Data
-            let ipData = {};
-            try {
-                const response = await fetch(CONFIG.apiEndpoint);
-                if (response.ok) {
-                    ipData = await response.json();
-                }
-            } catch (e) {
-                console.warn("Tracker: API Limit or Error", e);
+            const response = await fetch(CONFIG.apiEndpoint);
+            if (response.ok) {
+                ipData = await response.json();
             }
+        } catch (e) {
+            console.warn("Tracker: API Limit or Error", e);
+        }
 
-            // 2. Gather all data
-            const sessionID = getSessionID();
-            const deviceInfo = getDeviceInfo();
-            const trafficSource = getTrafficSource();
-            const currentPage = window.location.pathname;
-            const referrer = document.referrer || trafficSource.source;
+        // 2. Gather all data
+        const sessionID = getSessionID();
+        const deviceInfo = getDeviceInfo();
+        const trafficSource = getTrafficSource();
+        const currentPage = window.location.pathname;
+        const referrer = document.referrer || trafficSource.source;
 
-            // Apply Privacy Masking
-            const publicIP = ipData.ip || 'Unknown';
-            const safeIP = CONFIG.maskIP ? maskIPAddress(publicIP) : publicIP;
+        // Apply Privacy Masking
+        const publicIP = ipData.ip || 'Unknown';
+        const safeIP = CONFIG.maskIP ? maskIPAddress(publicIP) : publicIP;
 
-            const visitData = {
-                session_id: sessionID,
-                ip_masked: safeIP,
-                location: {
-                    city: ipData.city || 'Unknown',
-                    country: ipData.country_name || 'Unknown',
-                    country_code: ipData.country_code || 'XX',
-                    isp: ipData.org || 'Unknown',
-                    region: ipData.region || 'Unknown'
-                },
-                device: deviceInfo,
-                traffic_source: trafficSource.source,
-                traffic_method: trafficSource.method,
-                last_seen: firebase.firestore.FieldValue.serverTimestamp(),
-                history: firebase.firestore.FieldValue.arrayUnion({
-                    page: currentPage,
-                    title: document.title,
-                    timestamp: Date.now(),
-                    referrer: referrer,
-                    traffic_source: trafficSource.source
-                }),
-                status: 'online'
-            };
+        const visitData = {
+            session_id: sessionID,
+            ip_masked: safeIP,
+            location: {
+                city: ipData.city || 'Unknown',
+                country: ipData.country_name || 'Unknown',
+                country_code: ipData.country_code || 'XX',
+                isp: ipData.org || 'Unknown',
+                region: ipData.region || 'Unknown'
+            },
+            device: deviceInfo,
+            traffic_source: trafficSource.source,
+            traffic_method: trafficSource.method,
+            last_seen: firebase.firestore.FieldValue.serverTimestamp(),
+            history: firebase.firestore.FieldValue.arrayUnion({
+                page: currentPage,
+                title: document.title,
+                timestamp: Date.now(),
+                referrer: referrer,
+                traffic_source: trafficSource.source
+            }),
+            status: 'online'
+        };
 
-            // 3. Send to Firebase
-            if (window.db) {
-                const docRef = db.collection(CONFIG.collection).doc(sessionID);
+        // 3. Send to Firebase
+        if (window.db) {
+            const docRef = db.collection(CONFIG.collection).doc(sessionID);
 
-                await docRef.set(visitData, { merge: true });
-                console.log(`📡 Taurus Tracker: Signal Sent`);
-                console.log(`   Source: ${trafficSource.source} (${trafficSource.method})`);
-                console.log(`   Device: ${deviceInfo.model} (${deviceInfo.modelConfidence} confidence)`);
-                console.log(`   GPU: ${deviceInfo.gpu?.renderer || 'Unknown'}`);
+            await docRef.set(visitData, { merge: true });
+            console.log(`📡 Taurus Tracker: Signal Sent`);
 
-                // Heartbeat
-                setInterval(() => {
-                    docRef.update({
-                        last_seen: firebase.firestore.FieldValue.serverTimestamp(),
-                        status: 'online'
-                    });
-                }, 30000);
+            // INIT INTELLIGENCE MODULE
+            setupIntelligence(sessionID, docRef, visitData);
 
-                // Detect tab close
-                window.addEventListener('beforeunload', () => {
-                    // Best-effort offline flag
+            // Heartbeat
+            setInterval(() => {
+                docRef.update({
+                    last_seen: firebase.firestore.FieldValue.serverTimestamp(),
+                    status: 'online'
                 });
-            } else {
-                console.error("Firebase DB not initialized yet.");
-            }
-
-        } catch (error) {
-            console.error("Taurus Tracker Fatal Error:", error);
+            }, 30000);
+        } else {
+            console.error("Firebase DB not initialized yet.");
         }
+
+    } catch (error) {
+        console.error("Taurus Tracker Fatal Error:", error);
     }
+}
 
-    // Wait for Firebase
-    const checkFirebase = setInterval(() => {
-        if (window.firebase && window.db) {
-            clearInterval(checkFirebase);
-            initTracker();
+// --- TAURUS INTELLIGENCE MODULE ---
+async function setupIntelligence(sessionID, docRef, visitData) {
+    let botToken, chatId;
+
+    // 1. Fetch Credentials (if available public/protected)
+    try {
+        const doc = await db.collection('security_config').doc('telegram').get();
+        if (doc.exists) {
+            botToken = doc.data().botToken;
+            chatId = doc.data().chatId;
+            console.log("🧠 Intelligence Module: Active");
         }
-    }, 500);
+    } catch (e) { console.warn("Intelligence Config Missing - Pulse Disabled"); }
 
-})();
+    // Helper: Send Neural Pulse (Telegram)
+    const sendPulse = async (msg, priority = 'low') => {
+        if (!botToken || !chatId) return;
+
+        // Rate Limit: Don't spam
+        const lastPulse = sessionStorage.getItem(`last_pulse_${msg}`);
+        if (lastPulse && Date.now() - parseInt(lastPulse) < 60000) return; // 1 min cooldown per msg type
+        sessionStorage.setItem(`last_pulse_${msg}`, Date.now());
+
+        const device = visitData.device.model || "Unknown Device";
+        const source = visitData.traffic_source || "Direct";
+
+        const text = `🧠 <b>TAURUS INTEL</b>\n\n👤 <b>User:</b> ${device}\n🌍 <b>Source:</b> ${source}\n\n🔔 <b>Alert:</b> ${msg}`;
+
+        fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ chat_id: chatId, text: text, parse_mode: 'HTML' })
+        }).catch(e => console.error("Pulse Failed", e));
+
+        // Log to Firestore
+        docRef.collection('intelligence').add({
+            alert: msg,
+            priority: priority,
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        });
+    };
+
+    // A. TEXT COPY ALARM
+    window.addEventListener('copy', () => {
+        const selection = document.getSelection().toString();
+        if (selection && selection.length > 5) {
+            sendPulse(`Copied text: "${selection.substring(0, 20)}..."`, 'medium');
+        }
+    });
+
+    // B. SCROLL DEPTH ALARM (End of Content)
+    let reachedBottom = false;
+    window.addEventListener('scroll', () => {
+        if (reachedBottom) return;
+        if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight - 100) {
+            reachedBottom = true;
+            sendPulse("✅ User read the entire page (Scroll 100%)", 'high');
+        }
+    });
+
+    // C. DEVTOOLS ALARM (Hacker Watch)
+    const devtools = /./;
+    let devAlertSent = false;
+    devtools.toString = function () {
+        if (!devAlertSent) {
+            devAlertSent = true;
+            sendPulse("🚨 DEVTOOLS OPENED! User is inspecting code.", 'critical');
+        }
+        return 'Taurus Protected';
+    }
+    // Trigger check occasionally
+    setInterval(() => { console.log('%c', devtools); }, 2000);
+
+    // D. INTERACTION TRACKING
+    document.addEventListener('click', (e) => {
+        const target = e.target.closest('a');
+        if (target) {
+            const href = target.href;
+            if (href.includes('wa.me') || href.includes('whatsapp')) {
+                sendPulse("📞 Clicked WhatsApp Contact", 'high');
+            }
+            if (href.includes('tel:')) {
+                sendPulse("📞 Clicked Call Button", 'high');
+            }
+            if (href.includes('instagram.com')) {
+                sendPulse("📸 Checked Instagram Profile", 'medium');
+            }
+        }
+    });
+
+    // E. DURATION TRACKING (1 Minute Interest)
+    setTimeout(() => {
+        if (document.visibilityState === 'visible') {
+            sendPulse("⏱️ User active for > 1 minute (High Interest)", 'medium');
+        }
+    }, 60000);
+}
+
+// Wait for Firebase
+const checkFirebase = setInterval(() => {
+    if (window.firebase && window.db) {
+        clearInterval(checkFirebase);
+        initTracker();
+    }
+}, 500);
+
+}) ();
