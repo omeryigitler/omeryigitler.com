@@ -986,9 +986,13 @@
                                     <div class="flex items-center gap-2">
                                         <i data-lucide="${d.device?.type === 'Mobile' ? 'smartphone' : (d.device?.type === 'Tablet' ? 'tablet' : 'monitor')}" class="w-3 h-3 opacity-60"></i>
                                         <span class="font-bold">${d.device?.model || d.device?.type || 'Unknown'}</span>
+                                        ${d.device?.modelConfidence ? `<span class="w-1.5 h-1.5 rounded-full ${d.device.modelConfidence === 'high' ? 'bg-green-500' : d.device.modelConfidence === 'medium' ? 'bg-yellow-500' : 'bg-red-500'}" title="Detection confidence: ${d.device.modelConfidence}"></span>` : ''}
                                     </div>
                                     <div class="text-[10px] text-gray-500 flex items-center gap-3">
-                                        <span>🌐 ${d.device?.browser || 'Unknown'}</span>
+                                        ${d.device?.inAppSource
+                            ? `<span class="text-taurusGold flex items-center gap-1"><i data-lucide="${d.device.inAppSource === 'Instagram' ? 'instagram' : d.device.inAppSource === 'Facebook' ? 'facebook' : d.device.inAppSource === 'TikTok' ? 'music-2' : 'app-window'}" class="w-2.5 h-2.5"></i> ${d.device.browser}</span>`
+                            : `<span>🌐 ${d.device?.browser || 'Unknown'}</span>`
+                        }
                                         <span>💿 ${d.device?.os || d.device?.platform || 'Unknown OS'}</span>
                                     </div>
                                 </div>
@@ -1096,6 +1100,16 @@
                             <p class="text-[10px] text-gray-500 uppercase tracking-wider mb-1">ISP / Network</p>
                             <p class="text-sm text-white">${data.location?.isp || 'Unknown'}</p>
                         </div>
+                        ${data.traffic_source && data.traffic_source !== 'Direct / Unknown' ? `
+                        <div class="bg-black/40 rounded-lg p-3 border border-white/5 col-span-2">
+                            <p class="text-[10px] text-gray-500 uppercase tracking-wider mb-1">Traffic Source</p>
+                            <p class="text-sm text-taurusGold font-bold flex items-center gap-2">
+                                <i data-lucide="${data.traffic_source.includes('Instagram') ? 'instagram' : data.traffic_source.includes('Facebook') ? 'facebook' : data.traffic_source.includes('TikTok') ? 'music-2' : data.traffic_source.includes('Twitter') || data.traffic_source.includes('X/') ? 'twitter' : data.traffic_source.includes('LinkedIn') ? 'linkedin' : data.traffic_source.includes('Google') ? 'search' : 'link'}" class="w-3.5 h-3.5"></i>
+                                ${data.traffic_source}
+                                ${data.traffic_method ? `<span class="text-[9px] text-gray-500 font-normal">(${data.traffic_method})</span>` : ''}
+                            </p>
+                        </div>
+                        ` : ''}
                     </div>
                 </div>
 
@@ -1107,8 +1121,16 @@
                     </h5>
                     <div class="grid grid-cols-2 gap-3">
                         <div>
-                            <p class="text-[10px] text-gray-500 uppercase mb-1">Model</p>
+                            <p class="text-[10px] text-gray-500 uppercase mb-1 flex items-center gap-1.5">
+                                Model
+                                ${data.device?.modelConfidence ? `
+                                <span class="w-2 h-2 rounded-full ${data.device.modelConfidence === 'high' ? 'bg-green-500' : data.device.modelConfidence === 'medium' ? 'bg-yellow-500' : 'bg-red-500'}" title="Detection confidence: ${data.device.modelConfidence}"></span>
+                                ` : ''}
+                            </p>
                             <p class="text-sm text-white">${data.device?.model || 'Unknown'}</p>
+                            ${data.device?.modelConfidence && data.device.modelConfidence !== 'high' ? `
+                            <p class="text-[9px] text-gray-600 mt-0.5 italic">~${data.device.modelConfidence} certainty</p>
+                            ` : ''}
                         </div>
                         <div>
                             <p class="text-[10px] text-gray-500 uppercase mb-1">Type</p>
@@ -1116,7 +1138,10 @@
                         </div>
                         <div>
                             <p class="text-[10px] text-gray-500 uppercase mb-1">Browser</p>
-                            <p class="text-sm text-white">${data.device?.browser || 'Unknown'}</p>
+                            <p class="text-sm ${data.device?.inAppSource ? 'text-taurusGold font-bold' : 'text-white'} flex items-center gap-1">
+                                ${data.device?.inAppSource ? `<i data-lucide="${data.device.inAppSource === 'Instagram' ? 'instagram' : data.device.inAppSource === 'Facebook' ? 'facebook' : data.device.inAppSource === 'TikTok' ? 'music-2' : 'app-window'}" class="w-3 h-3"></i>` : ''}
+                                ${data.device?.browser || 'Unknown'}
+                            </p>
                         </div>
                         <div>
                             <p class="text-[10px] text-gray-500 uppercase mb-1">OS</p>
@@ -1130,6 +1155,12 @@
                             <p class="text-[10px] text-gray-500 uppercase mb-1">Language</p>
                             <p class="text-sm text-gray-400">${data.device?.language || 'Unknown'}</p>
                         </div>
+                        ${data.device?.gpu?.renderer ? `
+                        <div class="col-span-2">
+                            <p class="text-[10px] text-gray-500 uppercase mb-1">GPU Renderer</p>
+                            <p class="text-xs text-gray-400 font-mono truncate" title="${data.device.gpu.renderer}">${data.device.gpu.renderer}</p>
+                        </div>
+                        ` : ''}
                     </div>
                 </div>
 
