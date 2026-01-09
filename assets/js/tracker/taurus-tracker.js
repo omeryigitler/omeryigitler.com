@@ -145,16 +145,27 @@
         } else if (ua.includes("Telegram")) {
             browser = "Telegram";
             inAppSource = "Telegram";
-        } else if (ua.includes("Chrome") && !ua.includes("Edg")) {
-            browser = "Chrome";
-        } else if (ua.includes("Safari") && !ua.includes("Chrome")) {
-            browser = "Safari";
-        } else if (ua.includes("Firefox")) {
-            browser = "Firefox";
+        }
+        // Standard browsers - iOS needs special handling
+        // iOS browsers use WebKit but have specific identifiers
+        else if (ua.includes("CriOS")) {
+            browser = "Chrome"; // Chrome on iOS
+        } else if (ua.includes("FxiOS")) {
+            browser = "Firefox"; // Firefox on iOS
+        } else if (ua.includes("EdgiOS")) {
+            browser = "Edge"; // Edge on iOS
+        } else if (ua.includes("OPiOS")) {
+            browser = "Opera"; // Opera on iOS
+        } else if (ua.includes("Chrome") && !ua.includes("Edg") && !ua.includes("OPR")) {
+            browser = "Chrome"; // Chrome on other platforms
         } else if (ua.includes("Edg")) {
-            browser = "Edge";
+            browser = "Edge"; // Edge on other platforms
+        } else if (ua.includes("Firefox")) {
+            browser = "Firefox"; // Firefox on other platforms
         } else if (ua.includes("OPR") || ua.includes("Opera")) {
-            browser = "Opera";
+            browser = "Opera"; // Opera on other platforms
+        } else if (ua.includes("Safari")) {
+            browser = "Safari"; // Safari - check LAST (other browsers also contain "Safari")
         }
 
         // OS Detection
