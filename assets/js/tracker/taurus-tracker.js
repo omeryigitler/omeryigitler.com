@@ -205,7 +205,9 @@
                 const models = {
                     // Pro Max models (indistinguishable by screen alone)
                     '932x430@3': {
-                        certainty: "uncertain",
+                        certainty: "low",
+                        genericLabel: "iPhone Pro Max",
+                        note: "Could be 14/15/16 Pro Max - identical specs",
                         possibilities: [
                             { name: "iPhone 16 Pro Max", minOS: 18 },
                             { name: "iPhone 15 Pro Max", minOS: 17 },
@@ -214,7 +216,9 @@
                     },
                     // Pro models (same issue)
                     '852x393@3': {
-                        certainty: "uncertain",
+                        certainty: "low",
+                        genericLabel: "iPhone Pro",
+                        note: "Could be 14/15/16 Pro - identical specs",
                         possibilities: [
                             { name: "iPhone 16 Pro", minOS: 18 },
                             { name: "iPhone 15 Pro", minOS: 17 },
@@ -223,7 +227,9 @@
                     },
                     // Plus / older Pro Max
                     '926x428@3': {
-                        certainty: "uncertain",
+                        certainty: "low",
+                        genericLabel: "iPhone (6.7\")",
+                        note: "Could be 14 Plus / 13 Pro Max / 12 Pro Max",
                         possibilities: [
                             { name: "iPhone 14 Plus", minOS: 16 },
                             { name: "iPhone 13 Pro Max", minOS: 15 },
@@ -232,7 +238,9 @@
                     },
                     // Standard models
                     '844x390@3': {
-                        certainty: "uncertain",
+                        certainty: "low",
+                        genericLabel: "iPhone (6.1\")",
+                        note: "Could be 12/13/14/15/16 - identical screen",
                         possibilities: [
                             { name: "iPhone 16", minOS: 18 },
                             { name: "iPhone 15", minOS: 17 },
@@ -244,6 +252,8 @@
                     // Plus size
                     '956x440@3': {
                         certainty: "medium",
+                        genericLabel: "iPhone Plus",
+                        note: "Could be 15/16 Plus",
                         possibilities: [
                             { name: "iPhone 16 Plus", minOS: 18 },
                             { name: "iPhone 15 Plus", minOS: 17 }
@@ -252,6 +262,8 @@
                     // Mini / 11 Pro / XS / X
                     '812x375@3': {
                         certainty: "low",
+                        genericLabel: "iPhone (5.8\")",
+                        note: "Could be 13/12 mini or 11 Pro/XS/X",
                         possibilities: [
                             { name: "iPhone 13 mini", minOS: 15 },
                             { name: "iPhone 12 mini", minOS: 14 },
@@ -261,7 +273,9 @@
                     // Unique screens (high certainty)
                     '896x414@2': { certainty: "high", model: "iPhone 11 / XR" },
                     '896x414@3': {
-                        certainty: "medium", possibilities: [
+                        certainty: "medium",
+                        genericLabel: "iPhone (6.5\" OLED)",
+                        note: "Could be 11 Pro Max or XS Max", possibilities: [
                             { name: "iPhone 11 Pro Max", minOS: 13 },
                             { name: "iPhone XS Max", minOS: 12 }
                         ]
@@ -274,41 +288,28 @@
                 const matchData = models[screenKey];
 
                 if (matchData) {
-                    if (matchData.certainty === "high") {
-                        // We're certain
+                    if (matchData.certainty === "high" && matchData.model) {
+                        // Unique screen - we're certain!
                         deviceModel = matchData.model;
                         modelConfidence = "high";
-                    } else if (matchData.possibilities) {
-                        // Multiple possibilities - be honest!
-                        // Filter by iOS version if available
-                        const compatibleModels = matchData.possibilities.filter(m =>
-                            !iOSMajor || iOSMajor >= m.minOS
-                        );
-
-                        if (compatibleModels.length === 1) {
-                            // Only one possibility after filtering
-                            deviceModel = compatibleModels[0].name;
-                            modelConfidence = "high";
-                        } else if (iOSMajor) {
-                            // We can narrow it down based on iOS version
-                            // Device shipped with iOS X can't run iOS X-1
-                            const likelyModels = compatibleModels.filter(m => iOSMajor >= m.minOS);
-
-                            // If iOS matches ship version exactly, high confidence
-                            const exactMatch = likelyModels.find(m => iOSMajor === m.minOS);
+                    } else if (matchData.genericLabel) {
+                        // Multiple possibilities - use GENERIC label (no guessing!)
+                        deviceModel = matchData.genericLabel;
+                        modelConfidence = matchData.certainty === "medium" ? "medium" : "low";
+                        
+                        // Optional: Try to narrow IF iOS exactly matches ship version
+                        if (iOSMajor && matchData.possibilities) {
+                            const exactMatch = matchData.possibilities.find(m => iOSMajor === m.minOS);
                             if (exactMatch) {
                                 deviceModel = exactMatch.name;
                                 modelConfidence = "high";
-                            } else {
-                                // Show range - be honest!
-                                deviceModel = likelyModels.map(m => m.name.replace("iPhone ", "")).join(" / ");
-                                modelConfidence = matchData.certainty === "medium" ? "medium" : "low";
                             }
-                        } else {
-                            // No iOS version - show all possibilities
-                            deviceModel = compatibleModels.map(m => m.name.replace("iPhone ", "")).join(" / ");
-                            modelConfidence = "low";
                         }
+                    } else if (matchData.possibilities) {
+                        // Fallback (shouldn't reach here if genericLabel set correctly)
+                        deviceModel = matchData.possibilities.map(m => m.name.replace("iPhone ", "")).join(" / ");
+                        modelConfidence = "low";
+                    }
                     }
                 } else {
                     // Unknown screen size
