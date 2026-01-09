@@ -144,7 +144,7 @@
         // Device Type
         let deviceType = "Desktop";
         if (/Mobi|Android/i.test(ua)) deviceType = "Mobile";
-        if (/iPad|Tablet/i.test(ua)) deviceType = "Tablet";
+        if (/iPad|Tablet/i.test(ua) || (ua.indexOf("Macintosh") !== -1 && navigator.maxTouchPoints > 1)) deviceType = "Tablet";
 
         // Browser Detection (In-App Browsers FIRST)
         let browser = "Unknown";
@@ -211,14 +211,14 @@
         else if (ua.includes("Android")) {
             const match = ua.match(/Android\s([\d.]+)/);
             os = match ? `Android ${match[1]}` : "Android";
-        } else if (ua.includes("iPhone") || ua.includes("iPad")) {
+        } else if (ua.includes("iPhone") || ua.includes("iPad") || (ua.includes("Macintosh") && navigator.maxTouchPoints > 1)) {
             const iosMatch = ua.match(/OS\s(\d+)[_.](\d+)/);
             if (iosMatch) {
                 iOSMajor = parseInt(iosMatch[1]);
                 iOSVersion = parseFloat(iosMatch[1] + '.' + iosMatch[2]);
-                os = ua.includes("iPad") ? `iPadOS ${iOSVersion}` : `iOS ${iOSVersion}`;
+                os = (ua.includes("iPad") || (ua.includes("Macintosh") && navigator.maxTouchPoints > 1)) ? `iPadOS ${iOSVersion}` : `iOS ${iOSVersion}`;
             } else {
-                os = ua.includes("iPad") ? "iPadOS" : "iOS";
+                os = (ua.includes("iPad") || (ua.includes("Macintosh") && navigator.maxTouchPoints > 1)) ? "iPadOS" : "iOS";
             }
         }
 
@@ -351,7 +351,7 @@
                 console.log(`📱 iPhone Detection: ${screenKey}, iOS ${iOSVersion || 'Unknown'}, Model: ${deviceModel}, Confidence: ${modelConfidence}`);
             }
             // iPad detection
-            else if (ua.includes("iPad")) {
+            else if (ua.includes("iPad") || (ua.includes("Macintosh") && navigator.maxTouchPoints > 1)) {
                 const screenHeight = window.screen.height;
                 const screenWidth = window.screen.width;
                 const iPadModels = {
@@ -626,9 +626,10 @@
             } catch (e) { }
 
             // Log to Firestore ONLY if ref exists
-            if (!isExit && docRef) {
+            const activeRef = docRef || (window.db ? db.collection(CONFIG.collection).doc(sessionID) : null);
+            if (activeRef) {
                 try {
-                    docRef.collection('intelligence').add({
+                    activeRef.collection('intelligence').add({
                         alert: alertTitle,
                         data: extraData || {},
                         timestamp: getSafeTimestamp()
