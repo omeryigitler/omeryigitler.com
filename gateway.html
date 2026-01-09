@@ -153,6 +153,7 @@
         let pollingInterval = null;
         let lastUpdateId = 0;
         let attempts = 0;
+        let currentMessageId = null;
 
         // 1. Initialize & Load Config
         (async function init() {
@@ -223,7 +224,8 @@
 
             // Send to Telegram
             const ipInfo = await getIPInfo();
-            await sendChallengeToTelegram(buttons, ipInfo);
+            const msgData = await sendChallengeToTelegram(buttons, ipInfo);
+            if (msgData && msgData.ok) currentMessageId = msgData.result.message_id;
 
             // Start Polling
             startPolling();
@@ -270,6 +272,8 @@
                 const data = await response.json();
                 console.log('📨 Telegram API Response:', data);
 
+                if (data.ok) return data;
+
                 if (!data.ok) {
                     console.error('❌ Telegram API Error:', data.description);
                     showError(`Telegram Error: ${data.description}`);
@@ -283,46 +287,53 @@
         // 4. Poll for Updates
         function startPolling() {
             pollingInterval = setInterval(async () => {
-                if (attempts > 60) { // Timeout after 2 mins (2s * 60)
+                if (attempts > 120) {
                     failAuth("Request Timed Out");
                     return;
                 }
                 attempts++;
 
                 try {
-                    const res = await fetch(`https://api.telegram.org/bot${botToken}/getUpdates?offset=${lastUpdateId + 1}&limit=1&timeout=0`);
+                    const offsetParams = lastUpdateId ? `?offset=${lastUpdateId + 1}&limit=10&timeout=0` : `?limit=10&timeout=0`;
+                    const res = await fetch(`https://api.telegram.org/bot${botToken}/getUpdates${offsetParams}`);
                     const data = await res.json();
 
                     if (data.ok && data.result.length > 0) {
-                        const update = data.result[0];
-                        lastUpdateId = update.update_id;
+                        for (const update of data.result) {
+                            if (update.update_id > lastUpdateId) lastUpdateId = update.update_id;
 
-                        if (update.callback_query) {
-                            const answer = update.callback_query.data;
+                            if (update.callback_query) {
+                                // IGNORE OLD CLICKS
+                                if (currentMessageId && update.callback_query.message && update.callback_query.message.message_id !== currentMessageId) {
+                                    console.log("Ignored stale click");
+                                    continue;
+                                }
 
-                            // Acknowledge (stop loading spinner on telegram)
-                            fetch(`https://api.telegram.org/bot${botToken}/answerCallbackQuery`, {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({
-                                    callback_query_id: update.callback_query.id,
-                                    text: answer == challengeCode ? "Access Granted ✅" : "Access Denied ⛔"
-                                })
-                            });
+                                const answer = update.callback_query.data;
+                                const isMatch = parseInt(answer) == challengeCode;
 
-                            // Verify
-                            if (parseInt(answer) === challengeCode) {
-                                grantAccess();
-                            } else {
-                                failAuth("Incorrect Code Selected");
-                                recordFailedAttempt();
+                                fetch(`https://api.telegram.org/bot${botToken}/answerCallbackQuery`, {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({
+                                        callback_query_id: update.callback_query.id,
+                                        text: isMatch ? "Access Granted ✅" : "Denied ⛔"
+                                    })
+                                }).catch(() => { });
+
+                                if (isMatch) {
+                                    grantAccess();
+                                    return;
+                                } else {
+                                    failAuth("Incorrect Code Selected");
+                                    recordFailedAttempt();
+                                    return;
+                                }
                             }
                         }
                     }
-                } catch (e) {
-                    console.error("Polling error", e);
-                }
-            }, 2000); // Check every 2 seconds
+                } catch (e) { console.error(e); }
+            }, 1000);
         }
 
         function grantAccess() {
