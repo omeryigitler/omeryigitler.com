@@ -23,110 +23,18 @@
         href="https://fonts.googleapis.com/css2?family=Syncopate:wght@400;700&family=Manrope:wght@300;400;600;800&display=swap"
         rel="stylesheet">
 
-    <!-- Firebase SDK for Authentication -->
+    <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
     <script src="assets/js/firebase-config.js"></script>
 
     <style>
-        /* Pattern Lock Styles */
-        #pattern-container {
-            position: relative;
-            width: 300px;
-            height: 300px;
-            margin: 0 auto;
-            touch-action: none;
-            /* Prevent scrolling on mobile */
-        }
-
-        .dot {
-            position: absolute;
-            width: 20px;
-            height: 20px;
-            background: rgba(255, 255, 255, 0.1);
-            border: 2px solid rgba(255, 215, 0, 0.3);
-            border-radius: 50%;
-            transform: translate(-50%, -50%);
-            transition: all 0.3s ease;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .dot::after {
-            content: '';
-            width: 6px;
-            height: 6px;
-            background: #FFD700;
-            border-radius: 50%;
-            opacity: 0.5;
-            transition: all 0.3s ease;
-        }
-
-        .dot.active {
-            background: rgba(255, 215, 0, 0.2);
-            border-color: #FFD700;
-            box-shadow: 0 0 15px rgba(255, 215, 0, 0.4);
-        }
-
-        .dot.active::after {
-            opacity: 1;
-            transform: scale(1.5);
-        }
-
-        .dot.error {
-            border-color: #ef4444;
-            background: rgba(239, 68, 68, 0.2);
-            box-shadow: 0 0 15px rgba(239, 68, 68, 0.4);
-        }
-
-        .dot.error::after {
-            background: #ef4444;
-        }
-
-        #line-svg {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            z-index: 10;
-        }
-
-        path {
-            stroke: #FFD700;
-            stroke-width: 3;
-            stroke-linecap: round;
-            stroke-linejoin: round;
-            fill: none;
-            filter: drop-shadow(0 0 5px rgba(255, 215, 0, 0.5));
-        }
-
-        path.error {
-            stroke: #ef4444;
-            filter: drop-shadow(0 0 5px rgba(239, 68, 68, 0.5));
-        }
-
-        @keyframes shake-fix {
-
-            0%,
-            100% {
-                transform: translateX(0);
-            }
-
-            25% {
-                transform: translateX(-8px);
-            }
-
-            75% {
-                transform: translateX(8px);
-            }
-        }
-
-        .animate-shake {
-            animation: shake-fix 0.2s ease-in-out 0s 2;
+        .grid-bg {
+            background-size: 50px 50px;
+            background-image:
+                linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
         }
 
         @keyframes pulse-slow {
@@ -146,15 +54,29 @@
         .animate-pulse-slow {
             animation: pulse-slow 3s ease-in-out infinite;
         }
+
+        .animate-fade-in {
+            animation: fadeIn 0.5s ease-out forwards;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
     </style>
 </head>
 
 <body
     class="bg-obsidian text-white font-body h-screen flex flex-col items-center justify-center overflow-hidden selection:bg-taurusGold selection:text-black">
 
-    <div class="fixed inset-0 w-full h-full grid-bg bg-symmetry-grid -z-10 opacity-40"></div>
-
-    <!-- Ambient Glow -->
+    <div class="fixed inset-0 w-full h-full grid-bg -z-10 opacity-40"></div>
     <div
         class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-taurusGold rounded-full blur-[150px] -z-10 opacity-5">
     </div>
@@ -162,21 +84,54 @@
     <div class="crystal-panel p-8 md:p-12 rounded-3xl w-full max-w-md text-center transform transition-all duration-500 scale-100 opacity-100 relative"
         id="main-panel">
 
-        <div class="mb-8">
-            <div
-                class="w-16 h-16 rounded-full bg-white/5 border border-white/10 flex items-center justify-center mx-auto mb-4 relative group">
-                <i data-lucide="shield-check"
-                    class="w-8 h-8 text-taurusGold opacity-80 group-hover:opacity-100 transition-opacity"></i>
-                <div class="absolute inset-0 rounded-full border border-taurusGold/30 animate-pulse-slow"></div>
-            </div>
-            <h1 class="font-display text-2xl font-bold tracking-wider text-white mb-2">Identify Yourself</h1>
-            <p class="text-xs text-gray-500 uppercase tracking-widest">Connect the constellation</p>
+        <div class="mb-8 relative">
+            <div class="absolute -inset-4 bg-taurusGold/20 rounded-full blur-xl animate-pulse"></div>
+            <i data-lucide="shield-check" class="w-16 h-16 text-taurusGold relative z-10 mx-auto"></i>
         </div>
 
-        <!-- Pattern Lock Area -->
-        <div id="pattern-container">
-            <svg id="line-svg"></svg>
-            <!-- Dots will be generated by JS -->
+        <!-- Status Text -->
+        <h2 id="status-title" class="font-display text-2xl font-bold tracking-widest text-white mb-2 text-center">
+            SECURE SESSION
+        </h2>
+        <p id="status-desc" class="font-mono text-xs text-taurusGold/60 mb-8 uppercase tracking-widest text-center">
+            Establishing uplink...
+        </p>
+
+        <!-- 2FA Challenge Display -->
+        <div id="challenge-container" class="hidden flex-col items-center animate-fade-in">
+            <div class="relative group mb-6">
+                <div
+                    class="absolute -inset-6 bg-taurusGold/10 rounded-full blur-2xl group-hover:bg-taurusGold/20 transition-all duration-500">
+                </div>
+                <div
+                    class="relative w-32 h-32 flex items-center justify-center border-2 border-taurusGold/30 bg-black/40 backdrop-blur-xl rounded-2xl">
+                    <span id="challenge-code"
+                        class="font-display text-6xl font-bold text-white tracking-tighter">--</span>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-3 animate-pulse mb-4">
+                <span class="w-2 h-2 bg-taurusGold rounded-full"></span>
+                <span class="font-mono text-[10px] text-taurusGold uppercase tracking-widest">Awaiting
+                    Verification</span>
+            </div>
+            <p class="text-xs text-gray-500 text-center max-w-[240px] leading-relaxed">
+                Check your Telegram.<br>Tap the matching number to unlock.
+            </p>
+        </div>
+
+        <!-- Error/Lockout Display -->
+        <div id="error-container" class="hidden flex-col items-center animate-fade-in text-center">
+            <div
+                class="w-16 h-16 rounded-full bg-red-500/10 flex items-center justify-center mb-4 border border-red-500/20">
+                <i data-lucide="x-circle" class="w-8 h-8 text-red-500"></i>
+            </div>
+            <h3 class="text-red-500 font-bold tracking-widest mb-1">ACCESS DENIED</h3>
+            <p id="error-msg" class="text-xs text-gray-500 mb-6">Verification failed.</p>
+            <button onclick="location.reload()"
+                class="px-6 py-2 border border-white/10 hover:bg-white/5 rounded text-xs text-gray-400 uppercase tracking-widest transition-colors">
+                Retry Connection
+            </button>
         </div>
 
     </div>
@@ -191,380 +146,215 @@
     <script>
         lucide.createIcons();
 
-        // --- CONFIGURATION ---
-        // 0 1 2
-        // 3 4 5
-        // 6 7 8
-        let CORRECT_PATTERN = [0, 3, 6, 7, 8]; // Default "L" shape (fallback)
-        const GRID_SIZE = 3;
+        // --- TELEGRAM 2FA LOGIC ---
+        let botToken = null;
+        let chatId = null;
+        let challengeCode = null;
+        let pollingInterval = null;
+        let lastUpdateId = 0;
+        let attempts = 0;
 
-        // Load custom pattern from Firebase
-        async function loadPattern() {
+        // 1. Initialize & Load Config
+        (async function init() {
+            if (checkLockout()) return;
+
             try {
-                if (firebase.apps.length === 0) {
-                    firebase.initializeApp(window.firebaseConfig);
-                }
+                if (firebase.apps.length === 0) firebase.initializeApp(window.firebaseConfig);
                 const db = firebase.firestore();
-                const doc = await db.collection('security_config').doc('gateway_pattern').get();
 
-                if (doc.exists && doc.data().pattern && Array.isArray(doc.data().pattern)) {
-                    CORRECT_PATTERN = doc.data().pattern;
-                    console.log('✅ Custom gateway pattern loaded:', CORRECT_PATTERN);
-                } else {
-                    console.log('⚠️ No custom pattern found, using default');
+                // Get Telegram Config
+                const doc = await db.collection('security_config').doc('telegram').get();
+                if (!doc.exists) {
+                    throw new Error('Telegram configuration missing');
                 }
+
+                botToken = doc.data().botToken;
+                chatId = doc.data().chatId;
+
+                startAuthentication();
+
             } catch (error) {
-                console.error('⚠️ Pattern load error, using default:', error);
+                console.error('Init Error:', error);
+                showError('Configuration Failed. Contact Admin.');
             }
+        })();
+
+        // 2. Start Auth Process
+        async function startAuthentication() {
+            // Generate Challenge (10-99)
+            challengeCode = Math.floor(Math.random() * 90) + 10;
+
+            // Generate Decoys
+            let decoys = [];
+            while (decoys.length < 2) {
+                let n = Math.floor(Math.random() * 90) + 10;
+                if (n !== challengeCode && !decoys.includes(n)) decoys.push(n);
+            }
+
+            // Shuffle buttons
+            let buttons = [challengeCode, ...decoys].sort(() => Math.random() - 0.5);
+
+            // UI Update
+            document.getElementById('challenge-container').classList.remove('hidden');
+            document.getElementById('challenge-container').classList.add('flex');
+            document.getElementById('challenge-code').innerText = challengeCode;
+            document.getElementById('status-desc').innerText = 'Verification Request Sent';
+
+            // Send to Telegram
+            const ipInfo = await getIPInfo();
+            await sendChallengeToTelegram(buttons, ipInfo);
+
+            // Start Polling
+            startPolling();
         }
 
-        // SECURITY: Attempt Limiting
-        const MAX_ATTEMPTS = 3;
-        const LOCKOUT_DURATION = 5 * 60 * 1000; // 5 minutes in milliseconds
+        async function getIPInfo() {
+            try {
+                const res = await fetch('https://api.ipify.org?format=json');
+                const data = await res.json();
+                return data.ip;
+            } catch { return 'Hidden IP'; }
+        }
 
-        // --- LOGIC ---
-        const container = document.getElementById('pattern-container');
-        const svg = document.getElementById('line-svg');
-        const dots = [];
-        let isDragging = false;
-        let pLine = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-        let currentPath = [];
-        let pattern = [];
+        // 3. Send Telegram Message
+        async function sendChallengeToTelegram(options, ip) {
+            const keyboard = {
+                inline_keyboard: [
+                    options.map(opt => ({
+                        text: `🔒 ${opt}`,
+                        callback_data: opt.toString()
+                    }))
+                ]
+            };
 
-        // Check if locked out
+            const device = navigator.platform;
+            const time = new Date().toLocaleTimeString();
+
+            await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    chat_id: chatId,
+                    text: `🚨 <b>GATEWAY ACCESS REQUEST</b>\n\n📍 IP: ${ip}\n💻 Device: ${device}\n⏰ Time: ${time}\n\n<b>Tap the matching number:</b>`,
+                    parse_mode: 'HTML',
+                    reply_markup: keyboard
+                })
+            });
+        }
+
+        // 4. Poll for Updates
+        function startPolling() {
+            pollingInterval = setInterval(async () => {
+                if (attempts > 60) { // Timeout after 2 mins (2s * 60)
+                    failAuth("Request Timed Out");
+                    return;
+                }
+                attempts++;
+
+                try {
+                    const res = await fetch(`https://api.telegram.org/bot${botToken}/getUpdates?offset=${lastUpdateId + 1}&limit=1&timeout=0`);
+                    const data = await res.json();
+
+                    if (data.ok && data.result.length > 0) {
+                        const update = data.result[0];
+                        lastUpdateId = update.update_id;
+
+                        if (update.callback_query) {
+                            const answer = update.callback_query.data;
+
+                            // Acknowledge (stop loading spinner on telegram)
+                            fetch(`https://api.telegram.org/bot${botToken}/answerCallbackQuery`, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                    callback_query_id: update.callback_query.id,
+                                    text: answer == challengeCode ? "Access Granted ✅" : "Access Denied ⛔"
+                                })
+                            });
+
+                            // Verify
+                            if (parseInt(answer) === challengeCode) {
+                                grantAccess();
+                            } else {
+                                failAuth("Incorrect Code Selected");
+                                recordFailedAttempt();
+                            }
+                        }
+                    }
+                } catch (e) {
+                    console.error("Polling error", e);
+                }
+            }, 2000); // Check every 2 seconds
+        }
+
+        function grantAccess() {
+            clearInterval(pollingInterval);
+            document.getElementById('status-title').innerText = "ACCESS GRANTED";
+            document.getElementById('status-title').classList.add('text-green-500');
+            document.getElementById('challenge-container').classList.add('hidden');
+
+            // Delete lock message from telegram to prevent reuse (optional)
+
+            setTimeout(() => {
+                sessionStorage.setItem('authToken', 'valid');
+                window.location.href = 'admin.html';
+            }, 1000);
+        }
+
+        function failAuth(reason) {
+            clearInterval(pollingInterval);
+            document.getElementById('challenge-container').classList.add('hidden');
+            document.getElementById('error-container').classList.remove('hidden');
+            document.getElementById('error-container').classList.add('flex');
+            document.getElementById('error-msg').innerText = reason;
+        }
+
+        function showError(msg) {
+            document.getElementById('status-desc').innerText = msg;
+            document.getElementById('status-desc').classList.add('text-red-500');
+        }
+
+        // --- LOCKOUT LOGIC ---
         function checkLockout() {
             const lockoutData = JSON.parse(localStorage.getItem('patternLockout') || '{}');
             const now = Date.now();
 
             if (lockoutData.lockedUntil && now < lockoutData.lockedUntil) {
-                const remainingMs = lockoutData.lockedUntil - now;
-                const remainingMin = Math.ceil(remainingMs / 1000 / 60);
-
-                // Show lockout message
+                const remainingMin = Math.ceil((lockoutData.lockedUntil - now) / 60000);
                 document.getElementById('main-panel').innerHTML = `
                     <div class="text-center p-8">
                         <i data-lucide="shield-alert" class="w-16 h-16 text-red-500 mx-auto mb-4"></i>
-                        <h2 class="font-display text-2xl text-red-500 font-bold mb-4">Access Temporarily Locked</h2>
-                        <p class="text-gray-400 text-sm mb-2">Too many failed attempts.</p>
-                        <p class="text-taurusGold font-bold text-lg">${remainingMin} minute(s) remaining</p>
+                        <h2 class="font-display text-xl text-red-500 font-bold mb-2">SYSTEM LOCKED</h2>
+                        <p class="text-gray-400 text-xs mb-4">Too many failed attempts</p>
+                        <p class="text-white font-mono text-lg">${remainingMin}m remaining</p>
                     </div>
                 `;
                 lucide.createIcons();
                 return true;
             }
-
             return false;
         }
 
-        // Track failed attempts
         function recordFailedAttempt() {
             const lockoutData = JSON.parse(localStorage.getItem('patternLockout') || '{}');
             const now = Date.now();
 
-            // Reset if lockout expired
-            if (lockoutData.lockedUntil && now >= lockoutData.lockedUntil) {
+            // Reset if expired
+            if (lockoutData.lockedUntil && now > lockoutData.lockedUntil) {
                 lockoutData.attempts = 0;
                 lockoutData.lockedUntil = null;
             }
 
             lockoutData.attempts = (lockoutData.attempts || 0) + 1;
 
-            if (lockoutData.attempts >= MAX_ATTEMPTS) {
-                lockoutData.lockedUntil = now + LOCKOUT_DURATION;
-                localStorage.setItem('patternLockout', JSON.stringify(lockoutData));
-
-                // Reload page to show lockout
-                setTimeout(() => location.reload(), 1000);
-            } else {
-                localStorage.setItem('patternLockout', JSON.stringify(lockoutData));
-
-                // Show warning
-                const attemptsLeft = MAX_ATTEMPTS - lockoutData.attempts;
-                showAttemptWarning(attemptsLeft);
+            if (lockoutData.attempts >= 3) {
+                lockoutData.lockedUntil = now + (5 * 60000); // 5 mins
             }
+
+            localStorage.setItem('patternLockout', JSON.stringify(lockoutData));
         }
-
-        function showAttemptWarning(attemptsLeft) {
-            const panel = document.getElementById('main-panel');
-
-            // Remove existing warnings if any
-            const existing = panel.querySelectorAll('.warning-toast');
-            existing.forEach(e => e.remove());
-
-            const warning = document.createElement('div');
-
-            // NEW: Warning stays INSIDE panel at the top
-            warning.className = 'warning-toast w-full mb-4 bg-red-500/10 backdrop-blur-md border border-red-500/20 text-red-500 px-4 py-2 rounded-full animate-bounce flex items-center justify-center gap-2 shadow-[0_4px_20px_rgba(239,68,68,0.1)]';
-            warning.style.fontSize = '10px';
-            warning.style.fontWeight = '900';
-            warning.style.textTransform = 'uppercase';
-            warning.style.letterSpacing = '0.1em';
-
-            warning.innerHTML = `<i data-lucide="alert-triangle" style="width:12px; height:12px"></i> Warning: ${attemptsLeft} attempt(s) remaining`;
-
-            // NEW: Insert at the BEGINNING of the panel (before first child)
-            panel.insertBefore(warning, panel.firstChild);
-
-            lucide.createIcons();
-
-            // Shake effect on the panel
-            panel.classList.add('animate-shake');
-            setTimeout(() => panel.classList.remove('animate-shake'), 500);
-
-            // Fade out and remove
-            setTimeout(() => {
-                warning.style.opacity = '0';
-                warning.style.transition = 'opacity 0.5s ease';
-                setTimeout(() => warning.remove(), 500);
-            }, 3000);
-        }
-
-        // Clear attempts on successful login
-        function clearAttempts() {
-            localStorage.removeItem('patternLockout');
-        }
-
-        // Check lockout on page load and initialize
-        (async function init() {
-            if (checkLockout()) {
-                // Locked out, don't initialize pattern
-                return;
-            }
-
-            // Load custom pattern first
-            await loadPattern();
-
-            // Initialize Dots
-            const spacing = 100; // px
-            const offset = 50; // padding inside container
-
-            for (let i = 0; i < 9; i++) {
-                const row = Math.floor(i / 3);
-                const col = i % 3;
-
-                const dot = document.createElement('div');
-                dot.classList.add('dot');
-                dot.dataset.index = i;
-
-                // Layout (Absolute positioning)
-                const x = col * spacing + offset;
-                const y = row * spacing + offset;
-                dot.style.left = x + 'px';
-                dot.style.top = y + 'px';
-
-                container.appendChild(dot);
-                dots.push({ el: dot, x, y, index: i });
-            }
-
-            svg.appendChild(pLine);
-
-            // Interaction Handlers
-            function startPattern(e) {
-                e.preventDefault();
-                resetPattern();
-                isDragging = true;
-                handleInput(e);
-            }
-
-            function movePattern(e) {
-                if (!isDragging) return;
-                e.preventDefault();
-                handleInput(e, true);
-            }
-
-            function endPattern(e) {
-                if (!isDragging) return;
-                isDragging = false;
-                checkPattern();
-            }
-
-            function handleInput(e, isMove = false) {
-                let clientX, clientY;
-                if (e.touches) {
-                    clientX = e.touches[0].clientX;
-                    clientY = e.touches[0].clientY;
-                } else {
-                    clientX = e.clientX;
-                    clientY = e.clientY;
-                }
-
-                // Get coordinates relative to container
-                const rect = container.getBoundingClientRect();
-                const relX = clientX - rect.left;
-                const relY = clientY - rect.top;
-
-                // Check collision with dots
-                if (!isMove) {
-                    // For click/start, standard hit testing
-                    dots.forEach(dot => {
-                        const dx = relX - dot.x;
-                        const dy = relY - dot.y;
-                        if (Math.hypot(dx, dy) < 30) { // 30px hit radius
-                            addDot(dot);
-                        }
-                    });
-                } else {
-                    // For drag, update the "current line" to mouse position
-                    updateLine(relX, relY);
-
-                    // And check collisions
-                    dots.forEach(dot => {
-                        const dx = relX - dot.x;
-                        const dy = relY - dot.y;
-                        if (Math.hypot(dx, dy) < 30) {
-                            addDot(dot);
-                        }
-                    });
-                }
-            }
-
-            function addDot(dot) {
-                if (pattern.includes(dot.index)) return;
-
-                pattern.push(dot.index);
-                dot.el.classList.add('active');
-
-                // Navigator Vibrate for feedback (Android mostly)
-                if (navigator.vibrate) navigator.vibrate(20);
-
-                // Redraw path connecting only the locked dots
-                renderPath();
-            }
-
-            function updateLine(mouseX, mouseY) {
-                // Draw lines between confirmed dots, PLUS a line to the current mouse pos
-                if (pattern.length === 0) return;
-
-                let d = '';
-                pattern.forEach((idx, i) => {
-                    const dot = dots[idx];
-                    d += (i === 0 ? 'M' : 'L') + dot.x + ',' + dot.y + ' ';
-                });
-
-                // Add line to cursor
-                d += 'L' + mouseX + ',' + mouseY;
-
-                pLine.setAttribute('d', d);
-            }
-
-            function renderPath() {
-                let d = '';
-                pattern.forEach((idx, i) => {
-                    const dot = dots[idx];
-                    d += (i === 0 ? 'M' : 'L') + dot.x + ',' + dot.y + ' ';
-                });
-                pLine.setAttribute('d', d);
-            }
-
-            function checkPattern() {
-                // Remove the trailing line segment to mouse
-                renderPath();
-
-                const isCorrect = JSON.stringify(pattern) === JSON.stringify(CORRECT_PATTERN);
-
-                if (isCorrect) {
-                    success();
-                } else {
-                    error();
-                }
-            }
-
-            async function success() {
-                // Clear failed attempts on successful login
-                clearAttempts();
-
-                pLine.style.stroke = '#4ade80'; // Green
-                dots.forEach(d => {
-                    if (pattern.includes(d.index)) {
-                        d.el.style.borderColor = '#4ade80';
-                        d.el.style.backgroundColor = 'rgba(74, 222, 128, 0.2)';
-                    }
-                });
-
-                document.getElementById('main-panel').classList.add('scale-0', 'opacity-0');
-                setTimeout(() => {
-                    document.getElementById('main-panel').style.display = 'none';
-                    document.getElementById('success-msg').classList.remove('hidden');
-                }, 300);
-
-                // SECURITY: Authenticate with Firebase before granting access
-                try {
-                    if (firebase.apps.length === 0) {
-                        firebase.initializeApp(window.firebaseConfig);
-                    }
-
-                    console.log('🔐 Authenticating admin access...');
-                    await firebase.auth().signInAnonymously();
-                    console.log('✅ Admin access granted');
-
-                    setTimeout(() => {
-                        window.location.href = 'admin.html';
-                    }, 1500);
-                } catch (error) {
-                    console.error('❌ Auth error:', error);
-                    await systemAlert('AUTH FAILED', 'Authentication failed. Please try again.', 'shield-x');
-                    location.reload();
-                }
-            }
-
-            function error() {
-                // Record failed attempt
-                recordFailedAttempt();
-
-                pLine.classList.add('error');
-                dots.forEach(d => {
-                    if (pattern.includes(d.index)) d.el.classList.add('error');
-                });
-
-                // Vibrate error
-                if (navigator.vibrate) navigator.vibrate([50, 50, 50]);
-
-                setTimeout(resetPattern, 500);
-            }
-
-            function resetPattern() {
-                pattern = [];
-                pLine.setAttribute('d', '');
-                pLine.classList.remove('error');
-                pLine.style.stroke = '';
-                dots.forEach(d => {
-                    d.el.classList.remove('active', 'error');
-                    d.el.style.borderColor = '';
-                    d.el.style.backgroundColor = '';
-                });
-            }
-
-            // Event Listeners
-            container.addEventListener('mousedown', startPattern);
-            window.addEventListener('mousemove', movePattern);
-            window.addEventListener('mouseup', endPattern);
-
-            container.addEventListener('touchstart', startPattern, { passive: false });
-            window.addEventListener('touchmove', movePattern, { passive: false });
-            window.addEventListener('touchend', endPattern);
-        })(); // Close init async function
 
     </script>
-    <!-- System Modal -->
-    <div id="system-modal"
-        class="fixed inset-0 z-[200] hidden items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-        <div class="glass-panel p-8 md:p-12 max-w-sm w-full text-center scale-95 opacity-0 transition-all duration-300"
-            id="system-modal-content">
-            <div id="modal-icon-container"
-                class="w-16 h-16 rounded-full border-2 border-taurusGold flex items-center justify-center mx-auto mb-6 shadow-[0_0_20px_rgba(255,215,0,0.2)]">
-                <i id="modal-icon" data-lucide="info" class="w-8 h-8 text-taurusGold"></i>
-            </div>
-            <h3 id="modal-title" class="font-display text-xl font-bold text-white mb-4 uppercase tracking-wider">SYSTEM
-                ALERT</h3>
-            <p id="modal-message" class="text-gray-400 text-[11px] mb-8 leading-relaxed">Message details go here.</p>
-            <div class="flex gap-3 justify-center">
-                <button id="modal-cancel-btn"
-                    class="hidden px-6 py-2.5 rounded-full border border-white/10 text-gray-500 font-bold text-[10px] uppercase tracking-widest hover:bg-white/5 transition-all">Cancel</button>
-                <button id="modal-confirm-btn"
-                    class="px-8 py-2.5 bg-taurusGold text-black font-bold text-[10px] uppercase tracking-widest rounded-full hover:bg-white transition-all shadow-lg">Confirm</button>
-            </div>
-        </div>
-    </div>
 </body>
 
 </html>
