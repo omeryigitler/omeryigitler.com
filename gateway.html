@@ -195,8 +195,28 @@
         // 0 1 2
         // 3 4 5
         // 6 7 8
-        const CORRECT_PATTERN = [0, 3, 6, 7, 8]; // "L" shape (Top-Left -> Bottom-Left -> Bottom-Right)
+        let CORRECT_PATTERN = [0, 3, 6, 7, 8]; // Default "L" shape (fallback)
         const GRID_SIZE = 3;
+
+        // Load custom pattern from Firebase
+        async function loadPattern() {
+            try {
+                if (firebase.apps.length === 0) {
+                    firebase.initializeApp(window.firebaseConfig);
+                }
+                const db = firebase.firestore();
+                const doc = await db.collection('security_config').doc('gateway_pattern').get();
+
+                if (doc.exists && doc.data().pattern && Array.isArray(doc.data().pattern)) {
+                    CORRECT_PATTERN = doc.data().pattern;
+                    console.log('✅ Custom gateway pattern loaded:', CORRECT_PATTERN);
+                } else {
+                    console.log('⚠️ No custom pattern found, using default');
+                }
+            } catch (error) {
+                console.error('⚠️ Pattern load error, using default:', error);
+            }
+        }
 
         // SECURITY: Attempt Limiting
         const MAX_ATTEMPTS = 3;
@@ -304,10 +324,15 @@
             localStorage.removeItem('patternLockout');
         }
 
-        // Check lockout on page load
-        if (checkLockout()) {
-            // Locked out, don't initialize pattern
-        } else {
+        // Check lockout on page load and initialize
+        (async function init() {
+            if (checkLockout()) {
+                // Locked out, don't initialize pattern
+                return;
+            }
+
+            // Load custom pattern first
+            await loadPattern();
 
             // Initialize Dots
             const spacing = 100; // px
@@ -517,7 +542,7 @@
             container.addEventListener('touchstart', startPattern, { passive: false });
             window.addEventListener('touchmove', movePattern, { passive: false });
             window.addEventListener('touchend', endPattern);
-        } // Close lockout check
+        })(); // Close init async function
 
     </script>
     <!-- System Modal -->
