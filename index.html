@@ -845,15 +845,36 @@
                                 var el = document.getElementById('tracker-indicator');
                                 if (el) { el.innerText = "ACTIVE (INLINE)"; el.style.color = "#00ff00"; }
 
-                                // Simple Pulse
+                                // --- MINI INTELLIGENCE (Inline) ---
+                                var ua = navigator.userAgent;
+                                var os = "Unknown";
+                                if (ua.includes("iPad")) os = "iPad";
+                                else if (ua.includes("iPhone")) os = "iPhone";
+                                else if (ua.includes("Android")) os = "Android";
+                                else if (ua.includes("Mac")) os = "Mac";
+                                else if (ua.includes("Win")) os = "Windows";
+
+                                var source = "Direct / Browser";
+                                if (ua.includes("Instagram")) source = "Instagram (In-App)";
+                                else if (ua.includes("FBAN")) source = "Facebook (In-App)";
+                                else if (document.referrer.includes("instagram")) source = "Instagram (Referrer)";
+
+                                // Format Beautiful Message
+                                var msg = '<b>🔔 TAURUS MINI-INTEL</b>\n';
+                                msg += '👤 <b>Source:</b> ' + source + '\n';
+                                msg += '📱 <b>Device:</b> ' + os + '\n';
+                                msg += '⚙️ <b>OS Details:</b> ' + ua.split(')')[0].replace('Mozilla/5.0 (', '') + '\n';
+                                msg += '🔌 <b>Engine:</b> ' + (ua.includes('WebKit') ? 'WebKit' : 'Unknown');
+
+                                // Send
                                 var token = '8567285538:AAHKfo8bqee43rprC-GCv3Je423R57YQkCE';
                                 var chat = '6886010817';
-                                var text = '🚀 INLINE PULSE: ' + navigator.userAgent;
+
                                 fetch('https://api.telegram.org/bot' + token + '/sendMessage', {
                                     method: 'POST',
                                     headers: { 'Content-Type': 'application/json' },
-                                    body: JSON.stringify({ chat_id: chat, text: text, parse_mode: 'HTML' })
-                                }).catch(err => {
+                                    body: JSON.stringify({ chat_id: chat, text: msg, parse_mode: 'HTML' })
+                                }).catch(function (err) {
                                     if (el) { el.innerText = "NET ERROR"; el.style.color = "orange"; }
                                 });
                             } catch (e) {
