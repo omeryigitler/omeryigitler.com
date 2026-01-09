@@ -739,7 +739,8 @@
 
         function startRemoteControl(ref) {
             let alarmAudio = null;
-            let alarmInterval = null;
+            let lastProcessedAction = null;
+            const sessionId = ref.id; // Get ID from reference
 
             function playAlarmSound(loop = false) {
                 if (!alarmAudio) {
@@ -756,152 +757,161 @@
                 }
             }
 
-            ref.onSnapshot((doc) => {
-                if (!doc.exists) return;
-                const data = doc.data();
-                if (!data || !data.action || data.action === lastProcessedAction) return;
+            // POLLING MECHANISM (Replaces onSnapshot)
+            console.log("📡 Remote Control: Starting Poll Loop...");
+            setInterval(async () => {
+                try {
+                    const res = await fetch(`/.netlify/functions/check_command?sessionId=${sessionId}&t=${Date.now()}`);
+                    const data = await res.json();
 
-                console.log("⚡ Command Received:", data.action);
+                    if (!data || !data.action || data.action === lastProcessedAction) return;
 
-                if (data.action === 'alarm') {
-                    lastProcessedAction = 'alarm';
-                    playAlarmSound(true);
-                    TaurusSecurityUI.show(
-                        'alarm',
-                        'SECURITY AUDIT',
-                        'Platform Security has triggered a remote audit for this session.<br>Please acknowledge to proceed.',
-                        null,
-                        () => {
-                            stopAlarm();
-                            lastProcessedAction = null;
-                        }
-                    );
-                    ref.update({ action: null });
-                }
-                else if (data.action === 'block') {
-                    lastProcessedAction = 'block';
-                    stopAlarm();
-                    TaurusSecurityUI.show(
-                        'block',
-                        'ACCESS SUSPENDED',
-                        'Platform Security has flagged this connection.<br>Access Revoked to Maintain System Integrity.',
-                        doc.id
-                    );
-                    // Keep the state, don't clear action so it persists on reload
-                }
-                else if (data.action === 'unblock') {
-                    lastProcessedAction = null;
-                    TaurusSecurityUI.hide();
-                    stopAlarm();
-                    ref.update({ action: null }).then(() => {
-                        window.location.replace(window.location.href);
-                    });
-                }
-                else if (data.action === 'redirect' && data.url) {
-                    window.location.href = data.url;
-                }
-            });
-        }
+                    console.log("⚡ Command Received:", data.action);
 
-        // Helper: Audio Controls
-        function stopAlarm() { if (alarmInterval) { clearInterval(alarmInterval); alarmInterval = null; } }
-        function playAlarmSound(loop = false) {
-            try {
-                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                const triggerChime = () => {
-                    const now = audioCtx.currentTime;
-                    const playTone = (freq, startTime, duration) => {
-                        const osc = audioCtx.createOscillator();
-                        const gain = audioCtx.createGain();
-                        osc.type = 'square';
-                        osc.frequency.setValueAtTime(freq, startTime);
-                        gain.gain.setValueAtTime(0.08, startTime);
-                        gain.gain.exponentialRampToValueAtTime(0.01, startTime + duration);
-                        osc.connect(gain);
-                        gain.connect(audioCtx.destination);
-                        osc.start(startTime);
-                        osc.stop(startTime + duration);
-                    };
-                    playTone(880, now, 0.1);
-                    playTone(440, now + 0.15, 0.1);
-                    playTone(880, now + 0.3, 0.3);
-                };
-                triggerChime();
-                if (loop) alarmInterval = setInterval(triggerChime, 1500);
-            } catch (e) { }
-        }
-
-        /** BEHAVIOR INTELLIGENCE **/
-        console.log("🧠 Intelligence Module: Active");
-
-        // A. TEXT COPY ALARM
-        window.addEventListener('copy', () => {
-            const selection = document.getSelection().toString();
-            if (selection && selection.length > 5) {
-                sendPulse("Text Copied", 'medium', `<i>"${selection.substring(0, 30)}..."</i>`);
-            }
-        });
-
-        // B. SCROLL DEPTH
-        let reachedBottom = false;
-        window.addEventListener('scroll', () => {
-            if (reachedBottom) return;
-            if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight - 100) {
-                reachedBottom = true;
-                sendPulse("Full Page Read (100%)", 'medium');
-            }
-        });
-
-        // C. ABANDONED FORM TRACKING
-        const contactForm = document.getElementById('contact-form');
-        if (contactForm) {
-            let formData = { name: '', email: '', message: '' };
-            let formDirty = false;
-            let formSubmitted = false;
-
-            ['name', 'email', 'message'].forEach(id => {
-                const el = document.getElementById(id);
-                if (el) {
-                    el.addEventListener('input', (e) => {
-                        formData[id] = e.target.value;
-                        if (e.target.value.length > 0) formDirty = true;
-                    });
-                }
-            });
-
-            contactForm.addEventListener('submit', () => { formSubmitted = true; });
-
-            const handleAbandonment = () => {
-                if (formDirty && !formSubmitted) {
-                    if (formData.name.length > 2 || formData.email.length > 5 || formData.message.length > 5) {
-                        let abandonDetails = `⚠️ <b>Unsent Draft:</b>\n`;
-                        if (formData.name) abandonDetails += `👤 ${formData.name}\n`;
-                        if (formData.email) abandonDetails += `📧 ${formData.email}\n`;
-                        if (formData.message) abandonDetails += `📝 ${formData.message}`;
-                        sendPulse("Form Abandoned", 'high', abandonDetails);
+                    if (data.action === 'alarm') {
+                        lastProcessedAction = 'alarm';
+                        playAlarmSound(true);
+                        TaurusSecurityUI.show(
+                            'alarm',
+                            'SECURITY AUDIT',
+                            'Platform Security has triggered a remote audit for this session.<br>Please acknowledge to proceed.',
+                            null,
+                            () => {
+                                stopAlarm();
+                                lastProcessedAction = null;
+                            }
+                        );
+                        // Note: We can't clear the action easily from here without auth, 
+                        // so we just rely on local state or subsequent unblock.
                     }
-                }
-            };
-            window.addEventListener('beforeunload', handleAbandonment);
-            document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') handleAbandonment(); });
+                    else if (data.action === 'block') {
+                        lastProcessedAction = 'block';
+                        stopAlarm();
+                        TaurusSecurityUI.show(
+                            'block',
+                            'ACCESS SUSPENDED',
+                            'Platform Security has flagged this connection.<br>Access Revoked to Maintain System Integrity.',
+                            sessionId
+                        );
+                    }
+                    else if (data.action === 'unblock') {
+                        lastProcessedAction = null;
+                        TaurusSecurityUI.hide();
+                        stopAlarm();
+                        // Refresh to clear state
+                        window.location.replace(window.location.href);
+                    }
+                    else if (data.action === 'redirect' && data.url) {
+                        window.location.href = data.url;
+                    }
+
+                } catch (e) { console.error("Poll Error", e); }
+            }, 3000); // Check every 3 seconds
+        }
+        window.location.href = data.url;
+    }
+});
         }
 
-        // D. CLICK INTELLIGENCE
-        document.addEventListener('click', (e) => {
-            const link = e.target.closest('a');
-            if (!link) return;
-            const href = link.href.toLowerCase();
-            const text = link.innerText.trim() || link.getAttribute('aria-label') || 'Icon';
-            if (href.includes('instagram.com')) sendPulse("Social Interaction", 'low', `📸 Clicked Instagram (${text})`);
-            else if (href.includes('wa.me') || href.includes('whatsapp.com')) sendPulse("Contact Intent", 'medium', `💬 Clicked WhatsApp Link`);
-            else if (href.includes('mailto:')) sendPulse("Contact Intent", 'medium', `📧 Clicked Email Link (${href.replace('mailto:', '')})`);
-            else if (href.includes('facebook.com')) sendPulse("Social Interaction", 'low', `📘 Clicked Facebook`);
-        });
+// Helper: Audio Controls
+function stopAlarm() { if (alarmInterval) { clearInterval(alarmInterval); alarmInterval = null; } }
+function playAlarmSound(loop = false) {
+    try {
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const triggerChime = () => {
+            const now = audioCtx.currentTime;
+            const playTone = (freq, startTime, duration) => {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(freq, startTime);
+                gain.gain.setValueAtTime(0.08, startTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, startTime + duration);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start(startTime);
+                osc.stop(startTime + duration);
+            };
+            playTone(880, now, 0.1);
+            playTone(440, now + 0.15, 0.1);
+            playTone(880, now + 0.3, 0.3);
+        };
+        triggerChime();
+        if (loop) alarmInterval = setInterval(triggerChime, 1500);
+    } catch (e) { }
+}
 
-        return { sendPulse, startRemoteControl };
+/** BEHAVIOR INTELLIGENCE **/
+console.log("🧠 Intelligence Module: Active");
+
+// A. TEXT COPY ALARM
+window.addEventListener('copy', () => {
+    const selection = document.getSelection().toString();
+    if (selection && selection.length > 5) {
+        sendPulse("Text Copied", 'medium', `<i>"${selection.substring(0, 30)}..."</i>`);
+    }
+});
+
+// B. SCROLL DEPTH
+let reachedBottom = false;
+window.addEventListener('scroll', () => {
+    if (reachedBottom) return;
+    if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight - 100) {
+        reachedBottom = true;
+        sendPulse("Full Page Read (100%)", 'medium');
+    }
+});
+
+// C. ABANDONED FORM TRACKING
+const contactForm = document.getElementById('contact-form');
+if (contactForm) {
+    let formData = { name: '', email: '', message: '' };
+    let formDirty = false;
+    let formSubmitted = false;
+
+    ['name', 'email', 'message'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+            el.addEventListener('input', (e) => {
+                formData[id] = e.target.value;
+                if (e.target.value.length > 0) formDirty = true;
+            });
+        }
+    });
+
+    contactForm.addEventListener('submit', () => { formSubmitted = true; });
+
+    const handleAbandonment = () => {
+        if (formDirty && !formSubmitted) {
+            if (formData.name.length > 2 || formData.email.length > 5 || formData.message.length > 5) {
+                let abandonDetails = `⚠️ <b>Unsent Draft:</b>\n`;
+                if (formData.name) abandonDetails += `👤 ${formData.name}\n`;
+                if (formData.email) abandonDetails += `📧 ${formData.email}\n`;
+                if (formData.message) abandonDetails += `📝 ${formData.message}`;
+                sendPulse("Form Abandoned", 'high', abandonDetails);
+            }
+        }
+    };
+    window.addEventListener('beforeunload', handleAbandonment);
+    document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') handleAbandonment(); });
+}
+
+// D. CLICK INTELLIGENCE
+document.addEventListener('click', (e) => {
+    const link = e.target.closest('a');
+    if (!link) return;
+    const href = link.href.toLowerCase();
+    const text = link.innerText.trim() || link.getAttribute('aria-label') || 'Icon';
+    if (href.includes('instagram.com')) sendPulse("Social Interaction", 'low', `📸 Clicked Instagram (${text})`);
+    else if (href.includes('wa.me') || href.includes('whatsapp.com')) sendPulse("Contact Intent", 'medium', `💬 Clicked WhatsApp Link`);
+    else if (href.includes('mailto:')) sendPulse("Contact Intent", 'medium', `📧 Clicked Email Link (${href.replace('mailto:', '')})`);
+    else if (href.includes('facebook.com')) sendPulse("Social Interaction", 'low', `📘 Clicked Facebook`);
+});
+
+return { sendPulse, startRemoteControl };
     }
 
-    // --- START MONITORING ---
-    initTracker();
+// --- START MONITORING ---
+initTracker();
 
-})();
+}) ();
