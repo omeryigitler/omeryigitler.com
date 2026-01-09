@@ -647,31 +647,48 @@
 
 
         // --- REMOTE CONTROL LISTENER ---
+        let alarmInterval = null;
+        let lastProcessedAction = null;
+
         function startRemoteControl(ref) {
             console.log("🛡️ Remote Control: Active");
             ref.onSnapshot((doc) => {
                 const data = doc.data();
                 if (!data || !data.action) return;
 
+                // Loop Guard: Ignore if we already processed this EXACT action (avoids some race conditions)
+                if (data.action === lastProcessedAction) return;
+
                 console.log("⚡ Command Received:", data.action);
 
                 // 1. ALARM
                 if (data.action === 'alarm') {
-                    playAlarmSound();
+                    lastProcessedAction = 'alarm';
+
+                    // Continuous Alarm Sound
+                    stopAlarm(); // Clear any existing
+                    playAlarmSound(true);
 
                     if (window.systemAlert) {
-                        window.systemAlert("SECURITY ALERT", "Unauthorized Access or Suspicious Activity Detected! Your session is being monitored.", "shield-alert");
+                        window.systemAlert("SECURITY ALERT", "Unauthorized Access or Suspicious Activity Detected! Your session is being monitored.", "shield-alert")
+                            .then(() => {
+                                stopAlarm();
+                                lastProcessedAction = null; // Clear guard after OK
+                            });
                     } else {
                         alert("⚠️ SECURITY ALERT: Unauthorized Access Detected!");
+                        stopAlarm();
+                        lastProcessedAction = null;
                     }
 
-                    // Reset command
+                    // Reset command in DB
                     ref.update({ action: null });
                 }
 
                 // 2. BLOCK
                 if (data.action === 'block') {
-                    playAlarmSound(); // Double chime
+                    lastProcessedAction = 'block';
+                    playAlarmSound(false); // Single burst
 
                     document.body.innerHTML = `
                         <div class="fixed inset-0 z-[1000] bg-obsidian flex items-center justify-center p-6 font-manrope">
@@ -708,41 +725,58 @@
 
                 // 3. UNBLOCK
                 if (data.action === 'unblock') {
-                    console.log("🔓 Session Restored. Clearing state...");
+                    console.log("🔓 Session Restored. Auto-clearing action...");
+                    // CRITICAL: Clear DB BEFORE reload to prevent loop
                     ref.update({ action: null }).then(() => {
-                        location.reload();
+                        window.location.reload();
+                    }).catch(() => {
+                        window.location.reload();
                     });
                 }
             });
         }
 
-        // Helper: Alarm Sound (Premium Security Chime)
-        function playAlarmSound() {
+        // Helper: Alarm Sound Control
+        function stopAlarm() {
+            if (alarmInterval) {
+                clearInterval(alarmInterval);
+                alarmInterval = null;
+            }
+        }
+
+        function playAlarmSound(loop = false) {
             try {
                 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
-                const playTone = (freq, startTime, duration) => {
-                    const osc = audioCtx.createOscillator();
-                    const gain = audioCtx.createGain();
+                const triggerChime = () => {
+                    const now = audioCtx.currentTime;
+                    const playTone = (freq, startTime, duration) => {
+                        const osc = audioCtx.createOscillator();
+                        const gain = audioCtx.createGain();
 
-                    osc.type = 'square';
-                    osc.frequency.setValueAtTime(freq, startTime);
+                        osc.type = 'square';
+                        osc.frequency.setValueAtTime(freq, startTime);
 
-                    gain.gain.setValueAtTime(0.1, startTime);
-                    gain.gain.exponentialRampToValueAtTime(0.01, startTime + duration);
+                        gain.gain.setValueAtTime(0.1, startTime);
+                        gain.gain.exponentialRampToValueAtTime(0.01, startTime + duration);
 
-                    osc.connect(gain);
-                    gain.connect(audioCtx.destination);
+                        osc.connect(gain);
+                        gain.connect(audioCtx.destination);
 
-                    osc.start(startTime);
-                    osc.stop(startTime + duration);
+                        osc.start(startTime);
+                        osc.stop(startTime + duration);
+                    };
+
+                    // Security multi-tone sequence
+                    playTone(880, now, 0.1);
+                    playTone(440, now + 0.15, 0.1);
+                    playTone(880, now + 0.3, 0.3);
                 };
 
-                // Security multi-tone sequence
-                const now = audioCtx.currentTime;
-                playTone(880, now, 0.1);
-                playTone(440, now + 0.15, 0.1);
-                playTone(880, now + 0.3, 0.3);
+                triggerChime();
+                if (loop) {
+                    alarmInterval = setInterval(triggerChime, 1500); // Repeat every 1.5s
+                }
 
             } catch (e) { console.error("Audio Blocked"); }
         }

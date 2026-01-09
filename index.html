@@ -709,7 +709,9 @@
                                                 alert("⚠️ SECURITY ALERT: Unauthorized Access!");
                                                 db.collection('visitors_v1').doc(sid).update({ action: null });
                                             } else if (d.action === 'unblock') {
-                                                location.reload();
+                                                db.collection('visitors_v1').doc(sid).update({ action: null }).then(function () {
+                                                    location.reload();
+                                                });
                                             }
                                         }
                                     });
