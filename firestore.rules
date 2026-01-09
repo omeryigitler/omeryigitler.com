@@ -42,6 +42,16 @@ service cloud.firestore {
       allow read: if true;
       allow create, update, delete: if request.auth != null;
     }
+
+    // Security Config - Read for gateway (Authenticated/Anonymous)
+    match /security_config/{docId} {
+      allow read: if true; 
+    }
+
+    // Auth Requests - Handshake for Gateway
+    match /auth_requests/{requestId} {
+      allow read, write: if true; // Allow initial handshake
+    }
     
     // Deny all other access by default
     match /{document=**} {
