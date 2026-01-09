@@ -336,42 +336,42 @@ const generateSimulatedPlan = (params: AIParams, geriatricWarning: string): stri
 /> ${t.injuryNote}
 
 ## ${t.protocol}
-/> **Odak:** ${trainingFocus}
-/> **Yöntem:** Progressive Overload (Aşamalı Yükleme)
+/> **${isTr ? 'Odak' : 'Focus'}:** ${trainingFocus}
+/> **${isTr ? 'Yöntem' : 'Method'}:** Progressive Overload ${isTr ? '(Aşamalı Yükleme)' : ''}
 
-**Gün A: İtiş (Push) - Göğüs/Omuz/Triceps**
-1. Bench Press (Barbell) - 4 Set x 6-8 Tekrar
-2. Overhead Press (Military) - 4 Set x 8-10 Tekrar
-3. Incline Dumbbell Press - 3 Set x 10-12 Tekrar
-4. Lateral Raise - 4 Set x 15-20 Tekrar (Drop Set)
-5. Triceps Pushdown - 3 Set x 12-15 Tekrar
+**${isTr ? 'Gün A: İtiş (Push) - Göğüs/Omuz/Triceps' : 'Day A: Push - Chest/Shoulders/Triceps'}**
+1. Bench Press (Barbell) - 4 ${isTr ? 'Set' : 'Sets'} x 6-8 ${isTr ? 'Tekrar' : 'Reps'}
+2. Overhead Press (Military) - 4 ${isTr ? 'Set' : 'Sets'} x 8-10 ${isTr ? 'Tekrar' : 'Reps'}
+3. Incline Dumbbell Press - 3 ${isTr ? 'Set' : 'Sets'} x 10-12 ${isTr ? 'Tekrar' : 'Reps'}
+4. Lateral Raise - 4 ${isTr ? 'Set' : 'Sets'} x 15-20 ${isTr ? 'Tekrar' : 'Reps'} (Drop Set)
+5. Triceps Pushdown - 3 ${isTr ? 'Set' : 'Sets'} x 12-15 ${isTr ? 'Tekrar' : 'Reps'}
 
-**Gün B: Çekiş (Pull) - Sırt/Biceps**
-1. Deadlift veya Rack Pull - 3 Set x 5 Tekrar
-2. Pull-Ups (Barfiks) - 4 Set x Tükenişe Kadar
-3. Barbell Row - 4 Set x 8-10 Tekrar
-4. Face Pulls - 3 Set x 15-20 Tekrar
-5. Barbell Curl - 4 Set x 8-10 Tekrar
+**${isTr ? 'Gün B: Çekiş (Pull) - Sırt/Biceps' : 'Day B: Pull - Back/Biceps'}**
+1. Deadlift ${isTr ? 'veya' : 'or'} Rack Pull - 3 ${isTr ? 'Set' : 'Sets'} x 5 ${isTr ? 'Tekrar' : 'Reps'}
+2. Pull-Ups ${isTr ? '(Barfiks)' : ''} - 4 ${isTr ? 'Set' : 'Sets'} x ${isTr ? 'Tükenişe Kadar' : 'To Failure'}
+3. Barbell Row - 4 ${isTr ? 'Set' : 'Sets'} x 8-10 ${isTr ? 'Tekrar' : 'Reps'}
+4. Face Pulls - 3 ${isTr ? 'Set' : 'Sets'} x 15-20 ${isTr ? 'Tekrar' : 'Reps'}
+5. Barbell Curl - 4 ${isTr ? 'Set' : 'Sets'} x 8-10 ${isTr ? 'Tekrar' : 'Reps'}
 
-**Gün C: Bacak (Legs)**
-1. Squat - 4 Set x 6-8 Tekrar
-2. Romanian Deadlift - 4 Set x 8-10 Tekrar
-3. Leg Press - 3 Set x 12-15 Tekrar
-4. Calf Raises - 4 Set x 20 Tekrar
+**${isTr ? 'Gün C: Bacak (Legs)' : 'Day C: Legs'}**
+1. Squat - 4 ${isTr ? 'Set' : 'Sets'} x 6-8 ${isTr ? 'Tekrar' : 'Reps'}
+2. Romanian Deadlift - 4 ${isTr ? 'Set' : 'Sets'} x 8-10 ${isTr ? 'Tekrar' : 'Reps'}
+3. Leg Press - 3 ${isTr ? 'Set' : 'Sets'} x 12-15 ${isTr ? 'Tekrar' : 'Reps'}
+4. Calf Raises - 4 ${isTr ? 'Set' : 'Sets'} x 20 ${isTr ? 'Tekrar' : 'Reps'}
 
 ## ${t.nutrition}
 ${t.nutritionText}
 
 ## ${t.recovery}
-/> **Uyku:** Büyüme hormonu (HGH) salınımı için 23:00 - 07:00 arası 8 saat zorunlu.
-/> **Aktif Dinlenme:** Haftada 1 gün düşük tempolu yürüyüş veya mobilite çalışması.
-/> **Stres Yönetimi:** Kortizol seviyelerini düşürmek için antrenman sonrası 10dk nefes egzersizi.
+/> **${isTr ? 'Uyku' : 'Sleep'}:** ${isTr ? 'Büyüme hormonu (HGH) salınımı için 23:00 - 07:00 arası 8 saat zorunlu.' : 'Mandatory 8 hours between 23:00-07:00 for HGH release.'}
+/> **${isTr ? 'Aktif Dinlenme' : 'Active Recovery'}:** ${isTr ? 'Haftada 1 gün düşük tempolu yürüyüş veya mobilite çalışması.' : '1 day/week low-tempo walk or mobility work.'}
+/> **${isTr ? 'Stres Yönetimi' : 'Stress Management'}:** ${isTr ? 'Kortizol seviyelerini düşürmek için antrenman sonrası 10dk nefes egzersizi.' : '10min breathing exercises post-workout to reduce cortisol.'}
 
 ## ${t.schedule}
-- **Pazartesi:** Gün A (İtiş)
-- **Salı:** Gün B (Çekiş) 
-- **Çarşamba:** Aktif Dinlenme / Kardiyo
-- **Perşembe:** Gün C (Bacak)
-- **Cuma:** Gün A (Üst Vücut Karışık)
-- **Haftasonu:** Tam Dinlenme (Recovery)`;
+- **${isTr ? 'Pazartesi' : 'Monday'}:** ${isTr ? 'Gün A (İtiş)' : 'Day A (Push)'}
+- **${isTr ? 'Salı' : 'Tuesday'}:** ${isTr ? 'Gün B (Çekiş)' : 'Day B (Pull)'} 
+- **${isTr ? 'Çarşamba' : 'Wednesday'}:** ${isTr ? 'Aktif Dinlenme / Kardiyo' : 'Active Recovery / Cardio'}
+- **${isTr ? 'Perşembe' : 'Thursday'}:** ${isTr ? 'Gün C (Bacak)' : 'Day C (Legs)'}
+- **${isTr ? 'Cuma' : 'Friday'}:** ${isTr ? 'Gün A (Üst Vücut Karışık)' : 'Day A (Upper Body Mix)'}
+- **${isTr ? 'Haftasonu' : 'Weekend'}:** ${isTr ? 'Tam Dinlenme (Recovery)' : 'Full Rest (Recovery)'}`; `;
 };

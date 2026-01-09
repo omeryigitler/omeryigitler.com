@@ -18,8 +18,8 @@ const RetroLayout: React.FC<RetroLayoutProps> = ({ onExecute, lang, setLang }) =
 
   return (
     <div className="min-h-screen text-black pixel-font flex flex-col items-center justify-center p-2 md:p-10 relative overflow-hidden bg-[#008080]">
-      {/* Desktop Icons */}
-      <div className="absolute top-6 left-6 grid grid-flow-row gap-8 z-10">
+      {/* Desktop Icons - Hidden on Mobile/Tablet */}
+      <div className="hidden md:grid absolute top-6 left-6 grid-flow-row gap-8 z-10">
         <div className="flex flex-col items-center gap-1 group cursor-pointer">
           <div className="w-10 h-10 bg-gray-400 group-hover:bg-blue-200 retro-border flex items-center justify-center relative">
             <div className="w-6 h-6 bg-blue-600"></div>
