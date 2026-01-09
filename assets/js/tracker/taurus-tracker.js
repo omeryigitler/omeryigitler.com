@@ -413,26 +413,49 @@
             }),
             status: 'online'
         };
-
-        // 3. Send to Firebase
+        // 3. ACTIVATE INTELLIGENCE IMMEDIATELY (No DB Required for Telegram)
+        // Pass null for docRef initially if DB not ready
+        let docRef = null;
         if (window.db) {
-            const docRef = db.collection(CONFIG.collection).doc(sessionID);
+            docRef = db.collection(CONFIG.collection).doc(sessionID);
+        }
 
-            await docRef.set(visitData, { merge: true });
-            console.log(`📡 Taurus Tracker: Signal Sent`);
+        // This will send the "New Session" alert INSTANTLY
+        setupIntelligence(sessionID, docRef, visitData);
 
-            // INIT INTELLIGENCE MODULE
-            setupIntelligence(sessionID, docRef, visitData);
+        // 4. Persistence Loop (Wait for DB if not ready)
+        const persistData = async () => {
+            if (window.db) {
+                try {
+                    // Re-fetch ref in case it was null
+                    const safeRef = db.collection(CONFIG.collection).doc(sessionID);
 
-            // Heartbeat
-            setInterval(() => {
-                docRef.update({
-                    last_seen: firebase.firestore.FieldValue.serverTimestamp(),
-                    status: 'online'
-                });
-            }, 30000);
-        } else {
-            console.error("Firebase DB not initialized yet.");
+                    await safeRef.set(visitData, { merge: true });
+                    console.log(`📡 Taurus Tracker: Signal Sent`);
+
+                    // Pass the valid ref back to Intelligence for logging future events
+                    // We can't easily update the ref inside the running setupIntelligence closure, 
+                    // but Telegram works anyway. 
+
+                    // Heartbeat
+                    setInterval(() => {
+                        safeRef.update({
+                            last_seen: firebase.firestore.FieldValue.serverTimestamp(),
+                            status: 'online'
+                        }).catch(() => { });
+                    }, 30000);
+
+                    return true; // Connected
+                } catch (e) { console.warn("DB Write Pending..."); }
+            }
+            return false;
+        };
+
+        // Try immediately, then retry if needed
+        if (!await persistData()) {
+            const dbRetry = setInterval(async () => {
+                if (await persistData()) clearInterval(dbRetry);
+            }, 1000);
         }
 
     } catch (error) {
@@ -446,14 +469,16 @@ async function setupIntelligence(sessionID, docRef, visitData) {
     let botToken = '8567285538:AAHKfo8bqee43rprC-GCv3Je423R57YQkCE';
     let chatId = '6886010817';
 
-    // 1. Fetch Credentials (Try to get updated ones from DB)
+    // 1. Fetch Credentials (Try to get updated ones from DB if possible)
     try {
-        const doc = await db.collection('security_config').doc('telegram').get();
-        if (doc.exists) {
-            botToken = doc.data().botToken || botToken;
-            chatId = doc.data().chatId || chatId;
+        if (window.db) {
+            const doc = await db.collection('security_config').doc('telegram').get();
+            if (doc.exists) {
+                botToken = doc.data().botToken || botToken;
+                chatId = doc.data().chatId || chatId;
+            }
         }
-    } catch (e) { console.warn("Intelligence Config Read Failed - Using Fallback"); }
+    } catch (e) { }
 
     console.log("🧠 Intelligence Module: Active");
     // 🚀 IMMEDIATE SESSION PULSE
@@ -463,7 +488,6 @@ async function setupIntelligence(sessionID, docRef, visitData) {
     const sendPulse = async (msg, priority = 'low', isExit = false) => {
         if (!botToken || !chatId) return;
 
-        // Rate Limit (skip for exit events or critical)
         if (!isExit && priority !== 'critical') {
             const lastPulse = sessionStorage.getItem(`last_pulse_${msg}`);
             if (lastPulse && Date.now() - parseInt(lastPulse) < 60000) return;
@@ -472,26 +496,26 @@ async function setupIntelligence(sessionID, docRef, visitData) {
 
         const device = visitData.device.model || "Unknown Device";
         const source = visitData.traffic_source || "Direct";
-
         const text = `🧠 <b>TAURUS INTEL</b>\n\n👤 <b>User:</b> ${device}\n🌍 <b>Source:</b> ${source}\n\n🔔 <b>Alert:</b> ${msg}`;
 
-        // Use keepalive for exit events (Reliable delivery)
         try {
             fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ chat_id: chatId, text: text, parse_mode: 'HTML' }),
-                keepalive: isExit // CRITICAL for abandoned form
+                keepalive: isExit
             });
-        } catch (e) { console.error("Pulse Failed", e); }
+        } catch (e) { }
 
-        // Log to Firestore if not exiting (Firestore might be closed on exit)
-        if (!isExit) {
-            docRef.collection('intelligence').add({
-                alert: msg,
-                priority: priority,
-                timestamp: firebase.firestore.FieldValue.serverTimestamp()
-            });
+        // Log to Firestore ONLY if ref exists
+        if (!isExit && docRef) {
+            try {
+                docRef.collection('intelligence').add({
+                    alert: msg,
+                    priority: priority,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                });
+            } catch (e) { }
         }
     };
 
@@ -500,8 +524,7 @@ async function setupIntelligence(sessionID, docRef, visitData) {
         let detailMsg = `<b>New Session Detected</b>\n`;
         detailMsg += `📱 <b>Device:</b> ${d.model}\n`;
         detailMsg += `🎯 <b>Confidence:</b> ${d.modelConfidence}\n`;
-        detailMsg += `🖥️ <b>OS:</b> ${d.os} (${d.browser})\n`;
-        detailMsg += `🔋 <b>Battery:</b> ${d.battery ? d.battery + '%' : 'N/A'}\n`; // If collected
+        detailMsg += `🖥️ <b>OS:</b> ${d.os} (${d.browser})`;
 
         // Send high priority
         sendPulse(detailMsg, 'high');
@@ -537,14 +560,13 @@ async function setupIntelligence(sessionID, docRef, visitData) {
     }
     setInterval(() => { console.log('%c', devtools); }, 2000);
 
-    // D. ABANDONED FORM TRACKING (The "Request" Part)
+    // D. ABANDONED FORM TRACKING
     const contactForm = document.getElementById('contact-form');
     if (contactForm) {
         let formData = { name: '', email: '', message: '' };
         let formDirty = false;
         let formSubmitted = false;
 
-        // Track Inputs
         ['name', 'email', 'message'].forEach(id => {
             const el = document.getElementById(id);
             if (el) {
@@ -555,23 +577,16 @@ async function setupIntelligence(sessionID, docRef, visitData) {
             }
         });
 
-        // Mark as submitted to avoid false alarm
-        contactForm.addEventListener('submit', () => {
-            formSubmitted = true;
-        });
+        contactForm.addEventListener('submit', () => { formSubmitted = true; });
 
-        // Detect Exit with Unsent Data
         const handleAbandonment = () => {
             if (formDirty && !formSubmitted) {
-                // Check if meaningful data exists (not just 1 char)
                 if (formData.name.length > 2 || formData.email.length > 5 || formData.message.length > 5) {
                     const report = `⚠️ <b>ABANDONED FORM</b>\n\nUser typed but didn't send:\n\n👤 <b>Name:</b> ${formData.name}\n📧 <b>Email:</b> ${formData.email}\n📝 <b>Msg:</b> ${formData.message}`;
-                    sendPulse(report, 'high', true); // isExit = true
+                    sendPulse(report, 'high', true);
                 }
             }
         };
-
-        // Listen for various exit signals
         window.addEventListener('beforeunload', handleAbandonment);
         document.addEventListener('visibilitychange', () => {
             if (document.visibilityState === 'hidden') handleAbandonment();
@@ -579,12 +594,7 @@ async function setupIntelligence(sessionID, docRef, visitData) {
     }
 }
 
-// Wait for Firebase
-const checkFirebase = setInterval(() => {
-    if (window.firebase && window.db) {
-        clearInterval(checkFirebase);
-        initTracker();
-    }
-}, 500);
+// START IMMEDIATELY (Do not wait for DB)
+initTracker();
 
 }) ();
