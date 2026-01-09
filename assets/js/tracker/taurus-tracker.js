@@ -329,14 +329,14 @@
             const model = d.model || "Unknown";
             const source = (typeof visitData.traffic_source === 'object') ? (visitData.traffic_source.source || "Direct") : visitData.traffic_source;
 
-            let text = `<b>🔔 TAURUS INTEL: ${alertTitle}</b>\n\n`;
-            text += `👤 <b>User:</b> ${model}\n`;
-            text += `🌍 <b>Source:</b> ${source}\n`;
+            let text = `🔔 <b>${alertTitle}</b>\n\n`;
+            text += `👤 ${model}\n`;
+            text += `🌍 ${source}`;
 
             if (visitData.location && visitData.location.city !== 'Unknown') {
-                text += `📍 <b>Loc:</b> ${visitData.location.city}, ${visitData.location.country_code}\n`;
+                text += `\n📍 ${visitData.location.city}, ${visitData.location.country_code}`;
             }
-            if (extraData) text += `\n${extraData}`;
+            if (extraData) text += `\n\n${extraData}`;
 
             try {
                 const payload = {
