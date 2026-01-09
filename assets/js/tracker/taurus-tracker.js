@@ -579,8 +579,9 @@
                     if (data.action === 'alarm') {
                         playAlarmSound(true);
                         TaurusSecurityUI.show(
-                            'SECURITY ALERT',
-                            '#FFD700', // YELLOW
+                            'ACCESS',
+                            'SUSPENDED',
+                            '#FFD700',
                             'ACKNOWLEDGE',
                             () => {
                                 stopAlarm();
@@ -593,9 +594,10 @@
                     else if (data.action === 'block') {
                         stopAlarm();
                         TaurusSecurityUI.show(
-                            'ACCESS DENIED',
-                            '#ff4444', // RED
-                            null, // No Button
+                            'ACCESS',
+                            'DENIED',
+                            '#ff4444',
+                            null,
                             null
                         );
                     }
