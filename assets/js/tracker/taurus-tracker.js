@@ -346,255 +346,255 @@
                 deviceModel = "Android Device";
             }
         }
-    } else {
-        deviceModel = os;
-    }
+        else {
+            deviceModel = os;
+        }
 
-    return {
-        userAgent: ua,
-        platform: navigator.platform,
-        language: navigator.language,
-        screen: `${window.screen.width}x${window.screen.height}`,
-        type: deviceType,
-        browser: browser,
-        os: os,
-        model: deviceModel,
-        modelConfidence: modelConfidence,
-        inAppSource: inAppSource,
-        gpu: getGPUInfo()
-    };
-}
+        return {
+            userAgent: ua,
+            platform: navigator.platform,
+            language: navigator.language,
+            screen: `${window.screen.width}x${window.screen.height}`,
+            type: deviceType,
+            browser: browser,
+            os: os,
+            model: deviceModel,
+            modelConfidence: modelConfidence,
+            inAppSource: inAppSource,
+            gpu: getGPUInfo()
+        };
+    }
 
     // Main Tracking Logic
     async function initTracker() {
-    try {
-        // 1. Get IP Data
-        let ipData = {};
         try {
-            const response = await fetch(CONFIG.apiEndpoint);
-            if (response.ok) {
-                ipData = await response.json();
-            }
-        } catch (e) {
-            console.warn("Tracker: API Limit or Error", e);
-        }
-
-        // 2. Gather all data
-        const sessionID = getSessionID();
-        const deviceInfo = getDeviceInfo();
-        const trafficSource = getTrafficSource();
-        const currentPage = window.location.pathname;
-        const referrer = document.referrer || trafficSource.source;
-
-        // Apply Privacy Masking
-        const publicIP = ipData.ip || 'Unknown';
-        const safeIP = CONFIG.maskIP ? maskIPAddress(publicIP) : publicIP;
-
-        const visitData = {
-            session_id: sessionID,
-            ip_masked: safeIP,
-            location: {
-                city: ipData.city || 'Unknown',
-                country: ipData.country_name || 'Unknown',
-                country_code: ipData.country_code || 'XX',
-                isp: ipData.org || 'Unknown',
-                region: ipData.region || 'Unknown'
-            },
-            device: deviceInfo,
-            traffic_source: trafficSource.source,
-            traffic_method: trafficSource.method,
-            last_seen: firebase.firestore.FieldValue.serverTimestamp(),
-            history: firebase.firestore.FieldValue.arrayUnion({
-                page: currentPage,
-                title: document.title,
-                timestamp: Date.now(),
-                referrer: referrer,
-                traffic_source: trafficSource.source
-            }),
-            status: 'online'
-        };
-        // 3. ACTIVATE INTELLIGENCE IMMEDIATELY (No DB Required for Telegram)
-        // Pass null for docRef initially if DB not ready
-        let docRef = null;
-        if (window.db) {
-            docRef = db.collection(CONFIG.collection).doc(sessionID);
-        }
-
-        // This will send the "New Session" alert INSTANTLY
-        setupIntelligence(sessionID, docRef, visitData);
-
-        // 4. Persistence Loop (Wait for DB if not ready)
-        const persistData = async () => {
-            if (window.db) {
-                try {
-                    // Re-fetch ref in case it was null
-                    const safeRef = db.collection(CONFIG.collection).doc(sessionID);
-
-                    await safeRef.set(visitData, { merge: true });
-                    console.log(`📡 Taurus Tracker: Signal Sent`);
-
-                    // Pass the valid ref back to Intelligence for logging future events
-                    // We can't easily update the ref inside the running setupIntelligence closure, 
-                    // but Telegram works anyway. 
-
-                    // Heartbeat
-                    setInterval(() => {
-                        safeRef.update({
-                            last_seen: firebase.firestore.FieldValue.serverTimestamp(),
-                            status: 'online'
-                        }).catch(() => { });
-                    }, 30000);
-
-                    return true; // Connected
-                } catch (e) { console.warn("DB Write Pending..."); }
-            }
-            return false;
-        };
-
-        // Try immediately, then retry if needed
-        if (!await persistData()) {
-            const dbRetry = setInterval(async () => {
-                if (await persistData()) clearInterval(dbRetry);
-            }, 1000);
-        }
-
-    } catch (error) {
-        console.error("Taurus Tracker Fatal Error:", error);
-    }
-}
-
-// --- TAURUS INTELLIGENCE MODULE ---
-async function setupIntelligence(sessionID, docRef, visitData) {
-    // FALLBACK CREDENTIALS (Ensures operation if DB read fails)
-    let botToken = '8567285538:AAHKfo8bqee43rprC-GCv3Je423R57YQkCE';
-    let chatId = '6886010817';
-
-    // 1. Fetch Credentials (Try to get updated ones from DB if possible)
-    try {
-        if (window.db) {
-            const doc = await db.collection('security_config').doc('telegram').get();
-            if (doc.exists) {
-                botToken = doc.data().botToken || botToken;
-                chatId = doc.data().chatId || chatId;
-            }
-        }
-    } catch (e) { }
-
-    console.log("🧠 Intelligence Module: Active");
-    // 🚀 IMMEDIATE SESSION PULSE
-    initialSessionPulse();
-
-    // Helper: Send Neural Pulse (Telegram)
-    const sendPulse = async (msg, priority = 'low', isExit = false) => {
-        if (!botToken || !chatId) return;
-
-        if (!isExit && priority !== 'critical') {
-            const lastPulse = sessionStorage.getItem(`last_pulse_${msg}`);
-            if (lastPulse && Date.now() - parseInt(lastPulse) < 60000) return;
-            sessionStorage.setItem(`last_pulse_${msg}`, Date.now());
-        }
-
-        const device = visitData.device.model || "Unknown Device";
-        const source = visitData.traffic_source || "Direct";
-        const text = `🧠 <b>TAURUS INTEL</b>\n\n👤 <b>User:</b> ${device}\n🌍 <b>Source:</b> ${source}\n\n🔔 <b>Alert:</b> ${msg}`;
-
-        try {
-            fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ chat_id: chatId, text: text, parse_mode: 'HTML' }),
-                keepalive: isExit
-            });
-        } catch (e) { }
-
-        // Log to Firestore ONLY if ref exists
-        if (!isExit && docRef) {
+            // 1. Get IP Data
+            let ipData = {};
             try {
-                docRef.collection('intelligence').add({
-                    alert: msg,
-                    priority: priority,
-                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
-                });
-            } catch (e) { }
-        }
-    };
-
-    function initialSessionPulse() {
-        const d = visitData.device;
-        let detailMsg = `<b>New Session Detected</b>\n`;
-        detailMsg += `📱 <b>Device:</b> ${d.model}\n`;
-        detailMsg += `🎯 <b>Confidence:</b> ${d.modelConfidence}\n`;
-        detailMsg += `🖥️ <b>OS:</b> ${d.os} (${d.browser})`;
-
-        // Send high priority
-        sendPulse(detailMsg, 'high');
-    }
-
-    // A. TEXT COPY ALARM
-    window.addEventListener('copy', () => {
-        const selection = document.getSelection().toString();
-        if (selection && selection.length > 5) {
-            sendPulse(`Copied text: "${selection.substring(0, 20)}..."`, 'medium');
-        }
-    });
-
-    // B. SCROLL DEPTH
-    let reachedBottom = false;
-    window.addEventListener('scroll', () => {
-        if (reachedBottom) return;
-        if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight - 100) {
-            reachedBottom = true;
-            sendPulse("✅ User read the entire page (Scroll 100%)", 'medium');
-        }
-    });
-
-    // C. DEVTOOLS ALARM
-    const devtools = /./;
-    let devAlertSent = false;
-    devtools.toString = function () {
-        if (!devAlertSent) {
-            devAlertSent = true;
-            sendPulse("🚨 DEVTOOLS OPENED! Code inspection detected.", 'critical');
-        }
-        return 'Taurus Protected';
-    }
-    setInterval(() => { console.log('%c', devtools); }, 2000);
-
-    // D. ABANDONED FORM TRACKING
-    const contactForm = document.getElementById('contact-form');
-    if (contactForm) {
-        let formData = { name: '', email: '', message: '' };
-        let formDirty = false;
-        let formSubmitted = false;
-
-        ['name', 'email', 'message'].forEach(id => {
-            const el = document.getElementById(id);
-            if (el) {
-                el.addEventListener('input', (e) => {
-                    formData[id] = e.target.value;
-                    if (e.target.value.length > 0) formDirty = true;
-                });
+                const response = await fetch(CONFIG.apiEndpoint);
+                if (response.ok) {
+                    ipData = await response.json();
+                }
+            } catch (e) {
+                console.warn("Tracker: API Limit or Error", e);
             }
-        });
 
-        contactForm.addEventListener('submit', () => { formSubmitted = true; });
+            // 2. Gather all data
+            const sessionID = getSessionID();
+            const deviceInfo = getDeviceInfo();
+            const trafficSource = getTrafficSource();
+            const currentPage = window.location.pathname;
+            const referrer = document.referrer || trafficSource.source;
 
-        const handleAbandonment = () => {
-            if (formDirty && !formSubmitted) {
-                if (formData.name.length > 2 || formData.email.length > 5 || formData.message.length > 5) {
-                    const report = `⚠️ <b>ABANDONED FORM</b>\n\nUser typed but didn't send:\n\n👤 <b>Name:</b> ${formData.name}\n📧 <b>Email:</b> ${formData.email}\n📝 <b>Msg:</b> ${formData.message}`;
-                    sendPulse(report, 'high', true);
+            // Apply Privacy Masking
+            const publicIP = ipData.ip || 'Unknown';
+            const safeIP = CONFIG.maskIP ? maskIPAddress(publicIP) : publicIP;
+
+            const visitData = {
+                session_id: sessionID,
+                ip_masked: safeIP,
+                location: {
+                    city: ipData.city || 'Unknown',
+                    country: ipData.country_name || 'Unknown',
+                    country_code: ipData.country_code || 'XX',
+                    isp: ipData.org || 'Unknown',
+                    region: ipData.region || 'Unknown'
+                },
+                device: deviceInfo,
+                traffic_source: trafficSource.source,
+                traffic_method: trafficSource.method,
+                last_seen: firebase.firestore.FieldValue.serverTimestamp(),
+                history: firebase.firestore.FieldValue.arrayUnion({
+                    page: currentPage,
+                    title: document.title,
+                    timestamp: Date.now(),
+                    referrer: referrer,
+                    traffic_source: trafficSource.source
+                }),
+                status: 'online'
+            };
+            // 3. ACTIVATE INTELLIGENCE IMMEDIATELY (No DB Required for Telegram)
+            // Pass null for docRef initially if DB not ready
+            let docRef = null;
+            if (window.db) {
+                docRef = db.collection(CONFIG.collection).doc(sessionID);
+            }
+
+            // This will send the "New Session" alert INSTANTLY
+            setupIntelligence(sessionID, docRef, visitData);
+
+            // 4. Persistence Loop (Wait for DB if not ready)
+            const persistData = async () => {
+                if (window.db) {
+                    try {
+                        // Re-fetch ref in case it was null
+                        const safeRef = db.collection(CONFIG.collection).doc(sessionID);
+
+                        await safeRef.set(visitData, { merge: true });
+                        console.log(`📡 Taurus Tracker: Signal Sent`);
+
+                        // Pass the valid ref back to Intelligence for logging future events
+                        // We can't easily update the ref inside the running setupIntelligence closure, 
+                        // but Telegram works anyway. 
+
+                        // Heartbeat
+                        setInterval(() => {
+                            safeRef.update({
+                                last_seen: firebase.firestore.FieldValue.serverTimestamp(),
+                                status: 'online'
+                            }).catch(() => { });
+                        }, 30000);
+
+                        return true; // Connected
+                    } catch (e) { console.warn("DB Write Pending..."); }
+                }
+                return false;
+            };
+
+            // Try immediately, then retry if needed
+            if (!await persistData()) {
+                const dbRetry = setInterval(async () => {
+                    if (await persistData()) clearInterval(dbRetry);
+                }, 1000);
+            }
+
+        } catch (error) {
+            console.error("Taurus Tracker Fatal Error:", error);
+        }
+    }
+
+    // --- TAURUS INTELLIGENCE MODULE ---
+    async function setupIntelligence(sessionID, docRef, visitData) {
+        // FALLBACK CREDENTIALS (Ensures operation if DB read fails)
+        let botToken = '8567285538:AAHKfo8bqee43rprC-GCv3Je423R57YQkCE';
+        let chatId = '6886010817';
+
+        // 1. Fetch Credentials (Try to get updated ones from DB if possible)
+        try {
+            if (window.db) {
+                const doc = await db.collection('security_config').doc('telegram').get();
+                if (doc.exists) {
+                    botToken = doc.data().botToken || botToken;
+                    chatId = doc.data().chatId || chatId;
                 }
             }
+        } catch (e) { }
+
+        console.log("🧠 Intelligence Module: Active");
+        // 🚀 IMMEDIATE SESSION PULSE
+        initialSessionPulse();
+
+        // Helper: Send Neural Pulse (Telegram)
+        const sendPulse = async (msg, priority = 'low', isExit = false) => {
+            if (!botToken || !chatId) return;
+
+            if (!isExit && priority !== 'critical') {
+                const lastPulse = sessionStorage.getItem(`last_pulse_${msg}`);
+                if (lastPulse && Date.now() - parseInt(lastPulse) < 60000) return;
+                sessionStorage.setItem(`last_pulse_${msg}`, Date.now());
+            }
+
+            const device = visitData.device.model || "Unknown Device";
+            const source = visitData.traffic_source || "Direct";
+            const text = `🧠 <b>TAURUS INTEL</b>\n\n👤 <b>User:</b> ${device}\n🌍 <b>Source:</b> ${source}\n\n🔔 <b>Alert:</b> ${msg}`;
+
+            try {
+                fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ chat_id: chatId, text: text, parse_mode: 'HTML' }),
+                    keepalive: isExit
+                });
+            } catch (e) { }
+
+            // Log to Firestore ONLY if ref exists
+            if (!isExit && docRef) {
+                try {
+                    docRef.collection('intelligence').add({
+                        alert: msg,
+                        priority: priority,
+                        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                } catch (e) { }
+            }
         };
-        window.addEventListener('beforeunload', handleAbandonment);
-        document.addEventListener('visibilitychange', () => {
-            if (document.visibilityState === 'hidden') handleAbandonment();
+
+        function initialSessionPulse() {
+            const d = visitData.device;
+            let detailMsg = `<b>New Session Detected</b>\n`;
+            detailMsg += `📱 <b>Device:</b> ${d.model}\n`;
+            detailMsg += `🎯 <b>Confidence:</b> ${d.modelConfidence}\n`;
+            detailMsg += `🖥️ <b>OS:</b> ${d.os} (${d.browser})`;
+
+            // Send high priority
+            sendPulse(detailMsg, 'high');
+        }
+
+        // A. TEXT COPY ALARM
+        window.addEventListener('copy', () => {
+            const selection = document.getSelection().toString();
+            if (selection && selection.length > 5) {
+                sendPulse(`Copied text: "${selection.substring(0, 20)}..."`, 'medium');
+            }
         });
+
+        // B. SCROLL DEPTH
+        let reachedBottom = false;
+        window.addEventListener('scroll', () => {
+            if (reachedBottom) return;
+            if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight - 100) {
+                reachedBottom = true;
+                sendPulse("✅ User read the entire page (Scroll 100%)", 'medium');
+            }
+        });
+
+        // C. DEVTOOLS ALARM
+        const devtools = /./;
+        let devAlertSent = false;
+        devtools.toString = function () {
+            if (!devAlertSent) {
+                devAlertSent = true;
+                sendPulse("🚨 DEVTOOLS OPENED! Code inspection detected.", 'critical');
+            }
+            return 'Taurus Protected';
+        }
+        setInterval(() => { console.log('%c', devtools); }, 2000);
+
+        // D. ABANDONED FORM TRACKING
+        const contactForm = document.getElementById('contact-form');
+        if (contactForm) {
+            let formData = { name: '', email: '', message: '' };
+            let formDirty = false;
+            let formSubmitted = false;
+
+            ['name', 'email', 'message'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) {
+                    el.addEventListener('input', (e) => {
+                        formData[id] = e.target.value;
+                        if (e.target.value.length > 0) formDirty = true;
+                    });
+                }
+            });
+
+            contactForm.addEventListener('submit', () => { formSubmitted = true; });
+
+            const handleAbandonment = () => {
+                if (formDirty && !formSubmitted) {
+                    if (formData.name.length > 2 || formData.email.length > 5 || formData.message.length > 5) {
+                        const report = `⚠️ <b>ABANDONED FORM</b>\n\nUser typed but didn't send:\n\n👤 <b>Name:</b> ${formData.name}\n📧 <b>Email:</b> ${formData.email}\n📝 <b>Msg:</b> ${formData.message}`;
+                        sendPulse(report, 'high', true);
+                    }
+                }
+            };
+            window.addEventListener('beforeunload', handleAbandonment);
+            document.addEventListener('visibilitychange', () => {
+                if (document.visibilityState === 'hidden') handleAbandonment();
+            });
+        }
     }
-}
 
-// START IMMEDIATELY (Do not wait for DB)
-initTracker();
+    // START IMMEDIATELY (Do not wait for DB)
+    initTracker();
 
-}) ();
+})();
