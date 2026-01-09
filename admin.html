@@ -160,7 +160,7 @@
 <body class="bg-obsidian text-white font-body h-screen flex overflow-hidden">
     <!--AUTH GUARD-->
     <script>
-        if (sessionStorage.getItem('authToken') !== 'valid') {
+        if (sessionStorage.getItem('authToken') !== 'valid' && localStorage.getItem('authToken') !== 'valid') {
             window.location.replace('gateway.html');
         }
     </script>

