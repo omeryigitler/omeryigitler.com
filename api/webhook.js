@@ -31,7 +31,9 @@ module.exports = async (req, res) => {
     if (!callbackQuery) return res.status(200).send('OK');
 
     const data = callbackQuery.data;
-    const [action, sessionID] = data.split('_');
+    const firstUnderscore = data.indexOf('_');
+    const action = data.substring(0, firstUnderscore);
+    const sessionID = data.substring(firstUnderscore + 1);
     const chatId = callbackQuery.message.chat.id;
 
     try {

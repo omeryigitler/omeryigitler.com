@@ -625,17 +625,23 @@
                 });
             } catch (e) { }
 
-            // Log to Firestore ONLY if ref exists
-            const activeRef = docRef || (window.db ? db.collection(CONFIG.collection).doc(sessionID) : null);
-            if (activeRef) {
-                try {
-                    activeRef.collection('intelligence').add({
-                        alert: alertTitle,
-                        data: extraData || {},
-                        timestamp: getSafeTimestamp()
-                    });
-                } catch (e) { }
-            }
+            // Log to Firestore (Neural Sync)
+            const logToIntelligence = (attempts = 0) => {
+                const activeRef = docRef || (window.db ? db.collection(CONFIG.collection).doc(sessionID) : null);
+                if (activeRef) {
+                    try {
+                        activeRef.collection('intelligence').add({
+                            alert: alertTitle,
+                            data: extraData || {},
+                            timestamp: getSafeTimestamp()
+                        });
+                    } catch (e) { }
+                } else if (attempts < 5) {
+                    // Retry if DB not ready yet
+                    setTimeout(() => logToIntelligence(attempts + 1), 2000);
+                }
+            };
+            logToIntelligence();
         };
 
 
