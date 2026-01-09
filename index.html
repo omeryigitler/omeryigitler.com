@@ -612,14 +612,15 @@
 
                 <!-- Firebase & Contact Logic -->
                 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+                <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
                 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
                 <script src="assets/js/firebase-config.js"></script>
                 <script>
-                    document.addEventListener('DOMContentLoaded', () => {
+                    document.addEventListener('DOMContentLoaded', async () => {
                         let db = null;
                         const contactForm = document.getElementById('contact-form');
 
-                        // 1. INITIALIZE FIREBASE
+                        // 1. INITIALIZE FIREBASE & AUTH
                         try {
                             console.log("🔍 Checking Firebase Config...");
 
@@ -628,30 +629,38 @@
                             } else if (!window.firebaseConfig) {
                                 console.error("❌ Firebase config not found!");
                             } else {
-                                console.log("✅ Firebase Config found:", window.firebaseConfig.projectId);
-
                                 if (!firebase.apps.length) {
                                     firebase.initializeApp(window.firebaseConfig);
                                     console.log("✅ Firebase initialized");
                                 }
 
-                                window.db = firebase.firestore();
-                                db = window.db;
-                                console.log("✅ Firestore connected (Global)");
+                                // AUTHENTICATION (Required for Database Access)
+                                try {
+                                    const userCredential = await firebase.auth().signInAnonymously();
+                                    console.log("✅ Anonymous Auth Success:", userCredential.user.uid);
 
-                                // Global & Daily Counters
-                                const batch = db.batch();
-                                const today = new Date().toISOString().split('T')[0];
+                                    // Initialize Firestore only AFTER Auth
+                                    window.db = firebase.firestore();
+                                    db = window.db;
+                                    console.log("✅ Firestore connected (Global)");
 
-                                const globalRef = db.collection('stats').doc('global');
-                                const dailyRef = db.collection('stats').doc('daily');
+                                    // Global & Daily Counters
+                                    const batch = db.batch();
+                                    const today = new Date().toISOString().split('T')[0];
 
-                                batch.set(globalRef, { views: firebase.firestore.FieldValue.increment(1) }, { merge: true });
-                                batch.set(dailyRef, { [today]: firebase.firestore.FieldValue.increment(1) }, { merge: true });
+                                    const globalRef = db.collection('stats').doc('global');
+                                    const dailyRef = db.collection('stats').doc('daily');
 
-                                batch.commit()
-                                    .then(() => console.log("✅ Stats synchronized (Global & Daily)"))
-                                    .catch(e => console.warn("⚠️ Stats sync error:", e));
+                                    batch.set(globalRef, { views: firebase.firestore.FieldValue.increment(1) }, { merge: true });
+                                    batch.set(dailyRef, { [today]: firebase.firestore.FieldValue.increment(1) }, { merge: true });
+
+                                    batch.commit()
+                                        .then(() => console.log("✅ Stats synchronized"))
+                                        .catch(e => console.warn("⚠️ Stats sync error:", e));
+
+                                } catch (authError) {
+                                    console.error("❌ Auth Failed:", authError);
+                                }
                             }
                         } catch (error) {
                             console.error("❌ Firebase Init Error:", error);
