@@ -70,56 +70,75 @@
         // Device Model (Advanced Detection)
         let deviceModel = "";
         if (deviceType === "Mobile" || deviceType === "Tablet") {
-            // iPhone detection (using screen dimensions + pixel ratio + memory)
+            // iPhone detection (Advanced Multi-Factor Fingerprinting)
             if (ua.includes("iPhone")) {
                 const screenHeight = window.screen.height;
                 const screenWidth = window.screen.width;
                 const pixelRatio = window.devicePixelRatio || 1;
-                const memory = navigator.deviceMemory; // GB (if available)
 
-                // iPhone Model Database (by screen size and pixel ratio)
-                const iPhoneModels = {
-                    // iPhone 15 Series (2023)
-                    '932x430@3': 'iPhone 15 Pro Max',
-                    '852x393@3': 'iPhone 15 Pro',
-                    '844x390@3': 'iPhone 15 / 15 Plus',
+                // Extract iOS version
+                let iOSVersion = null;
+                const iosMatch = ua.match(/OS\s([\d_]+)/);
+                if (iosMatch) {
+                    iOSVersion = parseFloat(iosMatch[1].replace(/_/g, '.'));
+                }
 
-                    // iPhone 14 Series (2022)
-                    '926x428@3': 'iPhone 14 Pro Max',
-                    '852x393@3': 'iPhone 14 Pro',
-                    '844x390@3': 'iPhone 14',
-                    '926x428@3': 'iPhone 14 Plus',
+                // Hardware fingerprinting
+                const deviceMemory = navigator.deviceMemory || null; // GB
+                const cpuCores = navigator.hardwareConcurrency || null;
 
-                    // iPhone 13 Series (2021)
-                    '926x428@3': 'iPhone 13 Pro Max',
-                    '844x390@3': 'iPhone 13 / 13 Pro',
-                    '812x375@3': 'iPhone 13 mini',
+                // GPU detection
+                let gpuRenderer = null;
+                try {
+                    const canvas = document.createElement('canvas');
+                    const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+                    if (gl) {
+                        const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
+                        if (debugInfo) {
+                            gpuRenderer = gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL);
+                        }
+                    }
+                } catch (e) { }
 
-                    // iPhone 12 Series (2020)
-                    '926x428@3': 'iPhone 12 Pro Max',
-                    '844x390@3': 'iPhone 12 / 12 Pro',
-                    '812x375@3': 'iPhone 12 mini',
+                const screenKey = `${screenHeight}x${screenWidth}@${pixelRatio}`;
 
-                    // iPhone 11 Series (2019)
-                    '896x414@2': 'iPhone 11 Pro Max',
-                    '812x375@3': 'iPhone 11 Pro / XS',
-                    '896x414@2': 'iPhone 11 / XR',
-
-                    // iPhone X/XS (2017-2018)
-                    '812x375@3': 'iPhone X / XS',
-                    '896x414@3': 'iPhone XS Max',
-
-                    // iPhone SE & older
-                    '667x375@2': 'iPhone SE 2/3 / 8 / 7 / 6s',
-                    '736x414@3': 'iPhone 8 Plus / 7 Plus',
-                    '568x320@2': 'iPhone SE 1st gen / 5s'
-                };
-
-                const key = `${screenHeight}x${screenWidth}@${pixelRatio}`;
-                deviceModel = iPhoneModels[key] || `iPhone (${screenWidth}x${screenHeight})`;
-
-                // Additional check with memory (if available)
-                if (memory >= 6) deviceModel = deviceModel.replace('iPhone 1', 'iPhone 1') + ' (Pro)';
+                // Rule-based detection for critical models
+                if (screenKey === '926x428@3') {
+                    // Could be 14 Pro Max, 14 Plus, 13 Pro Max, or 12 Pro Max
+                    // Key differentiator: iOS version
+                    if (iOSVersion >= 18.0) {
+                        deviceModel = 'iPhone 14 Pro Max'; // Updated to iOS 18
+                    } else if (iOSVersion >= 16.0 && iOSVersion < 18.0) {
+                        deviceModel = 'iPhone 14 Pro Max';
+                    } else if (iOSVersion >= 15.0 && iOSVersion < 16.0) {
+                        deviceModel = 'iPhone 13 Pro Max';
+                    } else {
+                        deviceModel = 'iPhone 12 Pro Max';
+                    }
+                } else if (screenKey === '932x430@3') {
+                    deviceModel = 'iPhone 15 Pro Max';
+                } else if (screenKey === '852x393@3') {
+                    deviceModel = iOSVersion >= 17.0 ? 'iPhone 15 Pro' : 'iPhone 14 Pro';
+                } else if (screenKey === '844x390@3') {
+                    if (iOSVersion >= 17.0) deviceModel = 'iPhone 15';
+                    else if (iOSVersion >= 16.0) deviceModel = 'iPhone 14';
+                    else if (iOSVersion >= 15.0) deviceModel = 'iPhone 13';
+                    else deviceModel = 'iPhone 12';
+                } else if (screenKey === '812x375@3') {
+                    deviceModel = iOSVersion >= 15.0 ? 'iPhone 13 mini' : 'iPhone 12 mini / 11 Pro / XS / X';
+                } else if (screenKey === '896x414@2') {
+                    deviceModel = 'iPhone 11 / XR';
+                } else if (screenKey === '896x414@3') {
+                    deviceModel = 'iPhone XS Max';
+                } else if (screenKey === '667x375@2') {
+                    deviceModel = 'iPhone SE 2/3 / 8 / 7';
+                } else if (screenKey === '736x414@3') {
+                    deviceModel = 'iPhone 8 Plus / 7 Plus';
+                } else if (screenKey === '568x320@2') {
+                    deviceModel = 'iPhone SE 1st gen / 5s';
+                } else {
+                    deviceModel = `iPhone (${screenWidth}x${screenHeight})`;
+                }
             }
             // iPad detection (using screen size)
             else if (ua.includes("iPad")) {
