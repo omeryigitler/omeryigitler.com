@@ -8,13 +8,18 @@ window.systemAlert = (title, message, icon = 'info') => {
         const modal = document.getElementById('system-modal');
         const content = document.getElementById('system-modal-content');
         if (!modal || !content) {
-            alert(message); // Fallback
+            alert(message);
             resolve();
             return;
         }
 
-        document.getElementById('modal-title').innerText = title;
-        document.getElementById('modal-message').innerText = message;
+        // Hard Reset
+        modal.classList.add('hidden');
+        modal.classList.remove('flex', 'opacity-0');
+        content.classList.add('scale-95', 'opacity-0');
+
+        document.getElementById('modal-title').innerText = title || "SYSTEM ALERT";
+        document.getElementById('modal-message').innerText = message || "";
 
         const iconEl = document.getElementById('modal-icon');
         iconEl.setAttribute('data-lucide', icon);
@@ -52,13 +57,18 @@ window.systemConfirm = (title, message, icon = 'help-circle') => {
         const modal = document.getElementById('system-modal');
         const content = document.getElementById('system-modal-content');
         if (!modal || !content) {
-            const res = confirm(message); // Fallback
+            const res = confirm(message);
             resolve(res);
             return;
         }
 
-        document.getElementById('modal-title').innerText = title;
-        document.getElementById('modal-message').innerText = message;
+        // Hard Reset
+        modal.classList.add('hidden');
+        modal.classList.remove('flex', 'opacity-0');
+        content.classList.add('scale-95', 'opacity-0');
+
+        document.getElementById('modal-title').innerText = title || "CONFIRMATION REQUIRED";
+        document.getElementById('modal-message').innerText = message || "";
 
         const iconEl = document.getElementById('modal-icon');
         iconEl.setAttribute('data-lucide', icon);

@@ -1266,7 +1266,8 @@
                     if (loc !== 'Unknown') locationMap[loc] = (locationMap[loc] || 0) + 1;
 
                     // Format Row
-                    const flag = d.location && d.location.country_code ? `https://flagcdn.com/24x18/${d.location.country_code.toLowerCase()}.png` : '';
+                    const countryCode = d.location && d.location.country_code ? d.location.country_code.toLowerCase() : '';
+                    const flag = countryCode ? `<img src="https://flagcdn.com/24x18/${countryCode}.png" class="w-4 h-3 rounded-sm opacity-80" onerror="this.outerHTML='<span class=\'text-[8px] font-bold text-gray-500\'>${countryCode.toUpperCase()}</span>'"/>` : '';
 
                     const visitorId = doc.id;
                     intelDataMap[visitorId] = d;
@@ -1387,7 +1388,8 @@
             // Build session details HTML
             const loc = data.location?.city || 'Unknown';
             const country = data.location?.country || 'Unknown';
-            const flag = data.location?.country_code ? `https://flagcdn.com/96x72/${data.location.country_code.toLowerCase()}.png` : '';
+            const countryCode = data.location?.country_code?.toLowerCase() || '';
+            const flag = countryCode ? `<img src="https://flagcdn.com/96x72/${countryCode}.png" class="w-8 h-6 rounded border border-white/10" onerror="this.outerHTML='<span class=\'text-xs font-bold text-taurusGold\'>${countryCode.toUpperCase()}</span>'"/>` : '';
 
             let historyHtml = '';
             if (data.history && data.history.length > 0) {

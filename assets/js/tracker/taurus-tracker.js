@@ -702,17 +702,17 @@
                                     <div class="absolute inset-[-4px] rounded-full border-2 border-taurusGold/40 animate-ping"></div>
                                 </div>
                                 
-                                <h1 class="font-display text-3xl md:text-5xl font-black text-white mb-6 uppercase tracking-[0.4em] leading-tight">
-                                    ACCESS <br> <span class="text-taurusGold">SUSPENDED</span>
+                                <h1 class="font-display text-4xl md:text-6xl font-black text-white mb-6 uppercase tracking-[0.4em] leading-tight">
+                                    <span class="text-taurusGold">ACCESS</span> <br> <span class="text-red-500">SUSPENDED</span>
                                 </h1>
                                 
-                                <div class="p-8 rounded-3xl bg-neutral-900/50 border border-white/5 backdrop-blur-3xl mb-12 shadow-2xl">
-                                    <p class="text-gray-400 text-[10px] md:text-xs leading-relaxed tracking-[0.2em] uppercase mb-8">
+                                <div class="p-8 rounded-3xl bg-neutral-900/50 border border-white/5 backdrop-blur-3xl mb-12 shadow-2xl relative overflow-hidden group">
+                                    <p class="text-gray-400 text-[10px] md:text-xs leading-relaxed tracking-[0.2em] uppercase mb-8 relative z-10">
                                         Platform Security has flagged this connection. <br> 
                                         Your access has been revoked to maintain system integrity.
                                     </p>
                                     
-                                    <div class="inline-block px-8 py-3 rounded-full bg-taurusGold/5 border border-taurusGold/20">
+                                    <div class="inline-block px-8 py-3 rounded-full bg-taurusGold/5 border border-taurusGold/20 relative z-10">
                                         <p class="text-taurusGold/60 font-mono text-[8px] uppercase tracking-[0.3em] mb-1">INCIDENT TOKEN</p>
                                         <p class="text-white font-mono text-sm tracking-widest">${doc.id}</p>
                                     </div>
