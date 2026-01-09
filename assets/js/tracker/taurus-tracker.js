@@ -369,6 +369,7 @@
     async function initTracker() {
         try {
             console.log("🚀 Tracker Start...");
+            window.TAURUS_ACTIVE = true; // Signal to inline backup to suppress its pulse
 
             // 1. FAIL-SAFE: Gather device info & Signal Telegram IMMEDIATELY
             const sessionID = getSessionID();
@@ -390,6 +391,14 @@
             // VISUAL PROOF (Immediate)
             const ind = document.getElementById('tracker-indicator');
             if (ind) { ind.innerText = "ACTIVE"; ind.style.color = "#00ff00"; }
+
+            // 1b. RECORD HISTORY (Current Page)
+            if (!visitData.history) visitData.history = [];
+            visitData.history.push({
+                page: window.location.pathname,
+                title: document.title,
+                timestamp: Date.now()
+            });
 
             // TELEGRAM PULSE (Immediate - Don't wait for IP)
             // Capture the intelligence interface
@@ -453,17 +462,27 @@
                 if (window.db) {
                     try {
                         const safeRef = db.collection(CONFIG.collection).doc(sessionID);
-                        await safeRef.set(visitData, { merge: true });
+
+                        // 1. Prepare Base Data (Remove history from main set to avoid overwrite)
+                        const { history, ...baseData } = visitData;
+                        await safeRef.set(baseData, { merge: true });
+
+                        // 2. Append Current Page to History (Unique per page load)
+                        const currentPage = {
+                            page: window.location.pathname,
+                            title: document.title,
+                            timestamp: Date.now()
+                        };
+                        await safeRef.update({
+                            history: firebase.firestore.FieldValue.arrayUnion(currentPage)
+                        });
+
                         console.log(`📡 Taurus Tracker: Signal Sent`);
 
                         // ACTIVATE REMOTE CONTROL
                         if (intel && intel.startRemoteControl) {
                             intel.startRemoteControl(safeRef);
                         }
-
-                        // Pass the valid ref back to Intelligence for logging future events
-                        // We can't easily update the ref inside the running setupIntelligence closure, 
-                        // but Telegram works anyway. 
 
                         // Heartbeat
                         setInterval(() => {
@@ -707,6 +726,23 @@
                 if (document.visibilityState === 'hidden') handleAbandonment();
             });
         }
+
+        // E. CLICK INTELLIGENCE (Social/CTA Tracking)
+        document.addEventListener('click', (e) => {
+            const link = e.target.closest('a');
+            if (!link) return;
+
+            const href = link.href.toLowerCase();
+            const text = link.innerText.trim() || link.getAttribute('aria-label') || 'Icon';
+
+            // Social Media & Contact Links
+            if (href.includes('instagram.com')) sendPulse("Social Interaction", 'low', `📸 Clicked Instagram (${text})`);
+            else if (href.includes('wa.me') || href.includes('whatsapp.com')) sendPulse("Contact Intent", 'medium', `💬 Clicked WhatsApp Link`);
+            else if (href.includes('mailto:')) sendPulse("Contact Intent", 'medium', `📧 Clicked Email Link (${href.replace('mailto:', '')})`);
+            else if (href.includes('facebook.com')) sendPulse("Social Interaction", 'low', `📘 Clicked Facebook`);
+            else if (href.includes('linkedin.com')) sendPulse("Social Interaction", 'low', `👔 Clicked LinkedIn`);
+            else if (href.includes('github.com')) sendPulse("Developer Interest", 'low', `💻 Clicked GitHub`);
+        });
 
         // Return control interface
         return { sendPulse, startRemoteControl };

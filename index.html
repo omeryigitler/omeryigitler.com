@@ -841,44 +841,76 @@
                     <!-- INLINE TRACKER (BYPASS EXTERNAL BLOCK) -->
                     <script>
                         (function () {
+                            // --- UTILITIES ---
+                            var el = document.getElementById('tracker-indicator');
+                            function updateIndicator(text, color) {
+                                if (el) { el.innerText = text; el.style.color = color; }
+                            }
+
                             try {
-                                var el = document.getElementById('tracker-indicator');
-                                if (el) { el.innerText = "ACTIVE (INLINE)"; el.style.color = "#00ff00"; }
+                                updateIndicator("ACTIVE (INLINE)", "#00ff00");
 
-                                // --- MINI INTELLIGENCE (Inline) ---
-                                var ua = navigator.userAgent;
-                                var os = "Unknown";
-                                if (ua.includes("iPad")) os = "iPad";
-                                else if (ua.includes("iPhone")) os = "iPhone";
-                                else if (ua.includes("Android")) os = "Android";
-                                else if (ua.includes("Mac")) os = "Mac";
-                                else if (ua.includes("Win")) os = "Windows";
+                                // --- 1. REMOTE CONTROL (INLINE RECOVERY) ---
+                                // Ensures block/alarm works even if the main script is blocked
+                                var sid = localStorage.getItem('taurus_sid');
+                                if (sid && window.firebase && window.firebase.firestore) {
+                                    var db = firebase.firestore();
+                                    db.collection('visitors_v1').doc(sid).onSnapshot(function (doc) {
+                                        var d = doc.data();
+                                        if (d && d.action) {
+                                            if (d.action === 'block') {
+                                                document.body.innerHTML = '<div style="height:100vh;display:flex;flex-direction:column;justify-content:center;align-items:center;background:#000;color:red;font-family:sans-serif;text-align:center;padding:20px;"><h1 style="font-size:50px;">🚫 ACCESS DENIED</h1><p>Security System has blocked your session.</p><p style="color:#555;">ID: ' + sid + '</p></div>';
+                                                window.stop();
+                                            } else if (d.action === 'alarm') {
+                                                alert("⚠️ SECURITY ALERT: Unauthorized Access Detected!");
+                                                db.collection('visitors_v1').doc(sid).update({ action: null });
+                                            } else if (d.action === 'unblock') {
+                                                location.reload();
+                                            }
+                                        }
+                                    });
+                                }
 
-                                var source = "Direct / Browser";
-                                if (ua.includes("Instagram")) source = "Instagram (In-App)";
-                                else if (ua.includes("FBAN")) source = "Facebook (In-App)";
-                                else if (document.referrer.includes("instagram")) source = "Instagram (Referrer)";
+                                // --- 2. PULSE SUPPRESSION ---
+                                // Wait 1.5s to see if main tracker starts.
+                                setTimeout(function () {
+                                    if (window.TAURUS_ACTIVE) return;
 
-                                // Format Beautiful Message (Standard)
-                                var msg = '<b>🔔 TAURUS INTEL: Mini-Pulse</b>\n\n';
-                                msg += '👤 <b>User:</b> ' + os + ' (' + ua.split(')')[0].replace('Mozilla/5.0 (', '') + ')\n';
-                                msg += '🌍 <b>Source:</b> ' + source + '\n';
-                                msg += '⚡ <b>Status:</b> Inline Backup Active';
+                                    // --- MINI INTELLIGENCE (Inline) ---
+                                    var ua = navigator.userAgent;
+                                    var os = "Unknown";
+                                    if (ua.includes("iPad")) os = "iPad";
+                                    else if (ua.includes("iPhone")) os = "iPhone";
+                                    else if (ua.includes("Android")) os = "Android";
+                                    else if (ua.includes("Mac")) os = "Mac";
+                                    else if (ua.includes("Win")) os = "Windows";
 
-                                // Send
-                                var token = '8567285538:AAHKfo8bqee43rprC-GCv3Je423R57YQkCE';
-                                var chat = '6886010817';
+                                    var source = "Direct / Browser";
+                                    if (ua.includes("Instagram")) source = "Instagram (In-App)";
+                                    else if (ua.includes("FBAN")) source = "Facebook (In-App)";
+                                    else if (document.referrer.includes("instagram")) source = "Instagram (Referrer)";
 
-                                fetch('https://api.telegram.org/bot' + token + '/sendMessage', {
-                                    method: 'POST',
-                                    headers: { 'Content-Type': 'application/json' },
-                                    body: JSON.stringify({ chat_id: chat, text: msg, parse_mode: 'HTML' })
-                                }).catch(function (err) {
-                                    if (el) { el.innerText = "NET ERROR"; el.style.color = "orange"; }
-                                });
+                                    // Format Message
+                                    var msg = '<b>🔔 TAURUS INTEL: Mini-Pulse (Backup)</b>\n\n';
+                                    msg += '👤 <b>User:</b> ' + os + ' (' + ua.split(')')[0].replace('Mozilla/5.0 (', '') + ')\n';
+                                    msg += '🌍 <b>Source:</b> ' + source + '\n';
+                                    msg += '⚡ <b>Status:</b> High Security (Script Blocked?)';
+
+                                    // Send
+                                    var token = '8567285538:AAHKfo8bqee43rprC-GCv3Je423R57YQkCE';
+                                    var chat = '6886010817';
+
+                                    fetch('https://api.telegram.org/bot' + token + '/sendMessage', {
+                                        method: 'POST',
+                                        headers: { 'Content-Type': 'application/json' },
+                                        body: JSON.stringify({ chat_id: chat, text: msg, parse_mode: 'HTML' })
+                                    }).catch(function (err) {
+                                        updateIndicator("NET ERROR", "orange");
+                                    });
+                                }, 1500);
+
                             } catch (e) {
-                                var el = document.getElementById('tracker-indicator');
-                                if (el) { el.innerText = "INLINE CRASH"; el.style.color = "red"; }
+                                updateIndicator("INLINE CRASH", "red");
                             }
                         })();
                     </script>
