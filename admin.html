@@ -796,33 +796,61 @@
                 dots.push(dot);
             }
 
-            // Pattern drawing handlers
-            container.addEventListener('mousedown', (e) => {
-                if (e.target.dataset.index !== undefined) {
-                    currentPattern = [];
-                    isDragging = true;
+            // Disable touch scrolling on pattern container
+            container.style.touchAction = 'none';
+
+            // Universal input handler (Mouse & Touch)
+            function handleInputStart(e) {
+                e.preventDefault();
+                currentPattern = [];
+                isDragging = true;
+                resetDotStyles();
+                checkHit(e);
+            }
+
+            function handleInputMove(e) {
+                if (!isDragging) return;
+                e.preventDefault();
+                checkHit(e);
+            }
+
+            function handleInputEnd(e) {
+                if (!isDragging) return;
+                isDragging = false;
+                if (currentPattern.length >= 4) {
+                    updatePatternDisplay();
+                } else {
+                    systemAlert('INVALID PATTERN', 'Pattern must have at least 4 dots.', 'alert-triangle');
                     resetDotStyles();
-                    addDotToPattern(parseInt(e.target.dataset.index));
                 }
-            });
+            }
 
-            container.addEventListener('mouseover', (e) => {
-                if (isDragging && e.target.dataset.index !== undefined) {
-                    addDotToPattern(parseInt(e.target.dataset.index));
+            function checkHit(e) {
+                let clientX, clientY;
+                if (e.touches) {
+                    clientX = e.touches[0].clientX;
+                    clientY = e.touches[0].clientY;
+                } else {
+                    clientX = e.clientX;
+                    clientY = e.clientY;
                 }
-            });
 
-            window.addEventListener('mouseup', () => {
-                if (isDragging) {
-                    isDragging = false;
-                    if (currentPattern.length >= 4) {
-                        updatePatternDisplay();
-                    } else {
-                        systemAlert('INVALID PATTERN', 'Pattern must have at least 4 dots.', 'alert-triangle');
-                        resetDotStyles();
-                    }
+                // Get element under cursor/finger
+                const el = document.elementFromPoint(clientX, clientY);
+                if (el && el.dataset.index !== undefined) {
+                    addDotToPattern(parseInt(el.dataset.index));
                 }
-            });
+            }
+
+            // Event Listeners
+            container.addEventListener('mousedown', handleInputStart);
+            container.addEventListener('touchstart', handleInputStart, { passive: false });
+
+            window.addEventListener('mousemove', handleInputMove);
+            window.addEventListener('touchmove', handleInputMove, { passive: false });
+
+            window.addEventListener('mouseup', handleInputEnd);
+            window.addEventListener('touchend', handleInputEnd);
 
             function addDotToPattern(index) {
                 if (!currentPattern.includes(index)) {
