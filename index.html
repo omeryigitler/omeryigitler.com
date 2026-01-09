@@ -1096,7 +1096,14 @@
     </div>
 
     <script>
-        lucide.createIcons();
+        // Safe Icon Init
+        if (typeof lucide !== 'undefined') {
+            lucide.createIcons();
+        } else {
+            window.addEventListener('load', function () {
+                if (typeof lucide !== 'undefined') lucide.createIcons();
+            });
+        }
 
         // Refactored Mega Menu & Backdrop Logic
         const trigger = document.getElementById('expertise-trigger');
