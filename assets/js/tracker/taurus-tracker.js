@@ -480,11 +480,7 @@
             }
         } catch (e) { }
 
-        console.log("🧠 Intelligence Module: Active");
-        // 🚀 IMMEDIATE SESSION PULSE
-        initialSessionPulse();
-
-        // Helper: Send Neural Pulse (Telegram)
+        // Helper: Send Neural Pulse (Telegram) - DEFINED FIRST
         const sendPulse = async (msg, priority = 'low', isExit = false) => {
             if (!botToken || !chatId) return;
 
@@ -529,6 +525,10 @@
             // Send high priority
             sendPulse(detailMsg, 'high');
         }
+
+        console.log("🧠 Intelligence Module: Active");
+        // 🚀 IMMEDIATE SESSION PULSE
+        initialSessionPulse();
 
         // A. TEXT COPY ALARM
         window.addEventListener('copy', () => {
