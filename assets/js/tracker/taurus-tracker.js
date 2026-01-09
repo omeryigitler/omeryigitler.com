@@ -13,7 +13,7 @@
     };
 
     // BULLETPROOF ASSET: Base64 Logo (Universal Reliability)
-    const TAURUS_LOGO_B64 = 'data:image/png;base64,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薮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';
+    const TAURUS_LOGO_B64 = 'data:image/png;base64,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';
 
     // --- SAFETY HELPERS ---
     function getSafeTimestamp() {
@@ -774,8 +774,8 @@
 
         function startRemoteControl(ref) {
             let alarmAudio = null;
-            let lastProcessedAction = null;
-            const sessionId = ref.id; // Get ID from reference
+            let lastProcessedId = null; // Composite ID: action + timestamp
+            const sessionId = ref.id;
 
             function playAlarmSound(loop = false) {
                 if (!alarmAudio) {
@@ -792,7 +792,7 @@
                 }
             }
 
-            // POLLING MECHANISM (Replaces onSnapshot)
+            // POLLING MECHANISM
             console.log("📡 Remote Control: Starting Poll Loop...");
             setInterval(async () => {
                 try {
@@ -801,36 +801,37 @@
 
                     // HANDLE NULL/CLEAR STATE
                     if (!data || !data.action) {
-                        if (lastProcessedAction) {
+                        if (lastProcessedId) {
                             console.log("Commands Cleared.");
-                            lastProcessedAction = null;
+                            lastProcessedId = null;
                             stopAlarm();
                             TaurusSecurityUI.hide();
                         }
                         return;
                     }
 
-                    // PREVENT RE-PROCESSING SAME COMMAND
-                    if (data.action === lastProcessedAction) return;
+                    // GENERATE COMPOSITE ID (Use timestamp if available, fallback to action only if not)
+                    const currentId = data.action_timestamp
+                        ? `${data.action}_${JSON.stringify(data.action_timestamp)}`
+                        : data.action;
 
-                    console.log("⚡ Command Received:", data.action);
-                    lastProcessedAction = data.action; // Mark as processed immediately
+                    // PREVENT RE-PROCESSING EXACT SAME COMMAND INSTANCE
+                    if (currentId === lastProcessedId) return;
+
+                    console.log("⚡ Command Received:", data.action, "ID:", currentId);
+                    lastProcessedId = currentId;
 
                     if (data.action === 'alarm') {
                         playAlarmSound(true);
                         TaurusSecurityUI.show(
-                            'alarm',
-                            'SECURITY AUDIT',
-                            'Platform Security has triggered a remote audit for this session.<br>Please acknowledge to proceed.',
-                            null,
+                            'SECURITY ALERT',
+                            'Compliance check required.<br>Please verify session.',
+                            '<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#FFD700" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>',
+                            'ACKNOWLEDGE',
                             () => {
-                                // ON ACKNOWLEDGE:
                                 stopAlarm();
-                                TaurusSecurityUI.hide();
-                                // Call backend to clear the command so it doesn't persist on reload
                                 fetch('/.netlify/functions/ack_command', {
-                                    method: 'POST',
-                                    body: JSON.stringify({ sessionId: sessionId })
+                                    method: 'POST', body: JSON.stringify({ sessionId: sessionId })
                                 });
                             }
                         );
@@ -838,15 +839,14 @@
                     else if (data.action === 'block') {
                         stopAlarm();
                         TaurusSecurityUI.show(
-                            'block',
-                            'ACCESS SUSPENDED',
-                            'Platform Security has flagged this connection.<br>Access Revoked to Maintain System Integrity.',
-                            sessionId
+                            'ACCESS DENIED',
+                            'Session suspended by administrator.<br>Contact support.',
+                            '<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#ff4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line></svg>',
+                            null, // No button = hidden
+                            null
                         );
                     }
                     else if (data.action === 'unblock') {
-                        // Implicitly handled by the NULL check above if backend sets it to null,
-                        // but if explicit 'unblock' command is sent:
                         stopAlarm();
                         TaurusSecurityUI.hide();
                         window.location.replace(window.location.href);
