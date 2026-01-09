@@ -764,12 +764,24 @@
                     const res = await fetch(`/.netlify/functions/check_command?sessionId=${sessionId}&t=${Date.now()}`);
                     const data = await res.json();
 
-                    if (!data || !data.action || data.action === lastProcessedAction) return;
+                    // HANDLE NULL/CLEAR STATE
+                    if (!data || !data.action) {
+                        if (lastProcessedAction) {
+                            console.log("Commands Cleared.");
+                            lastProcessedAction = null;
+                            stopAlarm();
+                            TaurusSecurityUI.hide();
+                        }
+                        return;
+                    }
+
+                    // PREVENT RE-PROCESSING SAME COMMAND
+                    if (data.action === lastProcessedAction) return;
 
                     console.log("⚡ Command Received:", data.action);
+                    lastProcessedAction = data.action; // Mark as processed immediately
 
                     if (data.action === 'alarm') {
-                        lastProcessedAction = 'alarm';
                         playAlarmSound(true);
                         TaurusSecurityUI.show(
                             'alarm',
@@ -777,15 +789,18 @@
                             'Platform Security has triggered a remote audit for this session.<br>Please acknowledge to proceed.',
                             null,
                             () => {
+                                // ON ACKNOWLEDGE:
                                 stopAlarm();
-                                lastProcessedAction = null;
+                                TaurusSecurityUI.hide();
+                                // Call backend to clear the command so it doesn't persist on reload
+                                fetch('/.netlify/functions/ack_command', {
+                                    method: 'POST',
+                                    body: JSON.stringify({ sessionId: sessionId })
+                                });
                             }
                         );
-                        // Note: We can't clear the action easily from here without auth, 
-                        // so we just rely on local state or subsequent unblock.
                     }
                     else if (data.action === 'block') {
-                        lastProcessedAction = 'block';
                         stopAlarm();
                         TaurusSecurityUI.show(
                             'block',
@@ -795,10 +810,10 @@
                         );
                     }
                     else if (data.action === 'unblock') {
-                        lastProcessedAction = null;
-                        TaurusSecurityUI.hide();
+                        // Implicitly handled by the NULL check above if backend sets it to null,
+                        // but if explicit 'unblock' command is sent:
                         stopAlarm();
-                        // Refresh to clear state
+                        TaurusSecurityUI.hide();
                         window.location.replace(window.location.href);
                     }
                     else if (data.action === 'redirect' && data.url) {
