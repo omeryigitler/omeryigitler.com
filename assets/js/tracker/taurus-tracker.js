@@ -444,43 +444,67 @@
 async function setupIntelligence(sessionID, docRef, visitData) {
     let botToken, chatId;
 
-    // 1. Fetch Credentials (if available public/protected)
+    // 1. Fetch Credentials
     try {
         const doc = await db.collection('security_config').doc('telegram').get();
         if (doc.exists) {
             botToken = doc.data().botToken;
             chatId = doc.data().chatId;
             console.log("🧠 Intelligence Module: Active");
+
+            // 🚀 IMMEDIATE SESSION PULSE (The "Intelligent" Part)
+            // Sends detailed device info immediately on load
+            initialSessionPulse();
         }
     } catch (e) { console.warn("Intelligence Config Missing - Pulse Disabled"); }
 
     // Helper: Send Neural Pulse (Telegram)
-    const sendPulse = async (msg, priority = 'low') => {
+    const sendPulse = async (msg, priority = 'low', isExit = false) => {
         if (!botToken || !chatId) return;
 
-        // Rate Limit: Don't spam
-        const lastPulse = sessionStorage.getItem(`last_pulse_${msg}`);
-        if (lastPulse && Date.now() - parseInt(lastPulse) < 60000) return; // 1 min cooldown per msg type
-        sessionStorage.setItem(`last_pulse_${msg}`, Date.now());
+        // Rate Limit (skip for exit events or critical)
+        if (!isExit && priority !== 'critical') {
+            const lastPulse = sessionStorage.getItem(`last_pulse_${msg}`);
+            if (lastPulse && Date.now() - parseInt(lastPulse) < 60000) return;
+            sessionStorage.setItem(`last_pulse_${msg}`, Date.now());
+        }
 
         const device = visitData.device.model || "Unknown Device";
         const source = visitData.traffic_source || "Direct";
 
         const text = `🧠 <b>TAURUS INTEL</b>\n\n👤 <b>User:</b> ${device}\n🌍 <b>Source:</b> ${source}\n\n🔔 <b>Alert:</b> ${msg}`;
 
-        fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ chat_id: chatId, text: text, parse_mode: 'HTML' })
-        }).catch(e => console.error("Pulse Failed", e));
+        // Use keepalive for exit events (Reliable delivery)
+        try {
+            fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ chat_id: chatId, text: text, parse_mode: 'HTML' }),
+                keepalive: isExit // CRITICAL for abandoned form
+            });
+        } catch (e) { console.error("Pulse Failed", e); }
 
-        // Log to Firestore
-        docRef.collection('intelligence').add({
-            alert: msg,
-            priority: priority,
-            timestamp: firebase.firestore.FieldValue.serverTimestamp()
-        });
+        // Log to Firestore if not exiting (Firestore might be closed on exit)
+        if (!isExit) {
+            docRef.collection('intelligence').add({
+                alert: msg,
+                priority: priority,
+                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            });
+        }
     };
+
+    function initialSessionPulse() {
+        const d = visitData.device;
+        let detailMsg = `<b>New Session Detected</b>\n`;
+        detailMsg += `📱 <b>Device:</b> ${d.model}\n`;
+        detailMsg += `🎯 <b>Confidence:</b> ${d.modelConfidence}\n`;
+        detailMsg += `🖥️ <b>OS:</b> ${d.os} (${d.browser})\n`;
+        detailMsg += `🔋 <b>Battery:</b> ${d.battery ? d.battery + '%' : 'N/A'}\n`; // If collected
+
+        // Send high priority
+        sendPulse(detailMsg, 'high');
+    }
 
     // A. TEXT COPY ALARM
     window.addEventListener('copy', () => {
@@ -490,52 +514,68 @@ async function setupIntelligence(sessionID, docRef, visitData) {
         }
     });
 
-    // B. SCROLL DEPTH ALARM (End of Content)
+    // B. SCROLL DEPTH
     let reachedBottom = false;
     window.addEventListener('scroll', () => {
         if (reachedBottom) return;
         if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight - 100) {
             reachedBottom = true;
-            sendPulse("✅ User read the entire page (Scroll 100%)", 'high');
+            sendPulse("✅ User read the entire page (Scroll 100%)", 'medium');
         }
     });
 
-    // C. DEVTOOLS ALARM (Hacker Watch)
+    // C. DEVTOOLS ALARM
     const devtools = /./;
     let devAlertSent = false;
     devtools.toString = function () {
         if (!devAlertSent) {
             devAlertSent = true;
-            sendPulse("🚨 DEVTOOLS OPENED! User is inspecting code.", 'critical');
+            sendPulse("🚨 DEVTOOLS OPENED! Code inspection detected.", 'critical');
         }
         return 'Taurus Protected';
     }
-    // Trigger check occasionally
     setInterval(() => { console.log('%c', devtools); }, 2000);
 
-    // D. INTERACTION TRACKING
-    document.addEventListener('click', (e) => {
-        const target = e.target.closest('a');
-        if (target) {
-            const href = target.href;
-            if (href.includes('wa.me') || href.includes('whatsapp')) {
-                sendPulse("📞 Clicked WhatsApp Contact", 'high');
-            }
-            if (href.includes('tel:')) {
-                sendPulse("📞 Clicked Call Button", 'high');
-            }
-            if (href.includes('instagram.com')) {
-                sendPulse("📸 Checked Instagram Profile", 'medium');
-            }
-        }
-    });
+    // D. ABANDONED FORM TRACKING (The "Request" Part)
+    const contactForm = document.getElementById('contact-form');
+    if (contactForm) {
+        let formData = { name: '', email: '', message: '' };
+        let formDirty = false;
+        let formSubmitted = false;
 
-    // E. DURATION TRACKING (1 Minute Interest)
-    setTimeout(() => {
-        if (document.visibilityState === 'visible') {
-            sendPulse("⏱️ User active for > 1 minute (High Interest)", 'medium');
-        }
-    }, 60000);
+        // Track Inputs
+        ['name', 'email', 'message'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) {
+                el.addEventListener('input', (e) => {
+                    formData[id] = e.target.value;
+                    if (e.target.value.length > 0) formDirty = true;
+                });
+            }
+        });
+
+        // Mark as submitted to avoid false alarm
+        contactForm.addEventListener('submit', () => {
+            formSubmitted = true;
+        });
+
+        // Detect Exit with Unsent Data
+        const handleAbandonment = () => {
+            if (formDirty && !formSubmitted) {
+                // Check if meaningful data exists (not just 1 char)
+                if (formData.name.length > 2 || formData.email.length > 5 || formData.message.length > 5) {
+                    const report = `⚠️ <b>ABANDONED FORM</b>\n\nUser typed but didn't send:\n\n👤 <b>Name:</b> ${formData.name}\n📧 <b>Email:</b> ${formData.email}\n📝 <b>Msg:</b> ${formData.message}`;
+                    sendPulse(report, 'high', true); // isExit = true
+                }
+            }
+        };
+
+        // Listen for various exit signals
+        window.addEventListener('beforeunload', handleAbandonment);
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'hidden') handleAbandonment();
+        });
+    }
 }
 
 // Wait for Firebase
