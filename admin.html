@@ -601,6 +601,7 @@
         // --- GLOBAL STATE ---
         let db;
         let messagesMap = {};
+        let intelDataMap = {}; // Global store for visitor data
         let currentOpenedMessageId = null;
 
         // Helper: Format Referrer Source
@@ -959,8 +960,11 @@
                     // Format Row
                     const flag = d.location && d.location.country_code ? `https://flagcdn.com/24x18/${d.location.country_code.toLowerCase()}.png` : '';
 
+                    const visitorId = doc.id;
+                    intelDataMap[visitorId] = d;
+
                     html += `
-                        <tr class="border-b border-white/5 hover:bg-white/5 transition-all cursor-pointer" onclick='openSessionModal(${JSON.stringify(d)})'>
+                        <tr class="border-b border-white/5 hover:bg-white/5 transition-all cursor-pointer" onclick="openSessionModal('${visitorId}')">
                              <td class="p-4 align-middle">
                                 ${isOnline
                             ? '<div class="flex items-center gap-2"><div class="w-2 h-2 rounded-full bg-green-500 animate-pulse shadow-[0_0_5px_#22c55e]"></div><span class="text-green-500 text-[10px] font-bold uppercase tracking-wider">ONLINE</span></div>'
@@ -1022,7 +1026,8 @@
         }
 
         // Session Modal Functions
-        function openSessionModal(data) {
+        function openSessionModal(id) {
+            const data = intelDataMap[id];
             const modal = document.getElementById('session-modal');
             const content = document.getElementById('session-details');
 
