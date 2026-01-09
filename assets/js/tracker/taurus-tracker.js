@@ -424,6 +424,10 @@
             setupIntelligence(sessionID, docRef, visitData);
 
             // 4. Persistence Loop (Wait for DB if not ready)
+            // VISUAL PROOF for User (Confirm JS is running)
+            const ind = document.getElementById('tracker-indicator');
+            if (ind) ind.innerText = "ACTIVE";
+
             const persistData = async () => {
                 if (window.db) {
                     try {
