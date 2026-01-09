@@ -162,15 +162,27 @@
                 if (firebase.apps.length === 0) firebase.initializeApp(window.firebaseConfig);
                 const db = firebase.firestore();
 
-                // Get Telegram Config
-                const doc = await db.collection('security_config').doc('telegram').get();
+                // AUTHENTICATE FIRST (Required for Firestore Access)
+                try {
+                    await firebase.auth().signInAnonymously();
+                } catch (authErr) {
+                    console.warn('Authentication warning:', authErr);
+                }
 
-                if (doc.exists) {
-                    botToken = doc.data().botToken;
-                    chatId = doc.data().chatId;
-                } else {
-                    console.warn('Config missing, using fallback credentials');
-                    // Fallback to provided credentials (Auto-Recovery)
+                // Get Telegram Config (With Try-Catch for robustness)
+                try {
+                    const doc = await db.collection('security_config').doc('telegram').get();
+                    if (doc.exists) {
+                        botToken = doc.data().botToken;
+                        chatId = doc.data().chatId;
+                    }
+                } catch (dbErr) {
+                    console.warn('Config fetch failed (likely permission/missing doc), switching to fallback:', dbErr);
+                }
+
+                // FALLBACK CREDENTIALS (Auto-Recovery)
+                if (!botToken || !chatId) {
+                    console.log('Using fallback credentials');
                     botToken = '8567285538:AAHKfo8bqee43rprC-GCv3Je423R57YQkCE';
                     chatId = '6886010817';
                 }
