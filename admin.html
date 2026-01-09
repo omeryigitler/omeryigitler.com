@@ -1362,6 +1362,7 @@
         window.onclick = (e) => {
             if (e.target.id === 'message-modal') closeMessageModal();
             if (e.target.id === 'project-modal') closeProjectModal();
+            if (e.target.id === 'session-modal') closeSessionModal();
         }
     </script>
 
@@ -1510,6 +1511,41 @@
             </div>
         </div>
     </div>
+
+    <!-- Session History Modal -->
+    <div id="session-modal"
+        class="fixed inset-0 z-[110] hidden flex items-center justify-center lg:p-4 bg-black/90 lg:bg-black/80 backdrop-blur-md transition-opacity duration-300">
+        <div
+            class="glass-card w-full h-full lg:h-[90vh] lg:max-w-3xl lg:rounded-3xl border-y lg:border border-glassBorder bg-[#0a0a0a] shadow-2xl overflow-hidden animate-fade-in-up flex flex-col">
+            <!-- Header -->
+            <div
+                class="p-6 border-b border-white/5 flex justify-between items-center bg-gradient-to-r from-taurusGold/10 to-transparent flex-shrink-0">
+                <h3 class="text-xl font-display font-bold text-white flex items-center gap-3">
+                    <i data-lucide="radar" class="w-6 h-6 text-taurusGold"></i>
+                    Visitor Session Analysis
+                </h3>
+                <button onclick="closeSessionModal()"
+                    class="w-10 h-10 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-gray-400 hover:text-white transition-colors">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <!-- Scrollable Content -->
+            <div id="session-details" class="p-6 md:p-8 overflow-y-auto flex-1 space-y-6">
+                <!-- Content populated by JS -->
+                <div class="text-center text-gray-500 py-12">Loading session data...</div>
+            </div>
+
+            <!-- Footer -->
+            <div class="p-6 border-t border-white/5 bg-black/40 backdrop-blur-xl flex justify-end gap-3 flex-shrink-0">
+                <button onclick="closeSessionModal()"
+                    class="w-full md:w-auto px-8 py-4 rounded-xl bg-white/5 text-white font-black text-[10px] uppercase tracking-widest border border-white/10 hover:bg-white hover:text-black transition-all">
+                    Close Analysis
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- System Modal -->
     <div id="system-modal"
         class="fixed inset-0 z-[200] hidden items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
