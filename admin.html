@@ -1267,7 +1267,7 @@
 
                     // Format Row
                     const countryCode = d.location && d.location.country_code ? d.location.country_code.toLowerCase() : '';
-                    const flag = countryCode ? `<img src="https://flagcdn.com/24x18/${countryCode}.png" class="w-4 h-3 rounded-sm opacity-80" onerror="this.outerHTML='<span class=\'text-[8px] font-bold text-gray-500\'>${countryCode.toUpperCase()}</span>'"/>` : '';
+                    const flagHtml = countryCode ? `<img src="https://flagcdn.com/24x18/${countryCode}.png" class="w-5 rounded shadow-sm opacity-80" alt="${countryCode}" onerror="this.outerHTML='<span class=\'text-[8px] font-bold text-gray-500\'>${countryCode.toUpperCase()}</span>'"/>` : '';
 
                     const visitorId = doc.id;
                     intelDataMap[visitorId] = d;
@@ -1281,7 +1281,7 @@
                             </td>
                             <td class="p-4 align-middle">
                                 <div class="flex items-center gap-3">
-                                    ${flag}
+                                    ${flagHtml}
                                     <div class="flex flex-col">
                                         <span class="text-white text-xs font-bold">${loc}</span>
                                         <span class="text-[10px] text-gray-500">${country}</span>
@@ -1389,7 +1389,7 @@
             const loc = data.location?.city || 'Unknown';
             const country = data.location?.country || 'Unknown';
             const countryCode = data.location?.country_code?.toLowerCase() || '';
-            const flag = countryCode ? `<img src="https://flagcdn.com/96x72/${countryCode}.png" class="w-8 h-6 rounded border border-white/10" onerror="this.outerHTML='<span class=\'text-xs font-bold text-taurusGold\'>${countryCode.toUpperCase()}</span>'"/>` : '';
+            const flagHtml = countryCode ? `<img src="https://flagcdn.com/96x72/${countryCode}.png" class="w-12 h-9 rounded border border-white/10 shadow-lg" alt="${countryCode}" onerror="this.outerHTML='<span class=\'text-xs font-bold text-taurusGold\'>${countryCode.toUpperCase()}</span>'"/>` : '';
 
             let historyHtml = '';
             if (data.history && data.history.length > 0) {
@@ -1433,7 +1433,7 @@
             content.innerHTML = `
                 <div class="bg-gradient-to-r from-taurusGold/10 to-transparent border border-taurusGold/20 rounded-xl p-6">
                     <div class="flex items-center gap-4 mb-4">
-                        ${flag}
+                        ${flagHtml}
                         <div>
                             <h4 class="text-white font-bold text-lg">${loc}, ${country}</h4>
                             <p class="text-xs text-gray-500 font-mono">Session: ${data.session_id || 'Unknown'}</p>

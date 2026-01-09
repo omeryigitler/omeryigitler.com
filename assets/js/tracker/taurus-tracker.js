@@ -12,6 +12,9 @@
         apiEndpoint: 'https://ipapi.co/json/'
     };
 
+    // BULLETPROOF ASSET: Base64 Logo (Universal Reliability)
+    const TAURUS_LOGO_B64 = 'data:image/png;base64,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薮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';
+
     // --- SAFETY HELPERS ---
     function getSafeTimestamp() {
         try {
@@ -645,111 +648,152 @@
         let alarmInterval = null;
         let lastProcessedAction = null;
 
+        // --- TAURUS SECURITY UI MANAGER (High-Fidelity Overlay System) ---
+        const TaurusSecurityUI = {
+            overlay: null,
+            initialized: false,
+
+            init() {
+                if (this.initialized) return;
+                const el = document.createElement('div');
+                el.id = 'taurus-security-overlay';
+                el.style = "position:fixed;inset:0;z-index:9999999;display:none;flex-direction:column;align-items:center;justify-content:center;background:#050505;color:white;font-family:sans-serif;text-align:center;padding:20px;backdrop-filter:blur(20px);";
+                el.innerHTML = `
+                    <div id="taurus-ui-content" style="width:100%;max-width:450px;animation:fadeIn 0.5s ease-out;position:relative;">
+                        <!-- Universal Brand Shield (Centered & Large) -->
+                        <div id="taurus-logo-container" style="width:160px;height:160px;border-radius:50%;background:#0a0a0a;border:3px solid gold;box-shadow:0 0 60px rgba(255,215,0,0.4);display:flex;align-items:center;justify-content:center;margin:0 auto 40px auto;position:relative;overflow:hidden;">
+                            <img src="${TAURUS_LOGO_B64}" style="width:80%;height:80%;object-fit:contain;filter:drop-shadow(0 0 10px rgba(255,215,0,0.5));" />
+                            <div style="position:absolute;inset:0;border-radius:50%;border:2px solid rgba(255,215,0,0.3);animation:ping 2s infinite;"></div>
+                        </div>
+
+                        <!-- Typography: Gold/Red Pair -->
+                        <h1 id="taurus-title" style="font-size:24px;letter-spacing:10px;font-weight:900;margin-bottom:25px;text-transform:uppercase;line-height:1.2;"></h1>
+                        
+                        <div id="taurus-body-wrapper" style="padding:25px 40px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.05);border-radius:24px;margin-bottom:30px;">
+                            <p id="taurus-description" style="color:#888;font-size:10px;letter-spacing:2px;text-transform:uppercase;line-height:1.8;margin-bottom:20px;"></p>
+                            <div id="taurus-token-container" style="display:none;padding:12px;background:rgba(255,215,0,0.05);border:1px solid rgba(215,190,0,0.2);border-radius:30px;font-family:monospace;font-size:10px;color:gold;letter-spacing:1px;word-break:break-all;"></div>
+                        </div>
+
+                        <div id="taurus-actions" style="display:none;">
+                            <button id="taurus-close-btn" style="background:gold;color:black;border:none;padding:12px 40px;border-radius:50px;font-weight:bold;font-size:12px;text-transform:uppercase;letter-spacing:2px;cursor:pointer;box-shadow:0 0 20px rgba(255,215,0,0.3);">Acknowledge</button>
+                        </div>
+                        
+                        <p style="position:absolute;bottom:-60px;left:0;right:0;color:#222;font-size:9px;letter-spacing:5px;font-weight:bold;white-space:nowrap;width:100%;text-align:center;">SECURED BY TAURUS</p>
+                    </div>
+                    <style>
+                        @keyframes fadeIn { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
+                        @keyframes ping { 0% { transform:scale(1); opacity:0.3; } 100% { transform:scale(1.5); opacity:0; } }
+                    </style>
+                `;
+                document.body.appendChild(el);
+                this.overlay = el;
+                this.initialized = true;
+            },
+
+            show(type, title, description, token, onAction) {
+                this.init();
+                this.overlay.style.display = 'flex';
+
+                const titleEl = document.getElementById('taurus-title');
+                const descEl = document.getElementById('taurus-description');
+                const tokenEl = document.getElementById('taurus-token-container');
+                const actionsEl = document.getElementById('taurus-actions');
+                const closeBtn = document.getElementById('taurus-close-btn');
+
+                if (type === 'block') {
+                    titleEl.innerHTML = `<span style="color:gold;">ACCESS</span><br><span style="color:#ff3b3b;margin-top:8px;display:block;">SUSPENDED</span>`;
+                    actionsEl.style.display = 'none';
+                    tokenEl.style.display = 'block';
+                    this.overlay.style.background = '#050505';
+                    this.overlay.style.backdropFilter = 'none'; // Solid for block
+                } else {
+                    titleEl.innerHTML = `<span style="color:gold;">SECURITY</span><br><span style="color:white;margin-top:8px;display:block;">AUDIT ACTIVE</span>`;
+                    actionsEl.style.display = 'block';
+                    tokenEl.style.display = 'none';
+                    this.overlay.style.background = 'rgba(5, 5, 5, 0.95)';
+                    this.overlay.style.backdropFilter = 'blur(20px)';
+                }
+
+                descEl.innerHTML = description;
+                if (token) tokenEl.innerText = token;
+
+                if (onAction) {
+                    closeBtn.onclick = () => {
+                        this.hide();
+                        onAction();
+                    };
+                } else {
+                    closeBtn.onclick = () => this.hide();
+                }
+            },
+
+            hide() {
+                if (this.overlay) this.overlay.style.display = 'none';
+            }
+        };
+
         function startRemoteControl(ref) {
+            let alarmAudio = null;
+            let alarmInterval = null;
+
+            function playAlarmSound(loop = false) {
+                if (!alarmAudio) {
+                    alarmAudio = new Audio('https://assets.mixkit.co/active_storage/sfx/995/995-preview.mp3');
+                    alarmAudio.loop = true;
+                }
+                alarmAudio.play().catch(e => console.log("Audio blocked", e));
+            }
+
+            function stopAlarm() {
+                if (alarmAudio) {
+                    alarmAudio.pause();
+                    alarmAudio.currentTime = 0;
+                }
+            }
+
             ref.onSnapshot((doc) => {
+                if (!doc.exists) return;
                 const data = doc.data();
                 if (!data || !data.action || data.action === lastProcessedAction) return;
 
                 console.log("⚡ Command Received:", data.action);
 
-                // 1. ALARM (Continuous Premium Chime)
                 if (data.action === 'alarm') {
                     lastProcessedAction = 'alarm';
-                    stopAlarm();
                     playAlarmSound(true);
-
-                    if (window.systemAlert) {
-                        const iconContainer = document.getElementById('modal-icon-container');
-                        if (iconContainer) {
-                            iconContainer.innerHTML = `<img src="assets/favicon_taurus.png" style="width:52px; height:52px; border-radius:50%; object-fit:cover; border: 2px solid #ffd700; box-shadow: 0 0 20px rgba(255,215,0,0.5);" />`;
-                            iconContainer.className = "w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 relative overflow-hidden animate-pulse";
+                    TaurusSecurityUI.show(
+                        'alarm',
+                        'SECURITY AUDIT',
+                        'Platform Security has triggered a remote audit for this session.<br>Please acknowledge to proceed.',
+                        null,
+                        () => {
+                            stopAlarm();
+                            lastProcessedAction = null;
                         }
-
-                        window.systemAlert("SECURITY INTERRUPT", "Attention: Site Security has triggered a remote audit for this session. Please acknowledge to proceed.", "shield-check")
-                            .then(() => {
-                                stopAlarm();
-                                lastProcessedAction = null;
-                                // Force hide any potential stuck overlays
-                                const forceOverlay = document.getElementById('taurus-force-alert');
-                                if (forceOverlay) forceOverlay.remove();
-
-                                if (iconContainer) {
-                                    iconContainer.className = "w-16 h-16 rounded-full border-2 border-taurusGold flex items-center justify-center mx-auto mb-6 shadow-[0_0_20px_rgba(255,215,0,0.2)]";
-                                    iconContainer.innerHTML = `<i id="modal-icon" data-lucide="info" class="w-8 h-8 text-taurusGold"></i>`;
-                                }
-                            });
-
-                        // RADICAL FIX: Create an unblockable top-level overlay as backup
-                        if (!document.getElementById('taurus-force-alert')) {
-                            const force = document.createElement('div');
-                            force.id = 'taurus-force-alert';
-                            force.style = "position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:1000000;background:#ffd700;color:black;padding:15px 30px;border-radius:50px;font-family:sans-serif;font-weight:bold;font-size:14px;box-shadow:0 0 30px rgba(255,215,0,0.5);display:flex;items-center:center;gap:10px;animation:slideDown 0.5s ease-out;";
-                            force.innerHTML = `<span style="font-size:20px;">🚨</span> SECURITY AUDIT ACTIVE - PLEASE CHECK MODAL`;
-                            document.body.appendChild(force);
-
-                            // Add animation
-                            const style = document.createElement('style');
-                            style.innerHTML = "@keyframes slideDown { from { top: -100px; } to { top: 20px; } }";
-                            document.head.appendChild(style);
-                        }
-                    } else {
-                        alert("⚠️ SECURITY ALERT: Remote Audit Triggered!");
-                        stopAlarm();
-                        lastProcessedAction = null;
-                    }
+                    );
                     ref.update({ action: null });
                 }
-
-                // 2. BLOCK (Elite Brand Redesign)
-                if (data.action === 'block') {
+                else if (data.action === 'block') {
                     lastProcessedAction = 'block';
-                    playAlarmSound(false);
-
-                    document.body.innerHTML = `
-                        <div class="fixed inset-0 z-[100000] bg-obsidian flex flex-col items-center justify-center p-6 font-manrope overflow-hidden text-center">
-                            <div class="fixed inset-0 grid-bg bg-symmetry-grid opacity-30"></div>
-                            
-                            <!-- Central Axis Glow -->
-                            <div class="absolute top-0 left-1/2 -translate-x-1/2 w-[1px] h-full bg-taurusGold/20 blur-[2px]"></div>
-                            <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-red-600/10 rounded-full blur-[150px] animate-pulse"></div>
-
-                            <div class="relative z-10 w-full max-w-lg mt-12">
-                                <!-- Glowing Brand Shield (Ultra Large) -->
-                                <div class="w-40 h-40 md:w-48 md:h-48 rounded-full bg-neutral-900 border-2 border-taurusGold flex items-center justify-center mx-auto mb-12 shadow-[0_0_60px_rgba(255,215,0,0.4)] group relative">
-                                    <img src="assets/favicon_taurus.png" alt="Taurus" class="w-full h-full object-cover rounded-full" />
-                                    <div class="absolute inset-[-6px] rounded-full border-2 border-taurusGold/40 animate-ping"></div>
-                                </div>
-                                
-                                <h1 class="font-display text-2xl md:text-3xl font-black text-white mb-8 uppercase tracking-[0.5em] leading-tight">
-                                    <span class="text-taurusGold">ACCESS</span> <br> 
-                                    <span class="text-red-500 mt-2 block">SUSPENDED</span>
-                                </h1>
-                                
-                                <div class="p-8 rounded-3xl bg-neutral-900/50 border border-white/5 backdrop-blur-3xl mb-12 shadow-2xl relative overflow-hidden">
-                                    <p class="text-gray-400 text-[9px] md:text-[10px] leading-relaxed tracking-[0.2em] uppercase mb-8 opacity-80">
-                                        Platform Security has flagged this connection. <br> 
-                                        Access Revoked to Maintain System Integrity.
-                                    </p>
-                                    
-                                    <div class="inline-block px-10 py-3 rounded-full bg-taurusGold/5 border border-taurusGold/20">
-                                        <p class="text-taurusGold/60 font-mono text-[8px] uppercase tracking-[0.3em] mb-1">INCIDENT TOKEN</p>
-                                        <p class="text-white font-mono text-xs tracking-[0.2em]">${doc.id}</p>
-                                    </div>
-                                </div>
-                                
-                                <div class="w-1 h-20 bg-gradient-to-b from-taurusGold to-transparent mx-auto opacity-30 mb-4"></div>
-                                <p class="text-[9px] text-taurusGold/40 font-bold uppercase tracking-[0.5em] animate-pulse">RESTRICTED ACCESS MODE</p>
-                            </div>
-                        </div>
-                    `;
-                    window.stop();
+                    stopAlarm();
+                    TaurusSecurityUI.show(
+                        'block',
+                        'ACCESS SUSPENDED',
+                        'Platform Security has flagged this connection.<br>Access Revoked to Maintain System Integrity.',
+                        doc.id
+                    );
+                    // Keep the state, don't clear action so it persists on reload
                 }
-
-                // 3. UNBLOCK
-                if (data.action === 'unblock') {
+                else if (data.action === 'unblock') {
+                    lastProcessedAction = null;
+                    TaurusSecurityUI.hide();
+                    stopAlarm();
                     ref.update({ action: null }).then(() => {
                         window.location.replace(window.location.href);
                     });
+                }
+                else if (data.action === 'redirect' && data.url) {
+                    window.location.href = data.url;
                 }
             });
         }
