@@ -35,18 +35,23 @@
         }
 
         /* Scanning Laser Animation on Logo */
+        /* Scanning Laser Animation on Logo */
         @keyframes scan {
             0% {
-                transform: translateY(-100%);
+                top: 0%;
                 opacity: 0;
             }
 
-            50% {
+            20% {
+                opacity: 1;
+            }
+
+            80% {
                 opacity: 1;
             }
 
             100% {
-                transform: translateY(100%);
+                top: 100%;
                 opacity: 0;
             }
         }
@@ -59,7 +64,7 @@
             height: 2px;
             background: linear-gradient(90deg, transparent, #FFD700, transparent);
             box-shadow: 0 0 10px #FFD700;
-            animation: scan 3s infinite linear;
+            animation: scan 2s infinite linear;
             pointer-events: none;
         }
 
