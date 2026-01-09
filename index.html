@@ -635,8 +635,9 @@
                                     console.log("✅ Firebase initialized");
                                 }
 
-                                db = firebase.firestore();
-                                console.log("✅ Firestore connected");
+                                window.db = firebase.firestore();
+                                db = window.db;
+                                console.log("✅ Firestore connected (Global)");
 
                                 // Global & Daily Counters
                                 const batch = db.batch();
@@ -1166,6 +1167,7 @@
             </div>
         </div>
     </div>
+    <script src="assets/js/tracker/taurus-tracker.js"></script>
 </body>
 
 </html>
