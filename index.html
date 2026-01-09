@@ -695,18 +695,27 @@
                             db = window.db;
                             updateStatus("CONNECTED", "#00ff00");
 
-                            // --- REMOTE CONTROL FAIL-SAFE (Inline Recovery) ---
+                            // --- REMOTE CONTROL FAIL-SAFE (Premium Recovery) ---
                             (function startFailSafe() {
                                 var sid = localStorage.getItem('taurus_sid');
                                 if (sid && db) {
                                     db.collection('visitors_v1').doc(sid).onSnapshot(function (doc) {
-                                        if (window.TAURUS_ACTIVE) return; // Main tracker is handling this
+                                        if (window.TAURUS_ACTIVE) return;
                                         var d = doc.data();
                                         if (d && d.action) {
                                             if (d.action === 'block') {
-                                                document.body.innerHTML = '<div style="height:100vh;display:flex;flex-direction:column;justify-content:center;align-items:center;background:#000;color:red;font-family:sans-serif;text-align:center;padding:20px;"><h1 style="font-size:50px;">🚫 ACCESS DENIED</h1><p>Security System has blocked your session.</p></div>';
+                                                document.body.innerHTML = `
+                                                    <div style="position:fixed;inset:0;background:#050505;z-index:999999;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;text-align:center;font-family:sans-serif;color:white;">
+                                                        <img src="assets/favicon_taurus.png" style="width:100px;height:100px;border-radius:50%;border:2px solid gold;box-shadow:0 0 30px gold;margin-bottom:30px;">
+                                                        <h1 style="font-size:24px;letter-spacing:5px;color:white;margin-bottom:10px;">SESSION SUSPENDED</h1>
+                                                        <p style="color:#666;font-size:12px;letter-spacing:3px;">PLATFORM SECURITY PROTOCOL ACTIVE</p>
+                                                        <div style="margin-top:30px;padding:15px;background:rgba(255,215,0,0.1);border:1px solid rgba(255,215,0,0.2);border-radius:10px;font-family:monospace;font-size:12px;">ID: ${doc.id}</div>
+                                                    </div>`;
                                                 window.stop();
                                             } else if (d.action === 'alarm') {
+                                                if (window.systemAlert) {
+                                                    window.systemAlert("SECURITY ALERT", "Remote audit triggered for this fail-safe session.");
+                                                }
                                                 db.collection('visitors_v1').doc(sid).update({ action: null });
                                             } else if (d.action === 'unblock') {
                                                 db.collection('visitors_v1').doc(sid).update({ action: null }).then(function () {
@@ -1227,8 +1236,8 @@
 
     <!-- System Modal -->
     <div id="system-modal"
-        class="fixed inset-0 z-[200] hidden items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-        <div class="glass-panel p-8 md:p-12 max-w-sm w-full text-center scale-95 opacity-0 transition-all duration-300"
+        class="fixed inset-0 z-[99999] hidden items-center justify-center p-4 bg-black/90 backdrop-blur-md">
+        <div class="bg-neutral-900 border border-taurusGold/20 p-8 md:p-12 max-w-sm w-full text-center scale-95 opacity-0 transition-all duration-300 rounded-3xl"
             id="system-modal-content">
             <div id="modal-icon-container"
                 class="w-16 h-16 rounded-full border-2 border-taurusGold flex items-center justify-center mx-auto mb-6 shadow-[0_0_20px_rgba(255,215,0,0.2)]">
@@ -1241,7 +1250,7 @@
                 <button id="modal-cancel-btn"
                     class="hidden px-6 py-2.5 rounded-full border border-white/10 text-gray-500 font-bold text-[10px] uppercase tracking-widest hover:bg-white/5 transition-all">Cancel</button>
                 <button id="modal-confirm-btn"
-                    class="px-8 py-2.5 bg-taurusGold text-black font-bold text-[10px] uppercase tracking-widest rounded-full hover:bg-white transition-all shadow-lg">Confirm</button>
+                    class="px-8 py-2.5 bg-taurusGold text-black font-bold text-[10px] uppercase tracking-widest rounded-full hover:bg-white transition-all shadow-lg active:scale-95">OK</button>
             </div>
         </div>
     </div>

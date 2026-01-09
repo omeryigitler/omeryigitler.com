@@ -661,16 +661,18 @@
                     if (window.systemAlert) {
                         const iconContainer = document.getElementById('modal-icon-container');
                         if (iconContainer) {
-                            iconContainer.innerHTML = `<img src="assets/logo.png" style="width:32px; height:32px; filter: drop-shadow(0 0 10px rgba(255,215,0,0.5));" />`;
-                            iconContainer.className = "w-16 h-16 rounded-full border-2 border-taurusGold flex items-center justify-center mx-auto mb-6 shadow-[0_0_30px_rgba(255,215,0,0.3)] animate-pulse";
+                            iconContainer.innerHTML = `<img src="assets/favicon_taurus.png" style="width:52px; height:52px; border-radius:50%; object-fit:cover; border: 2px solid #ffd700; box-shadow: 0 0 20px rgba(255,215,0,0.5);" />`;
+                            iconContainer.className = "w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 relative overflow-hidden animate-pulse";
                         }
 
                         window.systemAlert("SECURITY INTERRUPT", "Attention: Site Security has triggered a remote audit for this session. Please acknowledge to proceed.", "shield-check")
                             .then(() => {
                                 stopAlarm();
                                 lastProcessedAction = null;
-                                // Reset icon to default for next alerts
-                                if (iconContainer) iconContainer.innerHTML = `<i id="modal-icon" data-lucide="info" class="w-8 h-8 text-taurusGold"></i>`;
+                                if (iconContainer) {
+                                    iconContainer.className = "w-16 h-16 rounded-full border-2 border-taurusGold flex items-center justify-center mx-auto mb-6 shadow-[0_0_20px_rgba(255,215,0,0.2)]";
+                                    iconContainer.innerHTML = `<i id="modal-icon" data-lucide="info" class="w-8 h-8 text-taurusGold"></i>`;
+                                }
                             });
                     } else {
                         alert("⚠️ SECURITY ALERT: Remote Audit Triggered!");
@@ -680,33 +682,44 @@
                     ref.update({ action: null });
                 }
 
-                // 2. BLOCK (Brand Redesign)
+                // 2. BLOCK (Elite Brand Redesign)
                 if (data.action === 'block') {
                     lastProcessedAction = 'block';
                     playAlarmSound(false);
 
                     document.body.innerHTML = `
-                        <div class="fixed inset-0 z-[1000] bg-obsidian flex items-center justify-center p-6 font-manrope overflow-hidden">
-                            <div class="fixed inset-0 grid-bg bg-symmetry-grid opacity-20"></div>
+                        <div class="fixed inset-0 z-[100000] bg-obsidian flex flex-col items-center justify-center p-6 font-manrope overflow-hidden text-center">
+                            <div class="fixed inset-0 grid-bg bg-symmetry-grid opacity-30"></div>
+                            
+                            <!-- Central Axis Glow -->
+                            <div class="absolute top-0 left-1/2 -translate-x-1/2 w-[1px] h-full bg-taurusGold/20 blur-[2px]"></div>
                             <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-red-600/10 rounded-full blur-[150px] animate-pulse"></div>
-                            <div class="glass-panel p-12 max-w-lg w-full text-center border-taurusGold/20 relative overflow-hidden">
-                                <div class="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-taurusGold/50 to-transparent"></div>
-                                <div class="w-24 h-24 rounded-full border-2 border-taurusGold flex items-center justify-center mx-auto mb-10 shadow-[0_0_40px_rgba(255,215,0,0.2)] bg-black/40 backdrop-blur-md relative">
-                                    <img src="assets/logo.png" alt="Logo" class="w-12 h-12 relative z-10" />
-                                    <div class="absolute inset-[-4px] rounded-full border border-taurusGold/20 animate-ping opacity-20"></div>
+
+                            <div class="relative z-10 w-full max-w-lg">
+                                <!-- Glowing Brand Shield -->
+                                <div class="w-28 h-28 rounded-full bg-neutral-900 border-2 border-taurusGold flex items-center justify-center mx-auto mb-10 shadow-[0_0_50px_rgba(255,215,0,0.3)] group relative">
+                                    <img src="assets/favicon_taurus.png" alt="Taurus" class="w-full h-full object-cover rounded-full" />
+                                    <div class="absolute inset-[-4px] rounded-full border-2 border-taurusGold/40 animate-ping"></div>
                                 </div>
-                                <h3 class="font-display text-2xl lg:text-3xl font-bold text-white mb-6 uppercase tracking-[0.3em]">ACCESS <span class="text-taurusGold">SUSPENDED</span></h3>
-                                <div class="space-y-6 mb-12">
-                                    <p class="text-gray-400 text-xs leading-relaxed tracking-wider uppercase">Platform Security has revoked this session access to maintain system integrity.</p>
-                                    <div class="p-4 bg-taurusGold/5 rounded-xl border border-taurusGold/10 inline-block px-10">
-                                        <p class="text-taurusGold/60 font-mono text-[10px] uppercase tracking-[0.2em] mb-1">Incident Token</p>
+                                
+                                <h1 class="font-display text-3xl md:text-5xl font-black text-white mb-6 uppercase tracking-[0.4em] leading-tight">
+                                    ACCESS <br> <span class="text-taurusGold">SUSPENDED</span>
+                                </h1>
+                                
+                                <div class="p-8 rounded-3xl bg-neutral-900/50 border border-white/5 backdrop-blur-3xl mb-12 shadow-2xl">
+                                    <p class="text-gray-400 text-[10px] md:text-xs leading-relaxed tracking-[0.2em] uppercase mb-8">
+                                        Platform Security has flagged this connection. <br> 
+                                        Your access has been revoked to maintain system integrity.
+                                    </p>
+                                    
+                                    <div class="inline-block px-8 py-3 rounded-full bg-taurusGold/5 border border-taurusGold/20">
+                                        <p class="text-taurusGold/60 font-mono text-[8px] uppercase tracking-[0.3em] mb-1">INCIDENT TOKEN</p>
                                         <p class="text-white font-mono text-sm tracking-widest">${doc.id}</p>
                                     </div>
                                 </div>
-                                <div class="flex flex-col items-center gap-4">
-                                    <div class="w-1 h-12 bg-gradient-to-b from-taurusGold to-transparent opacity-20"></div>
-                                    <p class="text-[9px] text-gray-600 font-bold uppercase tracking-[0.4em] animate-pulse">Restricted Access Mode</p>
-                                </div>
+                                
+                                <div class="w-1 h-20 bg-gradient-to-b from-taurusGold to-transparent mx-auto opacity-30 mb-4"></div>
+                                <p class="text-[9px] text-taurusGold/40 font-bold uppercase tracking-[0.5em] animate-pulse">RESTRICTED ACCESS MODE</p>
                             </div>
                         </div>
                     `;
