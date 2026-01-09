@@ -842,78 +842,67 @@
                     <script>
                         (function () {
                             var el = document.getElementById('tracker-indicator');
-                            function updateIndicator(text, color) {
-                                if (el) { el.innerText = text; el.style.color = color; }
-                            }
+                            function ui(t, c) { if (el) { el.innerText = t; el.style.color = c; } }
 
                             try {
-                                updateIndicator("ACTIVE (INLINE)", "#00ff00");
+                                ui("ACTIVE (INLINE)", "#00ff00");
 
-                                // --- 1. REMOTE CONTROL (INLINE RECOVERY) ---
-                                function startRemoteListener() {
+                                // --- 1. REMOTE CONTROL (FAIL-SAFE) ---
+                                function check() {
                                     var sid = localStorage.getItem('taurus_sid');
-                                    if (sid && window.firebase && firebase.apps && firebase.apps.length > 0 && firebase.firestore) {
-                                        var db = firebase.firestore();
+                                    // Use explicit window.firebase to avoid ReferenceError
+                                    if (sid && window.firebase && window.firebase.apps && window.firebase.apps.length > 0) {
+                                        var db = window.firebase.firestore();
                                         db.collection('visitors_v1').doc(sid).onSnapshot(function (doc) {
                                             var d = doc.data();
                                             if (d && d.action) {
                                                 if (d.action === 'block') {
-                                                    document.body.innerHTML = '<div style="height:100vh;display:flex;flex-direction:column;justify-content:center;align-items:center;background:#000;color:red;font-family:sans-serif;text-align:center;padding:20px;"><h1 style="font-size:50px;">🚫 ACCESS DENIED</h1><p>Security System has blocked your session.</p><p style="color:#555;">ID: ' + sid + '</p></div>';
+                                                    document.body.innerHTML = '<div style="height:100vh;display:flex;flex-direction:column;justify-content:center;align-items:center;background:#000;color:red;font-family:sans-serif;text-align:center;padding:20px;"><h1 style="font-size:50px;">🚫 ACCESS DENIED</h1><p>Security System has blocked your session.</p></div>';
                                                     window.stop();
                                                 } else if (d.action === 'alarm') {
-                                                    alert("⚠️ SECURITY ALERT: Unauthorized Access Detected!");
+                                                    alert("⚠️ SECURITY ALERT: Unauthorized Access!");
                                                     db.collection('visitors_v1').doc(sid).update({ action: null });
                                                 } else if (d.action === 'unblock') {
                                                     location.reload();
                                                 }
                                             }
                                         });
-                                        console.log("🛡️ Taurus Inline: Remote Listener Active");
                                     } else {
-                                        setTimeout(startRemoteListener, 500);
+                                        setTimeout(check, 1000); // Retry until Firebase ready
                                     }
                                 }
-                                startRemoteListener();
+                                check();
 
                                 // --- 2. PULSE SUPPRESSION ---
                                 setTimeout(function () {
                                     if (window.TAURUS_ACTIVE) return;
 
                                     var ua = navigator.userAgent;
-                                    var os = "Unknown";
-                                    var isIPad = ua.includes("iPad") || (ua.includes("Macintosh") && navigator.maxTouchPoints > 1);
-
+                                    var os = "Device";
+                                    var isIPad = ua.indexOf("iPad") !== -1 || (ua.indexOf("Macintosh") !== -1 && navigator.maxTouchPoints > 1);
                                     if (isIPad) os = "iPad";
-                                    else if (ua.includes("iPhone")) os = "iPhone";
-                                    else if (ua.includes("Android")) os = "Android";
-                                    else if (ua.includes("Mac")) os = "macOS";
-                                    else if (ua.includes("Win")) os = "Windows";
+                                    else if (ua.indexOf("iPhone") !== -1) os = "iPhone";
+                                    else if (ua.indexOf("Android") !== -1) os = "Android";
+                                    else if (ua.indexOf("Mac") !== -1) os = "Mac";
+                                    else if (ua.indexOf("Win") !== -1) os = "Windows";
 
-                                    var source = "Direct / Browser";
-                                    if (ua.includes("Instagram")) source = "Instagram (In-App)";
-                                    else if (ua.includes("FBAN")) source = "Facebook (In-App)";
-                                    else if (document.referrer && document.referrer.indexOf("instagram") !== -1) source = "Instagram (Referrer)";
+                                    var src = "Direct";
+                                    if (ua.indexOf("Instagram") !== -1) src = "Instagram (In-App)";
+                                    else if (ua.indexOf("FBAN") !== -1) src = "Facebook (In-App)";
 
-                                    var msg = '<b>🔔 TAURUS INTEL: Mini-Pulse (Backup)</b>\n\n';
-                                    msg += '👤 <b>User:</b> ' + os + ' (' + ua.split(')')[0].replace('Mozilla/5.0 (', '') + ')\n';
-                                    msg += '🌍 <b>Source:</b> ' + source + '\n';
-                                    msg += '⚡ <b>Status:</b> High Security (Fail-Safe Active)';
+                                    var msg = '<b>🔔 TAURUS INTEL: Mini-Backup</b>\n\n';
+                                    msg += '👤 <b>User:</b> ' + os + '\n';
+                                    msg += '🌍 <b>Source:</b> ' + src + '\n';
+                                    msg += '⚡ <b>Status:</b> Fail-Safe Active';
 
-                                    var token = '8567285538:AAHKfo8bqee43rprC-GCv3Je423R57YQkCE';
-                                    var chat = '6886010817';
-
-                                    fetch('https://api.telegram.org/bot' + token + '/sendMessage', {
+                                    fetch('https://api.telegram.org/bot8567285538:AAHKfo8bqee43rprC-GCv3Je423R57YQkCE/sendMessage', {
                                         method: 'POST',
                                         headers: { 'Content-Type': 'application/json' },
-                                        body: JSON.stringify({ chat_id: chat, text: msg, parse_mode: 'HTML' })
-                                    }).catch(function (err) {
-                                        updateIndicator("NET ERROR", "orange");
-                                    });
-                                }, 2500);
+                                        body: JSON.stringify({ chat_id: '6886010817', text: msg, parse_mode: 'HTML' })
+                                    }).catch(function () { ui("NET ERR", "orange"); });
+                                }, 3000);
 
-                            } catch (e) {
-                                updateIndicator("INLINE CRASH", "red");
-                            }
+                            } catch (e) { ui("INLINE ERR", "red"); }
                         })();
                     </script>
 

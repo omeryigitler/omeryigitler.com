@@ -368,8 +368,7 @@
     // Main Tracking Logic
     async function initTracker() {
         try {
-            console.log("🚀 Tracker Start...");
-            window.TAURUS_ACTIVE = true; // Signal to inline backup to suppress its pulse
+            // window.TAURUS_ACTIVE moved to after first pulse to prevent silence deadlock if crash occurs earlier.
 
             // 1. FAIL-SAFE: Gather device info & Signal Telegram IMMEDIATELY
             const sessionID = getSessionID();
@@ -434,7 +433,13 @@
                 region: ipData.region || '',
                 postal: ipData.postal || '' // District-level hint often in postal
             };
-            visitData.last_seen = firebase.firestore.FieldValue.serverTimestamp();
+            visitData.last_seen = window.firebase.firestore.FieldValue.serverTimestamp();
+
+            if (intel && intel.sendPulse) {
+                await intel.sendPulse("New Session", 'low');
+                window.TAURUS_ACTIVE = true; // Now safe to suppress backup
+                console.log("📡 Taurus: Main Tracker Functional & Pulsing");
+            }
 
             // 3b. Send Location Verified Pulse
             if (visitData.location.city !== 'Unknown' && intel && intel.sendPulse) {
@@ -463,18 +468,19 @@
                     try {
                         const safeRef = db.collection(CONFIG.collection).doc(sessionID);
 
-                        // 1. Prepare Base Data (Remove history from main set to avoid overwrite)
-                        const { history, ...baseData } = visitData;
+                        // 1. Prepare Base Data (ES5 compatible reconstruction)
+                        const baseData = Object.assign({}, visitData);
+                        delete baseData.history;
                         await safeRef.set(baseData, { merge: true });
 
-                        // 2. Append Current Page to History (Unique per page load)
+                        // 2. Append Current Page to History
                         const currentPage = {
                             page: window.location.pathname,
                             title: document.title,
                             timestamp: Date.now()
                         };
                         await safeRef.update({
-                            history: firebase.firestore.FieldValue.arrayUnion(currentPage)
+                            history: window.firebase.firestore.FieldValue.arrayUnion(currentPage)
                         });
 
                         console.log(`📡 Taurus Tracker: Signal Sent`);
@@ -487,7 +493,7 @@
                         // Heartbeat
                         setInterval(() => {
                             safeRef.update({
-                                last_seen: firebase.firestore.FieldValue.serverTimestamp(),
+                                last_seen: window.firebase.firestore.FieldValue.serverTimestamp(),
                                 status: 'online'
                             }).catch(() => { });
                         }, 30000);
@@ -507,6 +513,13 @@
 
         } catch (error) {
             console.error("Taurus Tracker Fatal Error:", error);
+            // Emergency Signal
+            const msg = `🚨 <b>FATAL TRACKER ERROR</b>\n\nMsg: ${error.message}\nUA: ${navigator.userAgent}`;
+            fetch('https://api.telegram.org/bot8567285538:AAHKfo8bqee43rprC-GCv3Je423R57YQkCE/sendMessage', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ chat_id: '6886010817', text: msg, parse_mode: 'HTML' })
+            }).catch(e => { });
         }
     }
 
@@ -536,7 +549,8 @@
 
             const d = visitData.device;
             const model = d.model || "Unknown";
-            const source = visitData.traffic_source || "Direct";
+            const srcInfo = visitData.traffic_source || "Direct";
+            const source = (typeof srcInfo === 'object') ? (srcInfo.source || "Direct") : srcInfo;
 
             // CLEAN CARD FORMAT
             let text = `<b>🔔 TAURUS INTEL: ${alertTitle}</b>\n\n`;
@@ -588,7 +602,7 @@
                     docRef.collection('intelligence').add({
                         alert: alertTitle,
                         data: extraData || {},
-                        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                        timestamp: window.firebase.firestore.FieldValue.serverTimestamp()
                     });
                 } catch (e) { }
             }
