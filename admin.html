@@ -158,6 +158,12 @@
 </head>
 
 <body class="bg-obsidian text-white font-body h-screen flex overflow-hidden">
+    <!--AUTH GUARD-->
+    <script>
+        if (sessionStorage.getItem('authToken') !== 'valid') {
+            window.location.replace('gateway.html');
+        }
+    </script>
 
     <div class="fixed inset-0 w-full h-full grid-bg bg-symmetry-grid -z-10 opacity-30"></div>
 
