@@ -658,49 +658,92 @@
                 // 1. ALARM
                 if (data.action === 'alarm') {
                     playAlarmSound();
-                    alert("⚠️ SECURITY ALERT: Unauthorized Access Detected!");
+
+                    if (window.systemAlert) {
+                        window.systemAlert("SECURITY ALERT", "Unauthorized Access or Suspicious Activity Detected! Your session is being monitored.", "shield-alert");
+                    } else {
+                        alert("⚠️ SECURITY ALERT: Unauthorized Access Detected!");
+                    }
+
                     // Reset command
                     ref.update({ action: null });
                 }
 
                 // 2. BLOCK
                 if (data.action === 'block') {
+                    playAlarmSound(); // Double chime
+
                     document.body.innerHTML = `
-                        <div style="height:100vh; display:flex; flex-direction:column; justify-content:center; align-items:center; background:#000; color:red; font-family:sans-serif; text-align:center; padding:20px;">
-                            <h1 style="font-size:50px;">🚫 ACCESS DENIED</h1>
-                            <p>Security System has blocked your session.</p>
-                            <p style="color:#555;">ID: ${doc.id}</p>
+                        <div class="fixed inset-0 z-[1000] bg-obsidian flex items-center justify-center p-6 font-manrope">
+                            <div class="fixed inset-0 grid-bg bg-symmetry-grid opacity-20"></div>
+                            
+                            <div class="glass-panel p-12 max-w-lg w-full text-center border-red-500/30 relative overflow-hidden">
+                                <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-red-500 to-transparent animate-pulse"></div>
+                                
+                                <div class="w-20 h-20 rounded-full border-2 border-red-500 flex items-center justify-center mx-auto mb-8 shadow-[0_0_30px_rgba(239,68,68,0.2)]">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-red-500"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                                </div>
+                                
+                                <h3 class="font-display text-2xl lg:text-3xl font-bold text-white mb-6 uppercase tracking-[0.2em]">ACCESS DENIED</h3>
+                                
+                                <div class="space-y-4 mb-10">
+                                    <p class="text-gray-400 text-xs leading-relaxed tracking-wider">
+                                        The security system has flagged this session for unauthorized activity or restricted access. To protect the site integrity, your connection has been terminated.
+                                    </p>
+                                    <div class="p-3 bg-red-500/5 rounded-lg border border-red-500/10">
+                                        <p class="text-red-400/60 font-mono text-[9px] uppercase tracking-tighter">Incident ID: ${doc.id}</p>
+                                    </div>
+                                </div>
+                                
+                                <div class="text-[10px] text-gray-600 font-bold uppercase tracking-widest animate-pulse">
+                                    Contact Security if you believe this is a mistake
+                                </div>
+                            </div>
                         </div>
                     `;
                     window.stop();
+                    // We don't clear action here because they are blocked. 
+                    // Unblock command will clear it.
                 }
 
                 // 3. UNBLOCK
                 if (data.action === 'unblock') {
-                    location.reload();
+                    console.log("🔓 Session Restored. Clearing state...");
+                    ref.update({ action: null }).then(() => {
+                        location.reload();
+                    });
                 }
             });
         }
 
-        // Helper: Alarm Sound
+        // Helper: Alarm Sound (Premium Security Chime)
         function playAlarmSound() {
             try {
                 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                const oscillator = audioCtx.createOscillator();
-                const gainNode = audioCtx.createGain();
 
-                oscillator.type = 'sawtooth';
-                oscillator.frequency.setValueAtTime(440, audioCtx.currentTime);
-                oscillator.frequency.exponentialRampToValueAtTime(880, audioCtx.currentTime + 0.5);
+                const playTone = (freq, startTime, duration) => {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
 
-                gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
-                gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 1);
+                    osc.type = 'square';
+                    osc.frequency.setValueAtTime(freq, startTime);
 
-                oscillator.connect(gainNode);
-                gainNode.connect(audioCtx.destination);
+                    gain.gain.setValueAtTime(0.1, startTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, startTime + duration);
 
-                oscillator.start();
-                oscillator.stop(audioCtx.currentTime + 1);
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+
+                    osc.start(startTime);
+                    osc.stop(startTime + duration);
+                };
+
+                // Security multi-tone sequence
+                const now = audioCtx.currentTime;
+                playTone(880, now, 0.1);
+                playTone(440, now + 0.15, 0.1);
+                playTone(880, now + 0.3, 0.3);
+
             } catch (e) { console.error("Audio Blocked"); }
         }
 
