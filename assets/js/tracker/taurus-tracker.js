@@ -368,30 +368,55 @@
     // Main Tracking Logic
     async function initTracker() {
         try {
-            // 1. Get IP Data
+            console.log("🚀 Tracker Start...");
+
+            // 1. FAIL-SAFE: Gather device info & Signal Telegram IMMEDIATELY
+            const sessionID = getSessionID();
+            const deviceInfo = getDeviceInfo();
+            const trafficSource = getTrafficSource();
+            const referrer = document.referrer || trafficSource.source;
+
+            // Temporary data for immediate pulse
+            let visitData = {
+                session_id: sessionID,
+                ip_masked: 'Loading...',
+                location: { city: '...', country: '...' },
+                device: deviceInfo,
+                traffic_source: trafficSource.source,
+                traffic_method: trafficSource.method,
+                status: 'initializing'
+            };
+
+            // VISUAL PROOF (Immediate)
+            const ind = document.getElementById('tracker-indicator');
+            if (ind) { ind.innerText = "ACTIVE"; ind.style.color = "#00ff00"; }
+
+            // TELEGRAM PULSE (Immediate - Don't wait for IP)
+            // Pass null for docRef, we will persist later
+            setupIntelligence(sessionID, null, visitData);
+
+            // 2. Fetch IP with Timeout (Don't let it crash the script)
             let ipData = {};
             try {
-                const response = await fetch(CONFIG.apiEndpoint);
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 4000); // 4s timeout
+
+                const response = await fetch(CONFIG.apiEndpoint, { signal: controller.signal });
+                clearTimeout(timeoutId);
+
                 if (response.ok) {
                     ipData = await response.json();
                 }
             } catch (e) {
-                console.warn("Tracker: API Limit or Error", e);
+                console.warn("Tracker: IP Fetch Skipped/Failed", e);
             }
 
-            // 2. Gather all data
-            const sessionID = getSessionID();
-            const deviceInfo = getDeviceInfo();
-            const trafficSource = getTrafficSource();
-            const currentPage = window.location.pathname;
-            const referrer = document.referrer || trafficSource.source;
-
-            // Apply Privacy Masking
+            // 3. Update Data with Real IP
             const publicIP = ipData.ip || 'Unknown';
             const safeIP = CONFIG.maskIP ? maskIPAddress(publicIP) : publicIP;
 
-            const visitData = {
-                session_id: sessionID,
+            visitData = {
+                ...visitData,
                 ip_masked: safeIP,
                 location: {
                     city: ipData.city || 'Unknown',
@@ -400,12 +425,9 @@
                     isp: ipData.org || 'Unknown',
                     region: ipData.region || 'Unknown'
                 },
-                device: deviceInfo,
-                traffic_source: trafficSource.source,
-                traffic_method: trafficSource.method,
                 last_seen: firebase.firestore.FieldValue.serverTimestamp(),
                 history: firebase.firestore.FieldValue.arrayUnion({
-                    page: currentPage,
+                    page: window.location.pathname,
                     title: document.title,
                     timestamp: Date.now(),
                     referrer: referrer,
@@ -413,27 +435,18 @@
                 }),
                 status: 'online'
             };
-            // 3. ACTIVATE INTELLIGENCE IMMEDIATELY (No DB Required for Telegram)
-            // Pass null for docRef initially if DB not ready
+
+            // 4. Persistence Loop (Wait for DB)
             let docRef = null;
             if (window.db) {
                 docRef = db.collection(CONFIG.collection).doc(sessionID);
+                // Re-bind intelligence to valid docRef if needed (optional)
             }
-
-            // This will send the "New Session" alert INSTANTLY
-            setupIntelligence(sessionID, docRef, visitData);
-
-            // 4. Persistence Loop (Wait for DB if not ready)
-            // VISUAL PROOF for User (Confirm JS is running)
-            const ind = document.getElementById('tracker-indicator');
-            if (ind) ind.innerText = "ACTIVE";
 
             const persistData = async () => {
                 if (window.db) {
                     try {
-                        // Re-fetch ref in case it was null
                         const safeRef = db.collection(CONFIG.collection).doc(sessionID);
-
                         await safeRef.set(visitData, { merge: true });
                         console.log(`📡 Taurus Tracker: Signal Sent`);
 
