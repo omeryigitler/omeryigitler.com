@@ -841,7 +841,6 @@
                     <!-- INLINE TRACKER (BYPASS EXTERNAL BLOCK) -->
                     <script>
                         (function () {
-                            // --- UTILITIES ---
                             var el = document.getElementById('tracker-indicator');
                             function updateIndicator(text, color) {
                                 if (el) { el.innerText = text; el.style.color = color; }
@@ -851,52 +850,55 @@
                                 updateIndicator("ACTIVE (INLINE)", "#00ff00");
 
                                 // --- 1. REMOTE CONTROL (INLINE RECOVERY) ---
-                                // Ensures block/alarm works even if the main script is blocked
-                                var sid = localStorage.getItem('taurus_sid');
-                                if (sid && window.firebase && window.firebase.firestore) {
-                                    var db = firebase.firestore();
-                                    db.collection('visitors_v1').doc(sid).onSnapshot(function (doc) {
-                                        var d = doc.data();
-                                        if (d && d.action) {
-                                            if (d.action === 'block') {
-                                                document.body.innerHTML = '<div style="height:100vh;display:flex;flex-direction:column;justify-content:center;align-items:center;background:#000;color:red;font-family:sans-serif;text-align:center;padding:20px;"><h1 style="font-size:50px;">🚫 ACCESS DENIED</h1><p>Security System has blocked your session.</p><p style="color:#555;">ID: ' + sid + '</p></div>';
-                                                window.stop();
-                                            } else if (d.action === 'alarm') {
-                                                alert("⚠️ SECURITY ALERT: Unauthorized Access Detected!");
-                                                db.collection('visitors_v1').doc(sid).update({ action: null });
-                                            } else if (d.action === 'unblock') {
-                                                location.reload();
+                                function startRemoteListener() {
+                                    var sid = localStorage.getItem('taurus_sid');
+                                    if (sid && window.firebase && firebase.apps && firebase.apps.length > 0 && firebase.firestore) {
+                                        var db = firebase.firestore();
+                                        db.collection('visitors_v1').doc(sid).onSnapshot(function (doc) {
+                                            var d = doc.data();
+                                            if (d && d.action) {
+                                                if (d.action === 'block') {
+                                                    document.body.innerHTML = '<div style="height:100vh;display:flex;flex-direction:column;justify-content:center;align-items:center;background:#000;color:red;font-family:sans-serif;text-align:center;padding:20px;"><h1 style="font-size:50px;">🚫 ACCESS DENIED</h1><p>Security System has blocked your session.</p><p style="color:#555;">ID: ' + sid + '</p></div>';
+                                                    window.stop();
+                                                } else if (d.action === 'alarm') {
+                                                    alert("⚠️ SECURITY ALERT: Unauthorized Access Detected!");
+                                                    db.collection('visitors_v1').doc(sid).update({ action: null });
+                                                } else if (d.action === 'unblock') {
+                                                    location.reload();
+                                                }
                                             }
-                                        }
-                                    });
+                                        });
+                                        console.log("🛡️ Taurus Inline: Remote Listener Active");
+                                    } else {
+                                        setTimeout(startRemoteListener, 500);
+                                    }
                                 }
+                                startRemoteListener();
 
                                 // --- 2. PULSE SUPPRESSION ---
-                                // Wait 1.5s to see if main tracker starts.
                                 setTimeout(function () {
                                     if (window.TAURUS_ACTIVE) return;
 
-                                    // --- MINI INTELLIGENCE (Inline) ---
                                     var ua = navigator.userAgent;
                                     var os = "Unknown";
-                                    if (ua.includes("iPad")) os = "iPad";
+                                    var isIPad = ua.includes("iPad") || (ua.includes("Macintosh") && navigator.maxTouchPoints > 1);
+
+                                    if (isIPad) os = "iPad";
                                     else if (ua.includes("iPhone")) os = "iPhone";
                                     else if (ua.includes("Android")) os = "Android";
-                                    else if (ua.includes("Mac")) os = "Mac";
+                                    else if (ua.includes("Mac")) os = "macOS";
                                     else if (ua.includes("Win")) os = "Windows";
 
                                     var source = "Direct / Browser";
                                     if (ua.includes("Instagram")) source = "Instagram (In-App)";
                                     else if (ua.includes("FBAN")) source = "Facebook (In-App)";
-                                    else if (document.referrer.includes("instagram")) source = "Instagram (Referrer)";
+                                    else if (document.referrer && document.referrer.indexOf("instagram") !== -1) source = "Instagram (Referrer)";
 
-                                    // Format Message
                                     var msg = '<b>🔔 TAURUS INTEL: Mini-Pulse (Backup)</b>\n\n';
                                     msg += '👤 <b>User:</b> ' + os + ' (' + ua.split(')')[0].replace('Mozilla/5.0 (', '') + ')\n';
                                     msg += '🌍 <b>Source:</b> ' + source + '\n';
-                                    msg += '⚡ <b>Status:</b> High Security (Script Blocked?)';
+                                    msg += '⚡ <b>Status:</b> High Security (Fail-Safe Active)';
 
-                                    // Send
                                     var token = '8567285538:AAHKfo8bqee43rprC-GCv3Je423R57YQkCE';
                                     var chat = '6886010817';
 
@@ -907,7 +909,7 @@
                                     }).catch(function (err) {
                                         updateIndicator("NET ERROR", "orange");
                                     });
-                                }, 1500);
+                                }, 2500);
 
                             } catch (e) {
                                 updateIndicator("INLINE CRASH", "red");
