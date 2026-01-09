@@ -25,49 +25,7 @@
     <link rel="dns-prefetch" href="https://firestore.googleapis.com">
 
     <link href="assets/css/styles.css" rel="stylesheet">
-    <script src="https://cdn.tailwindcss.com"></script>
-
-    <!-- CRITIAL CRASH REPORTER (Must be first) -->
-    <script>
-        window.onerror = function (msg, url, line) {
-            // Send to Telegram
-            try {
-                var token = '8567285538:AAHKfo8bqee43rprC-GCv3Je423R57YQkCE';
-                var chat = '6886010817';
-                var text = '🚨 STARTUP CRASH: ' + msg + ' at ' + (url || 'unknown') + ':' + line + ' UA: ' + navigator.userAgent;
-                fetch('https://api.telegram.org/bot' + token + '/sendMessage', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ chat_id: chat, text: text, parse_mode: 'HTML' })
-                });
-                // Visual fallback
-                setTimeout(function () {
-                    var el = document.getElementById('tracker-indicator');
-                    if (el) { el.innerText = "CRASHED"; el.style.color = "red"; }
-                }, 2000);
-            } catch (e) { }
-        };
-
-        // Script Load Failure Handler
-        window.handleScriptError = function (script) {
-            try {
-                var token = '8567285538:AAHKfo8bqee43rprC-GCv3Je423R57YQkCE';
-                var chat = '6886010817';
-                var text = '🚨 SCRIPT LOAD FAILED: ' + (script.src || 'unknown script') + ' on ' + navigator.userAgent;
-
-                fetch('https://api.telegram.org/bot' + token + '/sendMessage', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ chat_id: chat, text: text, parse_mode: 'HTML' })
-                }).catch(function () { }); // Silent fail if fetch blocked too
-
-                setTimeout(function () {
-                    var el = document.getElementById('tracker-indicator');
-                    if (el) { el.innerText = "BLOCKED"; el.style.color = "orange"; }
-                }, 1000);
-            } catch (e) { }
-        };
-    </script>
+    <script src="https://unpkg.com/lucide@latest"></script>
     <script src="assets/js/system-modals.js?v=V7"></script>
     <link
         href="https://fonts.googleapis.com/css2?family=Syncopate:wght@400;700&family=Manrope:wght@300;400;600;800&display=swap"
@@ -654,235 +612,218 @@
 
                 <!-- Firebase & Contact Logic -->
                 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-                <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
                 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
                 <script src="assets/js/firebase-config.js"></script>
                 <script>
-                    document.addEventListener('DOMContentLoaded', async () => {
+                    document.addEventListener('DOMContentLoaded', () => {
                         let db = null;
                         const contactForm = document.getElementById('contact-form');
-                        const statusIndicator = document.getElementById('tracker-indicator');
 
-                        function updateStatus(text, color) {
-                            if (statusIndicator) {
-                                statusIndicator.innerText = text;
-                                statusIndicator.style.color = color;
-                                statusIndicator.parentElement.parentElement.style.borderColor = color + "44"; // Dynamic Glow
-                            }
-                        }
-
-                        // 1. INITIALIZE FIREBASE & AUTH
+                        // 1. INITIALIZE FIREBASE
                         try {
+                            console.log("🔍 Checking Firebase Config...");
+
                             if (typeof firebase === 'undefined') {
-                                updateStatus("SDK ERROR", "#ff3333");
-                                return;
-                            }
+                                console.error("❌ Firebase SDK not loaded!");
+                            } else if (!window.firebaseConfig) {
+                                console.error("❌ Firebase config not found!");
+                            } else {
+                                console.log("✅ Firebase Config found:", window.firebaseConfig.projectId);
 
-                            if (!window.firebaseConfig) {
-                                updateStatus("CONFIG ERR", "#ff3333");
-                                return;
-                            }
-
-                            if (!firebase.apps.length) {
-                                firebase.initializeApp(window.firebaseConfig);
-                            }
-
-                            // AUTHENTICATION
-                            const userCredential = await firebase.auth().signInAnonymously();
-
-                            // Initialize Firestore
-                            window.db = firebase.firestore();
-                            db = window.db;
-                            updateStatus("CONNECTED", "#00ff00");
-
-                            // --- REMOTE CONTROL FAIL-SAFE (Premium Recovery) ---
-                            (function startFailSafe() {
-                                var sid = localStorage.getItem('taurus_sid');
-                                if (sid && db) {
-                                    db.collection('visitors_v1').doc(sid).onSnapshot(function (doc) {
-                                        if (window.TAURUS_ACTIVE) return;
-                                        var d = doc.data();
-                                        if (d && d.action) {
-                                            if (d.action === 'block') {
-                                                document.body.innerHTML = `
-                                                    <div style="position:fixed;inset:0;background:#050505;z-index:999999;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;text-align:center;font-family:sans-serif;color:white;">
-                                                        <div style="width:160px;height:160px;border-radius:50%;border:2px solid gold;box-shadow:0 0 40px rgba(255,215,0,0.4);margin-bottom:50px;background:#000;display:flex;align-items:center;justify-content:center;overflow:hidden;">
-                                                            <img src="data:image/png;base64,/9j/4AAQSkZJRgABAQAASABIAAD/4QBMRXhpZgAATU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAA6ABAAMAAAABAAEAAKACAAQAAAABAAAAgKADAAQAAAABAAAAgAAAAAD/7QA4UGhvdG9zaG9wIDMuMAA4QklNBAQAAAAAAAA4QklNBCUAAAAAABDUHYzZjwCyBOmACZjs+EJ+/8AAEQgAgACAAwEiAAIRAQMRAf/EAB8AAAEFAQEBAQEBAAAAAAAAAAABAgMEBQYHCAkKC//EALUQAAIBAwMCBAMFBQQEAAABfQECAwAEEQUSITFBBhNRYQcicRQygZGhCCNCscEVUtHwJDNicoIJChYXGBkaJSYnKCkqNDU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6g4SFhoeIiYqSk5SVlpeYmZqio6Slpqeoqaqys7S1tre4ubrCw8TFxsfIycrS09TV1tfY2drh4uPk5ebn6Onq8fLz9PX29/j5+v/EAB8BAAMBAQEBAQEBAQEAAAAAAAABAgMEBQYHCAkKC//EALURAAIBAgQEAwQHBQQEAAECdwABAgMRBAUhMQYSQVEHYXETIjKBCBRCkaGxwQkjM1LwFWJy0 (truncated 559 bytes)" style="width:80%;height:80%;object-fit:contain;">
-                                                        </div>
-                                                        <h1 style="font-size:28px;letter-spacing:8px;font-weight:900;margin-bottom:20px;text-transform:uppercase;line-height:1.4;">
-                                                            <span style="color:gold;">ACCESS</span> <br> <span style="color:#ef4444;">SUSPENDED</span>
-                                                        </h1>
-                                                        <div style="padding:20px 40px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.05);border-radius:20px;max-width:320px;">
-                                                            <p style="color:#666;font-size:10px;letter-spacing:2px;text-transform:uppercase;line-height:1.6;margin-bottom:20px;">Platform Security Protocol <br> System Integrity Active</p>
-                                                            <div style="padding:10px;background:rgba(255,215,0,0.05);border:1px solid rgba(255,215,0,0.1);border-radius:30px;font-family:monospace;font-size:10px;color:white;letter-spacing:1px;">${doc.id}</div>
-                                                        </div>
-                                                        <p style="position:absolute;bottom:40px;color:#222;font-size:9px;letter-spacing:5px;font-weight:bold;">SECURED BY TAURUS</p>
-                                                    </div>`;
-                                                window.stop();
-                                            } else if (d.action === 'alarm') {
-                                                if (window.systemAlert) {
-                                                    window.systemAlert("SECURITY ALERT", "Remote audit triggered for this fail-safe session.");
-                                                }
-                                                db.collection('visitors_v1').doc(sid).update({ action: null });
-                                            } else if (d.action === 'unblock') {
-                                                db.collection('visitors_v1').doc(sid).update({ action: null }).then(function () {
-                                                    location.reload();
-                                                });
-                                            }
-                                        }
-                                    });
+                                if (!firebase.apps.length) {
+                                    firebase.initializeApp(window.firebaseConfig);
+                                    console.log("✅ Firebase initialized");
                                 }
-                            })();
 
-                            // Global Stats
-                            const today = new Date().toISOString().split('T')[0];
-                            const batch = db.batch();
-                            batch.set(db.collection('stats').doc('global'), { views: firebase.firestore.FieldValue.increment(1) }, { merge: true });
-                            batch.set(db.collection('stats').doc('daily'), { [today]: firebase.firestore.FieldValue.increment(1) }, { merge: true });
-                            batch.commit().catch(() => { });
+                                db = firebase.firestore();
+                                console.log("✅ Firestore connected");
 
+                                // Global & Daily Counters
+                                const batch = db.batch();
+                                const today = new Date().toISOString().split('T')[0];
+
+                                const globalRef = db.collection('stats').doc('global');
+                                const dailyRef = db.collection('stats').doc('daily');
+
+                                batch.set(globalRef, { views: firebase.firestore.FieldValue.increment(1) }, { merge: true });
+                                batch.set(dailyRef, { [today]: firebase.firestore.FieldValue.increment(1) }, { merge: true });
+
+                                batch.commit()
+                                    .then(() => console.log("✅ Stats synchronized (Global & Daily)"))
+                                    .catch(e => console.warn("⚠️ Stats sync error:", e));
+                            }
                         } catch (error) {
-                            console.error("Firebase Error:", error);
-                            updateStatus("STALL", "#ffa500");
+                            console.error("❌ Firebase Init Error:", error);
                         }
 
-                        // 2. MINI-PULSE (BACKUP) - Delayed to check for TAURUS_ACTIVE
-                        setTimeout(function () {
-                            // Strictly check if main tracker claimed activity
-                            if (window.TAURUS_ACTIVE === true) return;
-
-                            try {
-                                var ua = navigator.userAgent;
-                                var os = "Device";
-                                var isIPad = ua.indexOf("iPad") !== -1 || (ua.indexOf("Macintosh") !== -1 && navigator.maxTouchPoints > 1);
-                                if (isIPad) os = "iPad";
-                                else if (ua.indexOf("iPhone") !== -1) os = "iPhone";
-                                else if (ua.indexOf("Android") !== -1) os = "Android";
-                                else if (ua.indexOf("Mac") !== -1) os = "Mac";
-                                else if (ua.indexOf("Win") !== -1) os = "Windows";
-
-                                var src = "Direct";
-                                if (ua.indexOf("Instagram") !== -1) src = "Instagram (In-App)";
-                                else if (ua.indexOf("FBAN") !== -1) src = "Facebook (In-App)";
-
-                                var msg = '<b>🛡️ TAURUS: Mini-Pulse (Backup)</b>\n\n';
-                                msg += '👤 <b>User:</b> ' + os + '\n';
-                                msg += '🌍 <b>Source:</b> ' + src + '\n';
-                                msg += '⚡ <b>Status:</b> Fail-Safe Monitoring Active';
-
-                                fetch('https://api.telegram.org/bot8567285538:AAHKfo8bqee43rprC-GCv3Je423R57YQkCE/sendMessage', {
-                                    method: 'POST',
-                                    headers: { 'Content-Type': 'application/json' },
-                                    body: JSON.stringify({ chat_id: '6886010817', text: msg, parse_mode: 'HTML' })
-                                }).catch(() => { updateStatus("NET ERR", "orange"); });
-                            } catch (e) { updateStatus("BACKUP ERR", "red"); }
-                        }, 8000); // 8s Delay to let main tracker finish setup on slow Instagram/iPad browser
-
-                        // 3. FORM SUBMISSION (WITH SECURITY)
+                        // 2. FORM SUBMISSION HANDLER WITH RATE LIMITING
                         if (contactForm) {
                             contactForm.addEventListener('submit', async (e) => {
                                 e.preventDefault();
+                                e.stopPropagation();
 
-                                // Honeypot Detection
-                                if (document.getElementById('honeypot-trap').value !== '') {
-                                    location.reload(); return;
-                                }
+                                const submitBtn = document.getElementById('submit-btn');
+                                const originalText = submitBtn.innerText;
 
-                                // Rate Limiting (3 per hour)
+                                // SECURITY: Rate Limiting Check (3 submissions per hour)
+                                const RATE_LIMIT = 3;
+                                const TIME_WINDOW = 60 * 60 * 1000; // 1 hour in milliseconds
                                 const now = Date.now();
-                                let subs = JSON.parse(localStorage.getItem('f_subs') || '[]');
-                                subs = subs.filter(t => now - t < 3600000);
-                                if (subs.length >= 3) {
-                                    if (window.systemAlert) await systemAlert('SECURITY LIMIT', 'You can only send 3 messages per hour. Please wait.', 'shield-alert');
-                                    else alert('Rate limit reached.');
+
+                                // Get submission history from localStorage
+                                let submissions = JSON.parse(localStorage.getItem('formSubmissions') || '[]');
+
+                                // Remove submissions older than 1 hour
+                                submissions = submissions.filter(timestamp => now - timestamp < TIME_WINDOW);
+
+                                // Check if rate limit exceeded
+                                if (submissions.length >= RATE_LIMIT) {
+                                    const oldestSubmission = Math.min(...submissions);
+                                    const waitTime = Math.ceil((TIME_WINDOW - (now - oldestSubmission)) / 1000 / 60); // minutes
+
+                                    await systemAlert('SECURITY LIMIT', `Security Limit Reached: You can only submit ${RATE_LIMIT} messages per hour. Please try again in ${waitTime} minute(s).`, 'shield-alert');
                                     return;
                                 }
 
-                                const submitBtn = document.getElementById('submit-btn');
+                                // UI Loading State
                                 submitBtn.innerText = 'PROCESSING...';
                                 submitBtn.disabled = true;
+                                submitBtn.style.opacity = '0.7';
 
-                                try {
-                                    const nameVal = document.getElementById('name').value;
-                                    const emailVal = document.getElementById('email').value;
-                                    const messageVal = document.getElementById('message').value;
+                                // Collect Data
+                                const nameVal = document.getElementById('name').value;
+                                const emailVal = document.getElementById('email').value;
+                                const messageVal = document.getElementById('message').value;
 
-                                    if (db) {
-                                        await db.collection('messages').add({
-                                            name: nameVal, email: emailVal, message: messageVal,
-                                            timestamp: firebase.firestore.FieldValue.serverTimestamp()
-                                        });
-                                    }
-                                    if (typeof emailjs !== 'undefined') {
-                                        await emailjs.send("service_z24kvj8", "template_frpxeef", { from_name: nameVal, from_email: emailVal, message: messageVal });
-                                    }
-                                    subs.push(now);
-                                    localStorage.setItem('f_subs', JSON.stringify(subs));
-                                    window.location.href = 'success.html';
-                                } catch (err) {
-                                    console.error(err);
-                                    submitBtn.innerText = 'ERROR - RETRY';
+                                // 🍯 SECURITY: Honeypot Bot Detection
+                                const honeypotVal = document.getElementById('honeypot-trap').value;
+                                if (honeypotVal !== '') {
+                                    // Bot detected! Silently reject submission
+                                    console.log('🚫 Bot submission blocked via honeypot');
+                                    submitBtn.innerText = 'ERROR - PLEASE TRY AGAIN';
                                     submitBtn.disabled = false;
+                                    submitBtn.style.opacity = '1';
+
+                                    // Show generic error to not alert the bot
+                                    setTimeout(async () => {
+                                        await systemAlert('SYSTEM ERROR', 'There was an error processing your request. Please refresh and try again.', 'alert-circle');
+                                        location.reload();
+                                    }, 500);
+                                    return;
+                                }
+
+                                let submissionSuccess = false;
+
+                                // --- TASK A: SAVE TO FIRESTORE ---
+                                if (db) {
+                                    try {
+                                        await db.collection('messages').add({
+                                            name: nameVal,
+                                            email: emailVal,
+                                            message: messageVal,
+                                            status: 'new',
+                                            timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                                            source: 'website_main_form'
+                                        });
+                                        console.log("Database: Entry Created");
+                                        submissionSuccess = true;
+                                    } catch (dbError) {
+                                        console.error("Database Error:", dbError);
+                                    }
+                                }
+
+                                // --- TASK B: EMAIL NOTIFICATION (EmailJS) ---
+                                try {
+                                    if (typeof emailjs !== 'undefined') {
+                                        await emailjs.send("service_z24kvj8", "template_frpxeef", {
+                                            from_name: nameVal,
+                                            from_email: emailVal,
+                                            message: messageVal,
+                                            reply_to: emailVal
+                                        });
+                                        console.log("Notification: Dispatched");
+                                        submissionSuccess = true; // Mark success if email sent even if DB failed
+                                    } else {
+                                        console.warn("Notification: EmailJS SDK not found");
+                                    }
+                                } catch (mailError) {
+                                    console.error("Notification Error:", mailError);
+                                }
+
+                                // --- TASK C: REDIRECT OR FALLBACK ---
+                                if (submissionSuccess) {
+                                    // SECURITY: Record successful submission for rate limiting
+                                    submissions.push(now);
+                                    localStorage.setItem('formSubmissions', JSON.stringify(submissions));
+
+                                    window.location.href = 'success.html';
+                                } else {
+                                    // Extreme Fallback: Native reload if everything failed
+                                    console.error("System Crash: All submission methods failed.");
+                                    submitBtn.innerText = "ERROR - RETRY";
+                                    submitBtn.disabled = false;
+                                    submitBtn.style.opacity = '1';
+                                    await systemAlert('SUBMISSION ERROR', "Submission error. Please try again or contact directly via email.", 'mail-warning');
+                                    // Wait, it had a double alert/reload logic. Let me simplify.
+                                    location.reload();
                                 }
                             });
                         }
                     });
                 </script>
 
-                <div class="flex justify-between items-start mb-8 relative z-10">
-                    <span class="text-gray-500 text-[10px] font-bold uppercase tracking-wider">TAURUS STATUS</span>
-                    <div
-                        class="px-2 py-1 rounded bg-green-500/10 border border-green-500/20 text-green-400 text-[10px] font-bold uppercase flex items-center gap-2 transition-all duration-300">
-                        <span class="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
-                        <span id="tracker-indicator">INITIALIZING...</span>
+                <!-- Tile 2: Visual System Status (Right) -->
+                <div
+                    class="col-span-1 md:col-span-5 crystal-panel p-8 rounded-3xl relative overflow-hidden flex flex-col justify-between group hover:border-taurusGold/40 transition-colors duration-300">
+                    <div class="absolute inset-0 bg-symmetry-grid opacity-20"></div>
+
+                    <div class="flex justify-between items-start mb-8 relative z-10">
+                        <span class="text-gray-500 text-[10px] font-bold uppercase tracking-wider">System Status</span>
+                        <div
+                            class="px-2 py-1 rounded bg-green-500/10 border border-green-500/20 text-green-400 text-[10px] font-bold uppercase flex items-center gap-2">
+                            <span class="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
+                            Nominal
+                        </div>
+                    </div>
+
+                    <!-- Decorative Uptime Graph -->
+                    <div class="flex items-end gap-1 h-32 w-full opacity-50 relative z-10">
+                        <div class="flex-1 bg-taurusGold/20 h-[40%] rounded-t-sm animate-pulse"
+                            style="animation-delay: 0.1s"></div>
+                        <div class="flex-1 bg-taurusGold/40 h-[70%] rounded-t-sm animate-pulse"
+                            style="animation-delay: 0.2s"></div>
+                        <div class="flex-1 bg-taurusGold/20 h-[50%] rounded-t-sm animate-pulse"
+                            style="animation-delay: 0.4s"></div>
+                        <div class="flex-1 bg-taurusGold/60 h-[85%] rounded-t-sm animate-pulse"
+                            style="animation-delay: 0.1s"></div>
+                        <div class="flex-1 bg-taurusGold/30 h-[60%] rounded-t-sm animate-pulse"
+                            style="animation-delay: 0.5s"></div>
+                        <div class="flex-1 bg-taurusGold/20 h-[45%] rounded-t-sm animate-pulse"
+                            style="animation-delay: 0.3s"></div>
+                        <div class="flex-1 bg-taurusGold/50 h-[80%] rounded-t-sm animate-pulse"
+                            style="animation-delay: 0.6s"></div>
+                    </div>
+
+                    <div class="mt-4 relative z-10">
+                        <span class="text-white text-2xl font-display font-bold">24/7</span>
+                        <span class="text-gray-500 text-xs uppercase tracking-wide ml-2">Uptime Monitor</span>
                     </div>
                 </div>
 
-
-                <!-- Decorative Uptime Graph -->
-                <div class="flex items-end gap-1 h-32 w-full opacity-50 relative z-10">
-                    <div class="flex-1 bg-taurusGold/20 h-[40%] rounded-t-sm animate-pulse"
-                        style="animation-delay: 0.1s"></div>
-                    <div class="flex-1 bg-taurusGold/40 h-[70%] rounded-t-sm animate-pulse"
-                        style="animation-delay: 0.2s"></div>
-                    <div class="flex-1 bg-taurusGold/20 h-[50%] rounded-t-sm animate-pulse"
-                        style="animation-delay: 0.4s"></div>
-                    <div class="flex-1 bg-taurusGold/60 h-[85%] rounded-t-sm animate-pulse"
-                        style="animation-delay: 0.1s"></div>
-                    <div class="flex-1 bg-taurusGold/30 h-[60%] rounded-t-sm animate-pulse"
-                        style="animation-delay: 0.5s"></div>
-                    <div class="flex-1 bg-taurusGold/20 h-[45%] rounded-t-sm animate-pulse"
-                        style="animation-delay: 0.3s"></div>
-                    <div class="flex-1 bg-taurusGold/50 h-[80%] rounded-t-sm animate-pulse"
-                        style="animation-delay: 0.6s"></div>
-                </div>
-
-                <div class="mt-4 relative z-10">
-                    <span class="text-white text-2xl font-display font-bold">24/7</span>
-                    <span class="text-gray-500 text-xs uppercase tracking-wide ml-2">Uptime Monitor</span>
-                </div>
-            </div>
-
-            <!-- Tile 3: Info & Maintenance (Bottom) -->
-            <div
-                class="col-span-1 md:col-span-12 crystal-panel p-6 md:px-12 md:py-8 rounded-3xl flex flex-col md:flex-row items-center justify-between gap-6 hover:border-taurusGold/40 transition-colors duration-300">
-                <div class="flex items-center gap-4">
-                    <div
-                        class="w-10 h-10 rounded-full bg-taurusGold/10 flex items-center justify-center text-taurusGold border border-taurusGold/20">
-                        <!-- Shield Check -->
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                            class="w-5 h-5">
-                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10" />
-                            <path d="m9 12 2 2 4-4" />
-                        </svg>
+                <!-- Tile 3: Info & Maintenance (Bottom) -->
+                <div
+                    class="col-span-1 md:col-span-12 crystal-panel p-6 md:px-12 md:py-8 rounded-3xl flex flex-col md:flex-row items-center justify-between gap-6 hover:border-taurusGold/40 transition-colors duration-300">
+                    <div class="flex items-center gap-4">
+                        <div
+                            class="w-10 h-10 rounded-full bg-taurusGold/10 flex items-center justify-center text-taurusGold border border-taurusGold/20">
+                            <i data-lucide="shield-check" class="w-5 h-5"></i>
+                        </div>
+                        <div class="text-center md:text-left">
+                            <h3 class="text-white font-bold text-sm">Long-Term Support & Maintenance</h3>
+                            <p class="text-gray-400 text-xs mt-1">We provide continuous security updates and performance
+                                optimization for every project.</p>
+                        </div>
                     </div>
-                    <div class="text-center md:text-left">
-                        <h3 class="text-white font-bold text-sm">Long-Term Support & Maintenance</h3>
-                        <p class="text-gray-400 text-xs mt-1">We provide continuous security updates and performance
-                            optimization for every project.</p>
-                    </div>
-                </div>
 
                     <!-- Social Media Links -->
                     <div class="flex flex-col gap-3">
@@ -920,18 +861,19 @@
                             </a>
                         </div>
                         <!-- Email Below -->
+                        <a href="mailto:info@omeryigitler.com"
+                            class="p-3 rounded-lg bg-white/5 border border-white/5 flex items-center justify-center gap-2 transition-all hover:border-taurusGold/30 hover:bg-taurusGold/10 group/email">
+                            <i data-lucide="mail"
+                                class="w-5 h-5 text-gray-500 group-hover/email:text-taurusGold group-hover/email:drop-shadow-[0_0_8px_rgba(255,215,0,0.6)] transition-all"></i>
+                            <span
+                                class="text-xs font-bold uppercase tracking-widest text-gray-400 group-hover/email:text-white transition-colors">
+                                info@omeryigitler.com
+                            </span>
                         </a>
                     </div>
-                    <!-- Email -->
-                    <a href="mailto:info@omeryigitler.com"
-                        class="flex items-center justify-center w-full h-10 rounded-xl bg-white/5 border border-white/5 hover:bg-taurusGold/20 hover:border-taurusGold/40 hover:text-taurusGold transition-all duration-300 group">
-                        <span
-                            class="text-gray-400 text-[10px] font-bold uppercase mr-2 group-hover:text-taurusGold transition-colors">info@omeryigitler.com</span>
-                    </a>
                 </div>
-            </div>
 
-        </div>
+            </div>
         </div>
 
     </main>
@@ -1102,19 +1044,7 @@
     </div>
 
     <script>
-        // Safe Icon Init (Retry Logic)
-        var lucideAttempts = 0;
-        function initIcons() {
-            if (typeof lucide !== 'undefined') {
-                lucide.createIcons();
-            } else if (lucideAttempts < 20) {
-                // Retry every 200ms for 4 seconds
-                lucideAttempts++;
-                setTimeout(initIcons, 200);
-            }
-        }
-        initIcons();
-        window.addEventListener('load', initIcons);
+        lucide.createIcons();
 
         // Refactored Mega Menu & Backdrop Logic
         const trigger = document.getElementById('expertise-trigger');
@@ -1218,8 +1148,8 @@
 
     <!-- System Modal -->
     <div id="system-modal"
-        class="fixed inset-0 z-[99999] hidden items-center justify-center p-4 bg-black/90 backdrop-blur-md">
-        <div class="bg-neutral-900 border border-taurusGold/20 p-8 md:p-12 max-w-sm w-full text-center scale-95 opacity-0 transition-all duration-300 rounded-3xl"
+        class="fixed inset-0 z-[200] hidden items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+        <div class="glass-panel p-8 md:p-12 max-w-sm w-full text-center scale-95 opacity-0 transition-all duration-300"
             id="system-modal-content">
             <div id="modal-icon-container"
                 class="w-16 h-16 rounded-full border-2 border-taurusGold flex items-center justify-center mx-auto mb-6 shadow-[0_0_20px_rgba(255,215,0,0.2)]">
@@ -1232,12 +1162,10 @@
                 <button id="modal-cancel-btn"
                     class="hidden px-6 py-2.5 rounded-full border border-white/10 text-gray-500 font-bold text-[10px] uppercase tracking-widest hover:bg-white/5 transition-all">Cancel</button>
                 <button id="modal-confirm-btn"
-                    class="px-8 py-2.5 bg-taurusGold text-black font-bold text-[10px] uppercase tracking-widest rounded-full hover:bg-white transition-all shadow-lg active:scale-95">OK</button>
+                    class="px-8 py-2.5 bg-taurusGold text-black font-bold text-[10px] uppercase tracking-widest rounded-full hover:bg-white transition-all shadow-lg">Confirm</button>
             </div>
         </div>
     </div>
-    <!-- TAURUS TRACKER (Intelligence & Stats) -->
-    <script src="assets/js/tracker/taurus-tracker.js?v=T1.7" defer onerror="handleScriptError(this)"></script>
 </body>
 
 </html>
