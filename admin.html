@@ -935,7 +935,7 @@
                     const flag = d.location && d.location.country_code ? `https://flagcdn.com/24x18/${d.location.country_code.toLowerCase()}.png` : '';
 
                     html += `
-                        <tr class="border-b border-white/5 hover:bg-white/5 transition-all">
+                        <tr class="border-b border-white/5 hover:bg-white/5 transition-all cursor-pointer" onclick='openSessionModal(${JSON.stringify(d)})'>
                              <td class="p-4 align-middle">
                                 ${isOnline
                             ? '<div class="flex items-center gap-2"><div class="w-2 h-2 rounded-full bg-green-500 animate-pulse shadow-[0_0_5px_#22c55e]"></div><span class="text-green-500 text-[10px] font-bold uppercase tracking-wider">ONLINE</span></div>'
@@ -995,6 +995,130 @@
                 if (container) container.innerHTML = '<tr><td colspan="7" class="py-8 text-center text-red-500 text-xs font-mono">SIGNAL INTERCEPT ERROR: ' + e.message + '</td></tr>';
             }
         }
+
+        // Session Modal Functions
+        function openSessionModal(data) {
+            const modal = document.getElementById('session-modal');
+            const content = document.getElementById('session-details');
+
+            if (!modal || !content || !data) return;
+
+            // Build session details HTML
+            const loc = data.location?.city || 'Unknown';
+            const country = data.location?.country || 'Unknown';
+            const flag = data.location?.country_code ? `https://flagcdn.com/96x72/${data.location.country_code.toLowerCase()}.png` : '';
+
+            let historyHtml = '';
+            if (data.history && data.history.length > 0) {
+                data.history.forEach((visit, idx) => {
+                    const time = new Date(visit.timestamp).toLocaleString('tr-TR', {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        second: '2-digit'
+                    });
+                    historyHtml += `
+                        <div class="flex items-start gap-4 p-4 rounded-xl bg-white/5 border border-white/5 hover:border-taurusGold/20 transition-all">
+                            <div class="flex flex-col items-center gap-2">
+                                <div class="w-8 h-8 rounded-full bg-taurusGold/20 border border-taurusGold flex items-center justify-center text-taurusGold font-bold text-xs">
+                                    ${idx + 1}
+                                </div>
+                                ${idx < data.history.length - 1 ? '<div class="w-0.5 h-8 bg-taurusGold/20"></div>' : ''}
+                            </div>
+                            <div class="flex-1">
+                                <div class="flex items-center gap-2 mb-1">
+                                    <i data-lucide="file-text" class="w-4 h-4 text-gray-400"></i>
+                                    <span class="text-white font-mono text-sm">${visit.page || '/unknown'}</span>
+                                </div>
+                                <p class="text-xs text-gray-500 mb-2">${visit.title || 'Untitled Page'}</p>
+                                <div class="flex items-center gap-4 text-[10px] text-gray-600">
+                                    <span>⏰ ${time}</span>
+                                    <span>🔗 ${visit.referrer || 'Direct'}</span>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+            } else {
+                historyHtml = '<div class="text-center text-gray-500 text-sm py-8">No navigation history available</div>';
+            }
+
+            content.innerHTML = `
+                <!-- Session Info -->
+                <div class="bg-gradient-to-r from-taurusGold/10 to-transparent border border-taurusGold/20 rounded-xl p-6">
+                    <div class="flex items-center gap-4 mb-4">
+                        ${flag ? `<img src="${flag}" class="w-12 h-9 rounded shadow-lg" alt="flag">` : ''}
+                        <div>
+                            <h4 class="text-white font-bold text-lg">${loc}, ${country}</h4>
+                            <p class="text-xs text-gray-500 font-mono">Session: ${data.session_id || 'Unknown'}</p>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4 mt-4">
+                        <div class="bg-black/40 rounded-lg p-3 border border-white/5">
+                            <p class="text-[10px] text-gray-500 uppercase tracking-wider mb-1">IP Address</p>
+                            <p class="text-sm text-taurusGold font-mono">${data.ip_masked || '---'}</p>
+                        </div>
+                        <div class="bg-black/40 rounded-lg p-3 border border-white/5">
+                            <p class="text-[10px] text-gray-500 uppercase tracking-wider mb-1">ISP / Network</p>
+                            <p class="text-sm text-white">${data.location?.isp || 'Unknown'}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Device Info -->
+                <div class="border border-white/5 rounded-xl p-6">
+                    <h5 class="text-white font-bold uppercase tracking-wider text-sm mb-4 flex items-center gap-2">
+                        <i data-lucide="smartphone" class="w-4 h-4 text-taurusGold"></i>
+                        Device Information
+                    </h5>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <p class="text-[10px] text-gray-500 uppercase mb-1">Model</p>
+                            <p class="text-sm text-white">${data.device?.model || 'Unknown'}</p>
+                        </div>
+                        <div>
+                            <p class="text-[10px] text-gray-500 uppercase mb-1">Type</p>
+                            <p class="text-sm text-white">${data.device?.type || 'Unknown'}</p>
+                        </div>
+                        <div>
+                            <p class="text-[10px] text-gray-500 uppercase mb-1">Browser</p>
+                            <p class="text-sm text-white">${data.device?.browser || 'Unknown'}</p>
+                        </div>
+                        <div>
+                            <p class="text-[10px] text-gray-500 uppercase mb-1">OS</p>
+                            <p class="text-sm text-white">${data.device?.os || 'Unknown'}</p>
+                        </div>
+                        <div>
+                            <p class="text-[10px] text-gray-500 uppercase mb-1">Screen</p>
+                            <p class="text-sm text-gray-400 font-mono">${data.device?.screen || 'Unknown'}</p>
+                        </div>
+                        <div>
+                            <p class="text-[10px] text-gray-500 uppercase mb-1">Language</p>
+                            <p class="text-sm text-gray-400">${data.device?.language || 'Unknown'}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Navigation History -->
+                <div class="border border-white/5 rounded-xl p-6">
+                    <h5 class="text-white font-bold uppercase tracking-wider text-sm mb-4 flex items-center gap-2">
+                        <i data-lucide="activity" class="w-4 h-4 text-taurusGold"></i>
+                        Navigation Timeline
+                    </h5>
+                    <div class="space-y-3">
+                        ${historyHtml}
+                    </div>
+                </div>
+            `;
+
+            modal.classList.remove('hidden');
+            lucide.createIcons();
+        }
+
+        function closeSessionModal() {
+            const modal = document.getElementById('session-modal');
+            if (modal) modal.classList.add('hidden');
+        }
+
 
         async function loadTrafficChart() {
             if (!db) return;
