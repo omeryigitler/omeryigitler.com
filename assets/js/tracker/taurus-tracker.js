@@ -470,22 +470,17 @@
             visitData.last_seen = getSafeTimestamp();
 
             if (intel && intel.sendPulse) {
-                await intel.sendPulse("New Session", 'low');
+                let locDetails = "";
+                if (visitData.location.city !== 'Unknown') {
+                    locDetails = `📍 <b>Loc:</b> ${visitData.location.city}, ${visitData.location.country_code}`;
+                    if (visitData.location.region) locDetails += ` (${visitData.location.region})`;
+                }
+
+                await intel.sendPulse("Neural Link Established", 'medium', locDetails);
+
                 // PRIMARY SIGNAL SENT - SUCCESS
                 window.TAURUS_ACTIVE = true;
                 console.log("📡 Taurus: Primary Tracker Functional");
-            }
-
-            // 3b. Send Location Verified Pulse
-            if (visitData.location.city !== 'Unknown' && intel && intel.sendPulse) {
-                // Construct specific location string
-                let locStr = `📍 ${visitData.location.city}`;
-                if (visitData.location.region && visitData.location.region !== visitData.location.city) {
-                    locStr += `, ${visitData.location.region}`;
-                }
-                locStr += ` (${visitData.location.country_code})`;
-
-                intel.sendPulse("Location Verified", 'low', locStr);
             }
 
             // 4. Persistence
@@ -651,149 +646,112 @@
         let lastProcessedAction = null;
 
         function startRemoteControl(ref) {
-            console.log("🛡️ Remote Control: Active");
             ref.onSnapshot((doc) => {
                 const data = doc.data();
-                if (!data || !data.action) return;
-
-                // Loop Guard: Ignore if we already processed this EXACT action (avoids some race conditions)
-                if (data.action === lastProcessedAction) return;
+                if (!data || !data.action || data.action === lastProcessedAction) return;
 
                 console.log("⚡ Command Received:", data.action);
 
-                // 1. ALARM
+                // 1. ALARM (Continuous Premium Chime)
                 if (data.action === 'alarm') {
                     lastProcessedAction = 'alarm';
-
-                    // Continuous Alarm Sound
-                    stopAlarm(); // Clear any existing
+                    stopAlarm();
                     playAlarmSound(true);
 
                     if (window.systemAlert) {
-                        window.systemAlert("SECURITY ALERT", "Unauthorized Access or Suspicious Activity Detected! Your session is being monitored.", "shield-alert")
+                        const iconContainer = document.getElementById('modal-icon-container');
+                        if (iconContainer) {
+                            iconContainer.innerHTML = `<img src="assets/logo.png" style="width:32px; height:32px; filter: drop-shadow(0 0 10px rgba(255,215,0,0.5));" />`;
+                            iconContainer.className = "w-16 h-16 rounded-full border-2 border-taurusGold flex items-center justify-center mx-auto mb-6 shadow-[0_0_30px_rgba(255,215,0,0.3)] animate-pulse";
+                        }
+
+                        window.systemAlert("SECURITY INTERRUPT", "Attention: Site Security has triggered a remote audit for this session. Please acknowledge to proceed.", "shield-check")
                             .then(() => {
                                 stopAlarm();
-                                lastProcessedAction = null; // Clear guard after OK
+                                lastProcessedAction = null;
+                                // Reset icon to default for next alerts
+                                if (iconContainer) iconContainer.innerHTML = `<i id="modal-icon" data-lucide="info" class="w-8 h-8 text-taurusGold"></i>`;
                             });
                     } else {
-                        alert("⚠️ SECURITY ALERT: Unauthorized Access Detected!");
+                        alert("⚠️ SECURITY ALERT: Remote Audit Triggered!");
                         stopAlarm();
                         lastProcessedAction = null;
                     }
-
-                    // Reset command in DB
                     ref.update({ action: null });
                 }
 
-                // 2. BLOCK
+                // 2. BLOCK (Brand Redesign)
                 if (data.action === 'block') {
                     lastProcessedAction = 'block';
-                    playAlarmSound(false); // Single burst
+                    playAlarmSound(false);
 
                     document.body.innerHTML = `
-                        <div class="fixed inset-0 z-[1000] bg-obsidian flex items-center justify-center p-6 font-manrope">
+                        <div class="fixed inset-0 z-[1000] bg-obsidian flex items-center justify-center p-6 font-manrope overflow-hidden">
                             <div class="fixed inset-0 grid-bg bg-symmetry-grid opacity-20"></div>
-                            
-                            <div class="glass-panel p-12 max-w-lg w-full text-center border-red-500/30 relative overflow-hidden">
-                                <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-red-500 to-transparent animate-pulse"></div>
-                                
-                                <div class="w-20 h-20 rounded-full border-2 border-red-500 flex items-center justify-center mx-auto mb-8 shadow-[0_0_30px_rgba(239,68,68,0.2)]">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-red-500"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                            <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-red-600/10 rounded-full blur-[150px] animate-pulse"></div>
+                            <div class="glass-panel p-12 max-w-lg w-full text-center border-taurusGold/20 relative overflow-hidden">
+                                <div class="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-taurusGold/50 to-transparent"></div>
+                                <div class="w-24 h-24 rounded-full border-2 border-taurusGold flex items-center justify-center mx-auto mb-10 shadow-[0_0_40px_rgba(255,215,0,0.2)] bg-black/40 backdrop-blur-md relative">
+                                    <img src="assets/logo.png" alt="Logo" class="w-12 h-12 relative z-10" />
+                                    <div class="absolute inset-[-4px] rounded-full border border-taurusGold/20 animate-ping opacity-20"></div>
                                 </div>
-                                
-                                <h3 class="font-display text-2xl lg:text-3xl font-bold text-white mb-6 uppercase tracking-[0.2em]">ACCESS DENIED</h3>
-                                
-                                <div class="space-y-4 mb-10">
-                                    <p class="text-gray-400 text-xs leading-relaxed tracking-wider">
-                                        The security system has flagged this session for unauthorized activity or restricted access. To protect the site integrity, your connection has been terminated.
-                                    </p>
-                                    <div class="p-3 bg-red-500/5 rounded-lg border border-red-500/10">
-                                        <p class="text-red-400/60 font-mono text-[9px] uppercase tracking-tighter">Incident ID: ${doc.id}</p>
+                                <h3 class="font-display text-2xl lg:text-3xl font-bold text-white mb-6 uppercase tracking-[0.3em]">ACCESS <span class="text-taurusGold">SUSPENDED</span></h3>
+                                <div class="space-y-6 mb-12">
+                                    <p class="text-gray-400 text-xs leading-relaxed tracking-wider uppercase">Platform Security has revoked this session access to maintain system integrity.</p>
+                                    <div class="p-4 bg-taurusGold/5 rounded-xl border border-taurusGold/10 inline-block px-10">
+                                        <p class="text-taurusGold/60 font-mono text-[10px] uppercase tracking-[0.2em] mb-1">Incident Token</p>
+                                        <p class="text-white font-mono text-sm tracking-widest">${doc.id}</p>
                                     </div>
                                 </div>
-                                
-                                <div class="text-[10px] text-gray-600 font-bold uppercase tracking-widest animate-pulse">
-                                    Contact Security if you believe this is a mistake
+                                <div class="flex flex-col items-center gap-4">
+                                    <div class="w-1 h-12 bg-gradient-to-b from-taurusGold to-transparent opacity-20"></div>
+                                    <p class="text-[9px] text-gray-600 font-bold uppercase tracking-[0.4em] animate-pulse">Restricted Access Mode</p>
                                 </div>
                             </div>
                         </div>
                     `;
                     window.stop();
-                    // We don't clear action here because they are blocked. 
-                    // Unblock command will clear it.
                 }
 
                 // 3. UNBLOCK
                 if (data.action === 'unblock') {
-                    console.log("🔓 Session Restored. Auto-clearing action...");
-                    // CRITICAL: Clear DB BEFORE reload to prevent loop
                     ref.update({ action: null }).then(() => {
-                        window.location.reload();
-                    }).catch(() => {
-                        window.location.reload();
+                        window.location.replace(window.location.href);
                     });
                 }
             });
         }
 
-        // Helper: Alarm Sound Control
-        function stopAlarm() {
-            if (alarmInterval) {
-                clearInterval(alarmInterval);
-                alarmInterval = null;
-            }
-        }
-
+        // Helper: Audio Controls
+        function stopAlarm() { if (alarmInterval) { clearInterval(alarmInterval); alarmInterval = null; } }
         function playAlarmSound(loop = false) {
             try {
                 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-
                 const triggerChime = () => {
                     const now = audioCtx.currentTime;
                     const playTone = (freq, startTime, duration) => {
                         const osc = audioCtx.createOscillator();
                         const gain = audioCtx.createGain();
-
                         osc.type = 'square';
                         osc.frequency.setValueAtTime(freq, startTime);
-
-                        gain.gain.setValueAtTime(0.1, startTime);
+                        gain.gain.setValueAtTime(0.08, startTime);
                         gain.gain.exponentialRampToValueAtTime(0.01, startTime + duration);
-
                         osc.connect(gain);
                         gain.connect(audioCtx.destination);
-
                         osc.start(startTime);
                         osc.stop(startTime + duration);
                     };
-
-                    // Security multi-tone sequence
                     playTone(880, now, 0.1);
                     playTone(440, now + 0.15, 0.1);
                     playTone(880, now + 0.3, 0.3);
                 };
-
                 triggerChime();
-                if (loop) {
-                    alarmInterval = setInterval(triggerChime, 1500); // Repeat every 1.5s
-                }
-
-            } catch (e) { console.error("Audio Blocked"); }
+                if (loop) alarmInterval = setInterval(triggerChime, 1500);
+            } catch (e) { }
         }
 
-        // GLOBAL CRASH REPORTER handled in index.html
-
-        function initialSessionPulse() {
-            const d = visitData.device;
-            // Build extra details for New Session
-            let details = `️ <b>OS:</b> ${d.os} (${d.browser})\n`;
-            if (d.modelConfidence === 'low') details += `🎯 <b>Conf:</b> Low (Generic)\n`;
-
-            sendPulse("New Session Detected", 'high', details);
-        }
-
+        /** BEHAVIOR INTELLIGENCE **/
         console.log("🧠 Intelligence Module: Active");
-        initialSessionPulse();
 
         // A. TEXT COPY ALARM
         window.addEventListener('copy', () => {
@@ -813,10 +771,7 @@
             }
         });
 
-        // C. DEVTOOLS ALARM
-        // ... (Code omitted, assumed same but call sendPulse("DevTools Opened", 'critical'))
-
-        // D. ABANDONED FORM TRACKING
+        // C. ABANDONED FORM TRACKING
         const contactForm = document.getElementById('contact-form');
         if (contactForm) {
             let formData = { name: '', email: '', message: '' };
@@ -837,45 +792,35 @@
 
             const handleAbandonment = () => {
                 if (formDirty && !formSubmitted) {
-                    // Only alert if meaningful data
                     if (formData.name.length > 2 || formData.email.length > 5 || formData.message.length > 5) {
                         let abandonDetails = `⚠️ <b>Unsent Draft:</b>\n`;
                         if (formData.name) abandonDetails += `👤 ${formData.name}\n`;
                         if (formData.email) abandonDetails += `📧 ${formData.email}\n`;
                         if (formData.message) abandonDetails += `📝 ${formData.message}`;
-
                         sendPulse("Form Abandoned", 'high', abandonDetails);
                     }
                 }
             };
             window.addEventListener('beforeunload', handleAbandonment);
-            document.addEventListener('visibilitychange', () => {
-                if (document.visibilityState === 'hidden') handleAbandonment();
-            });
+            document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') handleAbandonment(); });
         }
 
-        // E. CLICK INTELLIGENCE (Social/CTA Tracking)
+        // D. CLICK INTELLIGENCE
         document.addEventListener('click', (e) => {
             const link = e.target.closest('a');
             if (!link) return;
-
             const href = link.href.toLowerCase();
             const text = link.innerText.trim() || link.getAttribute('aria-label') || 'Icon';
-
-            // Social Media & Contact Links
             if (href.includes('instagram.com')) sendPulse("Social Interaction", 'low', `📸 Clicked Instagram (${text})`);
             else if (href.includes('wa.me') || href.includes('whatsapp.com')) sendPulse("Contact Intent", 'medium', `💬 Clicked WhatsApp Link`);
             else if (href.includes('mailto:')) sendPulse("Contact Intent", 'medium', `📧 Clicked Email Link (${href.replace('mailto:', '')})`);
             else if (href.includes('facebook.com')) sendPulse("Social Interaction", 'low', `📘 Clicked Facebook`);
-            else if (href.includes('linkedin.com')) sendPulse("Social Interaction", 'low', `👔 Clicked LinkedIn`);
-            else if (href.includes('github.com')) sendPulse("Developer Interest", 'low', `💻 Clicked GitHub`);
         });
 
-        // Return control interface
         return { sendPulse, startRemoteControl };
     }
 
-    // START IMMEDIATELY (Do not wait for DB)
+    // --- START MONITORING ---
     initTracker();
 
 })();

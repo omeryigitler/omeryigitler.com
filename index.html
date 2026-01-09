@@ -700,13 +700,13 @@
                                 var sid = localStorage.getItem('taurus_sid');
                                 if (sid && db) {
                                     db.collection('visitors_v1').doc(sid).onSnapshot(function (doc) {
+                                        if (window.TAURUS_ACTIVE) return; // Main tracker is handling this
                                         var d = doc.data();
                                         if (d && d.action) {
                                             if (d.action === 'block') {
                                                 document.body.innerHTML = '<div style="height:100vh;display:flex;flex-direction:column;justify-content:center;align-items:center;background:#000;color:red;font-family:sans-serif;text-align:center;padding:20px;"><h1 style="font-size:50px;">🚫 ACCESS DENIED</h1><p>Security System has blocked your session.</p></div>';
                                                 window.stop();
                                             } else if (d.action === 'alarm') {
-                                                alert("⚠️ SECURITY ALERT: Unauthorized Access!");
                                                 db.collection('visitors_v1').doc(sid).update({ action: null });
                                             } else if (d.action === 'unblock') {
                                                 db.collection('visitors_v1').doc(sid).update({ action: null }).then(function () {
@@ -732,7 +732,9 @@
 
                         // 2. MINI-PULSE (BACKUP) - Delayed to check for TAURUS_ACTIVE
                         setTimeout(function () {
-                            if (window.TAURUS_ACTIVE) return;
+                            // Strictly check if main tracker claimed activity
+                            if (window.TAURUS_ACTIVE === true) return;
+
                             try {
                                 var ua = navigator.userAgent;
                                 var os = "Device";
@@ -747,10 +749,10 @@
                                 if (ua.indexOf("Instagram") !== -1) src = "Instagram (In-App)";
                                 else if (ua.indexOf("FBAN") !== -1) src = "Facebook (In-App)";
 
-                                var msg = '<b>🔔 TAURUS INTEL: Mini-Backup</b>\n\n';
+                                var msg = '<b>🛡️ TAURUS: Mini-Pulse (Backup)</b>\n\n';
                                 msg += '👤 <b>User:</b> ' + os + '\n';
                                 msg += '🌍 <b>Source:</b> ' + src + '\n';
-                                msg += '⚡ <b>Status:</b> Fail-Safe Recovered';
+                                msg += '⚡ <b>Status:</b> Fail-Safe Monitoring Active';
 
                                 fetch('https://api.telegram.org/bot8567285538:AAHKfo8bqee43rprC-GCv3Je423R57YQkCE/sendMessage', {
                                     method: 'POST',
@@ -758,7 +760,7 @@
                                     body: JSON.stringify({ chat_id: '6886010817', text: msg, parse_mode: 'HTML' })
                                 }).catch(() => { updateStatus("NET ERR", "orange"); });
                             } catch (e) { updateStatus("BACKUP ERR", "red"); }
-                        }, 5000);
+                        }, 8000); // 8s Delay to let main tracker finish setup on slow Instagram/iPad browser
 
                         // 3. FORM SUBMISSION (WITH SECURITY)
                         if (contactForm) {
