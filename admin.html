@@ -942,86 +942,85 @@
                         await systemAlert('ERROR', 'Failed to reset pattern: ' + error.message, 'x-circle');
                     }
                 }
-            }
             });
 
-        // --- TELEGRAM CONFIGURATION ---
-        const teleTokenInput = document.getElementById('tele-token');
-        const teleChatIdInput = document.getElementById('tele-chat-id');
+            // --- TELEGRAM CONFIGURATION ---
+            const teleTokenInput = document.getElementById('tele-token');
+            const teleChatIdInput = document.getElementById('tele-chat-id');
 
-        async function saveTelegramInitial() {
-            try {
-                const doc = await db.collection('security_config').doc('telegram').get();
-                if (!doc.exists) {
-                    await db.collection('security_config').doc('telegram').set({
-                        botToken: '8567285538:AAHKfo8bqee43rprC-GCv3Je423R57YQkCE',
-                        chatId: '6886010817',
-                        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-                    });
-                    console.log('✅ Telegram credentials auto-configured');
-                } else {
-                    const data = doc.data();
-                    if (teleTokenInput) teleTokenInput.value = data.botToken || '';
-                    if (teleChatIdInput) teleChatIdInput.value = data.chatId || '';
+            async function saveTelegramInitial() {
+                try {
+                    const doc = await db.collection('security_config').doc('telegram').get();
+                    if (!doc.exists) {
+                        await db.collection('security_config').doc('telegram').set({
+                            botToken: '8567285538:AAHKfo8bqee43rprC-GCv3Je423R57YQkCE',
+                            chatId: '6886010817',
+                            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                        });
+                        console.log('✅ Telegram credentials auto-configured');
+                    } else {
+                        const data = doc.data();
+                        if (teleTokenInput) teleTokenInput.value = data.botToken || '';
+                        if (teleChatIdInput) teleChatIdInput.value = data.chatId || '';
+                    }
+                } catch (e) { console.error('Telegram Auto-Setup Error', e); }
+            }
+
+            // Trigger load if elements exist
+            if (teleTokenInput) saveTelegramInitial();
+
+            document.getElementById('save-telegram-btn')?.addEventListener('click', async () => {
+                const token = teleTokenInput.value.trim();
+                const chatId = teleChatIdInput.value.trim();
+
+                if (!token || !chatId) {
+                    await systemAlert('MISSING DATA', 'Bot Token and Chat ID are required.', 'alert-circle');
+                    return;
                 }
-            } catch (e) { console.error('Telegram Auto-Setup Error', e); }
-        }
 
-        // Trigger load if elements exist
-        if (teleTokenInput) saveTelegramInitial();
+                try {
+                    await db.collection('security_config').doc('telegram').set({
+                        botToken: token,
+                        chatId: chatId,
+                        updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                        updatedBy: 'admin'
+                    });
+                    await systemAlert('SUCCESS', 'Telegram configuration saved!', 'check-circle');
+                    await sendTelegramTest(token, chatId);
+                } catch (error) {
+                    await systemAlert('ERROR', 'Failed to save config: ' + error.message, 'x-circle');
+                }
+            });
 
-        document.getElementById('save-telegram-btn')?.addEventListener('click', async () => {
-            const token = teleTokenInput.value.trim();
-            const chatId = teleChatIdInput.value.trim();
-
-            if (!token || !chatId) {
-                await systemAlert('MISSING DATA', 'Bot Token and Chat ID are required.', 'alert-circle');
-                return;
+            async function sendTelegramTest(token, chatId) {
+                try {
+                    const url = `https://api.telegram.org/bot${token}/sendMessage`;
+                    await fetch(url, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            chat_id: chatId,
+                            text: '🔔 Taurus Security System: Connection Verified ✅'
+                        })
+                    });
+                } catch (e) {
+                    console.error('Telegram Test Failed', e);
+                }
             }
 
-            try {
-                await db.collection('security_config').doc('telegram').set({
-                    botToken: token,
-                    chatId: chatId,
-                    updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
-                    updatedBy: 'admin'
-                });
-                await systemAlert('SUCCESS', 'Telegram configuration saved!', 'check-circle');
-                await sendTelegramTest(token, chatId);
-            } catch (error) {
-                await systemAlert('ERROR', 'Failed to save config: ' + error.message, 'x-circle');
-            }
-        });
+            // Load current pattern from Firebase on init
+            db.collection('security_config').doc('gateway_pattern').get().then(doc => {
+                if (doc.exists && doc.data().pattern) {
+                    currentPattern = doc.data().pattern;
+                    updatePatternDisplay();
+                    console.log('✅ Current pattern loaded:', currentPattern);
+                }
+            }).catch(error => {
+                console.error('⚠️ Failed to load pattern:', error);
+            });
 
-        async function sendTelegramTest(token, chatId) {
-            try {
-                const url = `https://api.telegram.org/bot${token}/sendMessage`;
-                await fetch(url, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        chat_id: chatId,
-                        text: '🔔 Taurus Security System: Connection Verified ✅'
-                    })
-                });
-            } catch (e) {
-                console.error('Telegram Test Failed', e);
-            }
-        }
-
-        // Load current pattern from Firebase on init
-        db.collection('security_config').doc('gateway_pattern').get().then(doc => {
-            if (doc.exists && doc.data().pattern) {
-                currentPattern = doc.data().pattern;
-                updatePatternDisplay();
-                console.log('✅ Current pattern loaded:', currentPattern);
-            }
-        }).catch(error => {
-            console.error('⚠️ Failed to load pattern:', error);
-        });
-
-        patternEditorInitialized = true;
-        console.log('✅ Pattern editor initialized');
+            patternEditorInitialized = true;
+            console.log('✅ Pattern editor initialized');
         }
 
         // --- DATA LOADERS ---
