@@ -886,16 +886,37 @@
                 }
 
                 try {
+                    // Ensure DB is initialized
+                    if (!db) {
+                        if (firebase.apps.length === 0) firebase.initializeApp(window.firebaseConfig);
+                        db = firebase.firestore();
+                    }
+
+                    // Ensure user is authenticated
+                    const user = firebase.auth().currentUser;
+                    if (!user) {
+                        await systemAlert('AUTH ERROR', 'You appear to be signed out. Re-authenticating...', 'lock');
+                        await firebase.auth().signInAnonymously(); // Re-auth attempt
+                    }
+
                     await db.collection('security_config').doc('gateway_pattern').set({
                         pattern: currentPattern,
                         updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
-                        updatedBy: 'admin'
+                        updatedBy: 'admin',
+                        uid: firebase.auth().currentUser.uid // Log who updated
                     });
 
                     await systemAlert('SUCCESS', 'Gateway pattern updated successfully! New pattern will be effective immediately.', 'check-circle');
                     console.log('✅ Pattern saved:', currentPattern);
+
+                    // Reset visual feedback
+                    updatePatternDisplay();
+
                 } catch (error) {
-                    await systemAlert('ERROR', 'Failed to save pattern: ' + error.message, 'x-circle');
+                    console.error('Save Pattern Error:', error);
+                    let msg = error.message;
+                    if (error.code === 'permission-denied') msg = 'Permission denied. Check database rules.';
+                    await systemAlert('SAVE ID FAILED', msg, 'x-circle');
                 }
             });
 
