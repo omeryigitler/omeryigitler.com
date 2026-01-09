@@ -648,7 +648,7 @@
         let alarmInterval = null;
         let lastProcessedAction = null;
 
-        // --- TAURUS SECURITY UI MANAGER (High-Fidelity Overlay System) ---
+        // --- TAURUS SECURITY UI MANAGER (Minimalist & Symmetric) ---
         const TaurusSecurityUI = {
             overlay: null,
             initialized: false,
@@ -658,82 +658,117 @@
                 if (this.initialized) return;
                 const el = document.createElement('div');
                 el.id = 'taurus-security-overlay';
-                el.style = "position:fixed;inset:0;z-index:9999999;display:none;flex-direction:column;align-items:center;justify-content:center;background:#050505;color:white;font-family:sans-serif;text-align:center;padding:20px;backdrop-filter:blur(20px);";
+                el.style = "position:fixed;inset:0;z-index:9999999;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,0.85);backdrop-filter:blur(15px);opacity:0;transition:opacity 0.4s ease;";
+
+                // Minimalist Chic Design
                 el.innerHTML = `
-                    <div id="taurus-ui-content" style="width:100%;max-width:450px;animation:fadeIn 0.5s ease-out;position:relative;">
-                        <!-- Universal Brand Shield (Centered & Large) -->
-                        <div id="taurus-logo-container" style="width:160px;height:160px;border-radius:50%;background:#0a0a0a;border:3px solid gold;box-shadow:0 0 60px rgba(255,215,0,0.4);display:flex;align-items:center;justify-content:center;margin:0 auto 40px auto;position:relative;overflow:hidden;">
-                            <img src="${TAURUS_LOGO_B64}" style="width:80%;height:80%;object-fit:contain;filter:drop-shadow(0 0 10px rgba(255,215,0,0.5));" />
-                            <div style="position:absolute;inset:0;border-radius:50%;border:2px solid rgba(255,215,0,0.3);animation:ping 2s infinite;"></div>
+                    <div style="
+                        width: 100%; max-width: 400px;
+                        background: rgba(10, 10, 10, 0.6);
+                        border: 1px solid rgba(255, 255, 255, 0.1);
+                        border-radius: 20px;
+                        padding: 40px;
+                        text-align: center;
+                        box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+                        position: relative;
+                        overflow: hidden;
+                        transform: scale(0.95);
+                        transition: transform 0.4s cubic-bezier(0.19, 1, 0.22, 1);
+                    " id="taurus-card">
+                        
+                        <!-- Subtle Glow Effect -->
+                        <div style="position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg, transparent, rgba(255, 215, 0, 0.5), transparent);"></div>
+
+                        <!-- Icon/Status -->
+                        <div id="taurus-icon" style="
+                            font-size: 24px; color: #FFD700; margin-bottom: 20px;
+                            display: flex; justify-content: center; align-items: center;
+                            height: 60px;
+                        ">
+                            <!-- Icon injected by JS -->
                         </div>
 
-                        <!-- Typography: Gold/Red Pair -->
-                        <h1 id="taurus-title" style="font-size:24px;letter-spacing:10px;font-weight:900;margin-bottom:25px;text-transform:uppercase;line-height:1.2;"></h1>
-                        
-                        <div id="taurus-body-wrapper" style="padding:25px 40px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.05);border-radius:24px;margin-bottom:30px;">
-                            <p id="taurus-description" style="color:#888;font-size:10px;letter-spacing:2px;text-transform:uppercase;line-height:1.8;margin-bottom:20px;"></p>
-                            <div id="taurus-token-container" style="display:none;padding:12px;background:rgba(255,215,0,0.05);border:1px solid rgba(215,190,0,0.2);border-radius:30px;font-family:monospace;font-size:10px;color:gold;letter-spacing:1px;word-break:break-all;"></div>
-                        </div>
+                        <!-- Title -->
+                        <h2 id="taurus-title" style="
+                            font-family: 'Syncopate', sans-serif;
+                            font-size: 14px; letter-spacing: 4px; color: #fff;
+                            text-transform: uppercase; margin: 0 0 10px 0; font-weight: 700;
+                        ">SECURITY AUDIT</h2>
 
-                        <div id="taurus-actions" style="display:none;">
-                            <button id="taurus-close-btn" style="background:gold;color:black;border:none;padding:12px 40px;border-radius:50px;font-weight:bold;font-size:12px;text-transform:uppercase;letter-spacing:2px;cursor:pointer;box-shadow:0 0 20px rgba(255,215,0,0.3);">Acknowledge</button>
-                        </div>
-                        
-                        <p style="position:absolute;bottom:-60px;left:0;right:0;color:#222;font-size:9px;letter-spacing:5px;font-weight:bold;white-space:nowrap;width:100%;text-align:center;">SECURED BY TAURUS</p>
+                        <!-- Description -->
+                        <p id="taurus-desc" style="
+                            font-family: 'Manrope', sans-serif;
+                            font-size: 12px; color: #888; line-height: 1.6;
+                            margin: 0 0 30px 0; letter-spacing: 0.5px;
+                        ">System verification required.</p>
+
+                        <!-- Action Button -->
+                        <button id="taurus-action-btn" style="
+                            background: #FFD700; color: #000;
+                            border: none; padding: 14px 30px;
+                            border-radius: 4px;
+                            font-family: 'Manrope', sans-serif;
+                            font-weight: 700; font-size: 11px;
+                            text-transform: uppercase; letter-spacing: 2px;
+                            cursor: pointer; transition: all 0.2s;
+                            width: 100%;
+                        ">ACKNOWLEDGE</button>
+
                     </div>
-                    <style>
-                        @keyframes fadeIn { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
-                        @keyframes ping { 0% { transform:scale(1); opacity:0.3; } 100% { transform:scale(1.5); opacity:0; } }
-                    </style>
                 `;
+
                 document.body.appendChild(el);
                 this.overlay = el;
                 this.initialized = true;
 
-                // Event delegation for button clicks (works regardless of display state)
-                el.addEventListener('click', (e) => {
-                    if (e.target.id === 'taurus-close-btn' || e.target.closest('#taurus-close-btn')) {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        this.hide();
-                        if (this.currentAction) {
-                            this.currentAction();
-                            this.currentAction = null;
-                        }
+                // Bind Button
+                const btn = el.querySelector('#taurus-action-btn');
+                btn.onclick = () => {
+                    this.hide();
+                    if (this.currentAction) {
+                        this.currentAction();
+                        this.currentAction = null;
                     }
+                };
+            },
+
+            show(title, desc, iconHTML, btnText, onAction) {
+                this.init();
+                this.currentAction = onAction || null;
+
+                const card = this.overlay.querySelector('#taurus-card');
+                const titleEl = this.overlay.querySelector('#taurus-title');
+                const descEl = this.overlay.querySelector('#taurus-desc');
+                const iconEl = this.overlay.querySelector('#taurus-icon');
+                const btn = this.overlay.querySelector('#taurus-action-btn');
+
+                titleEl.textContent = title;
+                descEl.innerHTML = desc;
+                iconEl.innerHTML = iconHTML || '⚠️';
+                btn.textContent = btnText || 'ACKNOWLEDGE';
+
+                // Ensure proper button visibility styling
+                btn.style.display = btnText === null ? 'none' : 'inline-block';
+
+                // Display
+                this.overlay.style.display = 'flex';
+                // Trigger animation next frame
+                requestAnimationFrame(() => {
+                    this.overlay.style.opacity = '1';
+                    card.style.transform = 'scale(1)';
                 });
             },
 
-            show(type, title, description, token, onAction) {
-                this.init();
-                this.currentAction = onAction || null;
-                this.overlay.style.display = 'flex';
-
-                const titleEl = document.getElementById('taurus-title');
-                const descEl = document.getElementById('taurus-description');
-                const tokenEl = document.getElementById('taurus-token-container');
-                const actionsEl = document.getElementById('taurus-actions');
-
-                if (type === 'block') {
-                    titleEl.innerHTML = `<span style="color:gold;">ACCESS</span><br><span style="color:#ff3b3b;margin-top:8px;display:block;">SUSPENDED</span>`;
-                    actionsEl.style.display = 'none';
-                    tokenEl.style.display = 'block';
-                    this.overlay.style.background = '#050505';
-                    this.overlay.style.backdropFilter = 'none';
-                } else {
-                    titleEl.innerHTML = `<span style="color:gold;">SECURITY</span><br><span style="color:white;margin-top:8px;display:block;">AUDIT ACTIVE</span>`;
-                    actionsEl.style.display = 'block';
-                    tokenEl.style.display = 'none';
-                    this.overlay.style.background = 'rgba(5, 5, 5, 0.95)';
-                    this.overlay.style.backdropFilter = 'blur(20px)';
-                }
-
-                descEl.innerHTML = description;
-                if (token) tokenEl.innerText = token;
-            },
-
             hide() {
-                if (this.overlay) this.overlay.style.display = 'none';
+                if (this.overlay) {
+                    const card = this.overlay.querySelector('#taurus-card');
+                    this.overlay.style.opacity = '0';
+                    card.style.transform = 'scale(0.95)';
+
+                    setTimeout(() => {
+                        this.overlay.style.display = 'none';
+                    }, 400); // Match transition time
+                }
             }
         };
 
