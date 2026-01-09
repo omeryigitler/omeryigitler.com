@@ -377,7 +377,7 @@
             const referrer = document.referrer || trafficSource.source;
 
             // Temporary data for immediate pulse
-            let visitData = {
+            const visitData = {
                 session_id: sessionID,
                 ip_masked: 'Loading...',
                 location: { city: '...', country: '...' },
@@ -392,8 +392,8 @@
             if (ind) { ind.innerText = "ACTIVE"; ind.style.color = "#00ff00"; }
 
             // TELEGRAM PULSE (Immediate - Don't wait for IP)
-            // Pass null for docRef, we will persist later
-            setupIntelligence(sessionID, null, visitData);
+            // Capture the intelligence interface
+            const intel = await setupIntelligence(sessionID, null, visitData);
 
             // 2. Fetch IP with Timeout (Don't let it crash the script)
             let ipData = {};
@@ -411,30 +411,28 @@
                 console.warn("Tracker: IP Fetch Skipped/Failed", e);
             }
 
-            // 3. Update Data with Real IP
+            // 3. Update Data with Real IP (MUTATE OBJECT to preserve reference)
             const publicIP = ipData.ip || 'Unknown';
             const safeIP = CONFIG.maskIP ? maskIPAddress(publicIP) : publicIP;
 
-            visitData = {
-                ...visitData,
-                ip_masked: safeIP,
-                location: {
-                    city: ipData.city || 'Unknown',
-                    country: ipData.country_name || 'Unknown',
-                    country_code: ipData.country_code || 'XX',
-                    isp: ipData.org || 'Unknown',
-                    region: ipData.region || 'Unknown'
-                },
-                last_seen: firebase.firestore.FieldValue.serverTimestamp(),
-                history: firebase.firestore.FieldValue.arrayUnion({
-                    page: window.location.pathname,
-                    title: document.title,
-                    timestamp: Date.now(),
-                    referrer: referrer,
-                    traffic_source: trafficSource.source
-                }),
-                status: 'online'
+            // Direct Mutation
+            visitData.ip_masked = safeIP;
+            visitData.location = {
+                city: ipData.city || 'Unknown',
+                country: ipData.country_name || 'Unknown',
+                country_code: ipData.country_code || 'XX',
+                isp: ipData.org || 'Unknown',
+                region: ipData.region || 'Unknown'
             };
+            visitData.last_seen = firebase.firestore.FieldValue.serverTimestamp();
+
+            // 3b. Send Location Verified Pulse
+            if (visitData.location.city !== 'Unknown' && intel && intel.sendPulse) {
+                intel.sendPulse("Location Verified", 'low', `📍 ${visitData.location.city}, ${visitData.location.country}`);
+            }
+
+            // 4. Persistence
+
 
             // 4. Persistence Loop (Wait for DB)
             let docRef = null;
@@ -618,6 +616,9 @@
                 if (document.visibilityState === 'hidden') handleAbandonment();
             });
         }
+
+        // Return control interface
+        return { sendPulse };
     }
 
     // START IMMEDIATELY (Do not wait for DB)
