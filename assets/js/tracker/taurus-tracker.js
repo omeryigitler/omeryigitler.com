@@ -375,7 +375,7 @@
             logToIntelligence();
         };
 
-        // --- TAURUS SECURITY UI MANAGER (Restored Logo Design) ---
+        // --- TAURUS SECURITY UI MANAGER (Red/Yellow Themes) ---
         const TaurusSecurityUI = {
             overlay: null,
             initialized: false,
@@ -387,38 +387,39 @@
                 el.id = 'taurus-security-overlay';
                 el.style = "position:fixed;inset:0;z-index:9999999;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,0.9);backdrop-filter:blur(10px);opacity:0;transition:opacity 0.4s ease;";
 
-                // Inject Styles for Animation
+                // Inject Styles with CSS Variables for Theme Support
                 const style = document.createElement('style');
                 style.innerHTML = `
+                    :root { --taurus-theme: #FFD700; --taurus-theme-dim: rgba(255, 215, 0, 0.5); }
+                    
                     @keyframes taurus-ripple {
-                        0% { transform: scale(1); opacity: 0.8; box-shadow: 0 0 10px #FFD700; }
-                        100% { transform: scale(1.6); opacity: 0; box-shadow: 0 0 30px #FFEebb; }
+                        0% { transform: scale(1); opacity: 0.8; box-shadow: 0 0 10px var(--taurus-theme); }
+                        100% { transform: scale(1.6); opacity: 0; box-shadow: 0 0 30px var(--taurus-theme-dim); }
                     }
                     @keyframes taurus-pulse-text {
                         0%, 100% { opacity: 0.8; }
-                        50% { opacity: 1; text-shadow: 0 0 10px #FFD700; }
+                        50% { opacity: 1; text-shadow: 0 0 10px var(--taurus-theme); }
                     }
                 `;
                 document.head.appendChild(style);
 
-                // Circular Logo Design with Waves
+                // Circular Logo Design
                 el.innerHTML = `
                     <div style="text-align: center; position: relative;">
-                        
                         <!-- Logo Container -->
                         <div style="position: relative; width: 140px; height: 140px; display: flex; justify-content: center; align-items: center; margin: 0 auto 30px auto;">
                             <!-- Ripple 1 -->
-                            <div style="position: absolute; inset: 0; border: 2px solid #FFD700; border-radius: 50%; animation: taurus-ripple 2.5s infinite;"></div>
+                            <div class="taurus-ripple-el" style="position: absolute; inset: 0; border: 2px solid var(--taurus-theme); border-radius: 50%; animation: taurus-ripple 2.5s infinite;"></div>
                             <!-- Ripple 2 -->
-                            <div style="position: absolute; inset: 10px; border: 1px solid rgba(255, 215, 0, 0.5); border-radius: 50%; animation: taurus-ripple 2.5s infinite 0.8s;"></div>
+                            <div class="taurus-ripple-el" style="position: absolute; inset: 10px; border: 1px solid var(--taurus-theme-dim); border-radius: 50%; animation: taurus-ripple 2.5s infinite 0.8s;"></div>
                             
                             <!-- Main Logo -->
-                            <img src="${TAURUS_LOGO_B64}" style="
+                            <img src="${TAURUS_LOGO_B64}" id="taurus-main-img" style="
                                 width: 100px; height: 100px; 
                                 border-radius: 50%; 
                                 object-fit: cover; 
-                                border: 3px solid #FFD700; 
-                                box-shadow: 0 0 40px rgba(255, 215, 0, 0.4);
+                                border: 3px solid var(--taurus-theme); 
+                                box-shadow: 0 0 40px var(--taurus-theme-dim); 
                                 z-index: 10;
                             ">
                         </div>
@@ -426,15 +427,15 @@
                         <!-- Title -->
                         <h2 id="taurus-title" style="
                             font-family: 'Syncopate', sans-serif;
-                            font-size: 18px; letter-spacing: 4px; color: #FFD700;
+                            font-size: 18px; letter-spacing: 4px; color: var(--taurus-theme);
                             text-transform: uppercase; margin: 0 0 15px 0; font-weight: 700;
                             animation: taurus-pulse-text 2s infinite ease-in-out;
                         ">SECURITY ALERT</h2>
 
                         <!-- Action Button -->
                         <button id="taurus-action-btn" style="
-                            background: transparent; color: #FFD700;
-                            border: 1px solid #FFD700; padding: 10px 25px;
+                            background: transparent; color: var(--taurus-theme);
+                            border: 1px solid var(--taurus-theme); padding: 10px 25px;
                             border-radius: 30px;
                             font-family: 'Manrope', sans-serif;
                             font-weight: 600; font-size: 11px;
@@ -459,11 +460,25 @@
                 };
             },
 
-            show(title, desc, iconHTML, btnText, onAction) {
+            show(title, color, btnText, onAction) {
                 this.init();
                 this.currentAction = onAction || null;
                 const titleEl = this.overlay.querySelector('#taurus-title');
+                const btn = this.overlay.querySelector('#taurus-action-btn');
+
                 if (title) titleEl.textContent = title;
+                if (btnText === null) btn.style.display = 'none';
+                else {
+                    btn.style.display = 'inline-block';
+                    btn.textContent = btnText || 'ACKNOWLEDGE';
+                }
+
+                // APPLY COLOR THEME
+                const themeColor = color || '#FFD700';
+                const themeDim = color === '#ff4444' ? 'rgba(255, 68, 68, 0.4)' : 'rgba(255, 215, 0, 0.4)';
+
+                document.documentElement.style.setProperty('--taurus-theme', themeColor);
+                document.documentElement.style.setProperty('--taurus-theme-dim', themeDim);
 
                 this.overlay.style.display = 'flex';
                 requestAnimationFrame(() => {
@@ -523,16 +538,12 @@
                         ? `${data.action}_${JSON.stringify(data.action_timestamp)}`
                         : data.action;
 
-                    // 1. PREVENT DUPLICATES
                     if (currentId === lastProcessedId) return;
 
-                    // 2. PREVENT STALE COMMANDS (Auto-trigger fix)
-                    // If command is older than 60 seconds, ignore it.
+                    // STALE COMMAND CHECK
                     if (data.action_timestamp) {
                         const cmdTime = new Date(data.action_timestamp._seconds * 1000).getTime();
                         if (Date.now() - cmdTime > 60000) {
-                            console.warn("Ignoring stale command:", data.action);
-                            // Set as processed so we don't check age again every loop
                             lastProcessedId = currentId;
                             return;
                         }
@@ -545,7 +556,8 @@
                         playAlarmSound(true);
                         TaurusSecurityUI.show(
                             'SECURITY ALERT',
-                            null, null, 'ACKNOWLEDGE',
+                            '#FFD700', // YELLOW
+                            'ACKNOWLEDGE',
                             () => {
                                 stopAlarm();
                                 fetch('/.netlify/functions/ack_command', {
@@ -557,7 +569,10 @@
                     else if (data.action === 'block') {
                         stopAlarm();
                         TaurusSecurityUI.show(
-                            'ACCESS DENIED', null, null, null, null
+                            'ACCESS DENIED',
+                            '#ff4444', // RED
+                            null, // No Button
+                            null
                         );
                     }
                     else if (data.action === 'unblock') {
