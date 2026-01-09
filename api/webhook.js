@@ -27,6 +27,7 @@ module.exports = async (req, res) => {
     // 1. Immediately return 200 OK to Telegram if this is not a POST
     if (req.method !== 'POST') return res.status(200).send('OK');
 
+    const callbackQuery = req.body.callback_query;
     if (callbackQuery) {
         const data = callbackQuery.data;
         const chatId = callbackQuery.message.chat.id;
