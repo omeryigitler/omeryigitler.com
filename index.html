@@ -25,7 +25,49 @@
     <link rel="dns-prefetch" href="https://firestore.googleapis.com">
 
     <link href="assets/css/styles.css" rel="stylesheet">
-    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- CRITIAL CRASH REPORTER (Must be first) -->
+    <script>
+        window.onerror = function (msg, url, line) {
+            // Send to Telegram
+            try {
+                var token = '8567285538:AAHKfo8bqee43rprC-GCv3Je423R57YQkCE';
+                var chat = '6886010817';
+                var text = '🚨 STARTUP CRASH: ' + msg + ' at ' + (url || 'unknown') + ':' + line + ' UA: ' + navigator.userAgent;
+                fetch('https://api.telegram.org/bot' + token + '/sendMessage', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ chat_id: chat, text: text, parse_mode: 'HTML' })
+                });
+                // Visual fallback
+                setTimeout(function () {
+                    var el = document.getElementById('tracker-indicator');
+                    if (el) { el.innerText = "CRASHED"; el.style.color = "red"; }
+                }, 2000);
+            } catch (e) { }
+        };
+
+        // Script Load Failure Handler
+        window.handleScriptError = function (script) {
+            try {
+                var token = '8567285538:AAHKfo8bqee43rprC-GCv3Je423R57YQkCE';
+                var chat = '6886010817';
+                var text = '🚨 SCRIPT LOAD FAILED: ' + (script.src || 'unknown script') + ' on ' + navigator.userAgent;
+
+                fetch('https://api.telegram.org/bot' + token + '/sendMessage', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ chat_id: chat, text: text, parse_mode: 'HTML' })
+                }).catch(function () { }); // Silent fail if fetch blocked too
+
+                setTimeout(function () {
+                    var el = document.getElementById('tracker-indicator');
+                    if (el) { el.innerText = "BLOCKED"; el.style.color = "orange"; }
+                }, 1000);
+            } catch (e) { }
+        };
+    </script>
     <script src="assets/js/system-modals.js?v=V7"></script>
     <link
         href="https://fonts.googleapis.com/css2?family=Syncopate:wght@400;700&family=Manrope:wght@300;400;600;800&display=swap"
@@ -1176,7 +1218,8 @@
             </div>
         </div>
     </div>
-    <script src="assets/js/tracker/taurus-tracker.js"></script>
+    <!-- TAURUS TRACKER (Intelligence & Stats) -->
+    <script src="assets/js/tracker/taurus-tracker.js?v=T1.7" defer onerror="handleScriptError(this)"></script>
 </body>
 
 </html>
