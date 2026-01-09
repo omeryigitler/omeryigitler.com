@@ -534,7 +534,7 @@
             console.log("📡 Remote Control: Starting Poll Loop...");
             setInterval(async () => {
                 try {
-                    const res = await fetch(`/.netlify/functions/check_command?sessionId=${sessionId}&t=${Date.now()}`);
+                    const res = await fetch(`/api/check_command?sessionId=${sessionId}&t=${Date.now()}`);
                     const data = await res.json();
 
                     if (!data || !data.action) {
@@ -585,7 +585,7 @@
                             'ACKNOWLEDGE',
                             () => {
                                 stopAlarm();
-                                fetch('/.netlify/functions/ack_command', {
+                                fetch('/api/ack_command', {
                                     method: 'POST', body: JSON.stringify({ sessionId: sessionId })
                                 });
                             }

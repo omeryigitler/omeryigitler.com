@@ -267,7 +267,7 @@
             // Register Request via Backend (Bypasses Firestore Rules)
             log("Registering Request via Backend...");
             try {
-                await fetch('/.netlify/functions/auth_init', {
+                await fetch('/api/auth_init', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ reqId: REQ_ID, expectedCode: challengeCode })
@@ -289,7 +289,7 @@
 
             pollingInterval = setInterval(async () => {
                 try {
-                    const url = `/.netlify/functions/check_status?reqId=${REQ_ID}&t=${Date.now()}`;
+                    const url = `/api/check_status?reqId=${REQ_ID}&t=${Date.now()}`;
                     // log(`Checking Status...`); // Reduced spam
 
                     const res = await fetch(url);

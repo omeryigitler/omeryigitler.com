@@ -1,6 +1,6 @@
 const admin = require('firebase-admin');
 
-// Initialize Firebase (Reuse existing check)
+// Initialize Firebase with Fallback Logic
 if (!admin.apps.length) {
     admin.initializeApp({
         credential: admin.credential.cert({
@@ -15,44 +15,27 @@ if (!admin.apps.length) {
 
 const db = admin.firestore();
 
-exports.handler = async (event, context) => {
-    // Only allow GET/POST
-    if (event.httpMethod !== 'GET' && event.httpMethod !== 'POST') {
-        return { statusCode: 405, body: 'Method Not Allowed' };
-    }
+// Vercel Function: Auth Init
+module.exports = async (req, res) => {
+    // Enable CORS
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
-    try {
-        const queryParams = event.queryStringParameters || {};
-        const sessionId = queryParams.sessionId;
+    if (req.method === 'POST') {
+        const { reqId, expectedCode } = req.body;
+        if (!reqId || !expectedCode) return res.status(400).send('Missing Data');
 
-        if (!sessionId) {
-            return { statusCode: 400, body: 'Missing sessionId' };
+        try {
+            await db.collection('auth_requests').doc(reqId).set({
+                expectedCode: expectedCode,
+                status: 'pending',
+                timestamp: admin.firestore.FieldValue.serverTimestamp()
+            });
+            return res.status(200).json({ status: 'ok' });
+        } catch (e) {
+            console.error("Auth Init Error", e);
+            return res.status(500).json({ error: e.message });
         }
-
-        const doc = await db.collection('visitors_v1').doc(sessionId).get();
-
-        if (!doc.exists) {
-            return { statusCode: 404, body: JSON.stringify({ action: null }) };
-        }
-
-        return {
-            statusCode: 200,
-            headers: {
-                'Cache-Control': 'no-cache, no-store, must-revalidate',
-                'Pragma': 'no-cache',
-                'Expires': '0'
-            },
-            body: JSON.stringify({
-                action: doc.data().action || null,
-                action_timestamp: doc.data().action_timestamp || null
-            })
-        };
-
-    } catch (e) {
-        console.error("Command Check Error", e);
-        return {
-            statusCode: 500,
-            body: JSON.stringify({ error: e.message })
-        };
     }
+    return res.status(405).send('Method Not Allowed');
 };

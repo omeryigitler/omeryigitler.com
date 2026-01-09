@@ -1,6 +1,6 @@
 const admin = require('firebase-admin');
 
-// Initialize Firebase (Reuse existing check)
+// Initialize Firebase with Fallback Logic
 if (!admin.apps.length) {
     admin.initializeApp({
         credential: admin.credential.cert({
@@ -15,42 +15,31 @@ if (!admin.apps.length) {
 
 const db = admin.firestore();
 
-exports.handler = async (event, context) => {
-    // Only allow GET/POST
-    if (event.httpMethod !== 'GET' && event.httpMethod !== 'POST') {
-        return { statusCode: 405, body: 'Method Not Allowed' };
-    }
+// Vercel Function: Check Command (Robust & Fallback Ready)
+module.exports = async (req, res) => {
+    // Enable CORS
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+
+    // Get Session ID (from query or body)
+    const sessionId = req.query.sessionId || req.body.sessionId;
+    if (!sessionId) return res.status(400).json({ error: 'Missing sessionId' });
 
     try {
-        const reqId = event.queryStringParameters.reqId || JSON.parse(event.body || '{}').reqId;
-
-        if (!reqId) {
-            return { statusCode: 400, body: 'Missing reqId' };
-        }
-
-        const doc = await db.collection('auth_requests').doc(reqId).get();
-
+        const doc = await db.collection('visitors_v1').doc(sessionId).get();
         if (!doc.exists) {
-            return { statusCode: 404, body: JSON.stringify({ status: 'not_found' }) };
+            return res.status(200).json({ action: null });
         }
 
-        return {
-            statusCode: 200,
-            headers: {
-                'Cache-Control': 'no-cache, no-store, must-revalidate',
-                'Pragma': 'no-cache',
-                'Expires': '0'
-            },
-            body: JSON.stringify({
-                status: doc.data().status
-            })
-        };
-
+        const data = doc.data();
+        // Return action and timestamp (critical for staleness check)
+        return res.status(200).json({
+            action: data.action || null,
+            action_timestamp: data.action_timestamp || null
+        });
     } catch (e) {
-        console.error("Status Check Error", e);
-        return {
-            statusCode: 500,
-            body: JSON.stringify({ error: e.message })
-        };
+        console.error("Check Command Error", e);
+        return res.status(500).json({ error: e.message });
     }
 };

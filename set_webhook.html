@@ -72,7 +72,7 @@
             // Determine if Netlify or Vercel based on domain
             let webhookPath = '';
             if (url.includes('netlify.app')) {
-                webhookPath = '/.netlify/functions/webhook';
+                webhookPath = '/api/webhook';
             } else {
                 webhookPath = '/api/webhook';
             }

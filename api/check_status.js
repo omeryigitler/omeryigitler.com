@@ -1,6 +1,6 @@
 const admin = require('firebase-admin');
 
-// Initialize Firebase (Reuse existing check)
+// Initialize Firebase with Fallback Logic
 if (!admin.apps.length) {
     admin.initializeApp({
         credential: admin.credential.cert({
@@ -15,37 +15,24 @@ if (!admin.apps.length) {
 
 const db = admin.firestore();
 
-exports.handler = async (event, context) => {
-    // Only allow POST
-    if (event.httpMethod !== 'POST') {
-        return { statusCode: 405, body: 'Method Not Allowed' };
-    }
+// Vercel Function: Check Status
+module.exports = async (req, res) => {
+    // Enable CORS
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+
+    const reqId = req.query.reqId;
+    if (!reqId) return res.status(400).json({ error: 'Missing reqId' });
 
     try {
-        const body = JSON.parse(event.body);
-        const { reqId, expectedCode } = body;
-
-        if (!reqId || !expectedCode) {
-            return { statusCode: 400, body: 'Missing fields' };
+        const doc = await db.collection('auth_requests').doc(reqId).get();
+        if (!doc.exists) {
+            return res.status(404).json({ status: 'not_found' });
         }
-
-        // Write to Firestore using Admin SDK (Bypasses Rules)
-        await db.collection('auth_requests').doc(reqId).set({
-            expectedCode: parseInt(expectedCode),
-            status: 'pending',
-            timestamp: admin.firestore.FieldValue.serverTimestamp()
-        });
-
-        return {
-            statusCode: 200,
-            body: JSON.stringify({ success: true })
-        };
-
+        return res.status(200).json({ status: doc.data().status });
     } catch (e) {
-        console.error("Auth Init Error", e);
-        return {
-            statusCode: 500,
-            body: JSON.stringify({ error: e.message })
-        };
+        console.error("Check Status Error", e);
+        return res.status(500).json({ error: e.message });
     }
 };
