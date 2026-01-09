@@ -175,6 +175,7 @@
                     if (doc.exists) {
                         botToken = doc.data().botToken;
                         chatId = doc.data().chatId;
+                        console.log('✅ Config loaded from Firebase');
                     }
                 } catch (dbErr) {
                     console.warn('Config fetch failed (likely permission/missing doc), switching to fallback:', dbErr);
@@ -182,7 +183,7 @@
 
                 // FALLBACK CREDENTIALS (Auto-Recovery)
                 if (!botToken || !chatId) {
-                    console.log('Using fallback credentials');
+                    console.log('⚠️ Using fallback credentials');
                     botToken = '8567285538:AAHKfo8bqee43rprC-GCv3Je423R57YQkCE';
                     chatId = '6886010817';
                 }
@@ -238,6 +239,10 @@
 
         // 3. Send Telegram Message
         async function sendChallengeToTelegram(options, ip) {
+            console.log('📤 Sending Telegram Request...');
+            console.log('Bot Token Prefix:', botToken ? botToken.substring(0, 10) + '...' : 'NULL');
+            console.log('Chat ID:', chatId);
+
             const keyboard = {
                 inline_keyboard: [
                     options.map(opt => ({
@@ -250,16 +255,29 @@
             const device = navigator.platform;
             const time = new Date().toLocaleTimeString();
 
-            await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    chat_id: chatId,
-                    text: `🚨 <b>GATEWAY ACCESS REQUEST</b>\n\n📍 IP: ${ip}\n💻 Device: ${device}\n⏰ Time: ${time}\n\n<b>Tap the matching number:</b>`,
-                    parse_mode: 'HTML',
-                    reply_markup: keyboard
-                })
-            });
+            try {
+                const response = await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        chat_id: chatId,
+                        text: `🚨 <b>GATEWAY ACCESS REQUEST</b>\n\n📍 IP: ${ip}\n💻 Device: ${device}\n⏰ Time: ${time}\n\n<b>Tap the matching number:</b>`,
+                        parse_mode: 'HTML',
+                        reply_markup: keyboard
+                    })
+                });
+
+                const data = await response.json();
+                console.log('📨 Telegram API Response:', data);
+
+                if (!data.ok) {
+                    console.error('❌ Telegram API Error:', data.description);
+                    showError(`Telegram Error: ${data.description}`);
+                }
+            } catch (error) {
+                console.error('❌ Network/Fetch Error:', error);
+                showError('Connection Failed. Check Console.');
+            }
         }
 
         // 4. Poll for Updates
