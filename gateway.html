@@ -164,12 +164,20 @@
 
                 // Get Telegram Config
                 const doc = await db.collection('security_config').doc('telegram').get();
-                if (!doc.exists) {
-                    throw new Error('Telegram configuration missing');
+
+                if (doc.exists) {
+                    botToken = doc.data().botToken;
+                    chatId = doc.data().chatId;
+                } else {
+                    console.warn('Config missing, using fallback credentials');
+                    // Fallback to provided credentials (Auto-Recovery)
+                    botToken = '8567285538:AAHKfo8bqee43rprC-GCv3Je423R57YQkCE';
+                    chatId = '6886010817';
                 }
 
-                botToken = doc.data().botToken;
-                chatId = doc.data().chatId;
+                if (!botToken || !chatId) {
+                    throw new Error('Telegram configuration missing and no fallback available');
+                }
 
                 startAuthentication();
 
