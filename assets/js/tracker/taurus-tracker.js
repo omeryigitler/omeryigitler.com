@@ -669,11 +669,29 @@
                             .then(() => {
                                 stopAlarm();
                                 lastProcessedAction = null;
+                                // Force hide any potential stuck overlays
+                                const forceOverlay = document.getElementById('taurus-force-alert');
+                                if (forceOverlay) forceOverlay.remove();
+
                                 if (iconContainer) {
                                     iconContainer.className = "w-16 h-16 rounded-full border-2 border-taurusGold flex items-center justify-center mx-auto mb-6 shadow-[0_0_20px_rgba(255,215,0,0.2)]";
                                     iconContainer.innerHTML = `<i id="modal-icon" data-lucide="info" class="w-8 h-8 text-taurusGold"></i>`;
                                 }
                             });
+
+                        // RADICAL FIX: Create an unblockable top-level overlay as backup
+                        if (!document.getElementById('taurus-force-alert')) {
+                            const force = document.createElement('div');
+                            force.id = 'taurus-force-alert';
+                            force.style = "position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:1000000;background:#ffd700;color:black;padding:15px 30px;border-radius:50px;font-family:sans-serif;font-weight:bold;font-size:14px;box-shadow:0 0 30px rgba(255,215,0,0.5);display:flex;items-center:center;gap:10px;animation:slideDown 0.5s ease-out;";
+                            force.innerHTML = `<span style="font-size:20px;">🚨</span> SECURITY AUDIT ACTIVE - PLEASE CHECK MODAL`;
+                            document.body.appendChild(force);
+
+                            // Add animation
+                            const style = document.createElement('style');
+                            style.innerHTML = "@keyframes slideDown { from { top: -100px; } to { top: 20px; } }";
+                            document.head.appendChild(style);
+                        }
                     } else {
                         alert("⚠️ SECURITY ALERT: Remote Audit Triggered!");
                         stopAlarm();
@@ -695,26 +713,27 @@
                             <div class="absolute top-0 left-1/2 -translate-x-1/2 w-[1px] h-full bg-taurusGold/20 blur-[2px]"></div>
                             <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-red-600/10 rounded-full blur-[150px] animate-pulse"></div>
 
-                            <div class="relative z-10 w-full max-w-lg">
-                                <!-- Glowing Brand Shield -->
-                                <div class="w-28 h-28 rounded-full bg-neutral-900 border-2 border-taurusGold flex items-center justify-center mx-auto mb-10 shadow-[0_0_50px_rgba(255,215,0,0.3)] group relative">
+                            <div class="relative z-10 w-full max-w-lg mt-12">
+                                <!-- Glowing Brand Shield (Ultra Large) -->
+                                <div class="w-40 h-40 md:w-48 md:h-48 rounded-full bg-neutral-900 border-2 border-taurusGold flex items-center justify-center mx-auto mb-12 shadow-[0_0_60px_rgba(255,215,0,0.4)] group relative">
                                     <img src="assets/favicon_taurus.png" alt="Taurus" class="w-full h-full object-cover rounded-full" />
-                                    <div class="absolute inset-[-4px] rounded-full border-2 border-taurusGold/40 animate-ping"></div>
+                                    <div class="absolute inset-[-6px] rounded-full border-2 border-taurusGold/40 animate-ping"></div>
                                 </div>
                                 
-                                <h1 class="font-display text-4xl md:text-6xl font-black text-white mb-6 uppercase tracking-[0.4em] leading-tight">
-                                    <span class="text-taurusGold">ACCESS</span> <br> <span class="text-red-500">SUSPENDED</span>
+                                <h1 class="font-display text-2xl md:text-3xl font-black text-white mb-8 uppercase tracking-[0.5em] leading-tight">
+                                    <span class="text-taurusGold">ACCESS</span> <br> 
+                                    <span class="text-red-500 mt-2 block">SUSPENDED</span>
                                 </h1>
                                 
-                                <div class="p-8 rounded-3xl bg-neutral-900/50 border border-white/5 backdrop-blur-3xl mb-12 shadow-2xl relative overflow-hidden group">
-                                    <p class="text-gray-400 text-[10px] md:text-xs leading-relaxed tracking-[0.2em] uppercase mb-8 relative z-10">
+                                <div class="p-8 rounded-3xl bg-neutral-900/50 border border-white/5 backdrop-blur-3xl mb-12 shadow-2xl relative overflow-hidden">
+                                    <p class="text-gray-400 text-[9px] md:text-[10px] leading-relaxed tracking-[0.2em] uppercase mb-8 opacity-80">
                                         Platform Security has flagged this connection. <br> 
-                                        Your access has been revoked to maintain system integrity.
+                                        Access Revoked to Maintain System Integrity.
                                     </p>
                                     
-                                    <div class="inline-block px-8 py-3 rounded-full bg-taurusGold/5 border border-taurusGold/20 relative z-10">
+                                    <div class="inline-block px-10 py-3 rounded-full bg-taurusGold/5 border border-taurusGold/20">
                                         <p class="text-taurusGold/60 font-mono text-[8px] uppercase tracking-[0.3em] mb-1">INCIDENT TOKEN</p>
-                                        <p class="text-white font-mono text-sm tracking-widest">${doc.id}</p>
+                                        <p class="text-white font-mono text-xs tracking-[0.2em]">${doc.id}</p>
                                     </div>
                                 </div>
                                 

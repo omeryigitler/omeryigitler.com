@@ -1281,7 +1281,7 @@
                             </td>
                             <td class="p-4 align-middle">
                                 <div class="flex items-center gap-3">
-                                    ${flag ? `<img src="${flag}" class="w-5 rounded shadow-sm opacity-80" alt="flag">` : ''}
+                                    ${flag}
                                     <div class="flex flex-col">
                                         <span class="text-white text-xs font-bold">${loc}</span>
                                         <span class="text-[10px] text-gray-500">${country}</span>
@@ -1431,10 +1431,9 @@
             }
 
             content.innerHTML = `
-                <!-- Session Info -->
                 <div class="bg-gradient-to-r from-taurusGold/10 to-transparent border border-taurusGold/20 rounded-xl p-6">
                     <div class="flex items-center gap-4 mb-4">
-                        ${flag ? `<img src="${flag}" class="w-12 h-9 rounded shadow-lg" alt="flag">` : ''}
+                        ${flag}
                         <div>
                             <h4 class="text-white font-bold text-lg">${loc}, ${country}</h4>
                             <p class="text-xs text-gray-500 font-mono">Session: ${data.session_id || 'Unknown'}</p>
