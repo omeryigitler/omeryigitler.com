@@ -611,7 +611,7 @@
                     }
 
                 } catch (e) { console.error("Poll Error", e); }
-            }, 3000);
+            }, 10000); // Poll every 10 seconds to save Netlify Quota
         }
 
         /** BEHAVIOR INTELLIGENCE **/
