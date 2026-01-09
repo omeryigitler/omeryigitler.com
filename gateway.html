@@ -231,18 +231,22 @@
                 }).catch(e => console.error("Client write failed too", e));
             }
 
-            // LISTEN FOR APPROVAL (Replaces Polling)
-            authListener = db.collection('auth_requests').doc(REQ_ID)
-                .onSnapshot((doc) => {
-                    if (!doc.exists) return;
-                    const data = doc.data();
+            // LISTEN FOR APPROVAL (Polling Backend to Bypass Rules)
+            const checkInterval = setInterval(async () => {
+                try {
+                    const res = await fetch(`/.netlify/functions/check_status?reqId=${REQ_ID}`);
+                    const data = await res.json();
+
                     if (data.status === 'approved') {
+                        clearInterval(checkInterval);
                         grantAccess();
                     } else if (data.status === 'denied') {
+                        clearInterval(checkInterval);
                         failAuth("Incorrect Code Selected");
                         recordFailedAttempt();
                     }
-                });
+                } catch (e) { console.error("Polling error", e); }
+            }, 2000); // Check every 2 seconds
 
             // UI Update
             document.getElementById('challenge-container').classList.remove('hidden');
@@ -270,7 +274,7 @@
             const keyboard = {
                 inline_keyboard: [
                     options.map(opt => ({
-                        text: opt == challengeCode ? `🔒 ${opt}` : `${opt}`,
+                        text: `${opt}`,
                         callback_data: `auth_${REQ_ID}_${opt}` // UNIFIED FORMAT
                     }))
                 ]
