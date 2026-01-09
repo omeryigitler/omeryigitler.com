@@ -67,24 +67,103 @@
             }
         }
 
-        // Device Model (for mobile)
+        // Device Model (Advanced Detection)
         let deviceModel = "";
         if (deviceType === "Mobile" || deviceType === "Tablet") {
-            // iPhone detection
+            // iPhone detection (using screen dimensions + pixel ratio + memory)
             if (ua.includes("iPhone")) {
-                deviceModel = "iPhone";
-                // Try to detect model (limited without jailbreak)
-                if (window.screen.height === 844) deviceModel = "iPhone 14/13";
-                else if (window.screen.height === 926) deviceModel = "iPhone 14 Pro Max";
+                const screenHeight = window.screen.height;
+                const screenWidth = window.screen.width;
+                const pixelRatio = window.devicePixelRatio || 1;
+                const memory = navigator.deviceMemory; // GB (if available)
+
+                // iPhone Model Database (by screen size and pixel ratio)
+                const iPhoneModels = {
+                    // iPhone 15 Series (2023)
+                    '932x430@3': 'iPhone 15 Pro Max',
+                    '852x393@3': 'iPhone 15 Pro',
+                    '844x390@3': 'iPhone 15 / 15 Plus',
+
+                    // iPhone 14 Series (2022)
+                    '926x428@3': 'iPhone 14 Pro Max',
+                    '852x393@3': 'iPhone 14 Pro',
+                    '844x390@3': 'iPhone 14',
+                    '926x428@3': 'iPhone 14 Plus',
+
+                    // iPhone 13 Series (2021)
+                    '926x428@3': 'iPhone 13 Pro Max',
+                    '844x390@3': 'iPhone 13 / 13 Pro',
+                    '812x375@3': 'iPhone 13 mini',
+
+                    // iPhone 12 Series (2020)
+                    '926x428@3': 'iPhone 12 Pro Max',
+                    '844x390@3': 'iPhone 12 / 12 Pro',
+                    '812x375@3': 'iPhone 12 mini',
+
+                    // iPhone 11 Series (2019)
+                    '896x414@2': 'iPhone 11 Pro Max',
+                    '812x375@3': 'iPhone 11 Pro / XS',
+                    '896x414@2': 'iPhone 11 / XR',
+
+                    // iPhone X/XS (2017-2018)
+                    '812x375@3': 'iPhone X / XS',
+                    '896x414@3': 'iPhone XS Max',
+
+                    // iPhone SE & older
+                    '667x375@2': 'iPhone SE 2/3 / 8 / 7 / 6s',
+                    '736x414@3': 'iPhone 8 Plus / 7 Plus',
+                    '568x320@2': 'iPhone SE 1st gen / 5s'
+                };
+
+                const key = `${screenHeight}x${screenWidth}@${pixelRatio}`;
+                deviceModel = iPhoneModels[key] || `iPhone (${screenWidth}x${screenHeight})`;
+
+                // Additional check with memory (if available)
+                if (memory >= 6) deviceModel = deviceModel.replace('iPhone 1', 'iPhone 1') + ' (Pro)';
             }
-            // iPad detection  
+            // iPad detection (using screen size)
             else if (ua.includes("iPad")) {
-                deviceModel = "iPad";
+                const screenHeight = window.screen.height;
+                const screenWidth = window.screen.width;
+
+                const iPadModels = {
+                    // iPad Pro
+                    '1366x1024': 'iPad Pro 12.9"',
+                    '1194x834': 'iPad Pro 11"',
+                    '1133x744': 'iPad Pro 10.5"',
+
+                    // iPad Air
+                    '1180x820': 'iPad Air (4th/5th gen)',
+                    '1112x834': 'iPad Air (3rd gen)',
+
+                    // iPad Mini
+                    '1133x744': 'iPad Mini (6th gen)',
+                    '1024x768': 'iPad Mini (older)',
+
+                    // Standard iPad
+                    '1080x810': 'iPad (10th gen)',
+                    '1080x810': 'iPad (9th gen)'
+                };
+
+                const key = `${screenHeight}x${screenWidth}`;
+                deviceModel = iPadModels[key] || `iPad (${screenWidth}x${screenHeight})`;
             }
-            // Android device name (often in UA)
+            // Android device name (enhanced extraction from UA)
             else if (ua.includes("Android")) {
-                const deviceMatch = ua.match(/;\s([^;)]+)\sBuild/);
-                if (deviceMatch) deviceModel = deviceMatch[1];
+                // Try multiple patterns
+                let match = ua.match(/;\s*([^;)]+)\s+Build\//); // "Samsung SM-G998B Build/"
+                if (!match) match = ua.match(/;\s*([A-Z][A-Za-z0-9\s\-]+)\s+Build/); // Fallback
+                if (!match) match = ua.match(/Android[^;]*;\s*([^)]+)\)/); // Last resort
+
+                if (match) {
+                    let model = match[1].trim();
+                    // Clean up common patterns
+                    model = model.replace(/^(SAMSUNG|Samsung)\s*/i, '');
+                    model = model.replace(/\s*Build.*$/i, '');
+                    deviceModel = model;
+                } else {
+                    deviceModel = "Android Device";
+                }
             }
         } else {
             // Desktop device info
