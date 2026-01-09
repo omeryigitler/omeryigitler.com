@@ -20,6 +20,14 @@ if (!admin.apps.length) {
     });
 }
 
+// ... Skipping context in replacement chunk ...
+
+await axios.post(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+    chat_id: chatId,
+    text: `✅ <b>Action Applied:</b> ${action.toUpperCase()}`,
+    parse_mode: 'HTML'
+});
+
 const db = admin.firestore();
 const BOT_TOKEN = "8567285538:AAHKfo8bqee43rprC-GCv3Je423R57YQkCE";
 
