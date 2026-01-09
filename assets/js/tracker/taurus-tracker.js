@@ -808,110 +808,106 @@
                 } catch (e) { console.error("Poll Error", e); }
             }, 3000); // Check every 3 seconds
         }
-        window.location.href = data.url;
-    }
-});
+
+        // Helper: Audio Controls
+        function stopAlarm() { if (alarmInterval) { clearInterval(alarmInterval); alarmInterval = null; } }
+        function playAlarmSound(loop = false) {
+            try {
+                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                const triggerChime = () => {
+                    const now = audioCtx.currentTime;
+                    const playTone = (freq, startTime, duration) => {
+                        const osc = audioCtx.createOscillator();
+                        const gain = audioCtx.createGain();
+                        osc.type = 'square';
+                        osc.frequency.setValueAtTime(freq, startTime);
+                        gain.gain.setValueAtTime(0.08, startTime);
+                        gain.gain.exponentialRampToValueAtTime(0.01, startTime + duration);
+                        osc.connect(gain);
+                        gain.connect(audioCtx.destination);
+                        osc.start(startTime);
+                        osc.stop(startTime + duration);
+                    };
+                    playTone(880, now, 0.1);
+                    playTone(440, now + 0.15, 0.1);
+                    playTone(880, now + 0.3, 0.3);
+                };
+                triggerChime();
+                if (loop) alarmInterval = setInterval(triggerChime, 1500);
+            } catch (e) { }
         }
 
-// Helper: Audio Controls
-function stopAlarm() { if (alarmInterval) { clearInterval(alarmInterval); alarmInterval = null; } }
-function playAlarmSound(loop = false) {
-    try {
-        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        const triggerChime = () => {
-            const now = audioCtx.currentTime;
-            const playTone = (freq, startTime, duration) => {
-                const osc = audioCtx.createOscillator();
-                const gain = audioCtx.createGain();
-                osc.type = 'square';
-                osc.frequency.setValueAtTime(freq, startTime);
-                gain.gain.setValueAtTime(0.08, startTime);
-                gain.gain.exponentialRampToValueAtTime(0.01, startTime + duration);
-                osc.connect(gain);
-                gain.connect(audioCtx.destination);
-                osc.start(startTime);
-                osc.stop(startTime + duration);
-            };
-            playTone(880, now, 0.1);
-            playTone(440, now + 0.15, 0.1);
-            playTone(880, now + 0.3, 0.3);
-        };
-        triggerChime();
-        if (loop) alarmInterval = setInterval(triggerChime, 1500);
-    } catch (e) { }
-}
+        /** BEHAVIOR INTELLIGENCE **/
+        console.log("🧠 Intelligence Module: Active");
 
-/** BEHAVIOR INTELLIGENCE **/
-console.log("🧠 Intelligence Module: Active");
-
-// A. TEXT COPY ALARM
-window.addEventListener('copy', () => {
-    const selection = document.getSelection().toString();
-    if (selection && selection.length > 5) {
-        sendPulse("Text Copied", 'medium', `<i>"${selection.substring(0, 30)}..."</i>`);
-    }
-});
-
-// B. SCROLL DEPTH
-let reachedBottom = false;
-window.addEventListener('scroll', () => {
-    if (reachedBottom) return;
-    if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight - 100) {
-        reachedBottom = true;
-        sendPulse("Full Page Read (100%)", 'medium');
-    }
-});
-
-// C. ABANDONED FORM TRACKING
-const contactForm = document.getElementById('contact-form');
-if (contactForm) {
-    let formData = { name: '', email: '', message: '' };
-    let formDirty = false;
-    let formSubmitted = false;
-
-    ['name', 'email', 'message'].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) {
-            el.addEventListener('input', (e) => {
-                formData[id] = e.target.value;
-                if (e.target.value.length > 0) formDirty = true;
-            });
-        }
-    });
-
-    contactForm.addEventListener('submit', () => { formSubmitted = true; });
-
-    const handleAbandonment = () => {
-        if (formDirty && !formSubmitted) {
-            if (formData.name.length > 2 || formData.email.length > 5 || formData.message.length > 5) {
-                let abandonDetails = `⚠️ <b>Unsent Draft:</b>\n`;
-                if (formData.name) abandonDetails += `👤 ${formData.name}\n`;
-                if (formData.email) abandonDetails += `📧 ${formData.email}\n`;
-                if (formData.message) abandonDetails += `📝 ${formData.message}`;
-                sendPulse("Form Abandoned", 'high', abandonDetails);
+        // A. TEXT COPY ALARM
+        window.addEventListener('copy', () => {
+            const selection = document.getSelection().toString();
+            if (selection && selection.length > 5) {
+                sendPulse("Text Copied", 'medium', `<i>"${selection.substring(0, 30)}..."</i>`);
             }
+        });
+
+        // B. SCROLL DEPTH
+        let reachedBottom = false;
+        window.addEventListener('scroll', () => {
+            if (reachedBottom) return;
+            if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight - 100) {
+                reachedBottom = true;
+                sendPulse("Full Page Read (100%)", 'medium');
+            }
+        });
+
+        // C. ABANDONED FORM TRACKING
+        const contactForm = document.getElementById('contact-form');
+        if (contactForm) {
+            let formData = { name: '', email: '', message: '' };
+            let formDirty = false;
+            let formSubmitted = false;
+
+            ['name', 'email', 'message'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) {
+                    el.addEventListener('input', (e) => {
+                        formData[id] = e.target.value;
+                        if (e.target.value.length > 0) formDirty = true;
+                    });
+                }
+            });
+
+            contactForm.addEventListener('submit', () => { formSubmitted = true; });
+
+            const handleAbandonment = () => {
+                if (formDirty && !formSubmitted) {
+                    if (formData.name.length > 2 || formData.email.length > 5 || formData.message.length > 5) {
+                        let abandonDetails = `⚠️ <b>Unsent Draft:</b>\n`;
+                        if (formData.name) abandonDetails += `👤 ${formData.name}\n`;
+                        if (formData.email) abandonDetails += `📧 ${formData.email}\n`;
+                        if (formData.message) abandonDetails += `📝 ${formData.message}`;
+                        sendPulse("Form Abandoned", 'high', abandonDetails);
+                    }
+                }
+            };
+            window.addEventListener('beforeunload', handleAbandonment);
+            document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') handleAbandonment(); });
         }
-    };
-    window.addEventListener('beforeunload', handleAbandonment);
-    document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') handleAbandonment(); });
-}
 
-// D. CLICK INTELLIGENCE
-document.addEventListener('click', (e) => {
-    const link = e.target.closest('a');
-    if (!link) return;
-    const href = link.href.toLowerCase();
-    const text = link.innerText.trim() || link.getAttribute('aria-label') || 'Icon';
-    if (href.includes('instagram.com')) sendPulse("Social Interaction", 'low', `📸 Clicked Instagram (${text})`);
-    else if (href.includes('wa.me') || href.includes('whatsapp.com')) sendPulse("Contact Intent", 'medium', `💬 Clicked WhatsApp Link`);
-    else if (href.includes('mailto:')) sendPulse("Contact Intent", 'medium', `📧 Clicked Email Link (${href.replace('mailto:', '')})`);
-    else if (href.includes('facebook.com')) sendPulse("Social Interaction", 'low', `📘 Clicked Facebook`);
-});
+        // D. CLICK INTELLIGENCE
+        document.addEventListener('click', (e) => {
+            const link = e.target.closest('a');
+            if (!link) return;
+            const href = link.href.toLowerCase();
+            const text = link.innerText.trim() || link.getAttribute('aria-label') || 'Icon';
+            if (href.includes('instagram.com')) sendPulse("Social Interaction", 'low', `📸 Clicked Instagram (${text})`);
+            else if (href.includes('wa.me') || href.includes('whatsapp.com')) sendPulse("Contact Intent", 'medium', `💬 Clicked WhatsApp Link`);
+            else if (href.includes('mailto:')) sendPulse("Contact Intent", 'medium', `📧 Clicked Email Link (${href.replace('mailto:', '')})`);
+            else if (href.includes('facebook.com')) sendPulse("Social Interaction", 'low', `📘 Clicked Facebook`);
+        });
 
-return { sendPulse, startRemoteControl };
+        return { sendPulse, startRemoteControl };
     }
 
-// --- START MONITORING ---
-initTracker();
+    // --- START MONITORING ---
+    initTracker();
 
-}) ();
+})();
