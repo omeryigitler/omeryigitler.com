@@ -422,13 +422,21 @@
                 country: ipData.country_name || 'Unknown',
                 country_code: ipData.country_code || 'XX',
                 isp: ipData.org || 'Unknown',
-                region: ipData.region || 'Unknown'
+                region: ipData.region || '',
+                postal: ipData.postal || '' // District-level hint often in postal
             };
             visitData.last_seen = firebase.firestore.FieldValue.serverTimestamp();
 
             // 3b. Send Location Verified Pulse
             if (visitData.location.city !== 'Unknown' && intel && intel.sendPulse) {
-                intel.sendPulse("Location Verified", 'low', `📍 ${visitData.location.city}, ${visitData.location.country}`);
+                // Construct specific location string
+                let locStr = `📍 ${visitData.location.city}`;
+                if (visitData.location.region && visitData.location.region !== visitData.location.city) {
+                    locStr += `, ${visitData.location.region}`;
+                }
+                locStr += ` (${visitData.location.country_code})`;
+
+                intel.sendPulse("Location Verified", 'low', locStr);
             }
 
             // 4. Persistence
