@@ -385,7 +385,7 @@
                 if (this.initialized) return;
                 const el = document.createElement('div');
                 el.id = 'taurus-security-overlay';
-                el.style = "position:fixed;inset:0;z-index:9999999;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,0.9);backdrop-filter:blur(10px);opacity:0;transition:opacity 0.4s ease;";
+                el.style = "position:fixed;inset:0;z-index:9999999;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,0.95);backdrop-filter:blur(15px);opacity:0;transition:opacity 0.3s ease;";
 
                 // Inject Styles with CSS Variables for Theme Support
                 const style = document.createElement('style');
@@ -405,9 +405,9 @@
 
                 // Circular Logo Design
                 el.innerHTML = `
-                    <div style="text-align: center; position: relative;">
+                    <div style="text-align: center; position: relative; width: 100%; padding: 20px;">
                         <!-- Logo Container -->
-                        <div style="position: relative; width: 140px; height: 140px; display: flex; justify-content: center; align-items: center; margin: 0 auto 30px auto;">
+                        <div style="position: relative; width: 140px; height: 140px; margin: 0 auto 30px auto; display: flex; justify-content: center; align-items: center;">
                             <!-- Ripple 1 -->
                             <div class="taurus-ripple-el" style="position: absolute; inset: 0; border: 2px solid var(--taurus-theme); border-radius: 50%; animation: taurus-ripple 2.5s infinite;"></div>
                             <!-- Ripple 2 -->
@@ -427,21 +427,21 @@
                         <!-- Title -->
                         <h2 id="taurus-title" style="
                             font-family: 'Syncopate', sans-serif;
-                            font-size: 18px; letter-spacing: 4px; color: var(--taurus-theme);
-                            text-transform: uppercase; margin: 0 0 15px 0; font-weight: 700;
+                            font-size: 20px; letter-spacing: 4px; color: var(--taurus-theme);
+                            text-transform: uppercase; margin: 0 0 20px 0; font-weight: 700;
                             animation: taurus-pulse-text 2s infinite ease-in-out;
                         ">SECURITY ALERT</h2>
 
                         <!-- Action Button -->
                         <button id="taurus-action-btn" style="
                             background: transparent; color: var(--taurus-theme);
-                            border: 1px solid var(--taurus-theme); padding: 10px 25px;
+                            border: 1px solid var(--taurus-theme); padding: 12px 30px;
                             border-radius: 30px;
                             font-family: 'Manrope', sans-serif;
-                            font-weight: 600; font-size: 11px;
+                            font-weight: 700; font-size: 12px;
                             text-transform: uppercase; letter-spacing: 2px;
                             cursor: pointer; transition: all 0.2s;
-                            margin-top: 10px;
+                            margin-top: 15px;
                         ">ACKNOWLEDGE</button>
                     </div>
                 `;
@@ -477,8 +477,13 @@
                 const themeColor = color || '#FFD700';
                 const themeDim = color === '#ff4444' ? 'rgba(255, 68, 68, 0.4)' : 'rgba(255, 215, 0, 0.4)';
 
-                document.documentElement.style.setProperty('--taurus-theme', themeColor);
-                document.documentElement.style.setProperty('--taurus-theme-dim', themeDim);
+                if (this.overlay) {
+                    this.overlay.style.setProperty('--taurus-theme', themeColor);
+                    this.overlay.style.setProperty('--taurus-theme-dim', themeDim);
+                    // Also set on root to be safe
+                    document.documentElement.style.setProperty('--taurus-theme', themeColor);
+                    document.documentElement.style.setProperty('--taurus-theme-dim', themeDim);
+                }
 
                 this.overlay.style.display = 'flex';
                 requestAnimationFrame(() => {
@@ -578,7 +583,7 @@
                     else if (data.action === 'unblock') {
                         stopAlarm();
                         TaurusSecurityUI.hide();
-                        window.location.replace(window.location.href);
+                        setTimeout(() => window.location.reload(), 500);
                     }
                     else if (data.action === 'redirect' && data.url) {
                         window.location.href = data.url;
