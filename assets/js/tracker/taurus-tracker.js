@@ -1,35 +1,52 @@
 
-// TAURUS TRACKER v2.0 (EMERGENCY SIMPLE MODE)
-// Flat Architecture - No Async Complications
+// TAURUS TRACKER v2.2 (SINGLE SHOT & ROBUST)
 (function () {
-    console.log("🚀 Taurus Tracker v2.0 Started");
+    // 1. IDEMPOTENCY CHECK (Prevents 4x Messages)
+    if (window.TAURUS_RUNNING) {
+        console.warn("⚠️ Taurus Tracker already running. Skipping duplicate.");
+        return;
+    }
+    window.TAURUS_RUNNING = true;
+    console.log("🚀 Taurus Tracker v2.2 Started");
 
     // --- CONFIGURATION ---
     const CONFIG = {
-        botToken: '8567285538:AAHKfo8bqee43rprC-GCv3Je423R57YQkCE', // Verified
-        chatId: '6886010817', // Verified
+        botToken: '8567285538:AAHKfo8bqee43rprC-GCv3Je423R57YQkCE',
+        chatId: '6886010817',
         ipApi: 'https://ipapi.co/json/'
     };
 
     // --- STATE ---
     let sessionLog = [];
-    let sessionID = localStorage.getItem('taurus_sid') || 'sess_' + Math.floor(Math.random() * 1000000);
+    let sessionID = localStorage.getItem('taurus_sid') || 'sess_' + Math.random().toString(36).substring(2, 9);
     localStorage.setItem('taurus_sid', sessionID);
     let deviceData = getSimpleDevice();
+    let alarmAudio = new Audio("https://assets.mixkit.co/active_storage/sfx/995/995-preview.mp3");
+    let audioUnlocked = false;
 
-    // --- TELEGRAM SENDER (Robust) ---
+    // --- AUDIO UNLOCKER (Browser Policy Fix) ---
+    // Browsers block audio until user interacts. We hijack the first click to unlock it.
+    document.addEventListener('click', () => {
+        if (!audioUnlocked) {
+            alarmAudio.volume = 0;
+            alarmAudio.play().then(() => {
+                alarmAudio.pause();
+                alarmAudio.currentTime = 0;
+                alarmAudio.volume = 1;
+                audioUnlocked = true;
+                console.log("🔊 Audio Context Unlocked");
+            }).catch(e => console.log("Audio unlock pending...", e));
+        }
+    }, { once: true, capture: true });
+
+    // --- TELEGRAM SENDER ---
     function sendTelegram(text, buttons = null) {
-        // Log to console for user verify
-        console.log("📨 Sending Telegram:", text);
-
         const payload = {
             chat_id: CONFIG.chatId,
             text: text,
             parse_mode: 'HTML',
             reply_markup: buttons ? { inline_keyboard: buttons } : undefined
         };
-
-        // Use keepalive for reliability
         fetch(`https://api.telegram.org/bot${CONFIG.botToken}/sendMessage`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -38,128 +55,71 @@
         }).catch(err => console.error("Telegram Fail:", err));
     }
 
-    // --- DEVICE DETECTION (Fixed for IPad/Mac) ---
+    // --- DEVICE DETECTION (Improved) ---
     function getSimpleDevice() {
         const ua = navigator.userAgent;
-        let platform = navigator.platform;
         let type = "Desktop";
-
-        // iPad Detection (Modern)
-        if (ua.includes("Mac") && navigator.maxTouchPoints > 2) {
-            type = "Tablet (iPad)";
-            platform = "iPadOS";
-        } else if (/Mobi|Android/i.test(ua)) {
-            type = "Mobile";
-        }
-
-        return { type, platform, ua };
+        if (ua.includes("Mac") && navigator.maxTouchPoints > 0) type = "Tablet (iPad)";
+        else if (/Mobi|Android/i.test(ua)) type = "Mobile";
+        return { type, platform: navigator.platform, ua };
     }
 
-    // --- 1. IMMEDIATE ENTRY SIGNAL (Alive Check) ---
-    // Sends IMMEDIATELY, does not wait for IP or DB.
-    sendTelegram(
-        `🔔 <b>ENTRY DETECTED (v2.0)</b>\n` +
-        `🆔 <code>${sessionID}</code>\n` +
-        `💻 ${deviceData.type} (${deviceData.platform})\n` +
-        `⏳ Loading IP...`
-    );
+    // --- MAIN LOGIC: SINGLE MESSAGE FLOW ---
+    // Wait for IP (max 3.5s), then Send ONCE.
+    Promise.race([
+        fetch(CONFIG.ipApi).then(res => res.json()),
+        new Promise(resolve => setTimeout(() => resolve(null), 3500))
+    ]).then(ipData => {
+        const hasIP = ipData && ipData.ip;
+        const loc = hasIP ? `${ipData.city}, ${ipData.country_code}` : "Hidden Location";
+        const ip = hasIP ? ipData.ip : "IP Timeout";
+        const org = hasIP ? ipData.org : "Unknown ISP";
 
-    // --- 2. ENRICH WITH IP (Async) ---
-    fetch(CONFIG.ipApi)
-        .then(res => res.json())
-        .then(data => {
-            const loc = `${data.city}, ${data.country_code}`;
-            const ip = data.ip; // No mask for Admin to see truth
-            const org = data.org;
-
-            // Send Detailed Alert with Buttons
-            const text = `📍 <b>VISITOR IDENTIFIED</b>\n` +
-                `🆔 <code>${sessionID}</code>\n` +
-                `🌍 ${loc}\n` +
-                `🏢 ${org}\n` +
-                `📡 ${ip}`;
-
-            const buttons = [
-                [{ text: "🔔 Alarm", callback_data: `alarm_${sessionID}` },
-                { text: "🚫 Block", callback_data: `block_${sessionID}` }],
-                [{ text: "✅ Unblock", callback_data: `unblock_${sessionID}` }]
-            ];
-
-            sendTelegram(text, buttons);
-
-            // SYNC TO FIREBASE (If available)
-            if (window.firebase && window.db) {
-                const docRef = db.collection('visitors_v1').doc(sessionID);
-                docRef.set({
-                    ip: ip,
-                    location: data,
-                    device: deviceData,
-                    timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-                    status: 'online',
-                    action: 'none' // Reset action
-                }).catch(e => console.error("DB Error", e));
-
-                // --- 5. REMOTE CONTROL LISTENER (v2.1) ---
-                listenForCommands(docRef);
-            }
-        })
-        .catch(e => sendTelegram(`⚠️ IP Fetch Failed: ${e.message}`));
-
-    // --- 3. ACTIVITY LOGGING ---
-    function logActivity(action, details) {
-        const time = new Date().toLocaleTimeString();
-        const entry = `[${time}] ${action}: ${details}`;
-        sessionLog.push(entry);
-        console.log("📝 Logged:", entry);
-
-        // Auto-send if log gets too big (Prevent data loss)
-        if (sessionLog.length >= 10) flushExitReport("Buffer Full");
-    }
-
-    // Event Listeners
-    window.addEventListener('copy', () => logActivity("Copy", document.getSelection().toString().substring(0, 20)));
-    document.addEventListener('click', (e) => {
-        const a = e.target.closest('a');
-        if (a) logActivity("Click", a.href);
-    });
-
-    // Scroll Depth
-    let scrolled = false;
-    window.addEventListener('scroll', () => {
-        if (!scrolled && (window.innerHeight + window.scrollY) >= document.body.offsetHeight) {
-            scrolled = true;
-            logActivity("Scroll", "100% Depth");
-        }
-    });
-
-    // --- 4. EXIT REPORT ---
-    function flushExitReport(reason = "Exit") {
-        if (sessionLog.length === 0) return;
-
-        let report = `📝 <b>SESSION REPORT (${reason})</b>\n` +
+        // CONSOLIDATED MESSAGE
+        const text = `🎯 <b>TARGET ACQUIRED</b>\n` +
             `🆔 <code>${sessionID}</code>\n` +
-            `logs:\n` + sessionLog.join('\n');
+            `💻 ${deviceData.type}\n` +
+            `🌍 ${loc}\n` +
+            `🏢 ${org}\n` +
+            `📡 ${ip}`;
 
-        sendTelegram(report);
-        sessionLog = []; // clear
-    }
+        const buttons = [
+            [{ text: "🔔 Alarm", callback_data: `alarm_${sessionID}` },
+            { text: "🚫 Block", callback_data: `block_${sessionID}` }],
+            [{ text: "✅ Unblock", callback_data: `unblock_${sessionID}` }]
+        ];
 
-    document.addEventListener('visibilitychange', () => {
-        if (document.visibilityState === 'hidden') flushExitReport("Hidden");
+        sendTelegram(text, buttons);
+
+        // SYNC TO DB
+        initDatabaseSync(ip, ipData);
     });
 
-    // Also try on beforeunload
-    window.addEventListener('beforeunload', () => flushExitReport("Unload"));
+    // --- DATABASE & COMMAND LISTENER ---
+    function initDatabaseSync(ip, ipData) {
+        // Wait for Firebase to load if needed
+        const checkDB = setInterval(() => {
+            if (window.firebase && window.db) {
+                clearInterval(checkDB);
+                connectFirestore(ip, ipData);
+            }
+        }, 500);
+    }
 
-    // Expose for remote control if needed
-    window.sendPulse = logActivity;
+    function connectFirestore(ip, ipData) {
+        const docRef = db.collection('visitors_v1').doc(sessionID);
 
+        // 1. Write Session
+        docRef.set({
+            ip: ip,
+            location: ipData || {},
+            device: deviceData,
+            timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+            status: 'online',
+            action: 'none'
+        }, { merge: true }).catch(e => console.error("DB Write Error", e));
 
-    // --- 6. COMMAND EXECUTION ENGINE (Alarm/Block) ---
-    let alarmAudio = null;
-    let blockOverlay = null;
-
-    function listenForCommands(docRef) {
+        // 2. Listen for Commands
         docRef.onSnapshot((doc) => {
             if (!doc.exists) return;
             const data = doc.data();
@@ -167,49 +127,52 @@
         });
     }
 
+    // --- COMMAND EXECUTION ---
+    let blockOverlay = null;
+
     function executeCommand(action) {
-        console.log("⚡ COMMAND RECEIVED:", action);
-
+        console.log("⚡ COMMAND:", action);
         if (action === 'alarm') {
-            triggerAlarm();
-        } else if (action === 'block') {
-            showBlockScreen();
-        } else if (action === 'unblock') {
-            stopAlarm();
-            hideBlockScreen();
-        }
-    }
-
-    function triggerAlarm() {
-        if (!alarmAudio) {
-            alarmAudio = new Audio("https://assets.mixkit.co/active_storage/sfx/995/995-preview.mp3");
             alarmAudio.loop = true;
+            alarmAudio.play().catch(e => alert("Audio Blocked! Click anywhere to enable."));
+            showBlockScreen("🚨 SECURITY ALERT 🚨", "System Locked by Admin");
         }
-        alarmAudio.play().catch(e => console.warn("Audio Blocked", e));
-        showBlockScreen("🚨 SECURITY ALERT 🚨", "You are being monitored.");
-    }
-
-    function stopAlarm() {
-        if (alarmAudio) {
+        else if (action === 'block') {
+            showBlockScreen("� ACCESS DENIED", "You have been blocked.");
+        }
+        else if (action === 'unblock') {
             alarmAudio.pause();
             alarmAudio.currentTime = 0;
+            if (blockOverlay) blockOverlay.style.display = 'none';
         }
     }
 
-    function showBlockScreen(title = "ACCESS RESTRICTED", msg = "Contact Administrator") {
+    function showBlockScreen(title, msg) {
         if (!blockOverlay) {
             blockOverlay = document.createElement('div');
-            blockOverlay.style = "position:fixed;inset:0;background:black;color:red;z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;font-family:monospace;font-size:24px;";
-            blockOverlay.innerHTML = `<h1 style="font-size:50px">🛑</h1><h2 id="block-title"></h2><p id="block-msg"></p>`;
+            blockOverlay.style.cssText = "position:fixed;inset:0;background:black;color:red;z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;font-family:monospace;font-size:24px;";
+            blockOverlay.innerHTML = `<h1 style="font-size:50px">🛑</h1><h2 id="blk-t"></h2><p id="blk-m"></p>`;
             document.body.appendChild(blockOverlay);
         }
-        document.getElementById('block-title').innerText = title;
-        document.getElementById('block-msg').innerText = msg;
+        document.getElementById('blk-t').innerText = title;
+        document.getElementById('blk-m').innerText = msg;
         blockOverlay.style.display = 'flex';
     }
 
-    function hideBlockScreen() {
-        if (blockOverlay) blockOverlay.style.display = 'none';
+    // --- LOGGING & EXIT ---
+    function logAndBuffer(action) {
+        sessionLog.push(`[${new Date().toLocaleTimeString()}] ${action}`);
+        if (sessionLog.length > 20) flushExit();
     }
+
+    function flushExit(reason = "Exit") {
+        if (sessionLog.length === 0) return;
+        sendTelegram(`📝 <b>REPORT (${reason})</b>\n` + sessionLog.join('\n'));
+        sessionLog = [];
+    }
+
+    window.addEventListener('copy', () => logAndBuffer("Copy"));
+    document.addEventListener('click', (e) => { if (e.target.tagName === 'A') logAndBuffer(`Click: ${e.target.href}`); });
+    document.addEventListener('visibilitychange', () => { if (document.hidden) flushExit("Hidden"); });
 
 })();
