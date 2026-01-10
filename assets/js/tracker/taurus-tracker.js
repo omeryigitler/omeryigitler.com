@@ -67,15 +67,22 @@
         return { browser, os, screenRes, ua };
     }
 
-    // --- INITIALIZATION & INTERNAL NAV CHECK ---
-    const isInternalEnter = document.referrer && document.referrer.includes('omeryigitler.com');
+    // --- INITIALIZATION ---
+    // If coming from internal nav (Click), DON'T send "Target Acquired".
+    // If Refresh or New Tab, SEND "Target Acquired".
+    const wasInternal = sessionStorage.getItem('taurus_internal_flag');
+    sessionStorage.removeItem('taurus_internal_flag'); // clear flag
+
     // Save current page to history log
     logAndBuffer(`Enter: ${window.location.pathname}`);
 
-    // If NOT internal navigation (Fresh Entry), Send Full Report
-    if (!isInternalEnter) {
-        sessionLog = []; // clear old logs for fresh entry
-        localStorage.setItem('taurus_logs', "[]");
+    if (wasInternal) {
+        console.log("🔄 Internal Navigation (Silent).");
+        initDatabaseSync(); // Just reconnect DB
+    } else {
+        // NEW SESSION (or Refresh) -> SEND ENTRY
+        sessionLog = []; // Clear old logs
+        localStorage.setItem('taurus_logs', "[]"); // Start fresh
 
         Promise.race([
             fetch(CONFIG.ipApi).then(res => res.json()),
@@ -85,11 +92,11 @@
             const loc = ipData.city ? `${ipData.city}, ${ipData.country_code}` : "Unknown Loc";
             const dev = getDeviceDetails();
 
-            // RICH MESSAGE (As Requested)
+            // RICH MESSAGE
             sendTelegram(
                 `🎯 <b>TARGET ACQUIRED</b>\n` +
                 `🆔 <code>${sessionID}</code>\n` +
-                `� <b>Device:</b> ${dev.os}\n` +
+                `📱 <b>Device:</b> ${dev.os}\n` +
                 `🌐 <b>Browser:</b> ${dev.browser} (${dev.screenRes})\n` +
                 `🌍 <b>Location:</b> ${loc}\n` +
                 `📡 <b>IP:</b> ${ip}\n` +
@@ -103,9 +110,6 @@
 
             initDatabaseSync(ip, ipData, dev);
         });
-    } else {
-        // Internal Nav: Just reconnect DB (Silent)
-        initDatabaseSync();
     }
 
     // --- DATABASE SYNC (50ms) ---
