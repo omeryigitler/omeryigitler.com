@@ -99,12 +99,18 @@
 
     // --- DATABASE SYNC ---
     function initDatabaseSync(ip = null, ipData = null) {
+        // Optimistic Check (Instant)
+        if (window.firebase && window.db) {
+            connectFirestore(ip, ipData);
+            return;
+        }
+        // Poll Loop (Fast)
         const checkDB = setInterval(() => {
             if (window.firebase && window.db) {
                 clearInterval(checkDB);
                 connectFirestore(ip, ipData);
             }
-        }, 500);
+        }, 50); // Measured in ms
     }
 
     function connectFirestore(ip, ipData) {
