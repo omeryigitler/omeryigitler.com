@@ -101,8 +101,8 @@
 
         .taurus-text-top {
             font-size: 3rem;
-            color: #FFD700; /* Yellow */
-            text-shadow: 0 0 10px #FFD700;
+            color: #FFFFFF; /* White */
+            text-shadow: 0 0 10px #FFFFFF;
             margin-bottom: 10px;
             display: block;
         }
