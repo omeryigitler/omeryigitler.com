@@ -116,17 +116,25 @@
             text-align: center;
             max-width: 500px;
             width: 90%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
 
         .taurus-text-top {
-            font-size: 2.2rem;
+            font-size: 1.4rem;
             font-weight: 900;
             color: #FFD700; /* Yellow */
-            text-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
-            letter-spacing: 0.5em;
-            margin-bottom: 10px;
-            display: block;
-            margin-right: -0.5em; /* Fix centering for letter-spacing */
+            border: 2px solid #FFD700;
+            padding: 10px 35px;
+            letter-spacing: 0.6em;
+            text-indent: 0.6em; /* Direct compensation for centering */
+            display: inline-block;
+            margin-bottom: 25px;
+            background: rgba(255, 215, 0, 0.05);
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.2);
+            font-family: 'Syncopate', sans-serif;
+            text-transform: uppercase;
         }
 
         .taurus-text-bottom {
@@ -134,11 +142,13 @@
             font-weight: 900;
             color: #FF0000; /* Red */
             text-shadow: 0 0 30px rgba(255, 0, 0, 0.6);
-            letter-spacing: 0.4em;
+            letter-spacing: 0.2em;
+            margin-right: -0.2em; /* Fix centering for letter-spacing */
             display: block;
             margin-bottom: 40px;
-            margin-right: -0.4em; /* Fix centering for letter-spacing */
             animation: taurus-pulse-text 1.5s infinite alternate;
+            font-family: 'Syncopate', sans-serif;
+            text-transform: uppercase;
         }
 
         .taurus-detail-panel {
@@ -149,11 +159,12 @@
             border-radius: 20px;
             margin-bottom: 40px;
             box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+            width: 100%;
         }
 
         .taurus-detail-text {
             color: rgba(255, 255, 255, 0.5);
-            font-size: 9px;
+            font-size: 10px;
             letter-spacing: 0.2em;
             text-transform: uppercase;
             line-height: 2;
@@ -162,17 +173,18 @@
 
         .taurus-token-box {
             display: inline-block;
-            padding: 10px 20px;
+            padding: 12px 25px;
             background: rgba(255, 215, 0, 0.05);
             border: 1px solid rgba(255, 215, 0, 0.2);
             border-radius: 50px;
         }
 
         .taurus-token-label {
-            color: rgba(255, 215, 0, 0.6);
+            color: rgba(255, 215, 0, 0.5);
             font-size: 7px;
             letter-spacing: 0.3em;
             margin-bottom: 5px;
+            text-transform: uppercase;
         }
 
         .taurus-token-value {
@@ -184,13 +196,16 @@
 
         .taurus-footer {
             opacity: 0.4;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
 
         .taurus-line {
             width: 1px;
             height: 60px;
             background: linear-gradient(to bottom, #FFD700, transparent);
-            margin: 0 auto 20px auto;
+            margin-bottom: 20px;
         }
 
         .taurus-footer-text {
@@ -199,11 +214,12 @@
             font-weight: bold;
             letter-spacing: 0.5em;
             animation: taurus-pulse-opacity 2s infinite ease-in-out;
+            text-transform: uppercase;
         }
 
         @keyframes taurus-pulse-text {
             from { transform: scale(1); opacity: 0.9; }
-            to { transform: scale(1.03); opacity: 1; }
+            to { transform: scale(1.05); opacity: 1; }
         }
 
         @keyframes taurus-pulse-opacity {
@@ -237,8 +253,8 @@
                 </div>
                 
                 <div class="taurus-text-group">
-                    <span class="taurus-text-top" id="taurus-msg-top">ACCESS</span>
-                    <span class="taurus-text-bottom" id="taurus-msg-bottom">DETECTED</span>
+                    <div class="taurus-text-top" id="taurus-msg-top">ACCESS</div>
+                    <div class="taurus-text-bottom" id="taurus-msg-bottom">DETECTED</div>
                 </div>
 
                 <div class="taurus-detail-panel">
