@@ -1,4 +1,4 @@
-// TAURUS TRACKER v4.0 (Applied Fixes)
+// TAURUS TRACKER v4.0 (Premium UI Refined)
 /**
  * TAURUS TRACKER v4.0 (Final System)
  * ----------------------------------
@@ -28,6 +28,8 @@
 
     // Inject CSS
     const css = `
+        @import url('https://fonts.googleapis.com/css2?family=Syncopate:wght@400;700&display=swap');
+
         /* Overlay Base */
         #taurus-overlay {
             position: fixed;
@@ -37,87 +39,107 @@
             justify-content: center;
             align-items: center;
             flex-direction: column;
-            font-family: 'Courier New', monospace;
+            font-family: 'Syncopate', sans-serif;
+            background: #050505;
             user-select: none;
+            overflow: hidden;
         }
 
-        /* Alarm Mode (Black/Translucent) */
-        #taurus-overlay.mode-alarm {
-            background: rgba(0, 0, 0, 0.9);
-            backdrop-filter: blur(5px);
+        .taurus-grid-bg {
+            position: absolute;
+            inset: 0;
+            background-size: 50px 50px;
+            background-image:
+                linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+            opacity: 0.3;
+            z-index: 0;
         }
 
-        /* Block Mode (Red Tint) */
-        #taurus-overlay.mode-block {
-            background: rgba(50, 0, 0, 0.95);
-        }
-
-        /* Logo Container & Ripple Animation */
-        .taurus-logo-container {
-            position: relative;
-            width: 150px;
-            height: 150px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            border-radius: 50%;
-            margin-bottom: 30px;
-        }
-
-        .taurus-logo-img {
-            width: 120px;
-            height: auto;
-            z-index: 2;
-        }
-
-        /* Ripple Effect (Yellow) */
-        .taurus-ripple {
+        .taurus-glow-bg {
             position: absolute;
             top: 50%; left: 50%;
             transform: translate(-50%, -50%);
-            width: 100%; height: 100%;
+            width: 600px;
+            height: 600px;
+            background: rgba(255, 0, 0, 0.1);
             border-radius: 50%;
-            border: 2px solid #FFD700; /* Taurus Gold */
-            animation: taurus-ripple-anim 2s infinite ease-out;
-            opacity: 0;
-            z-index: 1;
+            blur: 150px;
+            filter: blur(150px);
+            animation: taurus-pulse-glow 4s infinite alternate;
+            z-index: 0;
         }
-        .taurus-ripple:nth-child(2) { animation-delay: 0.5s; }
-        .taurus-ripple:nth-child(3) { animation-delay: 1.0s; }
 
-        @keyframes taurus-ripple-anim {
-            0% { width: 100%; height: 100%; opacity: 0.8; border-width: 4px; }
-            100% { width: 300%; height: 300%; opacity: 0; border-width: 0px; }
+        @keyframes taurus-pulse-glow {
+            from { opacity: 0.3; transform: translate(-50%, -50%) scale(0.8); }
+            to { opacity: 0.6; transform: translate(-50%, -50%) scale(1.2); }
+        }
+
+        /* Logo Container */
+        .taurus-logo-wrapper {
+            position: relative;
+            width: 180px;
+            height: 180px;
+            background: #0a0a0a;
+            border: 2px solid #FFD700;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 40px;
+            box-shadow: 0 0 50px rgba(255, 215, 0, 0.3);
+            z-index: 10;
+        }
+
+        .taurus-logo-ping {
+            position: absolute;
+            inset: -6px;
+            border: 2px solid rgba(255, 215, 0, 0.4);
+            border-radius: 50%;
+            animation: taurus-ping 2s cubic-bezier(0, 0, 0.2, 1) infinite;
+        }
+
+        @keyframes taurus-ping {
+            75%, 100% { transform: scale(1.2); opacity: 0; }
+        }
+
+        .taurus-logo-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 50%;
         }
 
         /* Text Styling */
-        .taurus-text-group {
+        .taurus-content {
+            position: relative;
+            z-index: 10;
             text-align: center;
-            text-transform: uppercase;
-            letter-spacing: 5px;
-            font-weight: bold;
-            z-index: 2;
         }
 
         .taurus-text-top {
-            font-size: 3rem;
-            color: #FFFFFF; /* White */
-            text-shadow: 0 0 10px #FFFFFF;
-            margin-bottom: 10px;
+            font-size: 2.5rem;
+            font-weight: 900;
+            color: #FFD700; /* Yellow */
+            text-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+            letter-spacing: 0.4em;
+            margin-bottom: 15px;
             display: block;
         }
 
         .taurus-text-bottom {
-            font-size: 4rem;
+            font-size: 3.5rem;
+            font-weight: 900;
             color: #FF0000; /* Red */
-            text-shadow: 0 0 20px #FF0000;
+            text-shadow: 0 0 30px rgba(255, 0, 0, 0.6);
+            letter-spacing: 0.3em;
             display: block;
-            animation: taurus-pulse-text 1s infinite alternate;
+            animation: taurus-pulse-text 1.5s infinite alternate;
         }
 
         @keyframes taurus-pulse-text {
-            from { text-shadow: 0 0 10px #FF0000; transform: scale(1); }
-            to { text-shadow: 0 0 30px #FF0000; transform: scale(1.05); }
+            from { transform: scale(1); opacity: 0.9; }
+            to { transform: scale(1.05); opacity: 1; }
         }
     `;
 
@@ -133,18 +155,22 @@
         overlay.id = 'taurus-overlay';
 
         // Logo Content (using window.TAURUS_LOGO_DATA or fallback)
-        const logoSrc = window.TAURUS_LOGO_DATA || 'assets/img/logo.png'; // Make sure logo_data.js is loaded
+        const logoSrc = window.TAURUS_LOGO_DATA || 'assets/favicon_taurus.png';
 
         overlay.innerHTML = `
-            <div class="taurus-logo-container">
-                <div class="taurus-ripple"></div>
-                <div class="taurus-ripple"></div>
-                <div class="taurus-ripple"></div>
-                <img src="${logoSrc}" class="taurus-logo-img" alt="Taurus">
-            </div>
-            <div class="taurus-text-group">
-                <span class="taurus-text-top" id="taurus-msg-top">ACCESS</span>
-                <span class="taurus-text-bottom" id="taurus-msg-bottom">DETECTED</span>
+            <div class="taurus-grid-bg"></div>
+            <div class="taurus-glow-bg"></div>
+            
+            <div class="taurus-content">
+                <div class="taurus-logo-wrapper">
+                    <img src="${logoSrc}" class="taurus-logo-img" alt="Taurus">
+                    <div class="taurus-logo-ping"></div>
+                </div>
+                
+                <div class="taurus-text-group">
+                    <span class="taurus-text-top" id="taurus-msg-top">ACCESS</span>
+                    <span class="taurus-text-bottom" id="taurus-msg-bottom">DETECTED</span>
+                </div>
             </div>
         `;
         document.body.appendChild(overlay);
