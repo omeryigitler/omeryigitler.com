@@ -294,35 +294,36 @@
             log("Starting Status Polling Loop (2000ms)...");
 
             pollingInterval = setInterval(async () => {
+                let status = null;
                 try {
                     const url = `/api/gateway?action=check_status&reqId=${REQ_ID}&t=${Date.now()}`;
-                    // log(`Checking Status...`); // Reduced spam
-
                     const res = await fetch(url);
-                    if (!res.ok) {
-                        log(`Polling Error HTTP ${res.status}: ${res.statusText}`);
-                        return;
-                    }
+                    if (!res.ok) throw new Error("API_Unavailable");
 
                     const data = await res.json();
-
-                    if (data.status === 'approved') {
-                        log("✅ STATUS: APPROVED. Unlocking...");
-                        clearInterval(pollingInterval);
-                        grantAccess();
-                    } else if (data.status === 'denied') {
-                        log("⛔ STATUS: DENIED.");
-                        clearInterval(pollingInterval);
-                        failAuth("Incorrect Code Selected");
-                        recordFailedAttempt();
-                    } else if (data.status === 'pending') {
-                        // log("Status: Pending...");
-                    } else {
-                        log(`Unknown Status: ${data.status}`);
-                    }
+                    status = data.status;
                 } catch (e) {
-                    log(`POLLING EXCEPTION: ${e.message}`);
-                    console.error("Polling error", e);
+                    // LOCAL FALLBACK: Direct Firestore Read
+                    // log(`API Fail (${e.message}). Using Firestore Fallback...`); 
+                    try {
+                        const doc = await db.collection('auth_requests').doc(REQ_ID).get();
+                        if (doc.exists) status = doc.data().status;
+                    } catch (dbErr) { console.warn("Fallback Failed", dbErr); }
+                }
+
+                if (status === 'approved') {
+                    log("✅ STATUS: APPROVED. Unlocking...");
+                    clearInterval(pollingInterval);
+                    grantAccess();
+                } else if (status === 'denied') {
+                    log("⛔ STATUS: DENIED.");
+                    clearInterval(pollingInterval);
+                    failAuth("Incorrect Code Selected");
+                    recordFailedAttempt();
+                } else if (status === 'pending') {
+                    // Waiting...
+                } else {
+                    // log(`Status: ${status}`);
                 }
             }, 2000); // Check every 2 seconds
 

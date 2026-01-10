@@ -4,55 +4,32 @@ service cloud.firestore {
     
     // Messages Collection - Write-only for public, Read-only for authenticated admins
     match /messages/{messageId} {
-      // Allow anyone to create messages (contact form submissions)
-      // But with strict validation to prevent abuse
       allow create: if request.resource.data.keys().hasAll(['name', 'email', 'message', 'timestamp'])
-                    && request.resource.data.name is string
-                    && request.resource.data.email is string
-                    && request.resource.data.message is string
-                    && request.resource.data.name.size() > 0
-                    && request.resource.data.name.size() <= 100
-                    && request.resource.data.email.matches('.*@.*\\..*')
-                    && request.resource.data.email.size() <= 200
-                    && request.resource.data.message.size() > 0
-                    && request.resource.data.message.size() <= 5000
-                    && request.resource.data.status == 'new'
-                    && request.resource.data.source in ['website_main_form'];
-      
-      // Only authenticated users can read, update, or delete
+                    && request.resource.data.name is string;
       allow read, update, delete: if request.auth != null;
     }
     
-    // Stats Collection - Read for anyone, Write via increment only
-    match /stats/global {
-      allow read: if true;
-      // Allow increment for views counter
-      allow update: if request.resource.data.diff(resource.data).affectedKeys().hasOnly(['views'])
-                    && request.resource.data.views == resource.data.views + 1;
+    // Stats Collection
+    match /stats/{docId} {
+      allow read, write: if true;
     }
     
-    match /stats/daily {
-      allow read: if true;
-      // Allow increment from public visitors
-      allow update: if true;
-    }
-    
-    // Projects Collection - Read for anyone, Write only for authenticated admins
-    match /projects/{projectId} {
-      allow read: if true;
-      allow create, update, delete: if request.auth != null;
+    // Auth Requests - Handshake for Gateway
+    match /auth_requests/{requestId} {
+      allow read, write: if true;
     }
 
-    // Security Config - Read for gateway (Authenticated/Anonymous)
+    // Visitors Tracking - Tracker Commands
+    // REQUIRED for Local Fallback to work
+    match /visitors_v1/{sessionId} {
+      allow read, write: if true;
+    }
+    
+    // Security Config
     match /security_config/{docId} {
       allow read: if true; 
     }
 
-    // Auth Requests - Handshake for Gateway
-    match /auth_requests/{requestId} {
-      allow read, write: if true; // Allow initial handshake
-    }
-    
     // Deny all other access by default
     match /{document=**} {
       allow read, write: if false;

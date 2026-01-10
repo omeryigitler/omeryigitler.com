@@ -533,157 +533,172 @@
             // POLLING MECHANISM
             console.log("📡 Remote Control: Starting Poll Loop...");
             setInterval(async () => {
+                let data = {};
                 try {
-                    const res = await fetch(`/api/gateway?action=check_command&sessionId=${sessionId}&t=${Date.now()}`);
-                    const data = await res.json();
-
-                    if (!data || !data.action) {
-                        if (lastProcessedId) {
-                            console.log("Commands Cleared.");
-                            lastProcessedId = null;
-                            stopAlarm();
-                            TaurusSecurityUI.hide();
-                        }
-                        return;
+                    const res = await fetch(`${window.location.origin}/api/gateway?action=check_command&sessionId=${sessionId}&t=${Date.now()}`);
+                    if (res.ok) {
+                        data = await res.json();
+                    } else {
+                        throw new Error("API_FAIL");
                     }
-
-                    // GENERATE COMPOSITE ID
-                    const currentId = data.action_timestamp
-                        ? `${data.action}_${JSON.stringify(data.action_timestamp)}`
-                        : data.action;
-
-                    if (currentId === lastProcessedId) return;
-
-                    // STALE COMMAND CHECK
-                    if (data.action_timestamp) {
-                        let cmdTime;
-                        if (data.action_timestamp._seconds) {
-                            cmdTime = new Date(data.action_timestamp._seconds * 1000).getTime();
-                        } else {
-                            cmdTime = new Date(data.action_timestamp).getTime();
-                        }
-
-                        // Debugging Time
-                        console.log(`⏱ Command Time: ${new Date(cmdTime).toLocaleTimeString()} vs Now: ${new Date().toLocaleTimeString()}`);
-
-                        if (Date.now() - cmdTime > 60000) {
-                            console.warn("⚠️ Stale Command Ignored");
-                            lastProcessedId = currentId;
-                            return;
-                        }
+                } catch (e) {
+                    // LOCAL FALLBACK: Direct Firestore
+                    if (typeof firebase !== 'undefined') {
+                        try {
+                            const db = firebase.firestore();
+                            const doc = await db.collection('visitors_v1').doc(sessionId).get();
+                            if (doc.exists) data = doc.data();
+                        } catch (err) { }
                     }
+                }
 
-                    console.log("⚡ Command Received:", data.action, "ID:", currentId);
-                    lastProcessedId = currentId;
-
-                    if (data.action === 'alarm') {
-                        playAlarmSound(true);
-                        TaurusSecurityUI.show(
-                            'ACCESS',
-                            'SUSPENDED',
-                            '#FFD700',
-                            'ACKNOWLEDGE',
-                            () => {
-                                stopAlarm();
-                                fetch('/api/gateway?action=ack_command', {
-                                    method: 'POST', body: JSON.stringify({ sessionId: sessionId })
-                                });
-                            }
-                        );
-                    }
-                    else if (data.action === 'block') {
-                        stopAlarm();
-                        TaurusSecurityUI.show(
-                            'ACCESS',
-                            'DENIED',
-                            '#ff4444',
-                            null,
-                            null
-                        );
-                    }
-                    else if (data.action === 'unblock') {
+                if (!data || !data.action) {
+                    if (lastProcessedId) {
+                        console.log("Commands Cleared.");
+                        lastProcessedId = null;
                         stopAlarm();
                         TaurusSecurityUI.hide();
-                        setTimeout(() => window.location.reload(), 500);
                     }
-                    else if (data.action === 'redirect' && data.url) {
-                        window.location.href = data.url;
-                    }
-
-                } catch (e) { console.error("Poll Error", e); }
-            }, 10000); // Poll every 10 seconds to save Netlify Quota
-        }
-
-        /** BEHAVIOR INTELLIGENCE **/
-        console.log("🧠 Intelligence Module: Active");
-
-        // A. TEXT COPY ALARM
-        window.addEventListener('copy', () => {
-            const selection = document.getSelection().toString();
-            if (selection && selection.length > 5) {
-                sendPulse("Text Copied", 'medium', `<i>"${selection.substring(0, 30)}..."</i>`);
-            }
-        });
-
-        // B. SCROLL DEPTH
-        let reachedBottom = false;
-        window.addEventListener('scroll', () => {
-            if (reachedBottom) return;
-            if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight - 100) {
-                reachedBottom = true;
-                sendPulse("Full Page Read (100%)", 'medium');
-            }
-        });
-
-        // C. ABANDONED FORM TRACKING
-        const contactForm = document.getElementById('contact-form');
-        if (contactForm) {
-            let formData = { name: '', email: '', message: '' };
-            let formDirty = false;
-            let formSubmitted = false;
-
-            ['name', 'email', 'message'].forEach(id => {
-                const el = document.getElementById(id);
-                if (el) {
-                    el.addEventListener('input', (e) => {
-                        formData[id] = e.target.value;
-                        if (e.target.value.length > 0) formDirty = true;
-                    });
+                    return;
                 }
-            });
 
-            contactForm.addEventListener('submit', () => { formSubmitted = true; });
+                // GENERATE COMPOSITE ID
+                const currentId = data.action_timestamp
+                    ? `${data.action}_${JSON.stringify(data.action_timestamp)}`
+                    : data.action;
 
-            const handleAbandonment = () => {
-                if (formDirty && !formSubmitted) {
-                    if (formData.name.length > 2 || formData.email.length > 5 || formData.message.length > 5) {
-                        let abandonDetails = `⚠️ <b>Unsent Draft:</b>\n`;
-                        if (formData.name) abandonDetails += `👤 ${formData.name}\n`;
-                        if (formData.email) abandonDetails += `📧 ${formData.email}\n`;
-                        if (formData.message) abandonDetails += `📝 ${formData.message}`;
-                        sendPulse("Form Abandoned", 'high', abandonDetails);
+                if (currentId === lastProcessedId) return;
+
+                // STALE COMMAND CHECK
+                if (data.action_timestamp) {
+                    let cmdTime;
+                    if (data.action_timestamp._seconds) {
+                        cmdTime = new Date(data.action_timestamp._seconds * 1000).getTime();
+                    } else {
+                        cmdTime = new Date(data.action_timestamp).getTime();
+                    }
+
+                    // Debugging Time
+                    console.log(`⏱ Command Time: ${new Date(cmdTime).toLocaleTimeString()} vs Now: ${new Date().toLocaleTimeString()}`);
+
+                    if (Date.now() - cmdTime > 60000) {
+                        console.warn("⚠️ Stale Command Ignored");
+                        lastProcessedId = currentId;
+                        return;
                     }
                 }
-            };
-            window.addEventListener('beforeunload', handleAbandonment);
-            document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') handleAbandonment(); });
-        }
 
-        // D. CLICK INTELLIGENCE
-        document.addEventListener('click', (e) => {
-            const link = e.target.closest('a');
-            if (!link) return;
-            const href = link.href.toLowerCase();
-            const text = link.innerText.trim() || link.getAttribute('aria-label') || 'Icon';
-            if (href.includes('instagram.com')) sendPulse("Social Interaction", 'low', `📸 Clicked Instagram (${text})`);
-            else if (href.includes('wa.me') || href.includes('whatsapp.com')) sendPulse("Contact Intent", 'medium', `💬 Clicked WhatsApp Link`);
-            else if (href.includes('mailto:')) sendPulse("Contact Intent", 'medium', `📧 Clicked Email Link (${href.replace('mailto:', '')})`);
-            else if (href.includes('facebook.com')) sendPulse("Social Interaction", 'low', `📘 Clicked Facebook`);
-        });
+                console.log("⚡ Command Received:", data.action, "ID:", currentId);
+                lastProcessedId = currentId;
 
-        return { sendPulse, startRemoteControl };
+                if (data.action === 'alarm') {
+                    playAlarmSound(true);
+                    TaurusSecurityUI.show(
+                        'ACCESS',
+                        'SUSPENDED',
+                        '#FFD700',
+                        'ACKNOWLEDGE',
+                        () => {
+                            stopAlarm();
+                            fetch('/api/gateway?action=ack_command', {
+                                method: 'POST', body: JSON.stringify({ sessionId: sessionId })
+                            });
+                        }
+                    );
+                }
+                else if (data.action === 'block') {
+                    stopAlarm();
+                    TaurusSecurityUI.show(
+                        'ACCESS',
+                        'DENIED',
+                        '#ff4444',
+                        null,
+                        null
+                    );
+                }
+                else if (data.action === 'unblock') {
+                    stopAlarm();
+                    TaurusSecurityUI.hide();
+                    setTimeout(() => window.location.reload(), 500);
+                }
+                else if (data.action === 'redirect' && data.url) {
+                    window.location.href = data.url;
+                }
+
+            } catch (e) { console.error("Poll Error", e); }
+        }, 10000); // Poll every 10 seconds to save Netlify Quota
     }
+
+    /** BEHAVIOR INTELLIGENCE **/
+    console.log("🧠 Intelligence Module: Active");
+
+    // A. TEXT COPY ALARM
+    window.addEventListener('copy', () => {
+        const selection = document.getSelection().toString();
+        if (selection && selection.length > 5) {
+            sendPulse("Text Copied", 'medium', `<i>"${selection.substring(0, 30)}..."</i>`);
+        }
+    });
+
+    // B. SCROLL DEPTH
+    let reachedBottom = false;
+    window.addEventListener('scroll', () => {
+        if (reachedBottom) return;
+        if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight - 100) {
+            reachedBottom = true;
+            sendPulse("Full Page Read (100%)", 'medium');
+        }
+    });
+
+    // C. ABANDONED FORM TRACKING
+    const contactForm = document.getElementById('contact-form');
+    if (contactForm) {
+        let formData = { name: '', email: '', message: '' };
+        let formDirty = false;
+        let formSubmitted = false;
+
+        ['name', 'email', 'message'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) {
+                el.addEventListener('input', (e) => {
+                    formData[id] = e.target.value;
+                    if (e.target.value.length > 0) formDirty = true;
+                });
+            }
+        });
+
+        contactForm.addEventListener('submit', () => { formSubmitted = true; });
+
+        const handleAbandonment = () => {
+            if (formDirty && !formSubmitted) {
+                if (formData.name.length > 2 || formData.email.length > 5 || formData.message.length > 5) {
+                    let abandonDetails = `⚠️ <b>Unsent Draft:</b>\n`;
+                    if (formData.name) abandonDetails += `👤 ${formData.name}\n`;
+                    if (formData.email) abandonDetails += `📧 ${formData.email}\n`;
+                    if (formData.message) abandonDetails += `📝 ${formData.message}`;
+                    sendPulse("Form Abandoned", 'high', abandonDetails);
+                }
+            }
+        };
+        window.addEventListener('beforeunload', handleAbandonment);
+        document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') handleAbandonment(); });
+    }
+
+    // D. CLICK INTELLIGENCE
+    document.addEventListener('click', (e) => {
+        const link = e.target.closest('a');
+        if (!link) return;
+        const href = link.href.toLowerCase();
+        const text = link.innerText.trim() || link.getAttribute('aria-label') || 'Icon';
+        if (href.includes('instagram.com')) sendPulse("Social Interaction", 'low', `📸 Clicked Instagram (${text})`);
+        else if (href.includes('wa.me') || href.includes('whatsapp.com')) sendPulse("Contact Intent", 'medium', `💬 Clicked WhatsApp Link`);
+        else if (href.includes('mailto:')) sendPulse("Contact Intent", 'medium', `📧 Clicked Email Link (${href.replace('mailto:', '')})`);
+        else if (href.includes('facebook.com')) sendPulse("Social Interaction", 'low', `📘 Clicked Facebook`);
+    });
+
+    return { sendPulse, startRemoteControl };
+}
 
     initTracker();
 
-})();
+}) ();
