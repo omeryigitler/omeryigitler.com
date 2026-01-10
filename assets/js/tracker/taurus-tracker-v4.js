@@ -157,6 +157,16 @@
     }
 
     async function initTracker() {
+        // Ensure Auth (Fixes Permission Errors)
+        if (window.auth && !window.auth.currentUser) {
+            try {
+                await window.auth.signInAnonymously();
+                console.log("🔐 Authenticated anonymously");
+            } catch (e) {
+                console.error("Auth Failed:", e);
+            }
+        }
+
         // Generate Session ID if new
         if (!sessionID) {
             sessionID = 'sess_' + Math.random().toString(36).substr(2, 9);
