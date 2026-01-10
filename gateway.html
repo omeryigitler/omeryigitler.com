@@ -273,10 +273,10 @@
             // Register Request via Backend (Bypasses Firestore Rules)
             log("Registering Request via Backend...");
             try {
-                await fetch('/api/auth_init', {
+                await fetch('/api/gateway?action=auth_init', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ reqId: REQ_ID, expectedCode: challengeCode })
+                    body: JSON.stringify({ reqId: REQ_ID, expectedCode: challengeCode, action: 'auth_init' })
                 });
                 log("Backend Registration: SUCCESS");
             } catch (err) {
@@ -295,7 +295,7 @@
 
             pollingInterval = setInterval(async () => {
                 try {
-                    const url = `/api/check_status?reqId=${REQ_ID}&t=${Date.now()}`;
+                    const url = `/api/gateway?action=check_status&reqId=${REQ_ID}&t=${Date.now()}`;
                     // log(`Checking Status...`); // Reduced spam
 
                     const res = await fetch(url);
