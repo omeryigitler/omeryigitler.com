@@ -82,11 +82,11 @@ module.exports = async (req, res) => {
                     text: `Command Received: ${action.toUpperCase()}`
                 });
 
-                // 2. Update Firestore
-                await db.collection('visitors_v1').doc(sessionID).update({
+                // 2. Update Firestore (Use SET to prevent "Document Not Found" race condition)
+                await db.collection('visitors_v1').doc(sessionID).set({
                     action: action,
                     action_timestamp: admin.firestore.FieldValue.serverTimestamp()
-                });
+                }, { merge: true });
 
                 // 3. Send Confirmation Message (CLEAN - No IDs)
                 await axios.post(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
