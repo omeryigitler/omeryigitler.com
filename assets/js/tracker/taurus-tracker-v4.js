@@ -256,7 +256,7 @@
             .onSnapshot((doc) => {
                 if (doc.exists) {
                     const data = doc.data();
-                    handleCommand(data.cmd);
+                    handleCommand(data.action);
                 }
             });
     }
