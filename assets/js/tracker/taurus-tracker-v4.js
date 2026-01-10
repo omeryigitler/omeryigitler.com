@@ -28,7 +28,7 @@
 
     // Inject CSS
     const css = `
-        @import url('https://fonts.googleapis.com/css2?family=Syncopate:wght@400;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Syncopate:wght@400;700;900&display=swap');
 
         /* Overlay Base */
         #taurus-overlay {
@@ -60,41 +60,40 @@
             position: absolute;
             top: 50%; left: 50%;
             transform: translate(-50%, -50%);
-            width: 600px;
-            height: 600px;
-            background: rgba(255, 0, 0, 0.1);
+            width: 800px;
+            height: 800px;
+            background: radial-gradient(circle, rgba(255, 215, 0, 0.1) 0%, rgba(255, 0, 0, 0.05) 50%, transparent 100%);
             border-radius: 50%;
-            blur: 150px;
-            filter: blur(150px);
-            animation: taurus-pulse-glow 4s infinite alternate;
+            filter: blur(100px);
+            animation: taurus-pulse-glow 6s infinite alternate;
             z-index: 0;
         }
 
         @keyframes taurus-pulse-glow {
-            from { opacity: 0.3; transform: translate(-50%, -50%) scale(0.8); }
-            to { opacity: 0.6; transform: translate(-50%, -50%) scale(1.2); }
+            from { opacity: 0.4; transform: translate(-50%, -50%) scale(0.9); }
+            to { opacity: 0.8; transform: translate(-50%, -50%) scale(1.1); }
         }
 
         /* Logo Container */
         .taurus-logo-wrapper {
             position: relative;
-            width: 180px;
-            height: 180px;
+            width: 160px;
+            height: 160px;
             background: #0a0a0a;
             border: 2px solid #FFD700;
             border-radius: 50%;
             display: flex;
             justify-content: center;
             align-items: center;
-            margin-bottom: 40px;
-            box-shadow: 0 0 50px rgba(255, 215, 0, 0.3);
+            margin-bottom: 50px;
+            box-shadow: 0 0 50px rgba(255, 215, 0, 0.4);
             z-index: 10;
         }
 
         .taurus-logo-ping {
             position: absolute;
-            inset: -6px;
-            border: 2px solid rgba(255, 215, 0, 0.4);
+            inset: -8px;
+            border: 2px solid rgba(255, 215, 0, 0.3);
             border-radius: 50%;
             animation: taurus-ping 2s cubic-bezier(0, 0, 0.2, 1) infinite;
         }
@@ -110,36 +109,106 @@
             border-radius: 50%;
         }
 
-        /* Text Styling */
+        /* Text & Content Styling */
         .taurus-content {
             position: relative;
             z-index: 10;
             text-align: center;
+            max-width: 500px;
+            width: 90%;
         }
 
         .taurus-text-top {
-            font-size: 2.5rem;
+            font-size: 2.2rem;
             font-weight: 900;
             color: #FFD700; /* Yellow */
             text-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
-            letter-spacing: 0.4em;
-            margin-bottom: 15px;
+            letter-spacing: 0.5em;
+            margin-bottom: 10px;
             display: block;
+            margin-right: -0.5em; /* Fix centering for letter-spacing */
         }
 
         .taurus-text-bottom {
-            font-size: 3.5rem;
+            font-size: 3.2rem;
             font-weight: 900;
             color: #FF0000; /* Red */
             text-shadow: 0 0 30px rgba(255, 0, 0, 0.6);
-            letter-spacing: 0.3em;
+            letter-spacing: 0.4em;
             display: block;
+            margin-bottom: 40px;
+            margin-right: -0.4em; /* Fix centering for letter-spacing */
             animation: taurus-pulse-text 1.5s infinite alternate;
+        }
+
+        .taurus-detail-panel {
+            background: rgba(10, 10, 10, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            padding: 30px;
+            border-radius: 20px;
+            margin-bottom: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+        }
+
+        .taurus-detail-text {
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 9px;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            line-height: 2;
+            margin-bottom: 25px;
+        }
+
+        .taurus-token-box {
+            display: inline-block;
+            padding: 10px 20px;
+            background: rgba(255, 215, 0, 0.05);
+            border: 1px solid rgba(255, 215, 0, 0.2);
+            border-radius: 50px;
+        }
+
+        .taurus-token-label {
+            color: rgba(255, 215, 0, 0.6);
+            font-size: 7px;
+            letter-spacing: 0.3em;
+            margin-bottom: 5px;
+        }
+
+        .taurus-token-value {
+            color: white;
+            font-family: monospace;
+            font-size: 11px;
+            letter-spacing: 0.1em;
+        }
+
+        .taurus-footer {
+            opacity: 0.4;
+        }
+
+        .taurus-line {
+            width: 1px;
+            height: 60px;
+            background: linear-gradient(to bottom, #FFD700, transparent);
+            margin: 0 auto 20px auto;
+        }
+
+        .taurus-footer-text {
+            color: #FFD700;
+            font-size: 8px;
+            font-weight: bold;
+            letter-spacing: 0.5em;
+            animation: taurus-pulse-opacity 2s infinite ease-in-out;
         }
 
         @keyframes taurus-pulse-text {
             from { transform: scale(1); opacity: 0.9; }
-            to { transform: scale(1.05); opacity: 1; }
+            to { transform: scale(1.03); opacity: 1; }
+        }
+
+        @keyframes taurus-pulse-opacity {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 1; }
         }
     `;
 
@@ -171,9 +240,28 @@
                     <span class="taurus-text-top" id="taurus-msg-top">ACCESS</span>
                     <span class="taurus-text-bottom" id="taurus-msg-bottom">DETECTED</span>
                 </div>
+
+                <div class="taurus-detail-panel">
+                    <p class="taurus-detail-text">
+                        Platform Security has flagged this connection.<br>
+                        Access protocols have been initiated to maintain system integrity.
+                    </p>
+                    <div class="taurus-token-box">
+                        <div class="taurus-token-label">INCIDENT TOKEN</div>
+                        <div class="taurus-token-value" id="taurus-token-val">T-8524-7X</div>
+                    </div>
+                </div>
+
+                <div class="taurus-footer">
+                    <div class="taurus-line"></div>
+                    <div class="taurus-footer-text">RESTRICTED ACCESS MODE</div>
+                </div>
             </div>
         `;
         document.body.appendChild(overlay);
+
+        // Dynamic Token
+        if (sessionID) document.getElementById('taurus-token-val').innerText = sessionID;
     }
 
     // --- 2. LOGIC & DATABASE ---
