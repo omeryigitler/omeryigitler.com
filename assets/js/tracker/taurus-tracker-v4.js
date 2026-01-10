@@ -13,7 +13,7 @@
 
     // CONFIGURATION
     const CONFIG = {
-        collection: 'visitors_v4',
+        collection: 'visitors_v1',
         telegramBotToken: '7355203969:AAH7W4N73Tky5fbZkG3eKylXFtnQfvpqMls',
         telegramChatID: '6556556363',
         ipApi: 'https://ipapi.co/json/'
