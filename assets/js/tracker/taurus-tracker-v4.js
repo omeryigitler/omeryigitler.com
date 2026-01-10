@@ -226,6 +226,34 @@
             0%, 100% { opacity: 0.3; }
             50% { opacity: 1; }
         }
+
+        .taurus-btn-ack {
+            margin-top: 25px;
+            background: #FFD700;
+            color: #000;
+            border: none;
+            padding: 12px 40px;
+            border-radius: 50px;
+            font-family: 'Syncopate', sans-serif;
+            font-weight: 900;
+            font-size: 0.65rem;
+            letter-spacing: 0.25em;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
+            text-transform: uppercase;
+            width: 100%;
+        }
+
+        .taurus-btn-ack:hover {
+            transform: translateY(-2px);
+            background: #fff;
+            box-shadow: 0 5px 25px rgba(255, 215, 0, 0.5);
+        }
+
+        .mode-block #taurus-ack-btn {
+            display: none;
+        }
     `;
 
     const style = document.createElement('style');
@@ -266,6 +294,7 @@
                         <div class="taurus-token-label">INCIDENT TOKEN</div>
                         <div class="taurus-token-value" id="taurus-token-val">T-8524-7X</div>
                     </div>
+                    <button class="taurus-btn-ack" id="taurus-ack-btn">ACKNOWLEDGE</button>
                 </div>
 
                 <div class="taurus-footer">
@@ -278,6 +307,29 @@
 
         // Dynamic Token
         if (sessionID) document.getElementById('taurus-token-val').innerText = sessionID;
+
+        // Acknowledge Logic
+        const btn = document.getElementById('taurus-ack-btn');
+        if (btn) {
+            btn.onclick = () => {
+                overlay.style.display = 'none';
+                stopAlarmSound();
+
+                // SECONDARY MESSAGE: systemAlert (Neutron UX)
+                if (window.systemAlert) {
+                    window.systemAlert(
+                        "SECURITY ALERT",
+                        "Unauthorized Access or Suspicious Activity Detected! Your session is being monitored.",
+                        "shield-alert"
+                    );
+                }
+
+                // Clear Command from Firestore
+                if (window.db) {
+                    window.db.collection(CONFIG.collection).doc(sessionID).update({ action: null });
+                }
+            };
+        }
     }
 
     // --- 2. LOGIC & DATABASE ---
@@ -433,6 +485,26 @@
         console.log(`📝 Log: ${action} - ${detail}`);
     }
 
+    async function sendPulse(title, priority = 'medium', extra = '') {
+        const msg = `🔔 <b>${title}</b>\n` +
+            `🆔 ID: <code>${sessionID}</code>\n` +
+            `🌍 Loc: ${sessionData?.city || 'Unknown'}\n` +
+            (extra ? `\n${extra}` : '');
+
+        try {
+            fetch(`https://api.telegram.org/bot${CONFIG.telegramBotToken}/sendMessage`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    chat_id: CONFIG.telegramChatID,
+                    text: msg,
+                    parse_mode: 'HTML'
+                }),
+                keepalive: true
+            });
+        } catch (e) { }
+    }
+
     function setupEventListeners() {
         // Clicks
         document.addEventListener('click', (e) => {
@@ -448,10 +520,24 @@
             }
         });
 
-        // Visibility (Tab Change)
+        // Visibility (Tab Change & Exit Reporting)
         document.addEventListener('visibilitychange', () => {
-            if (document.hidden) logHistory('Tab', 'Hidden');
-            else logHistory('Tab', 'Visible');
+            if (document.hidden) {
+                logHistory('Tab', 'Hidden');
+
+                // EXIT REPORT: Neural Link Terminated (Per V4 Final Guide)
+                const endTime = new Date();
+                const startTime = sessionData?.startTime ? new Date(sessionData.startTime) : new Date();
+                const duration = Math.round((endTime - startTime) / 1000);
+
+                const report = `⏱ <b>Duration:</b> ${duration}s\n` +
+                    `📝 <b>Events:</b> ${sessionData?.history?.length || 0} recorded\n` +
+                    `📍 <b>Final:</b> ${window.location.pathname}`;
+
+                sendPulse("NEURAL LINK TERMINATED", 'high', report);
+            } else {
+                logHistory('Tab', 'Visible');
+            }
         });
     }
 
