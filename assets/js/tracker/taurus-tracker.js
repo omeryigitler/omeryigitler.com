@@ -262,12 +262,12 @@
 
             visitData.last_seen = getSafeTimestamp();
 
-            if (intel && intel.sendPulse) {
+            if (sendPulse) {
                 let locDetails = "";
                 if (visitData.location.city !== 'Unknown') {
                     locDetails = `📍 <b>Loc:</b> ${visitData.location.city}, ${visitData.location.country_code}`;
                 }
-                await intel.sendPulse("Neural Link Established", 'medium', locDetails);
+                await sendPulse("Neural Link Established", 'medium', locDetails);
                 window.TAURUS_ACTIVE = true;
             }
 
@@ -288,9 +288,12 @@
                         history: getSafeArrayUnion(currentPage)
                     });
 
-                    if (intel && intel.startRemoteControl) {
-                        intel.startRemoteControl(docRef);
-                    }
+                    // Check if startRemoteControl is available in scope
+                    try {
+                        if (typeof startRemoteControl === 'function') {
+                            startRemoteControl(docRef);
+                        }
+                    } catch (e) { }
 
                     // Heartbeat
                     setInterval(() => {
