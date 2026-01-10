@@ -1,7 +1,5 @@
 // Firebase Configuration
 // Ömer Yiğitler - Web App
-// Bu dosya global 'firebaseConfig' değişkenini tanımlar.
-
 const firebaseConfig = {
     apiKey: "AIzaSyC0DAIT0cVPD4WFpfgqrn0lfb-kyFRsnWM",
     authDomain: "omeryigitler-5abfb.firebaseapp.com",
@@ -12,5 +10,19 @@ const firebaseConfig = {
     measurementId: "G-FX3R67T7S7"
 };
 
-// Global erişim için window nesnesine ata
+// Global Exposure
 window.firebaseConfig = firebaseConfig;
+
+// AUTO-INITIALIZE
+if (typeof firebase !== 'undefined') {
+    if (!firebase.apps.length) {
+        firebase.initializeApp(firebaseConfig);
+        console.log("🔥 Firebase Initialized");
+    }
+    // Global DB Access
+    window.db = firebase.firestore();
+    window.auth = firebase.auth();
+    console.log("✅ Window.DB Exposed");
+} else {
+    console.error("❌ Firebase SDK not found!");
+}
