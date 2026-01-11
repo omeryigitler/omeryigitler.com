@@ -4,7 +4,7 @@
  * ----------------------------------
  * - Altyapı: Backend Oriented (Engellenemez Gölge Modu)
  * - Güvenlik: Middleware IP Gating & Server-side Reporting
- * - Design: Custom "Access Detected" / "Access Denied" UI
+ * - Design: Radical UI v2 (Technical Precision)
  * - Kurallar: %100 Final Guide Compliance
  */
 
@@ -29,200 +29,197 @@
 
     // --- 1. VISUAL INTERFACE (THE DESIGN) ---
 
-    // Inject CSS
-    const css = `
-        @import url('https://fonts.googleapis.com/css2?family=Syncopate:wght@400;700;900&display=swap');
+    // Inject CSS & Fonts
+    const fonts = document.createElement('link');
+    fonts.rel = 'stylesheet';
+    fonts.href = 'https://fonts.googleapis.com/css2?family=Manrope:wght@200;400;700;900&family=Syncopate:wght@400;700&display=swap';
+    document.head.appendChild(fonts);
 
+    const css = `
         /* Overlay Base */
         #taurus-overlay {
             position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            z-index: 99999;
-            display: none;
-            justify-content: center;
-            align-items: center;
-            flex-direction: column;
-            font-family: 'Syncopate', sans-serif;
+            inset: 0;
+            z-index: 9999999;
             background: #050505;
-            user-select: none;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Manrope', sans-serif;
+            text-align: center;
             overflow: hidden;
+            user-select: none;
+            touch-action: none;
         }
 
         .taurus-grid-bg {
             position: absolute;
             inset: 0;
-            background-size: 50px 50px;
-            background-image:
-                linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
-                linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
-            opacity: 0.3;
-            z-index: 0;
+            background-image: radial-gradient(circle at center, transparent 0, #050505 100%),
+                              linear-gradient(rgba(255, 215, 0, 0.08) 1px, transparent 0),
+                              linear-gradient(90deg, rgba(255, 215, 0, 0.08) 1px, transparent 0);
+            background-size: 100% 100%, 35px 35px, 35px 35px;
+            opacity: 0.4;
+            pointer-events: none;
         }
 
-        .taurus-glow-bg {
+        .taurus-axis-glow {
+            position: absolute;
+            top: 0; left: 50%;
+            transform: translateX(-50%);
+            width: 1px; height: 100%;
+            background: rgba(255, 215, 0, 0.2);
+            filter: blur(1px);
+            pointer-events: none;
+        }
+
+        .taurus-radial-glow {
             position: absolute;
             top: 50%; left: 50%;
             transform: translate(-50%, -50%);
-            width: 800px;
-            height: 800px;
-            background: radial-gradient(circle, rgba(255, 215, 0, 0.1) 0%, rgba(255, 0, 0, 0.05) 50%, transparent 100%);
+            width: 500px; height: 500px;
+            background: rgba(239, 68, 68, 0.2);
             border-radius: 50%;
             filter: blur(100px);
-            animation: taurus-pulse-glow 6s infinite alternate;
-            z-index: 0;
+            animation: taurus-pulse-glow 4s infinite ease-in-out;
+            pointer-events: none;
         }
 
         @keyframes taurus-pulse-glow {
-            from { opacity: 0.4; transform: translate(-50%, -50%) scale(0.9); }
-            to { opacity: 0.8; transform: translate(-50%, -50%) scale(1.1); }
+            0%, 100% { opacity: 0.2; transform: translate(-50%, -50%) scale(1); }
+            50% { opacity: 0.4; transform: translate(-50%, -50%) scale(1.1); }
         }
 
-        /* Logo Container */
-        .taurus-logo-wrapper {
-            position: relative;
-            width: 160px;
-            height: 160px;
-            background: #0a0a0a;
-            border: 2px solid #FFD700;
-            border-radius: 50%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            margin-bottom: 50px;
-            box-shadow: 0 0 50px rgba(255, 215, 0, 0.4);
-            z-index: 10;
-        }
-
-        .taurus-logo-ping {
-            position: absolute;
-            inset: -8px;
-            border: 2px solid rgba(255, 215, 0, 0.3);
-            border-radius: 50%;
-            animation: taurus-ping 2s cubic-bezier(0, 0, 0.2, 1) infinite;
-        }
-
+        /* Signal Waves */
         @keyframes taurus-ping {
-            75%, 100% { transform: scale(1.2); opacity: 0; }
+            0% { transform: scale(1); opacity: 0.8; }
+            70%, 100% { transform: scale(2.2); opacity: 0; }
         }
 
-        .taurus-logo-img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
+        .taurus-signal-wave {
+            position: absolute;
+            inset: 0;
             border-radius: 50%;
+            border: 4px solid rgba(255, 215, 0, 0.5);
+            animation: taurus-ping 2.5s cubic-bezier(0, 0, 0.2, 1) infinite;
+            pointer-events: none;
         }
 
-        /* Text & Content Styling */
+        .taurus-signal-wave-delay {
+            position: absolute;
+            inset: 0;
+            border-radius: 50%;
+            border: 2px solid rgba(255, 215, 0, 0.3);
+            animation: taurus-ping 2.5s cubic-bezier(0, 0, 0.2, 1) infinite 1.25s;
+            pointer-events: none;
+        }
+
+        /* Content Blocks */
         .taurus-content {
             position: relative;
             z-index: 10;
-            text-align: center;
+            width: 100%;
             max-width: 500px;
-            width: 90%;
             display: flex;
             flex-direction: column;
             align-items: center;
+            padding-top: 2rem;
         }
 
-        .taurus-text-top {
-            font-size: 1.4rem;
-            font-weight: 900;
-            color: #FFD700; /* Yellow */
-            border: 2px solid #FFD700;
-            padding: 10px 35px;
-            letter-spacing: 0.6em;
-            text-indent: 0.6em; /* Direct compensation for centering */
-            display: inline-block;
-            margin-bottom: 25px;
-            background: rgba(255, 215, 0, 0.05);
-            box-shadow: 0 0 20px rgba(255, 215, 0, 0.2);
+        .taurus-logo-container {
+            position: relative;
+            width: 140px; height: 140px;
+            margin-bottom: 2.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .taurus-logo-main {
+            width: 100%; height: 100%;
+            border-radius: 50%;
+            background: #000;
+            border: 2px solid rgba(255, 215, 0, 0.6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 70px rgba(255, 215, 0, 0.4);
+            position: relative;
+            z-index: 20;
+            overflow: hidden;
+        }
+
+        .taurus-logo-main img {
+            width: 75%; height: 75%;
+            object-contain: cover;
+        }
+
+        .taurus-title {
             font-family: 'Syncopate', sans-serif;
-            text-transform: uppercase;
-        }
-
-        .taurus-text-bottom {
-            font-size: 3.2rem;
             font-weight: 900;
-            color: #FF0000; /* Red */
-            text-shadow: 0 0 30px rgba(255, 0, 0, 0.6);
-            letter-spacing: 0.2em;
-            margin-right: -0.2em; /* Fix centering for letter-spacing */
-            display: block;
-            margin-bottom: 40px;
-            animation: taurus-pulse-text 1.5s infinite alternate;
-            font-family: 'Syncopate', sans-serif;
             text-transform: uppercase;
+            letter-spacing: 0.4em;
+            line-height: 1.2;
+            margin-bottom: 2.5rem;
         }
 
-        .taurus-detail-panel {
-            background: rgba(10, 10, 10, 0.7);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(20px);
-            padding: 30px;
-            border-radius: 20px;
-            margin-bottom: 40px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
-            width: 100%;
+        .taurus-title span:first-child { color: #FFD700; font-size: 1.5rem; }
+        .taurus-title span:last-child { color: #EF4444; font-size: 1.5rem; display: block; margin-top: 0.5rem; filter: drop-shadow(0 0 15px rgba(239, 68, 68, 0.6)); }
+
+        .taurus-panel {
+            background: rgba(10, 10, 10, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(30px);
+            padding: 2.5rem 2rem;
+            border-radius: 2.5rem;
+            width: 90%;
+            max-width: 400px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
         }
 
-        .taurus-detail-text {
-            color: rgba(255, 255, 255, 0.5);
+        .taurus-panel-text {
+            color: rgba(255, 255, 255, 0.6);
             font-size: 10px;
+            text-transform: uppercase;
             letter-spacing: 0.2em;
-            text-transform: uppercase;
-            line-height: 2;
-            margin-bottom: 25px;
+            line-height: 1.6;
+            margin-bottom: 2.5rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            padding-bottom: 1.5rem;
         }
 
-        .taurus-token-box {
-            display: inline-block;
-            padding: 12px 25px;
-            background: rgba(255, 215, 0, 0.05);
-            border: 1px solid rgba(255, 215, 0, 0.2);
-            border-radius: 50px;
+        .taurus-stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            text-align: left;
         }
 
-        .taurus-token-label {
-            color: rgba(255, 215, 0, 0.5);
-            font-size: 7px;
-            letter-spacing: 0.3em;
-            margin-bottom: 5px;
-            text-transform: uppercase;
-        }
-
-        .taurus-token-value {
-            color: white;
-            font-family: monospace;
-            font-size: 11px;
-            letter-spacing: 0.1em;
-        }
+        .taurus-stat-item p:first-child { color: rgba(255, 215, 0, 0.6); font-size: 7px; text-transform: uppercase; letter-spacing: 0.3em; margin-bottom: 0.25rem; }
+        .taurus-stat-item p:last-child { color: #fff; font-family: monospace; font-size: 11px; letter-spacing: 0.1em; font-weight: bold; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
         .taurus-footer {
-            opacity: 0.4;
+            margin-top: 3.5rem;
             display: flex;
             flex-direction: column;
             align-items: center;
         }
 
-        .taurus-line {
-            width: 1px;
-            height: 60px;
+        .taurus-footer-line {
+            width: 1px; height: 1.5rem;
             background: linear-gradient(to bottom, #FFD700, transparent);
-            margin-bottom: 20px;
+            opacity: 0.4;
+            margin-bottom: 0.75rem;
         }
 
         .taurus-footer-text {
-            color: #FFD700;
+            color: rgba(255, 215, 0, 0.5);
             font-size: 8px;
             font-weight: bold;
-            letter-spacing: 0.5em;
-            animation: taurus-pulse-opacity 2s infinite ease-in-out;
             text-transform: uppercase;
-        }
-
-        @keyframes taurus-pulse-text {
-            from { transform: scale(1); opacity: 0.9; }
-            to { transform: scale(1.05); opacity: 1; }
+            letter-spacing: 0.6em;
+            animation: taurus-pulse-opacity 2s infinite ease-in-out;
         }
 
         @keyframes taurus-pulse-opacity {
@@ -231,31 +228,58 @@
         }
 
         .taurus-btn-ack {
-            margin-top: 25px;
+            margin-top: 2rem;
             background: #FFD700;
             color: #000;
             border: none;
-            padding: 12px 40px;
+            padding: 10px 0;
             border-radius: 50px;
             font-family: 'Syncopate', sans-serif;
-            font-weight: 900;
+            font-weight: 700;
             font-size: 0.65rem;
-            letter-spacing: 0.25em;
+            letter-spacing: 0.2em;
             cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
-            text-transform: uppercase;
             width: 100%;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
         }
 
-        .taurus-btn-ack:hover {
-            transform: translateY(-2px);
-            background: #fff;
-            box-shadow: 0 5px 25px rgba(255, 215, 0, 0.5);
-        }
+        .taurus-btn-ack:hover { background: #fff; transform: translateY(-1px); }
 
         .mode-block #taurus-ack-btn {
-            display: none;
+            visibility: hidden;
+            pointer-events: none;
+        }
+
+        @media (min-width: 768px) {
+            .taurus-title span:first-child, .taurus-title span:last-child { font-size: 1.8rem; }
+            .taurus-panel-text { font-size: 11px; }
+            .taurus-stat-item p:last-child { font-size: 13px; }
+            .taurus-stat-item p:last-child { font-size: 13px; }
+        }
+
+        /* Freeze Mode (Show Feature) */
+        .mode-freeze .taurus-title,
+        .mode-freeze .taurus-panel,
+        .mode-freeze .taurus-footer {
+            display: none !important;
+        }
+
+        .mode-freeze .taurus-logo-container {
+            transform: scale(2);
+            transition: transform 1s ease;
+        }
+        
+        .mode-freeze .taurus-logo-main {
+            border-color: rgba(255, 215, 0, 0.8);
+            box-shadow: 0 0 100px rgba(255, 215, 0, 0.6);
+            transition: all 1s ease;
+        }
+
+        .mode-freeze .taurus-signal-wave,
+        .mode-freeze .taurus-signal-wave-delay {
+            animation-duration: 4s; /* Slower, calmer pulse */
+            border-color: rgba(255, 215, 0, 0.3);
         }
     `;
 
@@ -270,46 +294,62 @@
         const overlay = document.createElement('div');
         overlay.id = 'taurus-overlay';
 
-        // Logo Content (using window.TAURUS_LOGO_DATA or fallback)
         const logoSrc = window.TAURUS_LOGO_DATA || 'assets/favicon_taurus.png';
+        const displayIP = sessionData?.ip || '0.0.0.0';
+        const displayCity = sessionData?.city || 'Unknown';
 
         overlay.innerHTML = `
             <div class="taurus-grid-bg"></div>
-            <div class="taurus-glow-bg"></div>
+            <div class="taurus-axis-glow"></div>
+            <div class="taurus-radial-glow"></div>
             
             <div class="taurus-content">
-                <div class="taurus-logo-wrapper">
-                    <img src="${logoSrc}" class="taurus-logo-img" alt="Taurus">
-                    <div class="taurus-logo-ping"></div>
+                <div class="taurus-logo-container">
+                    <div class="taurus-signal-wave"></div>
+                    <div class="taurus-signal-wave-delay"></div>
+                    <div class="taurus-logo-main">
+                        <img src="${logoSrc}" alt="Taurus">
+                    </div>
                 </div>
                 
-                <div class="taurus-text-group">
-                    <div class="taurus-text-top" id="taurus-msg-top">ACCESS</div>
-                    <div class="taurus-text-bottom" id="taurus-msg-bottom">DETECTED</div>
-                </div>
+                <h1 class="taurus-title">
+                    <span id="taurus-msg-top">ACCESS</span>
+                    <span id="taurus-msg-bottom">DETECTED</span>
+                </h1>
 
-                <div class="taurus-detail-panel">
-                    <p class="taurus-detail-text">
-                        Platform Security has flagged this connection.<br>
-                        Access protocols have been initiated. <br>
-                        <b>Your session is being monitored for system integrity.</b>
+                <div class="taurus-panel">
+                    <p class="taurus-panel-text" id="taurus-panel-info">
+                        Platform Security has flagged this connection. <br>
+                        Access protocols have been initiated.
                     </p>
-                    <div class="taurus-token-box">
-                        <div class="taurus-token-label">INCIDENT TOKEN</div>
-                        <div class="taurus-token-value" id="taurus-token-val">T-8524-7X</div>
+
+                    <div class="taurus-stats-grid">
+                        <div class="taurus-stat-item">
+                            <p>Network Address</p>
+                            <p id="taurus-stat-ip">${displayIP}</p>
+                        </div>
+                        <div class="taurus-stat-item">
+                            <p>Geo-Location</p>
+                            <p id="taurus-stat-city">${displayCity}</p>
+                        </div>
+                        <div class="taurus-stat-item col-span-2">
+                            <p>Session Identifier</p>
+                            <p id="taurus-token-val">Initializing...</p>
+                        </div>
                     </div>
+
                     <button class="taurus-btn-ack" id="taurus-ack-btn">ACKNOWLEDGE</button>
                 </div>
 
                 <div class="taurus-footer">
-                    <div class="taurus-line"></div>
-                    <div class="taurus-footer-text">RESTRICTED ACCESS MODE</div>
+                    <div class="taurus-footer-line"></div>
+                    <p class="taurus-footer-text">RESTRICTED ACCESS MODE</p>
                 </div>
             </div>
         `;
         document.body.appendChild(overlay);
 
-        // Dynamic Token
+        // Update with real data
         if (sessionID) document.getElementById('taurus-token-val').innerText = sessionID;
 
         // Acknowledge Logic
@@ -317,9 +357,8 @@
         if (btn) {
             btn.onclick = () => {
                 overlay.style.display = 'none';
+                document.body.style.overflow = ''; // Restore scroll
                 stopAlarmSound();
-
-                // Clear Command from Firestore
                 if (window.db) {
                     window.db.collection(CONFIG.collection).doc(sessionID).update({ action: null });
                 }
@@ -365,9 +404,9 @@
     async function gatherAndNotify() {
         let ipData = { ip: '0.0.0.0' };
         try {
-            // Attempt to get IP/Geo on client, but don't crash if blocked (Office Firewall)
             const res = await fetch(CONFIG.ipApi);
             if (res.ok) ipData = await res.json();
+            sessionData = ipData; // Store globally for UI
         } catch (error) {
             console.warn("🐂 Client Geo-Fetch blocked, switching to Server-Side Capture.");
         }
@@ -413,28 +452,43 @@
         const overlay = document.getElementById('taurus-overlay');
         const topText = document.getElementById('taurus-msg-top');
         const botText = document.getElementById('taurus-msg-bottom');
+        const infoText = document.getElementById('taurus-panel-info');
 
         if (cmd === 'alarm') {
             overlay.style.display = 'flex';
+            document.body.style.overflow = 'hidden'; // Lock scroll
             overlay.className = 'mode-alarm';
-            topText.innerText = 'ACCESS';
-            botText.innerText = 'DETECTED'; // User confirmed "DETECTED" for Alarm
+            if (topText) topText.innerText = 'ACCESS';
+            if (botText) botText.innerText = 'DETECTED';
+            if (infoText) infoText.innerHTML = 'Platform Security has flagged this connection. <br> Access protocols have been initiated.';
             playAlarmSound();
         } else if (cmd === 'block') {
             overlay.style.display = 'flex';
+            document.body.style.overflow = 'hidden'; // Lock scroll
             overlay.className = 'mode-block';
-            topText.innerText = 'ACCESS';
-            botText.innerText = 'DENIED';
+            if (topText) topText.innerText = 'ACCESS';
+            if (botText) botText.innerText = 'DENIED';
+            if (infoText) infoText.innerHTML = 'Platform Security has flagged this connection. <br> Access protocols have been initiated.';
             playAlarmSound();
+            if (infoText) infoText.innerHTML = 'Platform Security has flagged this connection. <br> Access protocols have been initiated.';
+            playAlarmSound();
+            trapInput();
+        } else if (cmd === 'freeze') {
+            overlay.style.display = 'flex';
+            document.body.style.overflow = 'hidden'; // Lock scroll
+            overlay.className = 'mode-freeze';
+            // No text updates needed, CSS hides them
+            stopAlarmSound(); // Silence for dramatic effect
             trapInput();
         } else if (cmd === 'clear') {
             overlay.style.display = 'none';
+            document.body.style.overflow = ''; // Restore scroll
             stopAlarmSound();
-            // Release Input
             document.onkeydown = null;
             document.oncontextmenu = null;
         }
     }
+    window.handleCommand = handleCommand; // Expose for testing
 
     // --- 3. LOGGING & INTERACTION ---
 

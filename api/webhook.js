@@ -89,11 +89,7 @@ module.exports = async (req, res) => {
                 }, { merge: true });
 
                 // 3. Send Confirmation Message (CLEAN - No IDs)
-                await axios.post(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
-                    chat_id: chatId,
-                    text: `✅ <b>Action Applied:</b> ${action.toUpperCase()}`,
-                    parse_mode: 'HTML'
-                });
+                // Notification removed as per user request (redundant)
             } catch (error) {
                 console.error("Tracker Webhook Error:", error);
             }

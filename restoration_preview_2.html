@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Taurus Security - Boxed Header Preview</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Manrope:wght@200;400;700;900&family=Syncopate:wght@400;700&display=swap"
+        rel="stylesheet">
+    <style>
+        body {
+            background-color: #050505;
+            color: #fff;
+            font-family: 'Manrope', sans-serif;
+            margin: 0;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            text-align: center;
+        }
+
+        #taurus-overlay {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            max-width: 500px;
+        }
+
+        .taurus-logo-container {
+            position: relative;
+            width: 120px;
+            height: 120px;
+            margin-bottom: 40px;
+        }
+
+        .taurus-logo-img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            border-radius: 50%;
+            border: 2px solid #FFD700;
+            box-shadow: 0 0 30px rgba(255, 215, 0, 0.3);
+            position: relative;
+            z-index: 10;
+        }
+
+        .taurus-ripple {
+            position: absolute;
+            inset: 0;
+            border: 1px solid rgba(255, 215, 0, 0.3);
+            border-radius: 50%;
+            animation: taurus-ripple 2s infinite;
+        }
+
+        @keyframes taurus-ripple {
+            0% {
+                transform: scale(1);
+                opacity: 0.8;
+            }
+
+            100% {
+                transform: scale(1.5);
+                opacity: 0;
+            }
+        }
+
+        .taurus-text-top {
+            font-size: 1.4rem;
+            font-weight: 900;
+            color: #FFD700;
+            border: 2px solid #FFD700;
+            padding: 10px 35px;
+            letter-spacing: 0.6em;
+            text-indent: 0.6em;
+            display: inline-block;
+            margin-bottom: 25px;
+            background: rgba(255, 215, 0, 0.05);
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.2);
+            font-family: 'Syncopate', sans-serif;
+            text-transform: uppercase;
+        }
+
+        .taurus-text-bottom {
+            font-size: 3rem;
+            font-weight: 900;
+            color: #FF0000;
+            text-shadow: 0 0 30px rgba(255, 0, 0, 0.6);
+            letter-spacing: 0.2em;
+            margin-right: -0.2em;
+            display: block;
+            margin-bottom: 40px;
+            animation: taurus-pulse-text 1.5s infinite alternate;
+            font-family: 'Syncopate', sans-serif;
+            text-transform: uppercase;
+        }
+
+        @keyframes taurus-pulse-text {
+            from {
+                transform: scale(1);
+                opacity: 0.9;
+            }
+
+            to {
+                transform: scale(1.05);
+                opacity: 1;
+            }
+        }
+
+        .taurus-detail-panel {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 30px;
+            border-radius: 20px;
+            margin-bottom: 40px;
+            width: 100%;
+        }
+
+        .taurus-detail-text {
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 10px;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            line-height: 2;
+        }
+
+        .taurus-line {
+            width: 1px;
+            height: 60px;
+            background: linear-gradient(to bottom, #FFD700, transparent);
+            margin-bottom: 20px;
+        }
+
+        .taurus-footer-text {
+            color: #FFD700;
+            font-size: 9px;
+            font-weight: bold;
+            letter-spacing: 0.5em;
+            text-transform: uppercase;
+            opacity: 0.4;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="taurus-overlay">
+        <div class="taurus-logo-container">
+            <div class="taurus-ripple"></div>
+            <div class="taurus-ripple"></div>
+            <img src="assets/favicon_taurus.png" class="taurus-logo-img" alt="Taurus">
+        </div>
+
+        <div class="taurus-text-group">
+            <div class="taurus-text-top">ACCESS</div>
+            <div class="taurus-text-bottom">DENIED</div>
+        </div>
+
+        <div class="taurus-detail-panel">
+            <p class="taurus-detail-text">
+                PLATFORM SECURITY HAS FLAGGED THIS SESSION.<br>
+                UNAUTHORIZED ACTIVITY DETECTED.
+            </p>
+        </div>
+
+        <div class="taurus-line"></div>
+        <div class="taurus-footer-text">SECURED BY TAURUS</div>
+    </div>
+
+</body>
+
+</html>
