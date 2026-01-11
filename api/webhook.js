@@ -4,7 +4,7 @@ const { GoogleGenerativeAI } = require("@google/generative-ai");
 
 // Initialize Gemini
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
+const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
 
 // Initialize Firebase (With Fallback Key for Vercel)
 if (!admin.apps.length) {
@@ -186,7 +186,7 @@ module.exports = async (req, res) => {
             }
             // 404: Model Not Found
             else if (error.message.includes('404') || (error.response && error.response.status === 404)) {
-                errorMsg = "⚠️ <b>AI Model Connection Error (404)</b>\n\nThe specified AI model is currently unavailable. Contact administrator or try a different command.";
+                errorMsg = `⚠️ <b>AI Model Connection Error (404)</b>\n\nModel: <code>${model.model}</code>\n\nThe specified AI model is currently unavailable in your region or for this API key. Contact administrator.`;
             }
 
             try {
