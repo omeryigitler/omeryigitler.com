@@ -112,7 +112,7 @@
             position: relative;
             z-index: 10;
             width: 100%;
-            max-width: 500px;
+            max-width: 550px; /* Widened from 500px per user request */
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -149,14 +149,20 @@
 
         /* --- MODE-SPECIFIC STYLES --- */
 
-        /* MODE 1: LIVE (Freeze) - Huge Logo, No Panel */
+        /* MODE 1: LIVE (Freeze) - Huge Logo, Title Pushed Down */
         .mode-live .taurus-logo-container {
-            transform: scale(2.0); /* 2x Size, Same Center Point */
-            margin-bottom: 0; /* Remove margin since panel is gone */
+            transform: scale(2.0); /* 2x Size */
+            margin-bottom: 0; 
         }
-        .mode-live .taurus-panel, 
-        .mode-live .taurus-footer,
+        
+        /* User wants text VISIBLE but pushed down in Live mode */
         .mode-live .taurus-title {
+            display: block !important;
+            margin-top: 8rem; /* Push title down significantly to clear 2x logo */
+        }
+        
+        /* Only hide the PANEL in Live mode (keep looking clean) */
+        .mode-live .taurus-panel {
             display: none !important;
         }
 
@@ -186,7 +192,8 @@
             text-transform: uppercase;
             letter-spacing: 0.4em;
             line-height: 1.2;
-            margin-bottom: 1.5rem; /* Tightened Gap (Crop) */
+            margin-bottom: 2rem; /* Adjusted gap */
+            transition: margin 0.5s ease;
         }
 
         .taurus-title span:first-child { color: #FFD700; font-size: 1.5rem; }
