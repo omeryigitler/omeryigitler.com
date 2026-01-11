@@ -105,6 +105,20 @@
             }
         }
 
+        }
+
+        /* Content Blocks */
+        .taurus-content {
+            position: relative;
+            z-index: 10;
+            width: 100%;
+            max-width: 500px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding-top: 8rem; /* Pushed down significantly */
+        }
+
         .taurus-logo-container {
             position: relative;
             width: 140px; 
@@ -194,7 +208,7 @@
         .taurus-stat-item p:last-child { color: #fff; font-family: monospace; font-size: 11px; letter-spacing: 0.1em; font-weight: bold; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
         .taurus-footer {
-            margin-top: 3.5rem;
+            margin-top: 1rem; /* Cropped bottom space */
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -204,7 +218,7 @@
             width: 1px; height: 1.5rem;
             background: linear-gradient(to bottom, #FFD700, transparent);
             opacity: 0.4;
-            margin-bottom: 0.75rem;
+            margin-bottom: 0.5rem;
         }
 
         .taurus-footer-text {
@@ -214,6 +228,7 @@
             text-transform: uppercase;
             letter-spacing: 0.6em;
             animation: taurus-pulse-opacity 2s infinite ease-in-out;
+            padding-bottom: 2rem; /* Breathing room */
         }
 
         @keyframes taurus-pulse-opacity {
