@@ -116,7 +116,7 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            padding-top: 5vh; /* Slide down slightly (Fine-tune) */
+            padding-top: 2rem; /* Revert to original balanced padding */
         }
 
         .taurus-logo-container {
