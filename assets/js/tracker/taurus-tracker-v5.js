@@ -384,29 +384,38 @@
                 </div>
             `;
         } else {
-            // Alarm & Block (Standard IP View)
+            // Alarm & Block (Standard IP View) - Refactored for PERFECT SYMMETRY
+            // User complained previous Grid was "shifted left". 
+            // Now using simple flex-column centered layout matching Gateway structure.
             panelContentHTML = `
-                <p class="taurus-panel-text" id="taurus-panel-info">
+                <p class="taurus-panel-text" id="taurus-panel-info" style="margin-bottom: 2rem;">
                     Platform Security has flagged this connection. <br>
                     Access protocols have been initiated.
                 </p>
 
-                <div class="taurus-stats-grid">
-                    <div class="taurus-stat-item">
-                        <p>Network Address</p>
-                        <p id="taurus-stat-ip">${displayIP}</p>
+                <div style="display: flex; flex-direction: column; gap: 1.5rem; width: 100%; align-items: center;">
+                    
+                    <!-- Network Address -->
+                    <div style="text-align: center;">
+                        <p style="font-size: 0.7rem; color: rgba(255,255,255,0.5); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px;">Network Address</p>
+                        <p id="taurus-stat-ip" style="font-family: 'Courier New', monospace; font-size: 1.1rem; color: #fff; font-weight: bold; letter-spacing: 1px;">${displayIP}</p>
                     </div>
-                    <div class="taurus-stat-item">
-                        <p>Geo-Location</p>
-                        <p id="taurus-stat-city">${displayCity}</p>
+
+                    <!-- Geo Location -->
+                    <div style="text-align: center;">
+                        <p style="font-size: 0.7rem; color: rgba(255,255,255,0.5); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px;">Geo-Location</p>
+                        <p id="taurus-stat-city" style="font-family: 'Courier New', monospace; font-size: 1.1rem; color: #fff; font-weight: bold; letter-spacing: 1px;">${displayCity}</p>
                     </div>
-                    <div class="taurus-stat-item col-span-2">
-                        <p>Session Identifier</p>
-                        <p id="taurus-token-val">${sessionID || 'Initializing...'}</p>
+
+                    <!-- Session ID -->
+                    <div style="text-align: center;">
+                        <p style="font-size: 0.7rem; color: rgba(255,255,255,0.5); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px;">Session Identifier</p>
+                        <p id="taurus-token-val" style="font-family: 'Courier New', monospace; font-size: 0.9rem; color: #FFD700; letter-spacing: 1px;">${sessionID || 'Initializing...'}</p>
                     </div>
+
                 </div>
 
-                <button class="taurus-btn-ack" id="taurus-ack-btn">ACKNOWLEDGE</button>
+                <button class="taurus-btn-ack" id="taurus-ack-btn" style="margin-top: 2rem;">ACKNOWLEDGE</button>
             `;
         }
 
