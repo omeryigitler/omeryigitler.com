@@ -295,11 +295,6 @@
 
         .taurus-btn-ack:hover { background: #fff; transform: translateY(-1px); }
 
-        .mode-block #taurus-ack-btn {
-            visibility: hidden;
-            pointer-events: none;
-        }
-
         @media (min-width: 768px) {
             .taurus-title span:first-child, .taurus-title span:last-child { font-size: 1.8rem; }
             .taurus-panel-text { font-size: 11px; }
