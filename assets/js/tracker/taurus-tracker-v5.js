@@ -327,7 +327,7 @@
         /* Custom Message (Hacker Typewriter) */
         #taurus-custom-msg {
             display: none;
-            margin-top: 2rem;
+            margin-top: 5rem; /* Increased from 2rem to clear large logo */
             color: #FFD700;
             font-family: 'Courier New', monospace;
             font-size: 1.5rem;
@@ -648,8 +648,7 @@
             overlay.style.display = 'none';
             document.body.style.overflow = ''; // Restore scroll
             stopAlarmSound();
-            document.onkeydown = null;
-            document.oncontextmenu = null;
+            releaseInput(); // Restore all interactions
         }
     }
     window.handleCommand = handleCommand; // Expose for testing
@@ -757,9 +756,38 @@
         }
     }
 
+    function blockInteraction(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        return false;
+    }
+
     function trapInput() {
-        document.onkeydown = (e) => { e.preventDefault(); return false; };
-        document.oncontextmenu = (e) => { e.preventDefault(); return false; };
+        console.log("🔒 Strict Lockout Engaged");
+        // Use capturing phase to intercept before any other listeners
+        window.addEventListener('keydown', blockInteraction, true);
+        window.addEventListener('mousedown', blockInteraction, true);
+        window.addEventListener('click', blockInteraction, true);
+        window.addEventListener('contextmenu', blockInteraction, true);
+        window.addEventListener('touchstart', blockInteraction, { passive: false, capture: true });
+        window.addEventListener('wheel', blockInteraction, { passive: false, capture: true });
+
+        // Disable scroll on root elements
+        document.documentElement.style.overflow = 'hidden';
+        document.body.style.overflow = 'hidden';
+    }
+
+    function releaseInput() {
+        console.log("🔓 Strict Lockout Released");
+        window.removeEventListener('keydown', blockInteraction, true);
+        window.removeEventListener('mousedown', blockInteraction, true);
+        window.removeEventListener('click', blockInteraction, true);
+        window.removeEventListener('contextmenu', blockInteraction, true);
+        window.removeEventListener('touchstart', blockInteraction, true);
+        window.removeEventListener('wheel', blockInteraction, true);
+
+        document.documentElement.style.overflow = '';
+        document.body.style.overflow = '';
     }
 
     // WAIT FOR FIREBASE
