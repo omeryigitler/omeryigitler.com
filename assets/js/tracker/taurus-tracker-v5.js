@@ -118,7 +118,6 @@
             align-items: center;
             justify-content: center; 
             min-height: 100vh; /* Ensure full viewport height focus */
-            padding-top: 5vh; /* Visual offset to 'lower' the box as requested */
             padding-left: 1rem; padding-right: 1rem;
         }
 
@@ -396,9 +395,9 @@
             `;
         } else {
             // Alarm & Block (Standard IP View) - Differentiated by button functionality
-            // Block: Yellow button (decorative, disabled), Alarm: Yellow button (active)
+            // Block: Yellow button (decorative, disabled, no pointer events), Alarm: Yellow button (active)
             const buttonHTML = mode === 'block'
-                ? '<button class="taurus-btn-ack" disabled style="margin-top: 2rem; cursor: not-allowed;">BLOCKED</button>'
+                ? '<button class="taurus-btn-ack" disabled style="margin-top: 2rem; cursor: not-allowed; pointer-events: none;">BLOCKED</button>'
                 : '<button class="taurus-btn-ack" id="taurus-ack-btn" style="margin-top: 2rem;">ACKNOWLEDGE</button>';
 
             panelContentHTML = `
