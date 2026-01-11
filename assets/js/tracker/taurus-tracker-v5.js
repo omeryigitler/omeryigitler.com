@@ -162,22 +162,30 @@
 
         /* --- MODE-SPECIFIC STYLES --- */
 
-        /* MODE: LIVE & FREEZE (Freeze/Gezginci) - Huge Logo, Title Pushed Down */
+        /* MODE: LIVE & FREEZE (Freeze/Gezginci) - Huge Logo, Title Hidden in Freeze */
         .mode-live .taurus-logo-container,
         .mode-freeze .taurus-logo-container {
             transform: scale(2.0); 
             margin-bottom: 0; 
         }
         
-        .mode-live .taurus-title,
-        .mode-freeze .taurus-title {
+        .mode-live .taurus-title {
             display: block !important;
-            margin-top: 8rem; 
+            margin-top: 8.5rem; /* Push title down significantly to clear 2x logo */
+        }
+
+        .mode-freeze .taurus-title {
+            display: none !important; /* ACCESS DETECTED is hidden in freeze mode by default */
         }
         
         .mode-live .taurus-panel,
         .mode-freeze .taurus-panel {
             display: none !important;
+        }
+
+        .mode-freeze #taurus-custom-msg {
+            display: block; 
+            margin-top: 12rem; /* Move message much lower to avoid ripple contact */
         }
 
         /* Gateway, Alarm, Block - Standard Panel Style (Reverted) */
@@ -342,8 +350,8 @@
             z-index: 30;
         }
 
-        .mode-freeze #taurus-custom-msg {
-            display: block; /* Show in freeze mode if content exists */
+        .mode-freeze .taurus-footer {
+            display: none !important;
         }
     `;
 
@@ -628,20 +636,19 @@
             trapInput();
         } else if (cmd === 'freeze') {
             overlay.style.display = 'flex';
-            document.body.style.overflow = 'hidden'; // Lock scroll
+            document.body.style.overflow = 'hidden';
             overlay.className = 'mode-freeze';
 
             // Handle Custom Message
             if (msgBox) {
                 if (msg) {
                     msgBox.innerText = msg;
-                    msgBox.style.display = 'block';
+                    // Visibility handled by CSS adding .mode-freeze to overlay
                 } else {
-                    msgBox.style.display = 'none';
+                    msgBox.innerText = '';
                 }
             }
 
-            // No text updates needed, CSS hides them
             stopAlarmSound(); // Silence for dramatic effect
             trapInput();
         } else if (cmd === 'clear') {
