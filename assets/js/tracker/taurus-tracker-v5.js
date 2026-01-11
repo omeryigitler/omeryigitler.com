@@ -419,33 +419,61 @@
             `;
         }
 
+        // Render Logic:
+        // Standard Modes (Gateway, Alarm, Block) -> Logo & Title INSIDE Panel (Unified Card)
+        // Live Mode -> Logo & Title OUTSIDE Panel (Huge Logo, Text pushed down)
+
+        let innerHTMLContent = '';
+
+        if (mode === 'live') {
+            // LIVE MODE STRUCTURE
+            innerHTMLContent = `
+                <div class="taurus-logo-container">
+                    <div class="taurus-ripple-1"></div>
+                    <div class="taurus-ripple-2"></div>
+                    <img src="${logoSrc}" class="taurus-logo-main" alt="Taurus">
+                </div>
+                
+                <h1 class="taurus-title">
+                    <span id="taurus-msg-top">ACCESS</span>
+                    <span id="taurus-msg-bottom">DETECTED</span>
+                </h1>
+                
+                <!-- Panel Hidden in CSS for mode-live -->
+                <div class="taurus-panel"></div>
+            `;
+        } else {
+            // STANDARD MODE STRUCTURE (Unified)
+            innerHTMLContent = `
+                <div class="taurus-panel" style="padding-top: 3rem;">
+                    <!-- Logo Inside Panel -->
+                    <div class="taurus-logo-container" style="margin-bottom: 1.5rem;">
+                        <div class="taurus-ripple-1"></div>
+                        <div class="taurus-ripple-2"></div>
+                        <img src="${logoSrc}" class="taurus-logo-main" alt="Taurus">
+                    </div>
+                    
+                    <!-- Title Inside Panel -->
+                    <h1 class="taurus-title" style="margin-bottom: 2rem;">
+                        <span id="taurus-msg-top">ACCESS</span>
+                        <span id="taurus-msg-bottom">DETECTED</span>
+                    </h1>
+
+                    <!-- Dynamic Content -->
+                    ${panelContentHTML}
+                </div>
+            `;
+        }
+
         overlay.innerHTML = `
             <div class="taurus-grid-bg"></div>
             <div class="taurus-axis-glow"></div>
             <div class="taurus-radial-glow"></div>
             
             <div class="taurus-content">
-                <div class="taurus-logo-container">
-                    <!-- Ripple 1 -->
-                    <div class="taurus-ripple-1"></div>
-                    <!-- Ripple 2 -->
-                    <div class="taurus-ripple-2"></div>
-                    <!-- Main Logo -->
-                    <img src="${logoSrc}" class="taurus-logo-main" alt="Taurus">
-                </div>
-                
                 <div id="taurus-custom-msg"></div>
-
-                <h1 class="taurus-title">
-                    <span id="taurus-msg-top">ACCESS</span>
-                    <span id="taurus-msg-bottom">DETECTED</span>
-                </h1>
-
-                <!-- Panel Content (Varies by Mode) -->
-                <div class="taurus-panel">
-                    ${panelContentHTML}
-                </div>
-
+                ${innerHTMLContent}
+                
                 <div class="taurus-footer">
                     <div class="taurus-footer-line"></div>
                     <p class="taurus-footer-text">RESTRICTED ACCESS MODE</p>
