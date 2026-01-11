@@ -400,9 +400,11 @@
                 </div>
             `;
         } else {
-            // Alarm & Block (Standard IP View) - Refactored for PERFECT SYMMETRY
-            // User complained previous Grid was "shifted left". 
-            // Now using simple flex-column centered layout matching Gateway structure.
+            // Alarm & Block (Standard IP View) - Differentiated by button state
+            const buttonHTML = mode === 'block'
+                ? '<button class="taurus-btn-ack" disabled style="margin-top: 2rem; opacity: 0.5; cursor: not-allowed;">BLOCKED</button>'
+                : '<button class="taurus-btn-ack" id="taurus-ack-btn" style="margin-top: 2rem;">ACKNOWLEDGE</button>';
+
             panelContentHTML = `
                 <p class="taurus-panel-text" id="taurus-panel-info" style="margin-bottom: 2rem;">
                     Platform Security has flagged this connection. <br>
@@ -431,7 +433,7 @@
 
                 </div>
 
-                <button class="taurus-btn-ack" id="taurus-ack-btn" style="margin-top: 2rem;">ACKNOWLEDGE</button>
+                ${buttonHTML}
             `;
         }
 
@@ -463,14 +465,14 @@
             innerHTMLContent = `
                 <div class="taurus-panel" style="padding-top: 3rem; display: flex; flex-direction: column; align-items: center; width: 100%;">
                     <!-- Logo Inside Panel -->
-                    <div class="taurus-logo-container" style="margin-bottom: 1.5rem; flex-shrink: 0;">
+                    <div class="taurus-logo-container" style="flex-shrink: 0;">
                         <div class="taurus-ripple-1"></div>
                         <div class="taurus-ripple-2"></div>
                         <img src="${logoSrc}" class="taurus-logo-main" alt="Taurus">
                     </div>
                     
                     <!-- Title Inside Panel -->
-                    <h1 class="taurus-title" style="margin-bottom: 2rem; width: 100%; text-align: center;">
+                    <h1 class="taurus-title" style="width: 100%; text-align: center;">
                         <span id="taurus-msg-top">ACCESS</span>
                         <span id="taurus-msg-bottom">DETECTED</span>
                     </h1>
