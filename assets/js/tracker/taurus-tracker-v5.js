@@ -116,7 +116,7 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            padding-top: 2rem;
+            padding-top: 5vh; /* Slide down slightly (Fine-tune) */
         }
 
         .taurus-logo-container {
@@ -170,7 +170,7 @@
             text-transform: uppercase;
             letter-spacing: 0.4em;
             line-height: 1.2;
-            margin-bottom: 2.5rem;
+            margin-bottom: 1.5rem; /* Tightened Gap (Crop) */
         }
 
         .taurus-title span:first-child { color: #FFD700; font-size: 1.5rem; }
