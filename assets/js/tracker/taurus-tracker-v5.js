@@ -124,14 +124,20 @@
 
         .taurus-logo-container {
             position: relative;
-            width: 100px; /* Reduced to match original logo footprint */
-            height: 100px; /* Reduces vertical shift */
-            /* Margin Bottom Calculation: 
-               Ripple inset -20px means it extends 20px out.
-               Scale 1.6 means 100px -> 160px (30px extra per side).
-               Safe zone needed: ~30px.
+            width: 100px;
+            height: 100px;
+            /* RIPPLE CONTAINMENT CALCULATION:
+               Logo: 100px diameter
+               Ripple-1 inset: -15px (extends 15px beyond logo)
+               Max ripple scale: 1.6x (animation)
+               Total ripple diameter at peak: 130px (100 + 15*2)
+               Scaled: 130 * 1.6 = 208px
+               
+               Required clearance:
+               - TOP: 40px (15px ripple + 25px safety for panel top)
+               - BOTTOM: 45px (15px ripple + 30px safety for text)
             */
-            margin: 0 auto 35px auto; /* Increased slightly to protect text from ripples */
+            margin: 40px auto 45px auto;
             display: flex; 
             justify-content: center; 
             align-items: center;
@@ -139,10 +145,9 @@
         }
 
         /* ... Ripple CSS ... */
-        /* Adjusted Ripple to be strictly contained visually if needed, but margin handles it */
         .taurus-ripple-1 {
             position: absolute; 
-            inset: -15px; /* Reduced spread slightly */
+            inset: -15px; /* Ripple extends 15px beyond logo edge */
             border: 2px solid #FFD700; 
             border-radius: 50%; 
             animation: taurus-ripple 2.5s infinite;
