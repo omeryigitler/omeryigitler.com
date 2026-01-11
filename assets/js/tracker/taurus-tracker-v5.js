@@ -392,6 +392,9 @@
 
     // --- 2. LOGIC & DATABASE ---
 
+    // Captured early to ensure accuracy
+    const sessionStartTime = new Date();
+
     function getTimestamp() {
         return new Date().toLocaleTimeString('tr-TR');
     }
