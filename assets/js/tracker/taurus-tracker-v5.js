@@ -421,7 +421,7 @@
                     <!-- Session ID -->
                     <div style="text-align: center;">
                         <p style="font-size: 0.7rem; color: rgba(255,255,255,0.5); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px;">Session Identifier</p>
-                        <p id="taurus-token-val" style="font-family: 'Courier New', monospace; font-size: 0.9rem; color: #FFD700; letter-spacing: 1px;">${sessionID || 'Initializing...'}</p>
+                        <p id="taurus-token-val" style="font-family: 'Courier New', monospace; font-size: 0.9rem; color: #fff; letter-spacing: 1px;">${sessionID || 'Initializing...'}</p>
                     </div>
 
                 </div>
