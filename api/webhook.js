@@ -131,7 +131,7 @@ module.exports = async (req, res) => {
             if (['FREEZE', 'CLEAR', 'ALARM', 'BLOCK'].includes(command)) {
                 // Find most recent active session to apply command
                 const snapshot = await db.collection('visitors_v1')
-                    .orderBy('action_timestamp', 'desc')
+                    .orderBy('startTime', 'desc')
                     .limit(1)
                     .get();
 
