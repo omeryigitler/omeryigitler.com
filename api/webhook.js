@@ -4,7 +4,7 @@ const { GoogleGenerativeAI } = require("@google/generative-ai");
 
 // Initialize Gemini
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash-lite" });
+const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
 // Initialize Firebase (With Fallback Key for Vercel)
 if (!admin.apps.length) {
@@ -119,19 +119,14 @@ module.exports = async (req, res) => {
 
             // 3. Send to Gemini
             const prompt = `
-            Listen to this audio. Verify the intent and return a JSON object.
-            
+            Analyze audio intent. Return ONLY raw JSON.
             Schema: { "command": "FREEZE" | "CLEAR" | "ALARM" | "BLOCK" | "UNKNOWN", "message": string | null }
-
             Rules:
-            1. "Durdur", "Kapat", "Freeze" (without extra text) -> { "command": "FREEZE", "message": null }
+            1. "Durdur", "Kapat", "Freeze" -> { "command": "FREEZE", "message": null }
             2. "Durdur ve [X] yaz", "Write [X]" -> { "command": "FREEZE", "message": "[X]" }
             3. "Temizle", "Aç", "Clear" -> { "command": "CLEAR", "message": null }
-            4. "Alarm" -> { "command": "ALARM", "message": null }
-            5. "Engelle", "Block" -> { "command": "BLOCK", "message": null }
-            6. If the audio is just a sentence meant to be displayed (e.g. "I see you"), treat as FREEZE with that message.
-            
-            Return ONLY raw JSON. No markdown.
+            4. "Alarm" -> ALARM, "Engelle" -> BLOCK.
+            5. Sentence without command -> FREEZE with message.
             `;
 
             const result = await model.generateContent([
@@ -183,10 +178,18 @@ module.exports = async (req, res) => {
 
         } catch (error) {
             console.error("Voice Handler Error:", error);
+            let errorMsg = `⚠️ Voice Error: ${error.message}`;
+
+            // Check for 429 Quota Exceeded (Turkish Notification)
+            if (error.message.includes('429') || (error.response && error.response.status === 429)) {
+                errorMsg = "⚠️ <b>Gemini Kotası Doldu</b>\n\nÜcretsiz katman limitine ulaşıldı (20 RPM). Lütfen yaklaşık 10 saniye bekleyip tekrar dene.";
+            }
+
             try {
                 await axios.post(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
                     chat_id: message.chat.id,
-                    text: `⚠️ Voice Error: ${error.message}`,
+                    text: errorMsg,
+                    parse_mode: 'HTML'
                 });
             } catch (e) { }
         }
