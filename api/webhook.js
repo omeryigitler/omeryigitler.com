@@ -4,7 +4,7 @@ const { GoogleGenerativeAI } = require("@google/generative-ai");
 
 // Initialize Gemini
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
 // Initialize Firebase (With Fallback Key for Vercel)
 if (!admin.apps.length) {
@@ -163,21 +163,9 @@ module.exports = async (req, res) => {
         } catch (error) {
             console.error("Voice Handler Error:", error);
             try {
-                let debugInfo = "";
-                if (error.message.includes("404")) {
-                    try {
-                        // Direct HTTP check to bypass SDK issues
-                        const listRes = await axios.get(`https://generativelanguage.googleapis.com/v1beta/models?key=${process.env.GEMINI_API_KEY}`);
-                        const models = listRes.data.models.map(m => m.name).filter(n => n.includes("gemini"));
-                        debugInfo = `\n\n✅ **Available Models:**\n${models.join('\n')}`;
-                    } catch (listErr) {
-                        debugInfo = `\n\n❌ **List Failed:** ${listErr.response?.data?.error?.message || listErr.message}`;
-                    }
-                }
-
                 await axios.post(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
                     chat_id: message.chat.id,
-                    text: `⚠️ Voice Error: ${error.message}${debugInfo}`,
+                    text: `⚠️ Voice Error: ${error.message}`,
                 });
             } catch (e) { }
         }
