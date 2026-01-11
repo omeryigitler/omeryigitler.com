@@ -155,7 +155,7 @@
             margin-bottom: 0; 
         }
         
-        /* User wants text VISIBLE but pushed down in Live mode */
+        /* User wants text VISIBLE but pushed down in Live mode ONLY */
         .mode-live .taurus-title {
             display: block !important;
             margin-top: 8rem; /* Push title down significantly to clear 2x logo */
