@@ -185,7 +185,9 @@
 
         .mode-freeze #taurus-custom-msg {
             display: block; 
-            margin-top: 12rem; /* Move message much lower to avoid ripple contact */
+            width: 100%;
+            text-align: center;
+            margin: 18rem auto 0 auto; /* Move much lower and ensure auto-centering */
         }
 
         /* Gateway, Alarm, Block - Standard Panel Style (Reverted) */
