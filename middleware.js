@@ -1,77 +1,85 @@
-import { NextResponse } from 'next/server';
+export default async function middleware(request) {
+    const url = new URL(request.url);
+    const pathname = url.pathname;
 
-export async function middleware(request) {
-    const { pathname } = request.nextUrl;
-
-    // 1. Skip middleware for static assets, api calls, and the gateway/admin pages
+    // 1. Skip middleware for static assets, api calls, and specific pages
     if (
         pathname.startsWith('/assets') ||
         pathname.startsWith('/api') ||
         pathname.includes('gateway.html') ||
         pathname.includes('admin.html') ||
-        pathname.includes('favicon.ico')
+        pathname.includes('favicon.ico') ||
+        pathname.includes('.php') // Common bot probes
     ) {
-        return NextResponse.next();
+        return;
     }
 
     // 2. Get Visitor IP (Vercel standard)
     const ip = request.headers.get('x-forwarded-for') || '127.0.0.1';
-
-    // We only take the first IP in the list
     const clientIP = ip.split(',')[0].trim();
 
     try {
-        // 3. Query Firestore via REST API (Edge functions don't support firestore-admin)
-        // Note: Using a public REST fetch for speed and Edge compatibility
+        // 3. Query Firestore via REST API (Edge Compatible)
         const projectId = "omeryigitler-5abfb";
-        const collection = "visitors_v1";
-        const url = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/${collection}`;
+        const apiKey = "AIzaSyC0DAIT0cVPD4WFpfgqrn0lfb-kyFRsnWM";
+        const firestoreUrl = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents:runQuery?key=${apiKey}`;
 
-        // Fetching all "blocked" sessions (Optimized for Edge)
-        // In a real production environment with many visitors, we'd use a StructuredQuery
-        // For this audit, we'll fetch recently updated docs and check IP match
-        const response = await fetch(`${url}?pageSize=10`, {
-            next: { revalidate: 0 } // No cache for security checks
+        // Structured Query for "where IP == clientIP AND action == 'block'"
+        const query = {
+            structuredQuery: {
+                from: [{ collectionId: "visitors_v1" }],
+                where: {
+                    compositeFilter: {
+                        op: "AND",
+                        filters: [
+                            {
+                                fieldFilter: {
+                                    field: { fieldPath: "ip" },
+                                    op: "EQUAL",
+                                    value: { stringValue: clientIP }
+                                }
+                            },
+                            {
+                                fieldFilter: {
+                                    field: { fieldPath: "action" },
+                                    op: "EQUAL",
+                                    value: { stringValue: "block" }
+                                }
+                            }
+                        ]
+                    }
+                },
+                limit: 1
+            }
+        };
+
+        const response = await fetch(firestoreUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(query),
+            cache: 'no-store'
         });
 
         if (response.ok) {
-            const data = await response.json();
-            const documents = data.documents || [];
-
-            const isBlocked = documents.some(doc => {
-                const fields = doc.fields;
-                if (!fields) return false;
-
-                const docIP = fields.ip?.stringValue;
-                const action = fields.action?.stringValue;
-
-                return docIP === clientIP && action === 'block';
-            });
+            const results = await response.json();
+            // Firestore runQuery returns an array. If not empty and has a document, it's blocked.
+            const isBlocked = results && results.length > 0 && results[0].document;
 
             if (isBlocked) {
                 console.log(`🛑 Middleware: Blocking IP ${clientIP}`);
-                const url = request.nextUrl.clone();
-                url.pathname = '/gateway.html';
-                return NextResponse.redirect(url);
+                return Response.redirect(new URL('/gateway.html', request.url));
             }
+        } else {
+            const err = await response.text();
+            console.error("Firestore REST Error:", response.status, err);
         }
     } catch (e) {
-        console.error("Middleware Error:", e);
+        console.error("Middleware Runtime Error:", e);
     }
 
-    return NextResponse.next();
+    return;
 }
 
-// See "Matching Paths" below to learn more
 export const config = {
-    matcher: [
-        /*
-         * Match all request paths except for the ones starting with:
-         * - api (API routes)
-         * - _next/static (static files)
-         * - _next/image (image optimization files)
-         * - favicon.ico (favicon file)
-         */
-        '/((?!api|_next/static|_next/image|favicon.ico).*)',
-    ],
+    matcher: ['/((?!api|_next/static|_next/image|favicon.ico).*)'],
 };
