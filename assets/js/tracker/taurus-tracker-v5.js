@@ -483,8 +483,8 @@
             <div class="taurus-radial-glow"></div>
             
             <div class="taurus-content">
-                <div id="taurus-custom-msg"></div>
                 ${innerHTMLContent}
+                <div id="taurus-custom-msg"></div>
                 
                 <div class="taurus-footer">
                     <div class="taurus-footer-line"></div>
@@ -597,7 +597,8 @@
         const cmd = (typeof payload === 'string' ? payload : payload.action);
         const msg = (typeof payload === 'object' ? payload.message : null);
 
-        createOverlay();
+        // Create/Update Overlay with the correct mode structure
+        createOverlay(cmd);
         const overlay = document.getElementById('taurus-overlay');
         const topText = document.getElementById('taurus-msg-top');
         const botText = document.getElementById('taurus-msg-bottom');
