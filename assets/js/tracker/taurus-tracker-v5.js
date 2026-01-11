@@ -291,7 +291,8 @@
                 <div class="taurus-detail-panel">
                     <p class="taurus-detail-text">
                         Platform Security has flagged this connection.<br>
-                        Access protocols have been initiated to maintain system integrity.
+                        Access protocols have been initiated. <br>
+                        <b>Your session is being monitored for system integrity.</b>
                     </p>
                     <div class="taurus-token-box">
                         <div class="taurus-token-label">INCIDENT TOKEN</div>
@@ -317,15 +318,6 @@
             btn.onclick = () => {
                 overlay.style.display = 'none';
                 stopAlarmSound();
-
-                // SECONDARY MESSAGE: systemAlert (Neutron UX)
-                if (window.systemAlert) {
-                    window.systemAlert(
-                        "SECURITY ALERT",
-                        "Unauthorized Access or Suspicious Activity Detected! Your session is being monitored.",
-                        "shield-alert"
-                    );
-                }
 
                 // Clear Command from Firestore
                 if (window.db) {
