@@ -116,14 +116,15 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            padding-top: 8rem; /* Pushed down significantly */
+            justify-content: center; /* Ensure vertical centering */
+            padding-top: 4rem; /* Balanced top spacing */
         }
 
         .taurus-logo-container {
             position: relative;
             width: 140px; 
             height: 140px;
-            margin: 0 auto 30px auto; 
+            margin: 0 auto 1.5rem auto; 
             display: flex; 
             justify-content: center; 
             align-items: center;
@@ -169,7 +170,8 @@
             text-transform: uppercase;
             letter-spacing: 0.4em;
             line-height: 1.2;
-            margin-bottom: 2.5rem;
+            margin-bottom: 1rem; /* Tightened Gap (Cropped) */
+            text-align: center; /* Ensure alignment */
         }
 
         .taurus-title span:first-child { color: #FFD700; font-size: 1.5rem; }
