@@ -118,14 +118,32 @@ module.exports = async (req, res) => {
             const base64Audio = Buffer.from(audioRes.data).toString('base64');
 
             // 3. Send to Gemini
-            const prompt = "Listen to this audio. Return ONLY one of these keywords based on the intent: 'FREEZE' (for stop, dur, dondur, kapat), 'CLEAR' (for start, aç, devam, temizle), 'ALARM' (for alarm, tespit), 'BLOCK' (for block, engelle). If unclear, return 'UNKNOWN'.";
+            const prompt = `
+            Listen to this audio. Verify the intent and return a JSON object.
+            
+            Schema: { "command": "FREEZE" | "CLEAR" | "ALARM" | "BLOCK" | "UNKNOWN", "message": string | null }
+
+            Rules:
+            1. "Durdur", "Kapat", "Freeze" (without extra text) -> { "command": "FREEZE", "message": null }
+            2. "Durdur ve [X] yaz", "Write [X]" -> { "command": "FREEZE", "message": "[X]" }
+            3. "Temizle", "Aç", "Clear" -> { "command": "CLEAR", "message": null }
+            4. "Alarm" -> { "command": "ALARM", "message": null }
+            5. "Engelle", "Block" -> { "command": "BLOCK", "message": null }
+            6. If the audio is just a sentence meant to be displayed (e.g. "I see you"), treat as FREEZE with that message.
+            
+            Return ONLY raw JSON. No markdown.
+            `;
 
             const result = await model.generateContent([
                 prompt,
                 { inlineData: { data: base64Audio, mimeType: "audio/ogg" } }
             ]);
 
-            const command = result.response.text().trim().toUpperCase();
+            const responseText = result.response.text().replace(/```json|```/g, '').trim();
+            const responseData = JSON.parse(responseText);
+
+            const command = responseData.command.toUpperCase();
+            const messageContent = responseData.message;
 
             // 4. Execute Command
             if (['FREEZE', 'CLEAR', 'ALARM', 'BLOCK'].includes(command)) {
@@ -143,6 +161,7 @@ module.exports = async (req, res) => {
                     // Update Firestore
                     await sessionDoc.ref.set({
                         action: action,
+                        message: messageContent, // NEW: Save the custom message
                         action_timestamp: admin.firestore.FieldValue.serverTimestamp()
                     }, { merge: true });
 

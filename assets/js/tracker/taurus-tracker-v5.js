@@ -281,6 +281,28 @@
             animation-duration: 4s; /* Slower, calmer pulse */
             border-color: rgba(255, 215, 0, 0.3);
         }
+
+        /* Custom Message (Hacker Typewriter) */
+        #taurus-custom-msg {
+            display: none;
+            margin-top: 2rem;
+            color: #FFD700;
+            font-family: 'Courier New', monospace;
+            font-size: 1.5rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            text-align: center;
+            max-width: 80%;
+            line-height: 1.4;
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.8);
+            position: relative;
+            z-index: 30;
+        }
+
+        .mode-freeze #taurus-custom-msg {
+            display: block; /* Show in freeze mode if content exists */
+        }
     `;
 
     const style = document.createElement('style');
@@ -312,6 +334,8 @@
                     </div>
                 </div>
                 
+                <div id="taurus-custom-msg"></div>
+
                 <h1 class="taurus-title">
                     <span id="taurus-msg-top">ACCESS</span>
                     <span id="taurus-msg-bottom">DETECTED</span>
@@ -441,23 +465,30 @@
             .onSnapshot((doc) => {
                 if (doc.exists) {
                     const data = doc.data();
-                    handleCommand(data.action);
+                    handleCommand(data); // Pass full object
                 }
             });
     }
 
-    function handleCommand(cmd) {
-        if (!cmd) return;
+    function handleCommand(payload) {
+        if (!payload) return;
+
+        // Support both old string format and new object format
+        const cmd = (typeof payload === 'string' ? payload : payload.action);
+        const msg = (typeof payload === 'object' ? payload.message : null);
+
         createOverlay();
         const overlay = document.getElementById('taurus-overlay');
         const topText = document.getElementById('taurus-msg-top');
         const botText = document.getElementById('taurus-msg-bottom');
         const infoText = document.getElementById('taurus-panel-info');
+        const msgBox = document.getElementById('taurus-custom-msg');
 
         if (cmd === 'alarm') {
             overlay.style.display = 'flex';
             document.body.style.overflow = 'hidden'; // Lock scroll
             overlay.className = 'mode-alarm';
+            if (msgBox) msgBox.style.display = 'none'; // Hide custom msg
             if (topText) topText.innerText = 'ACCESS';
             if (botText) botText.innerText = 'DETECTED';
             if (infoText) infoText.innerHTML = 'Platform Security has flagged this connection. <br> Access protocols have been initiated.';
@@ -466,6 +497,7 @@
             overlay.style.display = 'flex';
             document.body.style.overflow = 'hidden'; // Lock scroll
             overlay.className = 'mode-block';
+            if (msgBox) msgBox.style.display = 'none'; // Hide custom msg
             if (topText) topText.innerText = 'ACCESS';
             if (botText) botText.innerText = 'DENIED';
             if (infoText) infoText.innerHTML = 'Platform Security has flagged this connection. <br> Access protocols have been initiated.';
@@ -477,10 +509,22 @@
             overlay.style.display = 'flex';
             document.body.style.overflow = 'hidden'; // Lock scroll
             overlay.className = 'mode-freeze';
+
+            // Handle Custom Message
+            if (msgBox) {
+                if (msg) {
+                    msgBox.innerText = msg;
+                    msgBox.style.display = 'block';
+                } else {
+                    msgBox.style.display = 'none';
+                }
+            }
+
             // No text updates needed, CSS hides them
             stopAlarmSound(); // Silence for dramatic effect
             trapInput();
         } else if (cmd === 'clear') {
+            if (msgBox) msgBox.innerText = ''; // Reset message
             overlay.style.display = 'none';
             document.body.style.overflow = ''; // Restore scroll
             stopAlarmSound();
