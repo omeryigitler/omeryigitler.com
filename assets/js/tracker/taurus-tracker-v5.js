@@ -121,8 +121,8 @@
 
         .taurus-logo-container {
             position: relative;
-            width: 140px; 
-            height: 140px;
+            width: 100px; /* Reduced to match original logo footprint */
+            height: 100px; /* Reduces vertical shift */
             margin: 0 auto 30px auto; 
             display: flex; 
             justify-content: center; 
@@ -133,7 +133,7 @@
         /* ... Ripple CSS ... */
         .taurus-ripple-1 {
             position: absolute; 
-            inset: 0; 
+            inset: -20px; /* Visual overflow only (maintains 140px look) */
             border: 2px solid #FFD700; 
             border-radius: 50%; 
             animation: taurus-ripple 2.5s infinite;
@@ -141,15 +141,15 @@
 
         .taurus-ripple-2 {
             position: absolute; 
-            inset: 10px; 
+            inset: -10px; 
             border: 1px solid rgba(255, 215, 0, 0.5); 
             border-radius: 50%; 
             animation: taurus-ripple 2.5s infinite 0.8s;
         }
 
         .taurus-logo-main {
-            width: 100px; 
-            height: 100px;
+            width: 100%; 
+            height: 100%;
             border-radius: 50%;
             object-fit: cover;
             border: 3px solid #FFD700;
