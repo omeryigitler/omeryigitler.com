@@ -91,63 +91,57 @@
             50% { opacity: 0.4; transform: translate(-50%, -50%) scale(1.1); }
         }
 
-        /* Signal Waves */
-        @keyframes taurus-ping {
-            0% { transform: scale(1); opacity: 0.8; }
-            70%, 100% { transform: scale(2.2); opacity: 0; }
-        }
-
-        .taurus-signal-wave {
-            position: absolute;
-            inset: 0;
-            border-radius: 50%;
-            border: 4px solid rgba(255, 215, 0, 0.5);
-            animation: taurus-ping 2.5s cubic-bezier(0, 0, 0.2, 1) infinite;
-            pointer-events: none;
-        }
-
-        .taurus-signal-wave-delay {
-            position: absolute;
-            inset: 0;
-            border-radius: 50%;
-            border: 2px solid rgba(255, 215, 0, 0.3);
-            animation: taurus-ping 2.5s cubic-bezier(0, 0, 0.2, 1) infinite 1.25s;
-            pointer-events: none;
-        }
-
-        /* Content Blocks */
-        .taurus-content {
-            position: relative;
-            z-index: 10;
-            width: 100%;
-            max-width: 500px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding-top: 2rem;
+        /* TAURUS RIPPLE ANIMATION (Unified Gateway Style) */
+        @keyframes taurus-ripple {
+            0% {
+                transform: scale(1);
+                opacity: 0.8;
+                box-shadow: 0 0 10px #FFD700;
+            }
+            100% {
+                transform: scale(1.6);
+                opacity: 0;
+                box-shadow: 0 0 30px #FFEebb;
+            }
         }
 
         .taurus-logo-container {
             position: relative;
-            width: 140px; height: 140px;
-            margin-bottom: 2.5rem;
-            display: flex;
+            width: 140px; 
+            height: 140px;
+            margin: 0 auto 30px auto; 
+            display: flex; 
+            justify-content: center; 
             align-items: center;
-            justify-content: center;
+            transition: transform 1s ease;
+        }
+
+        .taurus-ripple-1 {
+            position: absolute; 
+            inset: 0; 
+            border: 2px solid #FFD700; 
+            border-radius: 50%; 
+            animation: taurus-ripple 2.5s infinite;
+        }
+
+        .taurus-ripple-2 {
+            position: absolute; 
+            inset: 10px; 
+            border: 1px solid rgba(255, 215, 0, 0.5); 
+            border-radius: 50%; 
+            animation: taurus-ripple 2.5s infinite 0.8s;
         }
 
         .taurus-logo-main {
-            width: 100%; height: 100%;
+            width: 100px; 
+            height: 100px;
             border-radius: 50%;
-            background: #000;
-            border: 2px solid rgba(255, 215, 0, 0.6);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 0 70px rgba(255, 215, 0, 0.4);
+            object-fit: cover;
+            border: 3px solid #FFD700;
+            box-shadow: 0 0 40px rgba(255, 215, 0, 0.4);
+            z-index: 10;
             position: relative;
-            z-index: 20;
-            overflow: hidden;
+            transition: all 1s ease;
         }
 
         .taurus-logo-main img {
@@ -276,8 +270,8 @@
             transition: all 1s ease;
         }
 
-        .mode-freeze .taurus-signal-wave,
-        .mode-freeze .taurus-signal-wave-delay {
+        .mode-freeze .taurus-ripple-1,
+        .mode-freeze .taurus-ripple-2 {
             animation-duration: 4s; /* Slower, calmer pulse */
             border-color: rgba(255, 215, 0, 0.3);
         }
@@ -327,11 +321,12 @@
             
             <div class="taurus-content">
                 <div class="taurus-logo-container">
-                    <div class="taurus-signal-wave"></div>
-                    <div class="taurus-signal-wave-delay"></div>
-                    <div class="taurus-logo-main">
-                        <img src="${logoSrc}" alt="Taurus">
-                    </div>
+                    <!-- Ripple 1 -->
+                    <div class="taurus-ripple-1"></div>
+                    <!-- Ripple 2 -->
+                    <div class="taurus-ripple-2"></div>
+                    <!-- Main Logo -->
+                    <img src="${logoSrc}" class="taurus-logo-main" alt="Taurus">
                 </div>
                 
                 <div id="taurus-custom-msg"></div>
