@@ -116,21 +116,21 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center; /* Ensure vertical centering */
-            padding-top: 4rem; /* Balanced top spacing */
+            padding-top: 2rem;
         }
 
         .taurus-logo-container {
             position: relative;
             width: 140px; 
             height: 140px;
-            margin: 0 auto 1.5rem auto; 
+            margin: 0 auto 30px auto; 
             display: flex; 
             justify-content: center; 
             align-items: center;
             transition: transform 1s ease;
         }
 
+        /* ... Ripple CSS ... */
         .taurus-ripple-1 {
             position: absolute; 
             inset: 0; 
@@ -170,8 +170,7 @@
             text-transform: uppercase;
             letter-spacing: 0.4em;
             line-height: 1.2;
-            margin-bottom: 1rem; /* Tightened Gap (Cropped) */
-            text-align: center; /* Ensure alignment */
+            margin-bottom: 2.5rem;
         }
 
         .taurus-title span:first-child { color: #FFD700; font-size: 1.5rem; }
@@ -210,7 +209,7 @@
         .taurus-stat-item p:last-child { color: #fff; font-family: monospace; font-size: 11px; letter-spacing: 0.1em; font-weight: bold; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
         .taurus-footer {
-            margin-top: 1rem; /* Cropped bottom space */
+            margin-top: 3.5rem;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -220,7 +219,7 @@
             width: 1px; height: 1.5rem;
             background: linear-gradient(to bottom, #FFD700, transparent);
             opacity: 0.4;
-            margin-bottom: 0.5rem;
+            margin-bottom: 0.75rem;
         }
 
         .taurus-footer-text {
@@ -230,7 +229,7 @@
             text-transform: uppercase;
             letter-spacing: 0.6em;
             animation: taurus-pulse-opacity 2s infinite ease-in-out;
-            padding-bottom: 2rem; /* Breathing room */
+            padding-bottom: 0;
         }
 
         @keyframes taurus-pulse-opacity {
