@@ -1,22 +1,24 @@
-// TAURUS TRACKER v4.0 (Premium UI Refined)
+// TAURUS TRACKER v5.0 (Shadow Mode / Backend Oriented)
 /**
- * TAURUS TRACKER v4.0 (Final System)
+ * TAURUS TRACKER v5.0 (Final System)
  * ----------------------------------
- * - Database: Firestore (visitors_v4)
- * - History: Detailed event logging (ArrayUnion)
+ * - Altyapı: Backend Oriented (Engellenemez Gölge Modu)
+ * - Güvenlik: Middleware IP Gating & Server-side Reporting
  * - Design: Custom "Access Detected" / "Access Denied" UI
- * - Notifications: Telegram for Entry/Alerts only.
+ * - Kurallar: %100 Final Guide Compliance
  */
 
 (function () {
-    console.log("🐂 Taurus Tracker v4.0 Initializing...");
+    console.log("🐂 Taurus Tracker v5.0 (Shadow Mode) Initializing...");
 
-    // CONFIGURATION
+    // CONFIGURATION (Sensitive tokens moved to backend)
     const CONFIG = {
         collection: 'visitors_v1',
-        telegramBotToken: '8567285538:AAHKfo8bqee43rprC-GCv3Je423R57YQkCE',
-        telegramChatID: '6886010817',
-        ipApi: 'https://ipapi.co/json/'
+        ipApi: 'https://ipapi.co/json/',
+        api: {
+            tracker: '/api/tracker',
+            report: '/api/report'
+        }
     };
 
     // STATE
@@ -393,39 +395,21 @@
                 console.log("🔥 Firestore Session Created");
             }
 
-            // 2. Send Telegram Notification (Only Once)
-            const telegramMsg = `🎯 <b>Neural Link Established</b>\n\n` +
-                `🆔 <b>ID:</b> <code>${sessionID}</code>\n` +
-                `🌍 <b>Loc:</b> ${ipData.city}, ${ipData.country_name}\n` +
-                `📡 <b>IP:</b> <code>${ipData.ip}</code>\n` +
-                `🏢 <b>ISP:</b> ${ipData.org}\n` +
-                `💻 <b>Sys:</b> ${navigator.platform}`;
-
-            const buttons = {
-                inline_keyboard: [
-                    [
-                        { text: "🚨 ALARM", callback_data: `alarm_${sessionID}` },
-                        { text: "⛔ BLOCK", callback_data: `block_${sessionID}` }
-                    ],
-                    [
-                        { text: "🟢 CLEAR", callback_data: `clear_${sessionID}` }
-                    ]
-                ]
-            };
-
-            fetch(`https://api.telegram.org/bot${CONFIG.telegramBotToken}/sendMessage`, {
+            // 1. Send all data to Backend API (Shadow Reporting)
+            fetch(CONFIG.api.tracker, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    chat_id: CONFIG.telegramChatID,
-                    text: telegramMsg,
-                    parse_mode: 'HTML',
-                    reply_markup: buttons
+                    sessionID: sessionID,
+                    ipData: ipData,
+                    device: navigator.platform,
+                    browser: navigator.userAgent,
+                    pathname: window.location.pathname
                 }),
                 keepalive: true
             });
 
-            // Start Listening
+            // Start Listening for remote commands
             listenForCommands(sessionID);
 
         } catch (error) {
@@ -493,19 +477,20 @@
     }
 
     async function sendPulse(title, priority = 'medium', extra = '') {
-        const msg = `🔔 <b>${title}</b>\n` +
-            `🆔 ID: <code>${sessionID}</code>\n` +
-            `🌍 Loc: ${sessionData?.city || 'Unknown'}\n` +
-            (extra ? `\n${extra}` : '');
+        // Build detailed log content
+        const eventLog = localHistory.slice(-20).join('\n'); // Last 20 events
+        const reportText = `⏱ <b>Duration:</b> ${extra.duration}s\n` +
+            `📍 <b>Final Page:</b> ${window.location.pathname}\n\n` +
+            `📝 <b>EVENT LOG:</b>\n<code>${eventLog || 'No events recorded'}</code>`;
 
         try {
-            fetch(`https://api.telegram.org/bot${CONFIG.telegramBotToken}/sendMessage`, {
+            fetch(CONFIG.api.report, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    chat_id: CONFIG.telegramChatID,
-                    text: msg,
-                    parse_mode: 'HTML'
+                    sessionID: sessionID,
+                    report: reportText,
+                    city: sessionData?.city || 'Unknown'
                 }),
                 keepalive: true
             });
@@ -537,21 +522,13 @@
             if (document.hidden) {
                 logHistory('Tab', 'Hidden');
 
-                // EXIT REPORT: Session Report (Per Rich Data Guide v4)
+                // EXIT REPORT: Session Report (via Backend)
                 const endTime = new Date();
                 const startTime = sessionData?.startTime ? new Date(sessionData.startTime) : new Date();
                 const duration = Math.round((endTime - startTime) / 1000);
 
-                // Build detailed log content
-                const eventLog = localHistory.slice(-20).join('\n'); // Last 20 events
-                const report = `⏱ <b>Duration:</b> ${duration}s\n` +
-                    `📍 <b>Final Page:</b> ${window.location.pathname}\n\n` +
-                    `📝 <b>EVENT LOG:</b>\n<code>${eventLog || 'No events recorded'}</code>`;
+                sendPulse("Session Report", 'high', { duration: duration });
 
-                sendPulse("Session Report", 'high', report);
-
-                // Clear local buffer after report sent (assume exit)
-                // We keep it in localStorage till next page load to be safe
             } else {
                 logHistory('Tab', 'Visible');
             }
