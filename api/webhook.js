@@ -182,11 +182,11 @@ module.exports = async (req, res) => {
 
             // 429: Quota Exceeded
             if (error.message.includes('429') || (error.response && error.response.status === 429)) {
-                errorMsg = "⚠️ <b>Gemini Kotası Doldu</b>\n\nÜcretsiz katman limitine ulaşıldı (20 RPM). Lütfen yaklaşık 10 saniye bekleyip tekrar dene.";
+                errorMsg = "⚠️ <b>Gemini Quota Exceeded</b>\n\nFree tier limit reached (20 RPM). Please wait about 10 seconds and try again.";
             }
             // 404: Model Not Found
             else if (error.message.includes('404') || (error.response && error.response.status === 404)) {
-                errorMsg = "⚠️ <b>Model Bağlantı Hatası (404)</b>\n\nBelirtilen AI modeli şu an erişilebilir değil. Sistem yöneticisiyle iletişime geç veya farklı bir komut dene.";
+                errorMsg = "⚠️ <b>AI Model Connection Error (404)</b>\n\nThe specified AI model is currently unavailable. Contact administrator or try a different command.";
             }
 
             try {
