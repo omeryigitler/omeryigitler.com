@@ -163,22 +163,9 @@ module.exports = async (req, res) => {
         } catch (error) {
             console.error("Voice Handler Error:", error);
             try {
-                // Self-Diagnosis: List available models if 404 occurs
-                let debugInfo = "";
-                if (error.message.includes("404")) {
-                    try {
-                        const googleAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-                        const modelList = await googleAI.getGenerativeModelFactory().listModels(); // SDK specific, might differ
-                        // Actually in v0.1.3+ it's different. Let's use a simpler heuristic or just generic error first.
-                        // Standard SDK usage:
-                        // const modelQuery = await fetch(...) -- too complex to implement raw fetch here easily without imports.
-                        debugInfo = "\n\n📋 **Diagnosis:** Please check if the API Key has 'Generative Language API' enabled in Google Cloud Console.";
-                    } catch (e) { debugInfo = "\nDiagnosis failed."; }
-                }
-
                 await axios.post(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
                     chat_id: message.chat.id,
-                    text: `⚠️ Voice Error: ${error.message}${debugInfo}`,
+                    text: `⚠️ Voice Error: ${error.message}`,
                 });
             } catch (e) { }
         }
