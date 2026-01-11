@@ -400,9 +400,10 @@
                 </div>
             `;
         } else {
-            // Alarm & Block (Standard IP View) - Differentiated by button state
+            // Alarm & Block (Standard IP View) - Differentiated by button functionality
+            // Block: Yellow button (decorative, disabled), Alarm: Yellow button (active)
             const buttonHTML = mode === 'block'
-                ? '<button class="taurus-btn-ack" disabled style="margin-top: 2rem; opacity: 0.5; cursor: not-allowed;">BLOCKED</button>'
+                ? '<button class="taurus-btn-ack" disabled style="margin-top: 2rem; cursor: not-allowed;">BLOCKED</button>'
                 : '<button class="taurus-btn-ack" id="taurus-ack-btn" style="margin-top: 2rem;">ACKNOWLEDGE</button>';
 
             panelContentHTML = `
