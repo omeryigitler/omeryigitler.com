@@ -162,20 +162,21 @@
 
         /* --- MODE-SPECIFIC STYLES --- */
 
-        /* MODE 1: LIVE (Freeze) - Huge Logo, Title Pushed Down */
-        .mode-live .taurus-logo-container {
-            transform: scale(2.0); /* 2x Size */
+        /* MODE: LIVE & FREEZE (Freeze/Gezginci) - Huge Logo, Title Pushed Down */
+        .mode-live .taurus-logo-container,
+        .mode-freeze .taurus-logo-container {
+            transform: scale(2.0); 
             margin-bottom: 0; 
         }
         
-        /* User wants text VISIBLE but pushed down in Live mode ONLY */
-        .mode-live .taurus-title {
+        .mode-live .taurus-title,
+        .mode-freeze .taurus-title {
             display: block !important;
-            margin-top: 8rem; /* Push title down significantly to clear 2x logo */
+            margin-top: 8rem; 
         }
         
-        /* Only hide the PANEL in Live mode (keep looking clean) */
-        .mode-live .taurus-panel {
+        .mode-live .taurus-panel,
+        .mode-freeze .taurus-panel {
             display: none !important;
         }
 
@@ -302,8 +303,6 @@
         }
 
         /* Freeze Mode (Show Feature) */
-        .mode-freeze .taurus-title,
-        .mode-freeze .taurus-panel,
         .mode-freeze .taurus-footer {
             display: none !important;
         }
@@ -438,8 +437,8 @@
 
         let innerHTMLContent = '';
 
-        if (mode === 'live') {
-            // LIVE MODE STRUCTURE
+        if (mode === 'live' || mode === 'freeze') {
+            // LIVE / FREEZE MODE STRUCTURE (Logo Only / Large Logo)
             innerHTMLContent = `
                 <div class="taurus-logo-container">
                     <div class="taurus-ripple-1"></div>
@@ -452,7 +451,7 @@
                     <span id="taurus-msg-bottom">DETECTED</span>
                 </h1>
                 
-                <!-- Panel Hidden in CSS for mode-live -->
+                <!-- Panel Hidden in CSS for mode-live/freeze -->
                 <div class="taurus-panel"></div>
             `;
         } else {
