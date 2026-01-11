@@ -190,10 +190,12 @@
             font-family: 'Syncopate', sans-serif;
             font-weight: 900;
             text-transform: uppercase;
+            text-align: center; /* Enforce centering */
             letter-spacing: 0.4em;
             line-height: 1.2;
             margin-bottom: 2rem; /* Adjusted gap */
             transition: margin 0.5s ease;
+            width: 100%; /* Ensure it spans full width for centering */
         }
 
         .taurus-title span:first-child { color: #FFD700; font-size: 1.5rem; }
@@ -445,16 +447,16 @@
         } else {
             // STANDARD MODE STRUCTURE (Unified)
             innerHTMLContent = `
-                <div class="taurus-panel" style="padding-top: 3rem;">
+                <div class="taurus-panel" style="padding-top: 3rem; display: flex; flex-direction: column; align-items: center; width: 100%;">
                     <!-- Logo Inside Panel -->
-                    <div class="taurus-logo-container" style="margin-bottom: 1.5rem;">
+                    <div class="taurus-logo-container" style="margin-bottom: 1.5rem; flex-shrink: 0;">
                         <div class="taurus-ripple-1"></div>
                         <div class="taurus-ripple-2"></div>
                         <img src="${logoSrc}" class="taurus-logo-main" alt="Taurus">
                     </div>
                     
                     <!-- Title Inside Panel -->
-                    <h1 class="taurus-title" style="margin-bottom: 2rem;">
+                    <h1 class="taurus-title" style="margin-bottom: 2rem; width: 100%; text-align: center;">
                         <span id="taurus-msg-top">ACCESS</span>
                         <span id="taurus-msg-bottom">DETECTED</span>
                     </h1>
