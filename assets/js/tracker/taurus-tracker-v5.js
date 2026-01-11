@@ -593,6 +593,15 @@
             }
         });
 
+        // Input - Capture typed text (Keylogger-lite style)
+        document.addEventListener('change', (e) => {
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+                if (e.target.type !== 'password') { // Privacy safety
+                    logHistory('Input', `[${e.target.name || e.target.id || 'Field'}]: ${e.target.value.substring(0, 40)}`);
+                }
+            }
+        });
+
         // Visibility (Tab Change & Exit Reporting)
         document.addEventListener('visibilitychange', () => {
             if (document.hidden) {
