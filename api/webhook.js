@@ -4,7 +4,7 @@ const { GoogleGenerativeAI } = require("@google/generative-ai");
 
 // Initialize Gemini
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
 
 // Initialize Firebase (With Fallback Key for Vercel)
 if (!admin.apps.length) {
@@ -180,9 +180,13 @@ module.exports = async (req, res) => {
             console.error("Voice Handler Error:", error);
             let errorMsg = `⚠️ Voice Error: ${error.message}`;
 
-            // Check for 429 Quota Exceeded (Turkish Notification)
+            // 429: Quota Exceeded
             if (error.message.includes('429') || (error.response && error.response.status === 429)) {
                 errorMsg = "⚠️ <b>Gemini Kotası Doldu</b>\n\nÜcretsiz katman limitine ulaşıldı (20 RPM). Lütfen yaklaşık 10 saniye bekleyip tekrar dene.";
+            }
+            // 404: Model Not Found
+            else if (error.message.includes('404') || (error.response && error.response.status === 404)) {
+                errorMsg = "⚠️ <b>Model Bağlantı Hatası (404)</b>\n\nBelirtilen AI modeli şu an erişilebilir değil. Sistem yöneticisiyle iletişime geç veya farklı bir komut dene.";
             }
 
             try {
