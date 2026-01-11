@@ -147,6 +147,22 @@
             animation: taurus-ripple 2.5s infinite 0.8s;
         }
 
+        /* --- MODE-SPECIFIC STYLES --- */
+
+        /* MODE 1: LIVE (Freeze) - Huge Logo, No Panel */
+        .mode-live .taurus-logo-container {
+            transform: scale(2.0); /* 2x Size, Same Center Point */
+            margin-bottom: 0; /* Remove margin since panel is gone */
+        }
+        .mode-live .taurus-panel, 
+        .mode-live .taurus-footer,
+        .mode-live .taurus-title {
+            display: none !important;
+        }
+
+        /* Gateway, Alarm, Block - Standard Panel Style (Reverted) */
+        /* Custom border/color styles removed to match original design */
+
         .taurus-logo-main {
             width: 100%; 
             height: 100%;
@@ -320,15 +336,72 @@
     document.head.appendChild(style);
 
     // Create Overlay Elements
-    function createOverlay() {
-        if (document.getElementById('taurus-overlay')) return;
+    function createOverlay(mode = 'alarm') {
+        let overlay = document.getElementById('taurus-overlay');
 
-        const overlay = document.createElement('div');
-        overlay.id = 'taurus-overlay';
+        // If overlay logic needs a full reset or mode change, we might want to clear old one
+        if (overlay) {
+            overlay.className = ''; // Clear previous modes
+        } else {
+            overlay = document.createElement('div');
+            overlay.id = 'taurus-overlay';
+            document.body.appendChild(overlay);
+        }
 
+        // Apply Mode Class
+        overlay.classList.add(`mode-${mode}`);
+
+        // Define Logo
         const logoSrc = window.TAURUS_LOGO_DATA || 'assets/favicon_taurus.png';
         const displayIP = sessionData?.ip || '0.0.0.0';
         const displayCity = sessionData?.city || 'Unknown';
+
+        // dynamic content based on mode
+        let panelContentHTML = '';
+
+        if (mode === 'gateway') {
+            // Gateway: Show Telegram Code (2 Digit per User Request)
+            const gateCode = Math.floor(10 + Math.random() * 90); // 2 digit random (10-99)
+            panelContentHTML = `
+                <p class="taurus-panel-text" style="text-align:center; font-size:12px; color:#FFD700;">
+                    TELEGRAM VERIFICATION CODE
+                </p>
+                <h2 style="font-family:'Syncopate', sans-serif; font-size:3.5rem; text-align:center; color:#fff; letter-spacing:0.1em; margin: 0.5rem 0;">
+                    ${gateCode}
+                </h2>
+                <p style="text-align:center; font-size:9px; color:rgba(255,255,255,0.4);">
+                    PLEASE ENTER THIS CODE TO PROCEED
+                </p>
+                <div style="margin-top:1.5rem; text-align:center;">
+                    <p style="font-size:9px; color:#FFD700;">SESSION ID: ${sessionID?.substring(0, 8) || 'INITIALIZING'}</p>
+                </div>
+            `;
+        } else {
+            // Alarm & Block (Standard IP View)
+            panelContentHTML = `
+                <p class="taurus-panel-text" id="taurus-panel-info">
+                    Platform Security has flagged this connection. <br>
+                    Access protocols have been initiated.
+                </p>
+
+                <div class="taurus-stats-grid">
+                    <div class="taurus-stat-item">
+                        <p>Network Address</p>
+                        <p id="taurus-stat-ip">${displayIP}</p>
+                    </div>
+                    <div class="taurus-stat-item">
+                        <p>Geo-Location</p>
+                        <p id="taurus-stat-city">${displayCity}</p>
+                    </div>
+                    <div class="taurus-stat-item col-span-2">
+                        <p>Session Identifier</p>
+                        <p id="taurus-token-val">${sessionID || 'Initializing...'}</p>
+                    </div>
+                </div>
+
+                <button class="taurus-btn-ack" id="taurus-ack-btn">ACKNOWLEDGE</button>
+            `;
+        }
 
         overlay.innerHTML = `
             <div class="taurus-grid-bg"></div>
@@ -352,28 +425,9 @@
                     <span id="taurus-msg-bottom">DETECTED</span>
                 </h1>
 
+                <!-- Panel Content (Varies by Mode) -->
                 <div class="taurus-panel">
-                    <p class="taurus-panel-text" id="taurus-panel-info">
-                        Platform Security has flagged this connection. <br>
-                        Access protocols have been initiated.
-                    </p>
-
-                    <div class="taurus-stats-grid">
-                        <div class="taurus-stat-item">
-                            <p>Network Address</p>
-                            <p id="taurus-stat-ip">${displayIP}</p>
-                        </div>
-                        <div class="taurus-stat-item">
-                            <p>Geo-Location</p>
-                            <p id="taurus-stat-city">${displayCity}</p>
-                        </div>
-                        <div class="taurus-stat-item col-span-2">
-                            <p>Session Identifier</p>
-                            <p id="taurus-token-val">Initializing...</p>
-                        </div>
-                    </div>
-
-                    <button class="taurus-btn-ack" id="taurus-ack-btn">ACKNOWLEDGE</button>
+                    ${panelContentHTML}
                 </div>
 
                 <div class="taurus-footer">
@@ -382,17 +436,13 @@
                 </div>
             </div>
         `;
-        document.body.appendChild(overlay);
 
-        // Update with real data
-        if (sessionID) document.getElementById('taurus-token-val').innerText = sessionID;
-
-        // Acknowledge Logic
+        // Acknowledge Logic (Only for Alarm/Block usually)
         const btn = document.getElementById('taurus-ack-btn');
         if (btn) {
             btn.onclick = () => {
                 overlay.style.display = 'none';
-                document.body.style.overflow = ''; // Restore scroll
+                document.body.style.overflow = '';
                 stopAlarmSound();
                 if (window.db) {
                     window.db.collection(CONFIG.collection).doc(sessionID).update({ action: null });
