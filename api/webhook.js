@@ -146,12 +146,14 @@ module.exports = async (req, res) => {
                         action_timestamp: admin.firestore.FieldValue.serverTimestamp()
                     }, { merge: true });
 
-                    // Reply to User
-                    await axios.post(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
-                        chat_id: chatId,
-                        text: `🎤 <b>Voice Command:</b> ${command} \n✅ Applied to active session.`,
-                        parse_mode: 'HTML'
-                    });
+                    // Reply to User (Only for critical actions: ALARM & BLOCK)
+                    if (!['FREEZE', 'CLEAR'].includes(command)) {
+                        await axios.post(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+                            chat_id: chatId,
+                            text: `🎤 <b>Voice Command:</b> ${command} \n✅ Applied to active session.`,
+                            parse_mode: 'HTML'
+                        });
+                    }
                 }
             } else {
                 await axios.post(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
