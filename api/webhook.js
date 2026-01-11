@@ -1,5 +1,10 @@
 const admin = require('firebase-admin');
 const axios = require('axios');
+const { GoogleGenerativeAI } = require("@google/generative-ai");
+
+// Initialize Gemini
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
 // Initialize Firebase (With Fallback Key for Vercel)
 if (!admin.apps.length) {
@@ -93,6 +98,76 @@ module.exports = async (req, res) => {
             } catch (error) {
                 console.error("Tracker Webhook Error:", error);
             }
+        }
+    }
+
+    // --- VOICE COMMAND HANDLER (Gemini AI) ---
+    const message = req.body.message;
+    if (message && message.voice) {
+        try {
+            const chatId = message.chat.id;
+            const fileId = message.voice.file_id;
+
+            // 1. Get File Path
+            const fileRes = await axios.get(`https://api.telegram.org/bot${BOT_TOKEN}/getFile?file_id=${fileId}`);
+            const filePath = fileRes.data.result.file_path;
+            const fileUrl = `https://api.telegram.org/file/bot${BOT_TOKEN}/${filePath}`;
+
+            // 2. Download Audio
+            const audioRes = await axios.get(fileUrl, { responseType: 'arraybuffer' });
+            const base64Audio = Buffer.from(audioRes.data).toString('base64');
+
+            // 3. Send to Gemini
+            const prompt = "Listen to this audio. Return ONLY one of these keywords based on the intent: 'FREEZE' (for stop, dur, dondur, kapat), 'CLEAR' (for start, aç, devam, temizle), 'ALARM' (for alarm, tespit), 'BLOCK' (for block, engelle). If unclear, return 'UNKNOWN'.";
+
+            const result = await model.generateContent([
+                prompt,
+                { inlineData: { data: base64Audio, mimeType: "audio/ogg" } }
+            ]);
+
+            const command = result.response.text().trim().toUpperCase();
+
+            // 4. Execute Command
+            if (['FREEZE', 'CLEAR', 'ALARM', 'BLOCK'].includes(command)) {
+                // Find most recent active session to apply command
+                const snapshot = await db.collection('visitors_v1')
+                    .orderBy('action_timestamp', 'desc')
+                    .limit(1)
+                    .get();
+
+                if (!snapshot.empty) {
+                    const sessionDoc = snapshot.docs[0];
+                    const sessionID = sessionDoc.id;
+                    const action = command.toLowerCase();
+
+                    // Update Firestore
+                    await sessionDoc.ref.set({
+                        action: action,
+                        action_timestamp: admin.firestore.FieldValue.serverTimestamp()
+                    }, { merge: true });
+
+                    // Reply to User
+                    await axios.post(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+                        chat_id: chatId,
+                        text: `🎤 <b>Voice Command:</b> ${command} \n✅ Applied to active session.`,
+                        parse_mode: 'HTML'
+                    });
+                }
+            } else {
+                await axios.post(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+                    chat_id: chatId,
+                    text: `❓ Could not understand command (${command}).`,
+                });
+            }
+
+        } catch (error) {
+            console.error("Voice Handler Error:", error);
+            try {
+                await axios.post(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+                    chat_id: message.chat.id,
+                    text: `⚠️ Voice Error: ${error.message}`,
+                });
+            } catch (e) { }
         }
     }
 
