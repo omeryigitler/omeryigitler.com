@@ -116,14 +116,22 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            padding-top: 2rem; /* Revert to original balanced padding */
+            justify-content: center; 
+            min-height: 100vh; /* Ensure full viewport height focus */
+            padding-top: 5vh; /* Visual offset to 'lower' the box as requested */
+            padding-left: 1rem; padding-right: 1rem;
         }
 
         .taurus-logo-container {
             position: relative;
             width: 100px; /* Reduced to match original logo footprint */
             height: 100px; /* Reduces vertical shift */
-            margin: 0 auto 30px auto; 
+            /* Margin Bottom Calculation: 
+               Ripple inset -20px means it extends 20px out.
+               Scale 1.6 means 100px -> 160px (30px extra per side).
+               Safe zone needed: ~30px.
+            */
+            margin: 0 auto 35px auto; /* Increased slightly to protect text from ripples */
             display: flex; 
             justify-content: center; 
             align-items: center;
@@ -131,9 +139,10 @@
         }
 
         /* ... Ripple CSS ... */
+        /* Adjusted Ripple to be strictly contained visually if needed, but margin handles it */
         .taurus-ripple-1 {
             position: absolute; 
-            inset: -20px; /* Visual overflow only (maintains 140px look) */
+            inset: -15px; /* Reduced spread slightly */
             border: 2px solid #FFD700; 
             border-radius: 50%; 
             animation: taurus-ripple 2.5s infinite;
@@ -141,7 +150,7 @@
 
         .taurus-ripple-2 {
             position: absolute; 
-            inset: -10px; 
+            inset: -5px; 
             border: 1px solid rgba(255, 215, 0, 0.5); 
             border-radius: 50%; 
             animation: taurus-ripple 2.5s infinite 0.8s;
@@ -193,13 +202,13 @@
             text-align: center; /* Enforce centering */
             letter-spacing: 0.4em;
             line-height: 1.2;
-            margin-bottom: 2rem; /* Adjusted gap */
+            margin-bottom: 1rem; /* Reduced from 2rem (Tightened Gap) */
             transition: margin 0.5s ease;
             width: 100%; /* Ensure it spans full width for centering */
         }
 
         .taurus-title span:first-child { color: #FFD700; font-size: 1.5rem; }
-        .taurus-title span:last-child { color: #EF4444; font-size: 1.5rem; display: block; margin-top: 0.5rem; filter: drop-shadow(0 0 15px rgba(239, 68, 68, 0.6)); }
+        .taurus-title span:last-child { color: #EF4444; font-size: 1.5rem; display: block; margin-top: 0.2rem; filter: drop-shadow(0 0 15px rgba(239, 68, 68, 0.6)); } /* Reduced margin */
 
         .taurus-panel {
             background: rgba(10, 10, 10, 0.4);
