@@ -91,8 +91,7 @@
         class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-taurusGold rounded-full blur-[150px] -z-10 opacity-5">
     </div>
 
-    <div class="taurus-panel crystal-panel pt-20 md:pt-24 p-8 md:p-12 flex flex-col items-center overflow-hidden"
-        style="width: 90%; max-width: 400px; min-height: 600px; border-radius: 2.5rem;" id="main-panel">
+    <div class="taurus-master-panel" id="main-panel">
 
         <!-- LOGO CONTAINER (Inside with abundant top space) -->
         <div
@@ -122,7 +121,7 @@
             Verification Request Sent
         </p>
 
-        <div id="challenge-container" class="flex flex-col items-center animate-fade-in w-full mt-4">
+        <div id="challenge-container" class="flex flex-col items-center animate-fade-in w-full mt-4 flex-1 justify-end">
 
             <!-- Icon & Status moved UP -->
             <div class="flex flex-col items-center gap-3 mb-8">
@@ -135,9 +134,15 @@
             </div>
 
             <!-- "Alarm Button" Style Code Bar (Bottom) -->
-            <div
-                class="w-full bg-taurusGold text-black font-display font-black text-4xl tracking-widest py-4 rounded-xl shadow-[0_0_20px_rgba(255,215,0,0.4)] text-center flex items-center justify-center h-[70px]">
+            <div class="taurus-btn-container">
                 <span id="challenge-code">--</span>
+            </div>
+
+            <!-- Hidden Footer for alignment parity with Alarm Modal -->
+            <div class="taurus-footer"
+                style="position: relative; bottom: auto; left: auto; margin-top: 1.5rem; width: 100%; visibility: hidden;">
+                <div class="taurus-footer-line"></div>
+                <p class="taurus-footer-text">RESTRICTED ACCESS MODE</p>
             </div>
         </div>
 

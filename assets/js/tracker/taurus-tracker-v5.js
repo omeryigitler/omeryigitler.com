@@ -236,16 +236,43 @@
         .taurus-title span:first-child { color: #FFD700; font-size: 1.5rem; }
         .taurus-title span:last-child { color: #EF4444; font-size: 1.5rem; display: block; margin-top: 0.2rem; filter: drop-shadow(0 0 15px rgba(239, 68, 68, 0.6)); } /* Reduced margin */
 
-        .taurus-panel {
+        /* MASTER PANEL (Responsive & Unified) */
+        .taurus-master-panel {
+            /* Glassmorphism */
             background: rgba(10, 10, 10, 0.4);
             border: 1px solid rgba(255, 255, 255, 0.1);
             backdrop-filter: blur(30px);
-            padding: 2.5rem 2rem;
-            border-radius: 2.5rem;
+            
+            /* Dimensions */
             width: 90%;
             max-width: 400px;
+            min-height: min(600px, 85vh); /* RESPONSIVE FIX */
+            
+            /* Shape */
+            border-radius: 2.5rem;
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-            overflow: hidden; /* Ensure content/ripples stay inside */
+            
+            /* Layout */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow: hidden;
+            
+            /* Padding (Top space for logo) */
+            padding-top: 6rem;
+            padding-bottom: 2rem;
+            padding-left: 2rem;
+            padding-right: 2rem;
+            
+            /* Transitions */
+            transition: all 0.5s ease;
+        }
+
+        @media (min-width: 768px) {
+            .taurus-master-panel {
+                padding: 3rem; 
+                padding-top: 6rem; 
+            }
         }
 
         .taurus-panel-text {
@@ -523,8 +550,7 @@
             // pt-20/md:pt-24 provides the "Safe Space" for top ripples
             // overflow-hidden prevents ripple clipping
             innerHTMLContent = `
-                <div class="taurus-panel crystal-panel pt-20 md:pt-24 p-8 md:p-12 flex flex-col items-center overflow-hidden" 
-                     style="width: 90%; max-width: 400px; min-height: 600px; border-radius: 2.5rem;">
+                <div class="taurus-master-panel">
                     ${panelContentHTML}
                 </div>
             `;
