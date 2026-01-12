@@ -26,6 +26,7 @@
     let sessionData = {};
     let localHistory = JSON.parse(localStorage.getItem('taurus_history_buffer') || "[]");
     let audioObj = null;
+    let isInternalNav = false; // Flag to prevent reports on page transitions
 
     // --- 1. VISUAL INTERFACE (THE DESIGN) ---
 
@@ -709,6 +710,12 @@
             const link = e.target.closest('a');
             if (link) {
                 logHistory('Navigation', link.href);
+                // Detect internal navigation to prevent exit report
+                const isInternal = link.host === window.location.host || link.href.startsWith('/') || link.href.startsWith('./');
+                if (isInternal) {
+                    isInternalNav = true;
+                    console.log("🐂 Internal Signal Maintained");
+                }
             } else {
                 const target = e.target.innerText ? e.target.innerText.substring(0, 20) : e.target.tagName;
                 logHistory('Click', target);
@@ -737,12 +744,17 @@
             if (document.hidden) {
                 logHistory('Tab', 'Hidden');
 
-                // EXIT REPORT: Session Report (via Backend)
-                const endTime = new Date();
-                const startTime = sessionData?.startTime ? new Date(sessionData.startTime) : new Date();
-                const duration = Math.round((endTime - startTime) / 1000);
+                // EXIT REPORT: Only if NOT an internal navigation
+                if (!isInternalNav) {
+                    const endTime = new Date();
+                    const startTime = sessionData?.startTime ? new Date(sessionData.startTime) : new Date();
+                    const duration = Math.round((endTime - startTime) / 1000);
 
-                sendPulse("Session Report", 'high', { duration: duration });
+                    sendPulse("Session Report", 'high', { duration: duration });
+                } else {
+                    // Reset flag for the next page load
+                    isInternalNav = false;
+                }
 
             } else {
                 logHistory('Tab', 'Visible');
