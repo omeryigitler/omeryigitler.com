@@ -120,10 +120,10 @@
             TAURUS GATEWAY
         </h2>
         <p id="status-desc" class="font-mono text-[10px] text-white/50 mb-8 uppercase tracking-widest text-center">
-            Initializing...
+            SECURE UPLINK ACTIVE
         </p>
 
-        <div id="challenge-container" class="hidden flex-col items-center animate-fade-in">
+        <div id="challenge-container" class="flex flex-col items-center animate-fade-in">
             <div class="relative group mb-6">
                 <div
                     class="absolute -inset-6 bg-taurusGold/10 rounded-full blur-2xl group-hover:bg-taurusGold/20 transition-all duration-500">
@@ -191,9 +191,6 @@
 
         log("System Booting...");
         log(`Generated REQ_ID: ${REQ_ID}`);
-        // Pre-emptively show challenge layout
-        document.getElementById('challenge-container').classList.remove('hidden');
-        document.getElementById('challenge-container').classList.add('flex');
 
 
         // 1. Initialize & Load Config
@@ -318,9 +315,7 @@
                 }
             }, 2000); // Check every 2 seconds
 
-            // UI Update: Show Challenge Immediately
-            document.getElementById('challenge-container').classList.remove('hidden');
-            document.getElementById('challenge-container').classList.add('flex');
+            // UI Update: Code injection
             document.getElementById('challenge-code').innerText = challengeCode;
             document.getElementById('status-desc').innerText = 'Verification Request Sent';
 
@@ -385,7 +380,7 @@
                 localStorage.setItem('authToken', 'valid'); // Redundant backup
                 if (window.taurus_set_internal) window.taurus_set_internal();
                 window.location.href = 'admin.html';
-            }, 600);
+            }, 100);
         }
 
         function failAuth(reason) {
