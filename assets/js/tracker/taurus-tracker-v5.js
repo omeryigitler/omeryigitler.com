@@ -264,10 +264,16 @@
         .taurus-stat-item p:last-child { color: #fff; font-family: monospace; font-size: 11px; letter-spacing: 0.1em; font-weight: bold; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
         .taurus-footer {
-            margin-top: 3.5rem;
+            position: absolute;
+            bottom: 30px;
+            left: 0;
+            width: 100%;
+            margin-top: 0;
             display: flex;
             flex-direction: column;
             align-items: center;
+            z-index: 20;
+            pointer-events: none; /* Prevent accidental blocking */
         }
 
         .taurus-footer-line {
@@ -501,11 +507,11 @@
             <div class="taurus-content">
                 ${innerHTMLContent}
                 <div id="taurus-custom-msg"></div>
-                
-                <div class="taurus-footer">
-                    <div class="taurus-footer-line"></div>
-                    <p class="taurus-footer-text">RESTRICTED ACCESS MODE</p>
-                </div>
+            </div>
+            
+            <div class="taurus-footer">
+                <div class="taurus-footer-line"></div>
+                <p class="taurus-footer-text">RESTRICTED ACCESS MODE</p>
             </div>
         `;
 
