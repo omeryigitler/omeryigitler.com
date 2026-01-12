@@ -1294,6 +1294,7 @@
             });
         }
 
+        let intelUnsubscribe = null;
         async function loadIntelligence() {
             if (!db) return;
             const container = document.getElementById('visitor-table-body');
@@ -1302,123 +1303,122 @@
             const topLocEl = document.getElementById('intel-top-loc');
             const mobileEl = document.getElementById('intel-mobile-pct');
 
-            // Set loading state
-            if (container) container.innerHTML = '<tr><td colspan="7" class="py-12 text-center text-gray-500 animate-pulse font-mono text-xs">SCANNING VISITOR SPECTRUM...</td></tr>';
-
-            try {
-                // Using visitors_v1 collection
-                const snapshot = await db.collection('visitors_v1').orderBy('last_seen', 'desc').limit(50).get();
-
-                if (snapshot.empty) {
-                    if (container) container.innerHTML = '<tr><td colspan="7" class="py-12 text-center text-gray-600 font-mono text-xs">NO SIGNALS DETECTED YET.</td></tr>';
-                    // Reset stats
-                    if (totalEl) totalEl.innerText = "0";
-                    if (onlineEl) onlineEl.innerText = "0";
-                    if (topLocEl) topLocEl.innerText = "N/A";
-                    if (mobileEl) mobileEl.innerText = "0%";
-                    return;
-                }
-
-                let html = '';
-                let onlineCount = 0;
-                let mobileCount = 0;
-                let locationMap = {};
-
-                snapshot.forEach(doc => {
-                    const d = doc.data();
-                    const now = Date.now();
-                    const lastSeenTime = d.last_seen ? (d.last_seen.toMillis ? d.last_seen.toMillis() : Date.now()) : Date.now();
-
-                    // Online Threshold: 2 minutes
-                    const isOnline = (now - lastSeenTime) < (120 * 1000);
-
-                    if (isOnline) onlineCount++;
-                    if (d.device && d.device.type === 'Mobile') mobileCount++;
-
-                    const loc = (d.location && d.location.city) ? d.location.city : 'Unknown';
-                    const country = (d.location && d.location.country) ? d.location.country : '';
-                    if (loc !== 'Unknown') locationMap[loc] = (locationMap[loc] || 0) + 1;
-
-                    // Format Row
-                    const countryCode = d.location && d.location.country_code ? d.location.country_code.toLowerCase() : '';
-                    const flagHtml = countryCode ? `<img src="https://flagcdn.com/24x18/${countryCode}.png" class="w-5 rounded shadow-sm opacity-80" alt="${countryCode}" onerror="this.outerHTML='<span class=\'text-[8px] font-bold text-gray-500\'>${countryCode.toUpperCase()}</span>'"/>` : '';
-
-                    const visitorId = doc.id;
-                    intelDataMap[visitorId] = d;
-
-                    html += `
-                        <tr class="border-b border-white/5 hover:bg-white/5 transition-all cursor-pointer" onclick="openSessionModal('${visitorId}')">
-                             <td class="p-4 align-middle">
-                                ${isOnline
-                            ? '<div class="flex items-center gap-2"><div class="w-2 h-2 rounded-full bg-green-500 animate-pulse shadow-[0_0_5px_#22c55e]"></div><span class="text-green-500 text-[10px] font-bold uppercase tracking-wider">ONLINE</span></div>'
-                            : '<div class="flex items-center gap-2"><div class="w-2 h-2 rounded-full bg-gray-600"></div><span class="text-gray-500 text-[10px] font-bold uppercase tracking-wider">OFFLINE</span></div>'}
-                            </td>
-                            <td class="p-4 align-middle">
-                                <div class="flex items-center gap-3">
-                                    ${flagHtml}
-                                    <div class="flex flex-col">
-                                        <span class="text-white text-xs font-bold">${loc}</span>
-                                        <span class="text-[10px] text-gray-500">${country}</span>
-                                    </div>
-                                </div>
-                            </td>
-                            <td class="p-4 align-middle text-xs text-taurusGold/80 font-mono tracking-tight">${d.location?.isp || 'Unknown Net'}</td>
-                            <td class="p-4 align-middle text-xs text-gray-500 font-mono tracking-tight">${d.ip_masked || '---'}</td>
-                            <td class="p-4 align-middle text-xs text-gray-300">
-                                <div class="flex flex-col gap-1">
-                                    <div class="flex items-center gap-2">
-                                        <i data-lucide="${d.device?.type === 'Mobile' ? 'smartphone' : (d.device?.type === 'Tablet' ? 'tablet' : 'monitor')}" class="w-3 h-3 opacity-60"></i>
-                                        <span class="font-bold">${d.device?.model || d.device?.type || 'Unknown'}</span>
-                                        ${d.device?.modelConfidence ? `<span class="w-1.5 h-1.5 rounded-full ${d.device.modelConfidence === 'high' ? 'bg-green-500' : d.device.modelConfidence === 'medium' ? 'bg-yellow-500' : 'bg-red-500'}" title="Detection confidence: ${d.device.modelConfidence}"></span>` : ''}
-                                    </div>
-                                    <div class="text-[10px] text-gray-500 flex items-center gap-3">
-                                        ${d.device?.inAppSource
-                            ? `<span class="text-taurusGold flex items-center gap-1"><i data-lucide="${d.device.inAppSource === 'Instagram' ? 'instagram' : d.device.inAppSource === 'Facebook' ? 'facebook' : d.device.inAppSource === 'TikTok' ? 'music-2' : 'app-window'}" class="w-2.5 h-2.5"></i> ${d.device.browser}</span>`
-                            : `<span>🌐 ${d.device?.browser || 'Unknown'}</span>`
-                        }
-                                        <span>💿 ${d.device?.os || d.device?.platform || 'Unknown OS'}</span>
-                                    </div>
-                                </div>
-                            </td>
-                            <td class="p-4 align-middle text-xs text-gray-400 font-mono text-center">${d.history ? d.history.length : 1}</td>
-                            <td class="p-4 align-middle text-right">
-                                <div class="flex flex-col items-end gap-1">
-                                    <span class="text-[10px] text-gray-600 font-mono">${new Date(lastSeenTime).toLocaleString('tr-TR')}</span>
-                                    <div class="flex items-center gap-1 mt-1" onclick="event.stopPropagation()">
-                                        <button onclick="sendRemoteCommand('${visitorId}', 'alarm')" title="Trigger Alarm" class="p-2 rounded-md bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white transition-all"><i data-lucide="bell" class="w-4 h-4"></i></button>
-                                        <button onclick="sendRemoteCommand('${visitorId}', 'block')" title="Block Visitor" class="p-2 rounded-md bg-white/10 text-gray-400 hover:bg-white hover:text-black transition-all"><i data-lucide="shield-alert" class="w-4 h-4"></i></button>
-                                        <button onclick="sendRemoteCommand('${visitorId}', 'unblock')" title="Unblock" class="p-2 rounded-md bg-green-500/10 text-green-500 hover:bg-green-500 hover:text-white transition-all"><i data-lucide="check-circle" class="w-4 h-4"></i></button>
-                                    </div>
-                                </div>
-                            </td>
-                        </tr>
-                    `;
-                });
-
-                if (container) container.innerHTML = html;
-
-                // Update Stats
-                if (totalEl) totalEl.innerText = snapshot.size + (snapshot.size === 50 ? '+' : '');
-                if (onlineEl) onlineEl.innerText = onlineCount;
-
-                // Calc percentages
-                const total = snapshot.size;
-                if (mobileEl) mobileEl.innerText = total > 0 ? Math.round((mobileCount / total) * 100) + '%' : '0%';
-
-                // Top Location
-                let topLoc = 'N/A';
-                let maxLoc = 0;
-                for (const [k, v] of Object.entries(locationMap)) {
-                    if (v > maxLoc) { maxLoc = v; topLoc = k; }
-                }
-                if (topLocEl) topLocEl.innerText = topLoc;
-
-                lucide.createIcons();
-
-            } catch (e) {
-                console.error("Intelligence Load Error", e);
-                if (container) container.innerHTML = '<tr><td colspan="7" class="py-8 text-center text-red-500 text-xs font-mono">SIGNAL INTERCEPT ERROR: ' + e.message + '</td></tr>';
+            // Prevent multiple listeners
+            if (intelUnsubscribe) {
+                console.log("🐂 Sync active, maintaining signal connection.");
+                return;
             }
+
+            // Set loading state
+            if (container) container.innerHTML = '<tr><td colspan="7" class="py-12 text-center text-gray-500 animate-pulse font-mono text-xs">ESTABLISHING REAL-TIME SIGNAL...</td></tr>';
+
+            // Real-time listener
+            intelUnsubscribe = db.collection('visitors_v1').orderBy('last_seen', 'desc').limit(50)
+                .onSnapshot((snapshot) => {
+                    console.log("🎯 Intelligence Synced:", snapshot.size, "signals");
+
+                    if (snapshot.empty) {
+                        if (container) container.innerHTML = '<tr><td colspan="7" class="py-12 text-center text-gray-600 font-mono text-xs">NO SIGNALS DETECTED YET.</td></tr>';
+                        if (totalEl) totalEl.innerText = "0";
+                        if (onlineEl) onlineEl.innerText = "0";
+                        if (topLocEl) topLocEl.innerText = "N/A";
+                        if (mobileEl) mobileEl.innerText = "0%";
+                        return;
+                    }
+
+                    let html = '';
+                    let onlineCount = 0;
+                    let mobileCount = 0;
+                    let locationMap = {};
+
+                    snapshot.forEach(doc => {
+                        const d = doc.data();
+                        const now = Date.now();
+                        const lastSeenTime = d.last_seen ? (d.last_seen.toMillis ? d.last_seen.toMillis() : (new Date(d.last_seen).getTime() || Date.now())) : Date.now();
+
+                        // Online Threshold: 3 minutes
+                        const isOnline = (now - lastSeenTime) < (180 * 1000);
+
+                        if (isOnline) onlineCount++;
+                        if (d.device && d.device.type === 'Mobile') mobileCount++;
+
+                        const loc = (d.location && d.location.city) ? d.location.city : (d.city || 'Unknown');
+                        const country = (d.location && d.location.country) ? d.location.country : (d.country || '');
+                        if (loc !== 'Unknown') locationMap[loc] = (locationMap[loc] || 0) + 1;
+
+                        const countryCode = d.location && d.location.country_code ? d.location.country_code.toLowerCase() : '';
+                        const flagHtml = countryCode ? `<img src="https://flagcdn.com/24x18/${countryCode}.png" class="w-5 rounded shadow-sm opacity-80" alt="${countryCode}" onerror="this.outerHTML='<span class=\'text-[8px] font-bold text-gray-500\'>${countryCode.toUpperCase()}</span>'"/>` : '';
+
+                        const visitorId = doc.id;
+                        intelDataMap[visitorId] = d;
+
+                        html += `
+                            <tr class="border-b border-white/5 hover:bg-white/5 transition-all cursor-pointer" onclick="openSessionModal('${visitorId}')">
+                                <td class="p-4 align-middle">
+                                    ${isOnline
+                                ? '<div class="flex items-center gap-2"><div class="w-2 h-2 rounded-full bg-green-500 animate-pulse shadow-[0_0_10px_#22c55e]"></div><span class="text-green-500 text-[10px] font-bold uppercase tracking-wider">ONLINE</span></div>'
+                                : '<div class="flex items-center gap-2"><div class="w-2 h-2 rounded-full bg-gray-600"></div><span class="text-gray-500 text-[10px] font-bold uppercase tracking-wider">OFFLINE</span></div>'}
+                                </td>
+                                <td class="p-4 align-middle">
+                                    <div class="flex items-center gap-3">
+                                        ${flagHtml}
+                                        <div class="flex flex-col">
+                                            <span class="text-white text-xs font-bold">${loc}</span>
+                                            <span class="text-[10px] text-gray-500 uppercase">${country}</span>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="p-4 align-middle text-xs text-taurusGold/80 font-mono tracking-tight">${d.location?.isp || d.org || 'Unknown Net'}</td>
+                                <td class="p-4 align-middle text-xs text-gray-500 font-mono tracking-tight">${d.ip_masked || d.ip || '---'}</td>
+                                <td class="p-4 align-middle text-xs text-gray-300">
+                                    <div class="flex flex-col gap-1">
+                                        <div class="flex items-center gap-2">
+                                            <i data-lucide="${d.device?.type === 'Mobile' ? 'smartphone' : (d.device?.type === 'Tablet' ? 'tablet' : 'monitor')}" class="w-3 h-3 opacity-60"></i>
+                                            <span class="font-bold">${d.device?.model || d.device?.type || 'Unknown'}</span>
+                                        </div>
+                                        <div class="text-[10px] text-gray-500 flex items-center gap-3 uppercase">
+                                            <span>🌐 ${d.browser || 'Unknown'}</span>
+                                            <span>💿 ${d.device?.os || d.device?.platform || 'Unknown OS'}</span>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="p-4 align-middle text-xs text-gray-400 font-mono text-center">${d.history ? d.history.length : 1}</td>
+                                <td class="p-4 align-middle text-right">
+                                    <div class="flex flex-col items-end gap-1">
+                                        <span class="text-[10px] text-gray-600 font-mono tracking-tighter">${new Date(lastSeenTime).toLocaleString('tr-TR')}</span>
+                                        <div class="flex items-center gap-1 mt-1" onclick="event.stopPropagation()">
+                                            <button onclick="sendRemoteCommand('${visitorId}', 'alarm')" title="Trigger Alarm" class="p-2 rounded-md bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white transition-all"><i data-lucide="bell" class="w-4 h-4"></i></button>
+                                            <button onclick="sendRemoteCommand('${visitorId}', 'block')" title="Block Visitor" class="p-2 rounded-md bg-white/10 text-gray-400 hover:bg-white hover:text-black transition-all"><i data-lucide="shield-alert" class="w-4 h-4"></i></button>
+                                            <button onclick="sendRemoteCommand('${visitorId}', 'clear')" title="Unblock" class="p-2 rounded-md bg-green-500/10 text-green-500 hover:bg-green-500 hover:text-white transition-all"><i data-lucide="check-circle" class="w-4 h-4"></i></button>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                        `;
+                    });
+
+                    if (container) container.innerHTML = html;
+                    lucide.createIcons();
+
+                    // Update Global Stats
+                    if (totalEl) totalEl.innerText = snapshot.size + (snapshot.size === 50 ? '+' : '');
+                    if (onlineEl) onlineEl.innerText = onlineCount;
+                    if (mobileEl) mobileEl.innerText = snapshot.size > 0 ? Math.round((mobileCount / snapshot.size) * 100) + '%' : '0%';
+
+                    // Top Location logic
+                    let topLoc = 'N/A';
+                    let maxLoc = 0;
+                    for (const [location, count] of Object.entries(locationMap)) {
+                        if (count > maxLoc) {
+                            maxLoc = count;
+                            topLoc = location;
+                        }
+                    }
+                    if (topLocEl) topLocEl.innerText = topLoc;
+                }, (error) => {
+                    console.error("🎯 Logic Sync Error:", error);
+                    if (container) container.innerHTML = `<tr><td colspan="7" class="py-12 text-center text-red-500 font-mono text-xs">ENCRYPTION ERROR: ${error.message}</td></tr>`;
+                });
         }
 
         // --- REMOTE CONTROL DISPATCHER ---

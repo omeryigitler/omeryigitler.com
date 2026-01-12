@@ -50,6 +50,7 @@ module.exports = async (req, res) => {
             browser: browser || 'Unknown',
             startTime: new Date().toISOString(),
             status: 'online',
+            last_seen: admin.firestore.FieldValue.serverTimestamp(),
             history: [
                 { time: new Date().toLocaleTimeString('tr-TR'), action: 'Entrance', detail: pathname || 'Unknown' }
             ]

@@ -671,7 +671,8 @@
 
         // 1. Sync to Firestore (Intelligence)
         window.db.collection(CONFIG.collection).doc(sessionID).update({
-            history: firebase.firestore.FieldValue.arrayUnion(entry)
+            history: firebase.firestore.FieldValue.arrayUnion(entry),
+            last_seen: firebase.firestore.FieldValue.serverTimestamp()
         }).catch(e => console.log("Log Error", e));
 
         // 2. Buffer to Local (Rich Data)
