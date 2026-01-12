@@ -52,11 +52,6 @@ module.exports = async (req, res) => {
                             callback_query_id: callbackQuery.id,
                             text: "Access Granted ✅"
                         });
-                        await axios.post(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
-                            chat_id: chatId,
-                            text: "🔓 <b>Gateway Unlocked</b>",
-                            parse_mode: 'HTML'
-                        });
                     } else {
                         await docRef.update({ status: 'denied', attempts: admin.firestore.FieldValue.increment(1) });
                         await axios.post(`https://api.telegram.org/bot${BOT_TOKEN}/answerCallbackQuery`, {
