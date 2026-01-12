@@ -711,8 +711,14 @@
             if (link) {
                 logHistory('Navigation', link.href);
                 // Detect internal navigation to prevent exit report
-                const isInternal = link.host === window.location.host || link.href.startsWith('/') || link.href.startsWith('./');
-                if (isInternal) {
+                // 1. Must be internal host 
+                // 2. Must NOT be a fragment link (#)
+                // 3. Must NOT be target="_blank"
+                const isInternal = (link.host === window.location.host || link.href.startsWith('/') || link.href.startsWith('./'));
+                const isFragment = link.getAttribute('href').startsWith('#');
+                const isNewTab = link.target === '_blank';
+
+                if (isInternal && !isFragment && !isNewTab) {
                     isInternalNav = true;
                     console.log("🐂 Internal Signal Maintained");
                 }
