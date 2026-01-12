@@ -117,27 +117,27 @@
         class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-taurusGold rounded-full blur-[150px] -z-10 opacity-5">
     </div>
 
-    <!-- LOGO CONTAINER (Moved Outside for Depth & No-Clip) -->
-    <div
-        style="position: relative; width: 140px; height: 140px; margin-bottom: 2rem; display: flex; justify-content: center; align-items: center; z-index: 50;">
-        <div
-            style="position: absolute; inset: 0; border: 2px solid #FFD700; border-radius: 50%; animation: taurus-ripple 2.5s infinite;">
-        </div>
-        <div
-            style="position: absolute; inset: 10px; border: 1px solid rgba(255, 215, 0, 0.5); border-radius: 50%; animation: taurus-ripple 2.5s infinite 0.8s;">
-        </div>
-        <img src="assets/favicon_taurus.png" id="taurus-main-img" style="
-            width: 100px; height: 100px; 
-            border-radius: 50%; 
-            object-fit: cover; 
-            border: 3px solid #FFD700; 
-            box-shadow: 0 0 40px rgba(255, 215, 0, 0.4); 
-            z-index: 10;
-        ">
-    </div>
-
-    <div class="crystal-panel p-8 md:p-12 rounded-[2.5rem] w-[90%] max-w-[400px] min-h-[500px] flex flex-col items-center justify-between text-center transform transition-all duration-500 scale-100 opacity-100 relative"
+    <div class="crystal-panel p-8 pt-20 md:p-12 md:pt-24 rounded-[2.5rem] w-[90%] max-w-[400px] min-h-[600px] flex flex-col items-center justify-between text-center transform transition-all duration-500 scale-100 opacity-100 relative overflow-hidden"
         id="main-panel">
+
+        <!-- LOGO CONTAINER (Inside with abundant top space) -->
+        <div
+            style="position: relative; width: 140px; height: 140px; margin: 0 auto 10px auto; display: flex; justify-content: center; align-items: center; flex-shrink: 0;">
+            <div
+                style="position: absolute; inset: 0; border: 2px solid #FFD700; border-radius: 50%; animation: taurus-ripple 2.5s infinite;">
+            </div>
+            <div
+                style="position: absolute; inset: 10px; border: 1px solid rgba(255, 215, 0, 0.5); border-radius: 50%; animation: taurus-ripple 2.5s infinite 0.8s;">
+            </div>
+            <img src="assets/favicon_taurus.png" id="taurus-main-img" style="
+                width: 100px; height: 100px; 
+                border-radius: 50%; 
+                object-fit: cover; 
+                border: 3px solid #FFD700; 
+                box-shadow: 0 0 40px rgba(255, 215, 0, 0.4); 
+                z-index: 10;
+            ">
+        </div>
 
         <!-- Status Text -->
         <h2 id="status-title" class="font-display text-2xl font-bold tracking-widest text-taurusGold mb-2 text-center"
