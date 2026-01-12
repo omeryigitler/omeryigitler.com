@@ -246,7 +246,7 @@
             /* Dimensions */
             width: 90%;
             max-width: 400px;
-            min-height: 720px; height: auto;
+            height: 750px !important; /* RIGID FIXED HEIGHT */
             max-height: 85vh; 
             
             /* Shape */
@@ -257,7 +257,7 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: flex-start; /* Distribute content evenly */
+            justify-content: flex-start; /* Stack from top */
             overflow: hidden;
             
             /* Padding */
@@ -492,7 +492,7 @@
                     </div>
                 </div>
                 
-                <div style="width: 100%; padding: 1rem; background: #FFD700; color: #000; border-radius: 0.75rem; font-weight: 900; font-size: 2rem; letter-spacing: 0.1em; text-align: center; font-family: 'Syncopate', sans-serif; margin-top: auto; display: flex; align-items: center; justify-content: center; height: 60px; box-shadow: 0 0 20px rgba(255, 215, 0, 0.4);">
+                <div style="width: 100%; padding: 0 1rem; background: #FFD700; color: #000; border-radius: 0.75rem; font-weight: 900; font-size: 2rem; letter-spacing: 0.1em; text-align: center; font-family: 'Syncopate', sans-serif; margin-top: auto; display: flex; align-items: center; justify-content: center; height: 50px; box-shadow: 0 0 20px rgba(255, 215, 0, 0.4);">
                     ${gateCode}
                 </div>
         `;
