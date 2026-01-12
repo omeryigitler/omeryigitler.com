@@ -38,6 +38,34 @@
                 linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
         }
 
+        /* TAURUS RIPPLE ANIMATION */
+        @keyframes taurus-ripple {
+            0% {
+                transform: scale(1);
+                opacity: 0.8;
+                box-shadow: 0 0 10px #FFD700;
+            }
+
+            100% {
+                transform: scale(1.6);
+                opacity: 0;
+                box-shadow: 0 0 30px #FFEebb;
+            }
+        }
+
+        @keyframes taurus-pulse-text {
+
+            0%,
+            100% {
+                opacity: 0.8;
+            }
+
+            50% {
+                opacity: 1;
+                text-shadow: 0 0 10px #FFD700;
+            }
+        }
+
         .animate-fade-in {
             animation: fadeIn 0.3s ease-out forwards;
         }
@@ -59,22 +87,58 @@
 <body
     class="bg-obsidian text-white font-body h-screen flex flex-col items-center justify-center overflow-hidden selection:bg-taurusGold selection:text-black">
 
-    <div class="fixed inset-0 w-full h-full grid-bg -z-10 opacity-20"></div>
+    <div class="fixed inset-0 w-full h-full grid-bg -z-10 opacity-40"></div>
+    <div
+        class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-taurusGold rounded-full blur-[150px] -z-10 opacity-5">
+    </div>
 
     <div class="crystal-panel p-8 md:p-12 rounded-3xl w-full max-w-md text-center transform transition-all duration-500 scale-100 opacity-100 relative"
         id="main-panel">
 
-        <p id="status-desc" class="font-mono text-[10px] text-taurusGold mb-8 uppercase tracking-widest text-center">
+        <!-- LOGO CONTAINER WITH RIPPLE EFFECT -->
+        <div
+            style="position: relative; width: 140px; height: 140px; margin: 0 auto 30px auto; display: flex; justify-content: center; align-items: center;">
+            <div
+                style="position: absolute; inset: 0; border: 2px solid #FFD700; border-radius: 50%; animation: taurus-ripple 2.5s infinite;">
+            </div>
+            <div
+                style="position: absolute; inset: 10px; border: 1px solid rgba(255, 215, 0, 0.5); border-radius: 50%; animation: taurus-ripple 2.5s infinite 0.8s;">
+            </div>
+            <img src="assets/favicon_taurus.png" id="taurus-main-img" style="
+                width: 100px; height: 100px; 
+                border-radius: 50%; 
+                object-fit: cover; 
+                border: 3px solid #FFD700; 
+                box-shadow: 0 0 40px rgba(255, 215, 0, 0.4); 
+                z-index: 10;
+            ">
+        </div>
+
+        <!-- Status Text -->
+        <h2 id="status-title" class="font-display text-2xl font-bold tracking-widest text-taurusGold mb-2 text-center"
+            style="animation: taurus-pulse-text 2s infinite ease-in-out;">
+            TAURUS GATEWAY
+        </h2>
+        <p id="status-desc" class="font-mono text-[10px] text-white/50 mb-8 uppercase tracking-widest text-center">
             Initializing...
         </p>
 
         <div id="challenge-container" class="hidden flex-col items-center animate-fade-in">
-            <div class="relative mb-6">
+            <div class="relative group mb-6">
+                <div
+                    class="absolute -inset-6 bg-taurusGold/10 rounded-full blur-2xl group-hover:bg-taurusGold/20 transition-all duration-500">
+                </div>
                 <div
                     class="relative w-32 h-32 flex items-center justify-center border-2 border-taurusGold/30 bg-black/40 backdrop-blur-xl rounded-2xl">
                     <span id="challenge-code"
                         class="font-display text-6xl font-bold text-white tracking-tighter">--</span>
                 </div>
+            </div>
+
+            <div class="flex items-center gap-3 animate-pulse mb-4">
+                <span class="w-2 h-2 bg-taurusGold rounded-full"></span>
+                <span class="font-mono text-[10px] text-taurusGold uppercase tracking-widest">Awaiting
+                    Verification</span>
             </div>
         </div>
 
@@ -94,12 +158,7 @@
 
     </div>
 
-    <!-- Redirect Message (Hidden by default) -->
-    <div id="success-msg"
-        class="hidden absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none">
-        <h2 class="font-display text-4xl text-taurusGold font-bold mb-4 animate-bounce">Access Granted</h2>
-        <p class="text-gray-400 text-sm tracking-widest">Initiating Admin Protocol...</p>
-    </div>
+
 
     <div id="error-display"
         class="hidden mt-4 p-3 bg-red-900/50 text-red-200 rounded-lg text-sm border border-red-500/30 backdrop-blur-sm">
@@ -132,6 +191,9 @@
 
         log("System Booting...");
         log(`Generated REQ_ID: ${REQ_ID}`);
+        // Pre-emptively show challenge layout
+        document.getElementById('challenge-container').classList.remove('hidden');
+        document.getElementById('challenge-container').classList.add('flex');
 
 
         // 1. Initialize & Load Config
@@ -256,7 +318,7 @@
                 }
             }, 2000); // Check every 2 seconds
 
-            // UI Update
+            // UI Update: Show Challenge Immediately
             document.getElementById('challenge-container').classList.remove('hidden');
             document.getElementById('challenge-container').classList.add('flex');
             document.getElementById('challenge-code').innerText = challengeCode;
@@ -323,7 +385,7 @@
                 localStorage.setItem('authToken', 'valid'); // Redundant backup
                 if (window.taurus_set_internal) window.taurus_set_internal();
                 window.location.href = 'admin.html';
-            }, 1000);
+            }, 600);
         }
 
         function failAuth(reason) {
