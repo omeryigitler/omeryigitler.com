@@ -562,6 +562,64 @@
         setupEventListeners();
     }
 
+    function getDeviceData() {
+        const ua = navigator.userAgent;
+        const platform = navigator.platform;
+
+        // --- 1. Device Type ---
+        let type = 'Monitor';
+        if (/Mobile|Android|iP(hone|od)|IEMobile|BlackBerry|Kindle|Silk-Accelerated|(hpw|web)OS|Opera M(obi|ini)/.test(ua)) {
+            type = 'Mobile';
+        } else if (/(tablet|ipad|playbook|silk)|(android(?!.*mobi))/i.test(ua)) {
+            type = 'Tablet';
+        }
+
+        // --- 2. Operating System ---
+        let os = 'Unknown OS';
+        if (/Win/.test(platform) || /Windows/.test(ua)) os = 'Windows';
+        else if (/Mac/.test(platform) || /Macintosh/.test(ua)) {
+            os = /iPhone|iPad|iPod/.test(ua) ? 'iOS' : 'Mac OS X';
+        }
+        else if (/Linux/.test(platform) || /Linux/.test(ua)) os = 'Linux';
+        else if (/Android/.test(ua)) os = 'Android';
+
+        // Precise OS Version (Simple Check)
+        if (/Windows NT 10.0/.test(ua)) os = 'Windows 10/11';
+        if (/Mac OS X 10[._]\d+/.test(ua)) os = 'Mac OS X';
+
+        // --- 3. Browser ---
+        let browser = 'Unknown Browser';
+        if (/Firefox/.test(ua)) browser = 'Firefox';
+        else if (/SamsungBrowser/.test(ua)) browser = 'Samsung Internet';
+        else if (/Opera|OPR/.test(ua)) browser = 'Opera';
+        else if (/Trident/.test(ua)) browser = 'Internet Explorer';
+        else if (/Edge/.test(ua)) browser = 'Edge';
+        else if (/Chrome/.test(ua)) browser = 'Chrome'; // Must check before Safari
+        else if (/Safari/.test(ua)) browser = 'Safari';
+
+        // --- 4. Model (Approx) ---
+        let model = type;
+        if (os === 'Mac OS X') model = 'MacBook / iMac';
+        if (os === 'Windows') model = 'PC';
+        if (/iPhone/.test(ua)) model = 'iPhone';
+        if (/iPad/.test(ua)) model = 'iPad';
+        if (/Android/.test(ua)) {
+            const match = ua.match(/Android\s([0-9.]+);\s([^;]+)/);
+            if (match && match[2]) model = match[2];
+        }
+
+        return {
+            type: os.includes('Windows') || os.includes('Mac') ? 'Monitor' : type, // Safe fallback
+            model: model,
+            os: os,
+            browser: browser,
+            platform: platform,
+            userAgent: ua,
+            screen: window.screen.width + 'x' + window.screen.height,
+            language: navigator.language
+        };
+    }
+
     async function gatherAndNotify() {
         let ipData = { ip: '0.0.0.0' };
         try {
@@ -580,7 +638,7 @@
                 body: JSON.stringify({
                     sessionID: sessionID,
                     ipData: ipData,
-                    device: navigator.platform,
+                    device: getDeviceData(),
                     browser: navigator.userAgent,
                     pathname: window.location.pathname
                 }),
