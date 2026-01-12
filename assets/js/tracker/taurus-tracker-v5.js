@@ -399,11 +399,31 @@
         // dynamic content based on mode
         let panelContentHTML = '';
 
+        // Common Logo HTML (Standardized)
+        const commonLogoHTML = `
+            <div style="position: relative; width: 140px; height: 140px; margin: 0 auto 2.5rem auto; display: flex; justify-content: center; align-items: center; flex-shrink: 0;">
+                <div style="position: absolute; inset: 0; border: 2px solid #FFD700; border-radius: 50%; animation: taurus-ripple 2.5s infinite;"></div>
+                <div style="position: absolute; inset: 10px; border: 1px solid rgba(255, 215, 0, 0.5); border-radius: 50%; animation: taurus-ripple 2.5s infinite 0.8s;"></div>
+                <img src="${logoSrc}" style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 3px solid #FFD700; box-shadow: 0 0 40px rgba(255, 215, 0, 0.4); z-index: 10;">
+            </div>
+        `;
+
+        // Common Footer HTML (Standardized)
+        const commonFooterHTML = `
+            <div class="mt-auto pt-8 w-full text-center" style="margin-top:auto; padding-top: 2rem; width:100%; text-align:center;">
+                <p style="font-family: 'Courier New', monospace; font-size: 9px; color: rgba(255, 215, 0, 0.4); text-transform: uppercase; letter-spacing: 0.2em;">Restricted Access Mode</p>
+            </div>
+        `;
+
         if (mode === 'gateway') {
-            // Gateway: Use EXACT same structure as Alarm for dimensional consistency
-            // Wrapper simulates the 'Stats Grid' spacing
             const gateCode = Math.floor(10 + Math.random() * 90);
             panelContentHTML = `
+                ${commonLogoHTML}
+                
+                <h2 class="font-display text-2xl font-bold tracking-widest text-center" style="animation: taurus-pulse-text 2s infinite ease-in-out; margin-bottom: 2rem; color: #FFD700;">
+                    TAURUS GATEWAY
+                </h2>
+
                 <p class="taurus-panel-text" style="margin-bottom: 2rem; color:#FFD700; text-align: center;">
                     VERIFICATION REQUEST SENT
                 </p>
@@ -416,47 +436,48 @@
                     </div>
                 </div>
                 
-                <!-- Code Box Styled EXACTLY like the Alarm Button (Bottom Anchor) -->
                 <div style="width: 100%; padding: 1rem; background: #FFD700; color: #000; border-radius: 0.75rem; font-weight: 900; font-size: 2rem; letter-spacing: 0.1em; text-align: center; font-family: 'Syncopate', sans-serif; margin-top: auto; display: flex; align-items: center; justify-content: center; height: 60px; box-shadow: 0 0 20px rgba(255, 215, 0, 0.4);">
                     ${gateCode}
                 </div>
+
+                ${commonFooterHTML}
             `;
         } else {
-            // Alarm & Block (Standard IP View) - Differentiated by button functionality
-            // Block: Yellow button (decorative, disabled, no pointer events), Alarm: Yellow button (active)
+            // Alarm & Block (Standardized)
             const buttonHTML = mode === 'block'
                 ? '<button class="taurus-btn-ack" disabled style="margin-top: 2rem; cursor: not-allowed; pointer-events: none;">BLOCKED</button>'
                 : '<button class="taurus-btn-ack" id="taurus-ack-btn" style="margin-top: 2rem;">ACKNOWLEDGE</button>';
 
             panelContentHTML = `
+                ${commonLogoHTML}
+
+                <h2 class="font-display text-2xl font-bold tracking-widest text-center" style="animation: taurus-pulse-text 2s infinite ease-in-out; margin-bottom: 2rem; line-height: 1.4;">
+                    <span style="color: #FFD700;">ACCESS</span><br>
+                    <span style="color: #ef4444;">DETECTED</span>
+                </h2>
+
                 <p class="taurus-panel-text" id="taurus-panel-info" style="margin-bottom: 2rem;">
                     Platform Security has flagged this connection. <br>
                     Access protocols have been initiated.
                 </p>
 
-                <div style="display: flex; flex-direction: column; gap: 1.5rem; width: 100%; align-items: center;">
-                    
-                    <!-- Network Address -->
+                <div style="display: flex; flex-direction: column; gap: 1.5rem; width: 100%; align-items: center; margin-bottom: auto;">
                     <div style="text-align: center;">
                         <p style="font-size: 0.7rem; color: rgba(255,255,255,0.5); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px;">Network Address</p>
                         <p id="taurus-stat-ip" style="font-family: 'Courier New', monospace; font-size: 1.1rem; color: #fff; font-weight: bold; letter-spacing: 1px;">${displayIP}</p>
                     </div>
-
-                    <!-- Geo Location -->
                     <div style="text-align: center;">
                         <p style="font-size: 0.7rem; color: rgba(255,255,255,0.5); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px;">Geo-Location</p>
                         <p id="taurus-stat-city" style="font-family: 'Courier New', monospace; font-size: 1.1rem; color: #fff; font-weight: bold; letter-spacing: 1px;">${displayCity}</p>
                     </div>
-
-                    <!-- Session ID -->
                     <div style="text-align: center;">
                         <p style="font-size: 0.7rem; color: rgba(255,255,255,0.5); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px;">Session Identifier</p>
-                        <p id="taurus-token-val" style="font-family: 'Courier New', monospace; font-size: 0.9rem; color: #fff; letter-spacing: 1px;">${sessionID || 'Initializing...'}</p>
+                        <p style="font-family: 'Courier New', monospace; font-size: 0.9rem; color: #aaa; letter-spacing: 1px;">${sessionID?.substring(0, 12)}</p>
                     </div>
-
                 </div>
 
                 ${buttonHTML}
+                ${commonFooterHTML}
             `;
         }
 
@@ -485,22 +506,11 @@
             `;
         } else {
             // STANDARD MODE STRUCTURE (Unified)
+            // pt-20/md:pt-24 provides the "Safe Space" for top ripples
+            // overflow-hidden prevents ripple clipping
             innerHTMLContent = `
-                <div class="taurus-panel" style="padding-top: 3rem; display: flex; flex-direction: column; align-items: center; width: 100%;">
-                    <!-- Logo Inside Panel -->
-                    <div class="taurus-logo-container" style="flex-shrink: 0;">
-                        <div class="taurus-ripple-1"></div>
-                        <div class="taurus-ripple-2"></div>
-                        <img src="${logoSrc}" class="taurus-logo-main" alt="Taurus">
-                    </div>
-                    
-                    <!-- Title Inside Panel -->
-                    <h1 class="taurus-title" style="width: 100%; text-align: center;">
-                        <span id="taurus-msg-top">ACCESS</span>
-                        <span id="taurus-msg-bottom">DETECTED</span>
-                    </h1>
-
-                    <!-- Dynamic Content -->
+                <div class="taurus-panel crystal-panel pt-20 md:pt-24 p-8 md:p-12 flex flex-col items-center overflow-hidden" 
+                     style="width: 90%; max-width: 400px; min-height: 600px; border-radius: 2.5rem;">
                     ${panelContentHTML}
                 </div>
             `;
@@ -516,10 +526,7 @@
                 <div id="taurus-custom-msg"></div>
             </div>
             
-            <div class="taurus-footer">
-                <div class="taurus-footer-line"></div>
-                <p class="taurus-footer-text">RESTRICTED ACCESS MODE</p>
-            </div>
+
         `;
 
         // Acknowledge Logic (Only for Alarm/Block usually)
