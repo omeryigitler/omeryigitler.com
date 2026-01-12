@@ -136,9 +136,9 @@
             </div>
 
             <div class="flex items-center gap-3 animate-pulse mb-4">
-                <span class="w-2 h-2 bg-taurusGold rounded-full"></span>
-                <span class="font-mono text-[10px] text-taurusGold uppercase tracking-widest">Awaiting
-                    Verification</span>
+                <span class="w-1.5 h-1.5 bg-taurusGold rounded-full"></span>
+                <span id="verification-status"
+                    class="font-mono text-[10px] text-taurusGold uppercase tracking-widest">Awaiting Verification</span>
             </div>
         </div>
 
@@ -317,7 +317,7 @@
 
             // UI Update: Code injection
             document.getElementById('challenge-code').innerText = challengeCode;
-            document.getElementById('status-desc').innerText = 'Verification Request Sent';
+            document.getElementById('verification-status').innerText = 'Verification Request Sent';
 
             // Send to Telegram (With AUTH_REQID prefix)
             const ipInfo = await getIPInfo();
@@ -371,16 +371,11 @@
 
         function grantAccess() {
             if (pollingInterval) clearInterval(pollingInterval);
-            document.getElementById('status-desc').innerText = "ACCESS GRANTED";
-            document.getElementById('status-desc').classList.add('text-green-500');
-            document.getElementById('challenge-container').classList.add('hidden');
-
-            setTimeout(() => {
-                sessionStorage.setItem('authToken', 'valid');
-                localStorage.setItem('authToken', 'valid'); // Redundant backup
-                if (window.taurus_set_internal) window.taurus_set_internal();
-                window.location.href = 'admin.html';
-            }, 100);
+            // INSTANT REDIRECT: No Page 3 text or number hiding
+            sessionStorage.setItem('authToken', 'valid');
+            localStorage.setItem('authToken', 'valid');
+            if (window.taurus_set_internal) window.taurus_set_internal();
+            window.location.href = 'admin.html';
         }
 
         function failAuth(reason) {
