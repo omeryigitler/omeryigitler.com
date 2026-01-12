@@ -246,7 +246,7 @@
             /* Dimensions */
             width: 90%;
             max-width: 400px;
-            height: 720px; /* FIXED DIMENSION (Matches Original Alarm Height) */
+            min-height: 720px; height: auto;
             max-height: 85vh; 
             
             /* Shape */
@@ -257,11 +257,7 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            /* Layout */
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: space-between; /* Distribute content evenly */
+            justify-content: flex-start; /* Distribute content evenly */
             overflow: hidden;
             
             /* Padding */
