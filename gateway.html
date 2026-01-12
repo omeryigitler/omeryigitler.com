@@ -120,7 +120,7 @@
             TAURUS GATEWAY
         </h2>
         <p id="status-desc" class="font-mono text-[10px] text-white/50 mb-8 uppercase tracking-widest text-center">
-            SECURE UPLINK ACTIVE
+            Verification Request Sent
         </p>
 
         <div id="challenge-container" class="flex flex-col items-center animate-fade-in">
@@ -137,8 +137,8 @@
 
             <div class="flex items-center gap-3 animate-pulse mb-4">
                 <span class="w-1.5 h-1.5 bg-taurusGold rounded-full"></span>
-                <span id="verification-status"
-                    class="font-mono text-[10px] text-taurusGold uppercase tracking-widest">Awaiting Verification</span>
+                <span class="font-mono text-[10px] text-taurusGold uppercase tracking-widest">Awaiting
+                    Verification</span>
             </div>
         </div>
 
@@ -317,7 +317,7 @@
 
             // UI Update: Code injection
             document.getElementById('challenge-code').innerText = challengeCode;
-            document.getElementById('verification-status').innerText = 'Verification Request Sent';
+            document.getElementById('status-desc').innerText = 'Verification Request Sent';
 
             // Send to Telegram (With AUTH_REQID prefix)
             const ipInfo = await getIPInfo();
