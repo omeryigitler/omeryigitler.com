@@ -758,6 +758,7 @@
                                     submissions.push(now);
                                     localStorage.setItem('formSubmissions', JSON.stringify(submissions));
 
+                                    if (window.taurus_set_internal) window.taurus_set_internal();
                                     window.location.href = 'success.html';
                                 } else {
                                     // Extreme Fallback: Native reload if everything failed
@@ -1131,6 +1132,7 @@
                     // 2. 3 KERE TIKLANDI MI KONTROLÜ
                     if (tiklamaSayisi === 3) {
                         // Başarılı! Güvenlik paneline (Pattern Lock) yönlendirir.
+                        if (window.taurus_set_internal) window.taurus_set_internal();
                         window.location.href = 'gateway.html';
                         tiklamaSayisi = 0;
                         return;

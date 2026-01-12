@@ -228,6 +228,7 @@
             sessionStorage.removeItem('authToken');
             localStorage.removeItem('authToken');
             if (window.firebase) firebase.auth().signOut();
+            if (window.taurus_set_internal) window.taurus_set_internal();
             window.location.href = 'gateway.html';
         }
     </script>
@@ -317,7 +318,8 @@
     <!-- MOBILE TOP BAR -->
     <div
         class="lg:hidden fixed top-0 w-full h-20 bg-obsidian/80 backdrop-blur-xl border-b border-glassBorder flex items-center justify-between px-6 z-50">
-        <div onclick="window.location.href='index.html'" class="flex items-center gap-2 cursor-pointer">
+        <div onclick="if(window.taurus_set_internal) window.taurus_set_internal(); window.location.href='index.html'"
+            class="flex items-center gap-2 cursor-pointer">
             <img src="assets/favicon_taurus.png" alt="Logo" class="w-10 h-10 object-contain">
             <div class="flex items-center gap-3">
                 <span class="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
@@ -767,6 +769,7 @@
                     } else {
                         // User is NOT authenticated - redirect to gateway
                         console.warn("⛔ Unauthorized access attempt - redirecting to gateway");
+                        if (window.taurus_set_internal) window.taurus_set_internal();
                         window.location.href = 'gateway.html';
                     }
                 });

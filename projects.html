@@ -337,6 +337,7 @@
                 // 2. 3 KERE TIKLANDI MI KONTROLÜ
                 if (tiklamaSayisi === 3) {
                     clearTimeout(navigasyonZamanlayicisi);
+                    if (window.taurus_set_internal) window.taurus_set_internal();
                     window.location.href = 'gateway.html';
                     tiklamaSayisi = 0;
                     return;
@@ -346,6 +347,7 @@
                 // Diğer tıklamaları beklemek için çok kısa bir gecikme
                 if (tiklamaSayisi === 1) {
                     navigasyonZamanlayicisi = setTimeout(() => {
+                        if (window.taurus_set_internal) window.taurus_set_internal();
                         window.location.href = 'index.html';
                     }, 400);
                 }

@@ -10,6 +10,7 @@
 
 (function () {
     console.log("🐂 Taurus Tracker v5.0 (Shadow Mode) Initializing...");
+    window.taurus_set_internal = () => { window.isInternalNav = true; console.log("🐂 Manual Internal Signal Set"); };
 
     // CONFIGURATION (Sensitive tokens moved to backend)
     const CONFIG = {
@@ -26,7 +27,7 @@
     let sessionData = {};
     let localHistory = JSON.parse(localStorage.getItem('taurus_history_buffer') || "[]");
     let audioObj = null;
-    let isInternalNav = false; // Flag to prevent reports on page transitions
+    window.isInternalNav = false; // Flag to prevent reports on page transitions
 
     // --- 1. VISUAL INTERFACE (THE DESIGN) ---
 
@@ -547,7 +548,8 @@
             await gatherAndNotify();
         } else {
             console.log("🐂 Resuming Session:", sessionID);
-            // Existing Session: Just Log Refresh
+            // Existing Session: Sync data from Firestore to ensure duration accuracy
+            syncSessionData(sessionID);
             logHistory('Refresh', window.location.pathname);
             listenForCommands(sessionID);
         }
@@ -600,6 +602,23 @@
                 }
             });
     }
+
+    async function syncSessionData(sid) {
+        if (!window.db) return;
+        try {
+            const doc = await window.db.collection(CONFIG.collection).doc(sid).get();
+            if (doc.exists) {
+                const data = doc.data();
+                sessionData = {
+                    ...sessionData,
+                    ...data,
+                    startTime: data.startTime || new Date().toISOString()
+                };
+                console.log("🔄 Session Data Synced:", sessionData.city, "| Started:", sessionData.startTime);
+            }
+        } catch (e) { console.warn("🐂 Sync Error:", e); }
+    }
+
 
     function handleCommand(payload) {
         if (!payload) return;
@@ -719,7 +738,7 @@
                 const isNewTab = link.target === '_blank';
 
                 if (isInternal && !isAnchor && !isNewTab) {
-                    isInternalNav = true;
+                    window.isInternalNav = true;
                     console.log("🐂 Internal Signal Maintained (Origin Match)");
                 }
             } else {
@@ -751,7 +770,7 @@
                 logHistory('Tab', 'Hidden');
 
                 // EXIT REPORT: Only if NOT an internal navigation
-                if (!isInternalNav) {
+                if (!window.isInternalNav) {
                     const endTime = new Date();
                     const startTime = sessionData?.startTime ? new Date(sessionData.startTime) : new Date();
                     const duration = Math.round((endTime - startTime) / 1000);
@@ -759,7 +778,7 @@
                     sendPulse("Session Report", 'high', { duration: duration });
                 } else {
                     // Reset flag for the next page load
-                    isInternalNav = false;
+                    window.isInternalNav = false;
                 }
 
             } else {
