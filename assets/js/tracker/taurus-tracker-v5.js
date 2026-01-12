@@ -439,8 +439,6 @@
                 <div style="width: 100%; padding: 1rem; background: #FFD700; color: #000; border-radius: 0.75rem; font-weight: 900; font-size: 2rem; letter-spacing: 0.1em; text-align: center; font-family: 'Syncopate', sans-serif; margin-top: auto; display: flex; align-items: center; justify-content: center; height: 60px; box-shadow: 0 0 20px rgba(255, 215, 0, 0.4);">
                     ${gateCode}
                 </div>
-
-                ${commonFooterHTML}
             `;
         } else {
             // Alarm & Block (Standardized)
@@ -453,7 +451,7 @@
 
                 <h2 class="font-display text-2xl font-bold tracking-widest text-center" style="animation: taurus-pulse-text 2s infinite ease-in-out; margin-bottom: 2rem; line-height: 1.4;">
                     <span style="color: #FFD700;">ACCESS</span><br>
-                    <span style="color: #ef4444;">DETECTED</span>
+                    <span style="color: #FFD700;">${mode === 'block' ? 'DENIED' : 'DETECTED'}</span>
                 </h2>
 
                 <p class="taurus-panel-text" id="taurus-panel-info" style="margin-bottom: 2rem;">
