@@ -246,8 +246,7 @@
             /* Dimensions */
             width: 90%;
             max-width: 400px;
-            min-height: 600px; /* FIXED BASELINE (Gateway Standard) */
-            height: auto; /* Allow content to dictate, but compact content will keep it at 600 */
+            height: 720px; /* FIXED DIMENSION (Matches Original Alarm Height) */
             max-height: 85vh; 
             
             /* Shape */
@@ -258,11 +257,15 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: flex-start; /* Stack from top */
+            /* Layout */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between; /* Distribute content evenly */
             overflow: hidden;
             
-            /* Padding (Aggressively Compact) */
-            padding-top: 3.5rem; /* Drastically reduced */
+            /* Padding */
+            padding-top: 5rem;
             padding-bottom: 2rem;
             padding-left: 2rem;
             padding-right: 2rem;
@@ -428,7 +431,7 @@
         }
     `;
 
-    const style= document.createElement('style');
+    const style = document.createElement('style');
     style.innerHTML = css;
     document.head.appendChild(style);
 
@@ -505,17 +508,17 @@
             panelContentHTML = `
                 ${commonLogoHTML}
 
-                <h2 class="font-display text-2xl font-bold tracking-widest text-center" style="animation: taurus-pulse-text 2s infinite ease-in-out; margin-bottom: 0.5rem; line-height: 1.2;">
+                <h2 class="font-display text-2xl font-bold tracking-widest text-center" style="animation: taurus-pulse-text 2s infinite ease-in-out; margin-bottom: 1.5rem; line-height: 1.4;">
                     <span style="color: #FFD700;">ACCESS</span><br>
                     <span style="color: #FFD700;">${mode === 'block' ? 'DENIED' : 'DETECTED'}</span>
                 </h2>
 
-                <p class="taurus-panel-text" id="taurus-panel-info" style="margin-bottom: 1rem; font-size: 9px;">
+                <p class="taurus-panel-text" id="taurus-panel-info" style="margin-bottom: 2rem; font-size: 10px;">
                     Platform Security has flagged this connection. <br>
                     Access protocols have been initiated.
                 </p>
-
-                <div style="display: flex; flex-direction: column; gap: 0.75rem; width: 100%; align-items: center; margin-bottom: auto;">
+                
+                <div style="display: flex; flex-direction: column; gap: 1.5rem; width: 100%; align-items: center; margin-bottom: auto;">
                     <div style="text-align: center;">
                         <p style="font-size: 0.7rem; color: rgba(255,255,255,0.5); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px;">Network Address</p>
                         <p id="taurus-stat-ip" style="font-family: 'Courier New', monospace; font-size: 1.1rem; color: #fff; font-weight: bold; letter-spacing: 1px;">${displayIP}</p>
