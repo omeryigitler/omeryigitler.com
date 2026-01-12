@@ -480,7 +480,7 @@
         } else {
             // STANDARD MODE STRUCTURE (Unified)
             innerHTMLContent = `
-                <div class="taurus-panel" style="padding-top: 3rem; display: flex; flex-direction: column; align-items: center; width: 100%;">
+                <div class="taurus-panel" style="padding-top: 3rem; display: flex; flex-direction: column; align-items: center; width: 100%; ${(mode === 'gateway' ? 'min-height: 500px; justify-content: center;' : '')}">
                     <!-- Logo Inside Panel -->
                     <div class="taurus-logo-container" style="flex-shrink: 0;">
                         <div class="taurus-ripple-1"></div>
