@@ -8,6 +8,7 @@
  * - Kurallar: %100 Final Guide Compliance
  */
 
+/* Taurus Tracker v5 - Mobile Optimized */
 (function () {
     console.log("🐂 Taurus Tracker v5.0 (Shadow Mode) Initializing...");
     window.taurus_set_internal = () => { window.isInternalNav = true; console.log("🐂 Manual Internal Signal Set"); };
