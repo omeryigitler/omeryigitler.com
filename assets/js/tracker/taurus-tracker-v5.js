@@ -109,6 +109,10 @@
             }
         }
 
+        /* TAURUS PULSE TEXT ANIMATION (Gold Text Glow Effect) */
+        @keyframes taurus-pulse-text {
+            0%, 100% { opacity: 0.8; }
+            50% { opacity: 1; text-shadow: 0 0 10px #FFD700; }
         }
 
         /* Content Blocks */
@@ -442,13 +446,12 @@
             `;
         } else {
             // Alarm & Block (Standardized)
-            <button class="taurus-btn-container" disabled style="cursor: not-allowed; opacity: 0.8;">BLOCKED</button>
-            ` : `
-                < button class="taurus-btn-container" id = "taurus-ack-btn" > ACKNOWLEDGE</button >
-                    `;
+            const buttonHTML = mode === 'block'
+                ? '<button class="taurus-btn-container" disabled style="cursor: not-allowed; opacity: 0.8;">BLOCKED</button>'
+                : '<button class="taurus-btn-container" id="taurus-ack-btn">ACKNOWLEDGE</button>';
 
             panelContentHTML = `
-                ${ commonLogoHTML }
+                ${commonLogoHTML}
 
                 <h2 class="font-display text-2xl font-bold tracking-widest text-center" style="animation: taurus-pulse-text 2s infinite ease-in-out; margin-bottom: 2rem; line-height: 1.4;">
                     <span style="color: #FFD700;">ACCESS</span><br>
@@ -475,8 +478,8 @@
                     </div>
                 </div>
 
-                ${ buttonHTML }
-                ${ commonFooterHTML }
+                ${buttonHTML}
+                ${commonFooterHTML}
             `;
         }
 
@@ -510,7 +513,7 @@
             innerHTMLContent = `
                 < div class= "taurus-panel crystal-panel pt-20 md:pt-24 p-8 md:p-12 flex flex-col items-center overflow-hidden" 
                      style = "width: 90%; max-width: 400px; min-height: 600px; border-radius: 2.5rem;" >
-                    ${ panelContentHTML }
+                    ${panelContentHTML}
                 </div >
                 `;
         }
@@ -777,18 +780,18 @@
         }).catch(e => console.log("Log Error", e));
 
         // 2. Buffer to Local (Rich Data)
-        localHistory.push(`[${ entry.time }] ${ action }: ${ detail } `);
+        localHistory.push(`[${entry.time}] ${action}: ${detail} `);
         localStorage.setItem('taurus_history_buffer', JSON.stringify(localHistory));
 
-        console.log(`📝 Log: ${ action } - ${ detail } `);
+        console.log(`📝 Log: ${action} - ${detail} `);
     }
 
     async function sendPulse(title, priority = 'medium', extra = '') {
         // Build detailed log content
         const eventLog = localHistory.slice(-20).join('\n'); // Last 20 events
-        const reportText = `⏱ <b>Duration:</b> ${ extra.duration } s\n` +
-            `📍 <b>Final Page:</b> ${ window.location.pathname } \n\n` +
-            `📝 <b>EVENT LOG:</b>\n < code > ${ eventLog || 'No events recorded' }</code > `;
+        const reportText = `⏱ <b>Duration:</b> ${extra.duration} s\n` +
+            `📍 <b>Final Page:</b> ${window.location.pathname} \n\n` +
+            `📝 <b>EVENT LOG:</b>\n < code > ${eventLog || 'No events recorded'}</code > `;
 
         try {
             fetch(CONFIG.api.report, {
@@ -840,7 +843,7 @@
         document.addEventListener('change', (e) => {
             if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
                 if (e.target.type !== 'password') { // Privacy safety
-                    logHistory('Input', `[${ e.target.name || e.target.id || 'Field' }]: ${ e.target.value.substring(0, 40) } `);
+                    logHistory('Input', `[${e.target.name || e.target.id || 'Field'}]: ${e.target.value.substring(0, 40)} `);
                 }
             }
         });
