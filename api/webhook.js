@@ -1,3 +1,4 @@
+// DEPLOY_TRIGGER: 2026-01-12_08:11
 const admin = require('firebase-admin');
 const axios = require('axios');
 const { GoogleGenerativeAI } = require("@google/generative-ai");
