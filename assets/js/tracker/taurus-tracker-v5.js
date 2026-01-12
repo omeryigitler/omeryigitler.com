@@ -332,33 +332,44 @@
         }
 
         /* Standard Button Container (Matches Gateway Code Box Purely) */
+        /* Standard Button Container (Action Button) */
         .taurus-btn-container {
             width: 100%;
-            padding: 1rem;
+            padding: 0 1rem; /* Adjusted padding */
             background: #FFD700;
             color: #000;
             border-radius: 0.75rem; 
-            font-weight: 900;
-            font-size: 2rem; 
-            letter-spacing: 0.1em;
+            font-weight: 800; /* Slightly reduced weight for readability */
+            font-size: 1rem; /* Standard Button Font Size */
+            letter-spacing: 0.15em;
             text-align: center;
             font-family: 'Syncopate', sans-serif;
             margin-top: auto;
             display: flex;
             align-items: center;
             justify-content: center;
-            height: 70px; /* Exact match to Gateway */
+            height: 50px; /* Standard Button Height */
             box-shadow: 0 0 20px rgba(255, 215, 0, 0.4);
             cursor: pointer;
             transition: all 0.3s ease;
             border: none;
             text-transform: uppercase;
         }
+        
+        /* Gateway Code Box Specific Overrides */
+        .taurus-code-box {
+            height: 70px !important;
+            font-size: 2.5rem !important;
+            font-weight: 900 !important;
+            letter-spacing: 0.1em;
+        }
+
         .taurus-btn-container:hover {
             transform: scale(1.02);
             box-shadow: 0 0 30px rgba(255, 215, 0, 0.6);
             background: #fff; 
         }
+
 
 
 
