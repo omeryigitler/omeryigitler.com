@@ -15,7 +15,8 @@ window.systemAlert = (title, message, icon = 'info') => {
 
         // Hard Reset
         modal.classList.add('hidden');
-        modal.classList.remove('flex', 'opacity-0');
+        modal.classList.remove('flex');
+        content.classList.remove('scale-100', 'opacity-100');
         content.classList.add('scale-95', 'opacity-0');
 
         document.getElementById('modal-title').innerText = title || "SYSTEM ALERT";
@@ -30,18 +31,19 @@ window.systemAlert = (title, message, icon = 'info') => {
         modal.classList.remove('hidden');
         modal.classList.add('flex');
 
-        // Use requestAnimationFrame for smoother entry on mobile
+        // Use requestAnimationFrame for smoother entry
         requestAnimationFrame(() => {
             setTimeout(() => {
                 content.classList.remove('scale-95', 'opacity-0');
                 content.classList.add('scale-100', 'opacity-100');
-            }, 50);
+            }, 10);
         });
 
         if (window.lucide) lucide.createIcons();
 
         const btn = document.getElementById('modal-confirm-btn');
         btn.onclick = () => {
+            content.classList.remove('scale-100', 'opacity-100');
             content.classList.add('scale-95', 'opacity-0');
             setTimeout(() => {
                 modal.classList.add('hidden');
@@ -64,7 +66,8 @@ window.systemConfirm = (title, message, icon = 'help-circle') => {
 
         // Hard Reset
         modal.classList.add('hidden');
-        modal.classList.remove('flex', 'opacity-0');
+        modal.classList.remove('flex');
+        content.classList.remove('scale-100', 'opacity-100');
         content.classList.add('scale-95', 'opacity-0');
 
         document.getElementById('modal-title').innerText = title || "CONFIRMATION REQUIRED";
@@ -79,17 +82,17 @@ window.systemConfirm = (title, message, icon = 'help-circle') => {
         modal.classList.remove('hidden');
         modal.classList.add('flex');
 
-        // Use requestAnimationFrame for smoother entry on mobile
         requestAnimationFrame(() => {
             setTimeout(() => {
                 content.classList.remove('scale-95', 'opacity-0');
                 content.classList.add('scale-100', 'opacity-100');
-            }, 50);
+            }, 10);
         });
 
         if (window.lucide) lucide.createIcons();
 
         document.getElementById('modal-confirm-btn').onclick = () => {
+            content.classList.remove('scale-100', 'opacity-100');
             content.classList.add('scale-95', 'opacity-0');
             setTimeout(() => {
                 modal.classList.add('hidden');
@@ -99,6 +102,7 @@ window.systemConfirm = (title, message, icon = 'help-circle') => {
         };
 
         document.getElementById('modal-cancel-btn').onclick = () => {
+            content.classList.remove('scale-100', 'opacity-100');
             content.classList.add('scale-95', 'opacity-0');
             setTimeout(() => {
                 modal.classList.add('hidden');
