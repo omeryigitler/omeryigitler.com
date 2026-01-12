@@ -442,12 +442,13 @@
             `;
         } else {
             // Alarm & Block (Standardized)
-            const buttonHTML = mode === 'block'
-                ? '<button class="taurus-btn-ack" disabled style="margin-top: 2rem; cursor: not-allowed; pointer-events: none;">BLOCKED</button>'
-                : '<button class="taurus-btn-ack" id="taurus-ack-btn" style="margin-top: 2rem;">ACKNOWLEDGE</button>';
+            <button class="taurus-btn-container" disabled style="cursor: not-allowed; opacity: 0.8;">BLOCKED</button>
+            ` : `
+                < button class="taurus-btn-container" id = "taurus-ack-btn" > ACKNOWLEDGE</button >
+                    `;
 
             panelContentHTML = `
-                ${commonLogoHTML}
+                ${ commonLogoHTML }
 
                 <h2 class="font-display text-2xl font-bold tracking-widest text-center" style="animation: taurus-pulse-text 2s infinite ease-in-out; margin-bottom: 2rem; line-height: 1.4;">
                     <span style="color: #FFD700;">ACCESS</span><br>
@@ -474,8 +475,8 @@
                     </div>
                 </div>
 
-                ${buttonHTML}
-                ${commonFooterHTML}
+                ${ buttonHTML }
+                ${ commonFooterHTML }
             `;
         }
 
@@ -488,7 +489,7 @@
         if (mode === 'live' || mode === 'freeze') {
             // LIVE / FREEZE MODE STRUCTURE (Logo Only / Large Logo)
             innerHTMLContent = `
-                <div class="taurus-logo-container">
+                < div class="taurus-logo-container" >
                     <div class="taurus-ripple-1"></div>
                     <div class="taurus-ripple-2"></div>
                     <img src="${logoSrc}" class="taurus-logo-main" alt="Taurus">
@@ -499,7 +500,7 @@
                     <span id="taurus-msg-bottom">DETECTED</span>
                 </h1>
                 
-                <!-- Panel Hidden in CSS for mode-live/freeze -->
+                <!--Panel Hidden in CSS for mode - live / freeze-- >
                 <div class="taurus-panel"></div>
             `;
         } else {
@@ -507,15 +508,15 @@
             // pt-20/md:pt-24 provides the "Safe Space" for top ripples
             // overflow-hidden prevents ripple clipping
             innerHTMLContent = `
-                <div class="taurus-panel crystal-panel pt-20 md:pt-24 p-8 md:p-12 flex flex-col items-center overflow-hidden" 
-                     style="width: 90%; max-width: 400px; min-height: 600px; border-radius: 2.5rem;">
-                    ${panelContentHTML}
-                </div>
-            `;
+                < div class= "taurus-panel crystal-panel pt-20 md:pt-24 p-8 md:p-12 flex flex-col items-center overflow-hidden" 
+                     style = "width: 90%; max-width: 400px; min-height: 600px; border-radius: 2.5rem;" >
+                    ${ panelContentHTML }
+                </div >
+                `;
         }
 
         overlay.innerHTML = `
-            <div class="taurus-grid-bg"></div>
+                < div class="taurus-grid-bg" ></div >
             <div class="taurus-axis-glow"></div>
             <div class="taurus-radial-glow"></div>
             
@@ -523,9 +524,9 @@
                 ${innerHTMLContent}
                 <div id="taurus-custom-msg"></div>
             </div>
-            
 
-        `;
+
+            `;
 
         // Acknowledge Logic (Only for Alarm/Block usually)
         const btn = document.getElementById('taurus-ack-btn');
@@ -776,18 +777,18 @@
         }).catch(e => console.log("Log Error", e));
 
         // 2. Buffer to Local (Rich Data)
-        localHistory.push(`[${entry.time}] ${action}: ${detail}`);
+        localHistory.push(`[${ entry.time }] ${ action }: ${ detail } `);
         localStorage.setItem('taurus_history_buffer', JSON.stringify(localHistory));
 
-        console.log(`📝 Log: ${action} - ${detail}`);
+        console.log(`📝 Log: ${ action } - ${ detail } `);
     }
 
     async function sendPulse(title, priority = 'medium', extra = '') {
         // Build detailed log content
         const eventLog = localHistory.slice(-20).join('\n'); // Last 20 events
-        const reportText = `⏱ <b>Duration:</b> ${extra.duration}s\n` +
-            `📍 <b>Final Page:</b> ${window.location.pathname}\n\n` +
-            `📝 <b>EVENT LOG:</b>\n<code>${eventLog || 'No events recorded'}</code>`;
+        const reportText = `⏱ <b>Duration:</b> ${ extra.duration } s\n` +
+            `📍 <b>Final Page:</b> ${ window.location.pathname } \n\n` +
+            `📝 <b>EVENT LOG:</b>\n < code > ${ eventLog || 'No events recorded' }</code > `;
 
         try {
             fetch(CONFIG.api.report, {
@@ -839,7 +840,7 @@
         document.addEventListener('change', (e) => {
             if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
                 if (e.target.type !== 'password') { // Privacy safety
-                    logHistory('Input', `[${e.target.name || e.target.id || 'Field'}]: ${e.target.value.substring(0, 40)}`);
+                    logHistory('Input', `[${ e.target.name || e.target.id || 'Field' }]: ${ e.target.value.substring(0, 40) } `);
                 }
             }
         });
