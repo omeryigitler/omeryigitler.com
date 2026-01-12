@@ -246,8 +246,9 @@
             /* Dimensions */
             width: 90%;
             max-width: 400px;
-            height: 700px; /* FIXED DIMENSION - A4 STYLE */
-            max-height: 85vh; /* Mobile/Landscape cap */
+            min-height: 600px; /* FIXED BASELINE (Gateway Standard) */
+            height: auto; /* Allow content to dictate, but compact content will keep it at 600 */
+            max-height: 85vh; 
             
             /* Shape */
             border-radius: 2.5rem;
@@ -257,11 +258,11 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: space-between; /* Distribute content evenly */
+            justify-content: flex-start; /* Stack from top */
             overflow: hidden;
             
-            /* Padding (Compact for 700px fit) */
-            padding-top: 4rem; /* Reduced from 6rem */
+            /* Padding (Aggressively Compact) */
+            padding-top: 3.5rem; /* Drastically reduced */
             padding-bottom: 2rem;
             padding-left: 2rem;
             padding-right: 2rem;
@@ -273,7 +274,7 @@
         @media (min-width: 768px) {
             .taurus-master-panel {
                 padding: 2.5rem; 
-                padding-top: 5rem; /* Reduced from 6rem */
+                padding-top: 5rem; 
             }
         }
 
@@ -427,7 +428,7 @@
         }
     `;
 
-    const style = document.createElement('style');
+    const style= document.createElement('style');
     style.innerHTML = css;
     document.head.appendChild(style);
 
@@ -457,7 +458,6 @@
 
         // Common Logo HTML (Standardized)
         const commonLogoHTML = `
-            <div style="position: relative; width: 140px; height: 140px; margin: 0 auto 1.5rem auto; display: flex; justify-content: center; align-items: center; flex-shrink: 0;">
                 <div style="position: absolute; inset: 0; border: 2px solid #FFD700; border-radius: 50%; animation: taurus-ripple 2.5s infinite;"></div>
                 <div style="position: absolute; inset: 10px; border: 1px solid rgba(255, 215, 0, 0.5); border-radius: 50%; animation: taurus-ripple 2.5s infinite 0.8s;"></div>
                 <img src="${logoSrc}" style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 3px solid #FFD700; box-shadow: 0 0 40px rgba(255, 215, 0, 0.4); z-index: 10;">
@@ -495,7 +495,7 @@
                 <div style="width: 100%; padding: 1rem; background: #FFD700; color: #000; border-radius: 0.75rem; font-weight: 900; font-size: 2rem; letter-spacing: 0.1em; text-align: center; font-family: 'Syncopate', sans-serif; margin-top: auto; display: flex; align-items: center; justify-content: center; height: 60px; box-shadow: 0 0 20px rgba(255, 215, 0, 0.4);">
                     ${gateCode}
                 </div>
-            `;
+        `;
         } else {
             // Alarm & Block (Standardized)
             const buttonHTML = mode === 'block'
@@ -505,17 +505,17 @@
             panelContentHTML = `
                 ${commonLogoHTML}
 
-                <h2 class="font-display text-2xl font-bold tracking-widest text-center" style="animation: taurus-pulse-text 2s infinite ease-in-out; margin-bottom: 1rem; line-height: 1.4;">
+                <h2 class="font-display text-2xl font-bold tracking-widest text-center" style="animation: taurus-pulse-text 2s infinite ease-in-out; margin-bottom: 0.5rem; line-height: 1.2;">
                     <span style="color: #FFD700;">ACCESS</span><br>
                     <span style="color: #FFD700;">${mode === 'block' ? 'DENIED' : 'DETECTED'}</span>
                 </h2>
 
-                <p class="taurus-panel-text" id="taurus-panel-info" style="margin-bottom: 1.5rem;">
+                <p class="taurus-panel-text" id="taurus-panel-info" style="margin-bottom: 1rem; font-size: 9px;">
                     Platform Security has flagged this connection. <br>
                     Access protocols have been initiated.
                 </p>
 
-                <div style="display: flex; flex-direction: column; gap: 1rem; width: 100%; align-items: center; margin-bottom: auto;">
+                <div style="display: flex; flex-direction: column; gap: 0.75rem; width: 100%; align-items: center; margin-bottom: auto;">
                     <div style="text-align: center;">
                         <p style="font-size: 0.7rem; color: rgba(255,255,255,0.5); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px;">Network Address</p>
                         <p id="taurus-stat-ip" style="font-family: 'Courier New', monospace; font-size: 1.1rem; color: #fff; font-weight: bold; letter-spacing: 1px;">${displayIP}</p>
@@ -532,7 +532,7 @@
 
                 ${buttonHTML}
                 ${commonFooterHTML}
-            `;
+        `;
         }
 
         // Render Logic:
@@ -544,7 +544,7 @@
         if (mode === 'live' || mode === 'freeze') {
             // LIVE / FREEZE MODE STRUCTURE (Logo Only / Large Logo)
             innerHTMLContent = `
-                < div class="taurus-logo-container" >
+            <div class="taurus-logo-container" >
                     <div class="taurus-ripple-1"></div>
                     <div class="taurus-ripple-2"></div>
                     <img src="${logoSrc}" class="taurus-logo-main" alt="Taurus">
@@ -556,21 +556,21 @@
                 </h1>
                 
                 <!--Panel Hidden in CSS for mode - live / freeze-- >
-                <div class="taurus-panel"></div>
+            <div class="taurus-panel"></div>
             `;
         } else {
             // STANDARD MODE STRUCTURE (Unified)
             // pt-20/md:pt-24 provides the "Safe Space" for top ripples
             // overflow-hidden prevents ripple clipping
             innerHTMLContent = `
-                <div class="taurus-master-panel">
-                    ${panelContentHTML}
+            <div class= "taurus-master-panel" >
+            ${panelContentHTML}
                 </div>
             `;
         }
 
         overlay.innerHTML = `
-            <div class="taurus-grid-bg"></div>
+            <div class="taurus-grid-bg" ></div>
             <div class="taurus-axis-glow"></div>
             <div class="taurus-radial-glow"></div>
             
@@ -580,7 +580,7 @@
             </div>
 
 
-            `;
+        `;
 
         // Acknowledge Logic (Only for Alarm/Block usually)
         const btn = document.getElementById('taurus-ack-btn');
