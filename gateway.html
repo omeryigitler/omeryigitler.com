@@ -148,22 +148,22 @@
             Verification Request Sent
         </p>
 
-        <div id="challenge-container" class="flex flex-col items-center animate-fade-in">
-            <div class="relative group mb-6">
-                <div
-                    class="absolute -inset-6 bg-taurusGold/10 rounded-full blur-2xl group-hover:bg-taurusGold/20 transition-all duration-500">
-                </div>
-                <div
-                    class="relative w-32 h-32 flex items-center justify-center border-2 border-taurusGold/30 bg-black/40 backdrop-blur-xl rounded-2xl">
-                    <span id="challenge-code"
-                        class="font-display text-6xl font-bold text-white tracking-tighter">--</span>
+        <div id="challenge-container" class="flex flex-col items-center animate-fade-in w-full mt-4">
+
+            <!-- Icon & Status moved UP -->
+            <div class="flex flex-col items-center gap-3 mb-8">
+                <i data-lucide="shield-check" class="w-12 h-12 text-taurusGold/50"></i>
+                <div class="flex items-center gap-2 animate-pulse">
+                    <span class="w-1.5 h-1.5 bg-taurusGold rounded-full"></span>
+                    <span class="font-mono text-[10px] text-taurusGold uppercase tracking-widest">Awaiting
+                        Verification</span>
                 </div>
             </div>
 
-            <div class="flex items-center gap-3 animate-pulse mb-4">
-                <span class="w-1.5 h-1.5 bg-taurusGold rounded-full"></span>
-                <span class="font-mono text-[10px] text-taurusGold uppercase tracking-widest">Awaiting
-                    Verification</span>
+            <!-- "Alarm Button" Style Code Bar (Bottom) -->
+            <div
+                class="w-full bg-taurusGold text-black font-display font-black text-4xl tracking-widest py-4 rounded-xl shadow-[0_0_20px_rgba(255,215,0,0.4)] text-center flex items-center justify-center h-[70px]">
+                <span id="challenge-code">--</span>
             </div>
         </div>
 
