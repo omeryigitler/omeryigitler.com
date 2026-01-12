@@ -711,16 +711,16 @@
             if (link) {
                 logHistory('Navigation', link.href);
                 // Detect internal navigation to prevent exit report
-                // 1. Must be internal host 
-                // 2. Must NOT be a fragment link (#)
-                // 3. Must NOT be target="_blank"
-                const isInternal = (link.host === window.location.host || link.href.startsWith('/') || link.href.startsWith('./'));
-                const isFragment = link.getAttribute('href').startsWith('#');
+                // 1. Must be same origin (protocol + host)
+                // 2. Must NOT be a simple #anchor tracking (staying on same page)
+                // 3. Must NOT be target="_blank" (opening new tab/window)
+                const isInternal = link.origin === window.location.origin;
+                const isAnchor = link.getAttribute('href')?.startsWith('#');
                 const isNewTab = link.target === '_blank';
 
-                if (isInternal && !isFragment && !isNewTab) {
+                if (isInternal && !isAnchor && !isNewTab) {
                     isInternalNav = true;
-                    console.log("🐂 Internal Signal Maintained");
+                    console.log("🐂 Internal Signal Maintained (Origin Match)");
                 }
             } else {
                 const target = e.target.innerText ? e.target.innerText.substring(0, 20) : e.target.tagName;
