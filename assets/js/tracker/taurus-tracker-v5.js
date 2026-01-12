@@ -42,6 +42,7 @@
         #taurus-overlay {
             position: fixed;
             inset: 0;
+            height: 100dvh; /* Enforce Dynamic Viewport Height on Parent */
             z-index: 9999999;
             background: #050505;
             display: none;
@@ -118,8 +119,11 @@
             display: flex;
             flex-direction: column;
             align-items: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
             justify-content: center; 
-            min-height: 100dvh; /* Dynamic Viewport Height for Mobile Centering */
+            /* min-height removed to allow parent flex centering to work */
             padding-left: 1rem; padding-right: 1rem;
         }
 
