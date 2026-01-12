@@ -304,24 +304,36 @@
             50% { opacity: 1; }
         }
 
-        .taurus-btn-ack {
-            margin-top: 2rem;
+        /* Standard Button Container (Matches Gateway Code Box Purely) */
+        .taurus-btn-container {
+            width: 100%;
+            padding: 1rem;
             background: #FFD700;
             color: #000;
-            border: none;
-            padding: 10px 0;
-            border-radius: 50px;
+            border-radius: 0.75rem; 
+            font-weight: 900;
+            font-size: 2rem; 
+            letter-spacing: 0.1em;
+            text-align: center;
             font-family: 'Syncopate', sans-serif;
-            font-weight: 700;
-            font-size: 0.65rem;
-            letter-spacing: 0.2em;
+            margin-top: auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 70px; /* Exact match to Gateway */
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.4);
             cursor: pointer;
-            width: 100%;
             transition: all 0.3s ease;
+            border: none;
             text-transform: uppercase;
         }
+        .taurus-btn-container:hover {
+            transform: scale(1.02);
+            box-shadow: 0 0 30px rgba(255, 215, 0, 0.6);
+            background: #fff; 
+        }
 
-        .taurus-btn-ack:hover { background: #fff; transform: translateY(-1px); }
+
 
         @media (min-width: 768px) {
             .taurus-title span:first-child, .taurus-title span:last-child { font-size: 1.8rem; }
