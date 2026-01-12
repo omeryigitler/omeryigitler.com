@@ -119,7 +119,7 @@
             flex-direction: column;
             align-items: center;
             justify-content: center; 
-            min-height: 100vh; /* Ensure full viewport height focus */
+            min-height: 100dvh; /* Dynamic Viewport Height for Mobile Centering */
             padding-left: 1rem; padding-right: 1rem;
         }
 
