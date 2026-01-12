@@ -408,24 +408,18 @@
                     VERIFICATION REQUEST SENT
                 </p>
 
-                <div style="display: flex; flex-direction: column; gap: 1.5rem; width: 100%; align-items: center; flex: 1; justify-content: center;">
-                    
-                    <!-- Code Box (Visual Anchor to match Alarm Height) -->
-                    <div style="border: 1px solid rgba(255,215,0,0.3); border-radius: 20px; padding: 2rem 3rem; background: rgba(255,215,0,0.05); box-shadow: 0 0 20px rgba(255,215,0,0.05);">
-                        <h2 style="font-family:'Syncopate', sans-serif; font-size:4rem; text-align:center; color:#fff; letter-spacing:0.1em; margin: 0; line-height: 1;">
-                            ${gateCode}
-                        </h2>
-                    </div>
-
-                    <div style="text-align: center; margin-top: 1rem;">
+                <div style="display: flex; flex-direction: column; gap: 1rem; width: 100%; align-items: center; flex: 1; justify-content: center;">
+                    <i data-lucide="shield-check" style="color: rgba(255,215,0,0.5); width: 48px; height: 48px;"></i>
+                    <div style="text-align: center;">
                         <p style="font-size: 0.7rem; color: rgba(255,255,255,0.5); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px;">Awaiting Verification</p>
-                        <p class="animate-pulse" style="font-size:9px; color:#FFD700;">ID: ${sessionID?.substring(0, 8) || 'Init'}</p>
+                        <p style="font-size:9px; color:#FFD700; font-family: monospace;">SESSION ID: ${sessionID?.substring(0, 8) || 'Init'}</p>
                     </div>
-
                 </div>
                 
-                <!-- Spacer to match Button height/margin -->
-                <div style="height: 60px; margin-top: 2rem;"></div>
+                <!-- Code Box Styled EXACTLY like the Alarm Button (Bottom Anchor) -->
+                <div style="width: 100%; padding: 1rem; background: #FFD700; color: #000; border-radius: 0.75rem; font-weight: 900; font-size: 2rem; letter-spacing: 0.1em; text-align: center; font-family: 'Syncopate', sans-serif; margin-top: auto; display: flex; align-items: center; justify-content: center; height: 60px; box-shadow: 0 0 20px rgba(255, 215, 0, 0.4);">
+                    ${gateCode}
+                </div>
             `;
         } else {
             // Alarm & Block (Standard IP View) - Differentiated by button functionality
