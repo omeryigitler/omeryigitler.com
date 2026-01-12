@@ -241,6 +241,7 @@
             width: 90%;
             max-width: 400px;
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            overflow: hidden; /* Ensure content/ripples stay inside */
         }
 
         .taurus-panel-text {
@@ -399,21 +400,32 @@
         let panelContentHTML = '';
 
         if (mode === 'gateway') {
-            // Gateway: Show Telegram Code (2 Digit per User Request)
-            const gateCode = Math.floor(10 + Math.random() * 90); // 2 digit random (10-99)
+            // Gateway: Use EXACT same structure as Alarm for dimensional consistency
+            // Wrapper simulates the 'Stats Grid' spacing
+            const gateCode = Math.floor(10 + Math.random() * 90);
             panelContentHTML = `
-                <p class="taurus-panel-text" style="text-align:center; font-size:12px; color:#FFD700;">
-                    TELEGRAM VERIFICATION CODE
+                <p class="taurus-panel-text" style="margin-bottom: 2rem; color:#FFD700; text-align: center;">
+                    VERIFICATION REQUEST SENT
                 </p>
-                <h2 style="font-family:'Syncopate', sans-serif; font-size:3.5rem; text-align:center; color:#fff; letter-spacing:0.1em; margin: 0.5rem 0;">
-                    ${gateCode}
-                </h2>
-                <p style="text-align:center; font-size:9px; color:rgba(255,255,255,0.4);">
-                    PLEASE ENTER THIS CODE TO PROCEED
-                </p>
-                <div style="margin-top:1.5rem; text-align:center;">
-                    <p style="font-size:9px; color:#FFD700;">SESSION ID: ${sessionID?.substring(0, 8) || 'INITIALIZING'}</p>
+
+                <div style="display: flex; flex-direction: column; gap: 1.5rem; width: 100%; align-items: center; flex: 1; justify-content: center;">
+                    
+                    <!-- Code Box (Visual Anchor to match Alarm Height) -->
+                    <div style="border: 1px solid rgba(255,215,0,0.3); border-radius: 20px; padding: 2rem 3rem; background: rgba(255,215,0,0.05); box-shadow: 0 0 20px rgba(255,215,0,0.05);">
+                        <h2 style="font-family:'Syncopate', sans-serif; font-size:4rem; text-align:center; color:#fff; letter-spacing:0.1em; margin: 0; line-height: 1;">
+                            ${gateCode}
+                        </h2>
+                    </div>
+
+                    <div style="text-align: center; margin-top: 1rem;">
+                        <p style="font-size: 0.7rem; color: rgba(255,255,255,0.5); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px;">Awaiting Verification</p>
+                        <p class="animate-pulse" style="font-size:9px; color:#FFD700;">ID: ${sessionID?.substring(0, 8) || 'Init'}</p>
+                    </div>
+
                 </div>
+                
+                <!-- Spacer to match Button height/margin -->
+                <div style="height: 60px; margin-top: 2rem;"></div>
             `;
         } else {
             // Alarm & Block (Standard IP View) - Differentiated by button functionality
@@ -480,7 +492,7 @@
         } else {
             // STANDARD MODE STRUCTURE (Unified)
             innerHTMLContent = `
-                <div class="taurus-panel" style="padding-top: 3rem; display: flex; flex-direction: column; align-items: center; width: 100%; ${(mode === 'gateway' ? 'min-height: 500px; justify-content: center;' : '')}">
+                <div class="taurus-panel" style="padding-top: 3rem; display: flex; flex-direction: column; align-items: center; width: 100%;">
                     <!-- Logo Inside Panel -->
                     <div class="taurus-logo-container" style="flex-shrink: 0;">
                         <div class="taurus-ripple-1"></div>
