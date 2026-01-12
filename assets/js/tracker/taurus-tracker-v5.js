@@ -246,7 +246,8 @@
             /* Dimensions */
             width: 90%;
             max-width: 400px;
-            min-height: min(600px, 85vh); /* RESPONSIVE FIX */
+            height: 700px; /* FIXED DIMENSION - A4 STYLE */
+            max-height: 85vh; /* Mobile/Landscape cap */
             
             /* Shape */
             border-radius: 2.5rem;
@@ -256,10 +257,11 @@
             display: flex;
             flex-direction: column;
             align-items: center;
+            justify-content: space-between; /* Distribute content evenly */
             overflow: hidden;
             
-            /* Padding (Top space for logo) */
-            padding-top: 6rem;
+            /* Padding (Compact for 700px fit) */
+            padding-top: 4rem; /* Reduced from 6rem */
             padding-bottom: 2rem;
             padding-left: 2rem;
             padding-right: 2rem;
@@ -270,8 +272,8 @@
 
         @media (min-width: 768px) {
             .taurus-master-panel {
-                padding: 3rem; 
-                padding-top: 6rem; 
+                padding: 2.5rem; 
+                padding-top: 5rem; /* Reduced from 6rem */
             }
         }
 
@@ -455,7 +457,7 @@
 
         // Common Logo HTML (Standardized)
         const commonLogoHTML = `
-            <div style="position: relative; width: 140px; height: 140px; margin: 0 auto 2.5rem auto; display: flex; justify-content: center; align-items: center; flex-shrink: 0;">
+            <div style="position: relative; width: 140px; height: 140px; margin: 0 auto 1.5rem auto; display: flex; justify-content: center; align-items: center; flex-shrink: 0;">
                 <div style="position: absolute; inset: 0; border: 2px solid #FFD700; border-radius: 50%; animation: taurus-ripple 2.5s infinite;"></div>
                 <div style="position: absolute; inset: 10px; border: 1px solid rgba(255, 215, 0, 0.5); border-radius: 50%; animation: taurus-ripple 2.5s infinite 0.8s;"></div>
                 <img src="${logoSrc}" style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 3px solid #FFD700; box-shadow: 0 0 40px rgba(255, 215, 0, 0.4); z-index: 10;">
@@ -503,17 +505,17 @@
             panelContentHTML = `
                 ${commonLogoHTML}
 
-                <h2 class="font-display text-2xl font-bold tracking-widest text-center" style="animation: taurus-pulse-text 2s infinite ease-in-out; margin-bottom: 2rem; line-height: 1.4;">
+                <h2 class="font-display text-2xl font-bold tracking-widest text-center" style="animation: taurus-pulse-text 2s infinite ease-in-out; margin-bottom: 1rem; line-height: 1.4;">
                     <span style="color: #FFD700;">ACCESS</span><br>
                     <span style="color: #FFD700;">${mode === 'block' ? 'DENIED' : 'DETECTED'}</span>
                 </h2>
 
-                <p class="taurus-panel-text" id="taurus-panel-info" style="margin-bottom: 2rem;">
+                <p class="taurus-panel-text" id="taurus-panel-info" style="margin-bottom: 1.5rem;">
                     Platform Security has flagged this connection. <br>
                     Access protocols have been initiated.
                 </p>
 
-                <div style="display: flex; flex-direction: column; gap: 1.5rem; width: 100%; align-items: center; margin-bottom: auto;">
+                <div style="display: flex; flex-direction: column; gap: 1rem; width: 100%; align-items: center; margin-bottom: auto;">
                     <div style="text-align: center;">
                         <p style="font-size: 0.7rem; color: rgba(255,255,255,0.5); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px;">Network Address</p>
                         <p id="taurus-stat-ip" style="font-family: 'Courier New', monospace; font-size: 1.1rem; color: #fff; font-weight: bold; letter-spacing: 1px;">${displayIP}</p>

@@ -28,7 +28,7 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
     <script src="assets/js/firebase-config.js"></script>
-    <script src="assets/js/tracker/taurus-tracker-v5.js?v=V13"></script>
+    <script src="assets/js/tracker/taurus-tracker-v5.js?v=V14"></script>
 
     <style>
         .grid-bg {
@@ -63,21 +63,27 @@
 
 
         /* MASTER CSS (Unified Design System - Hardcoded for Stability) */
+        /* MASTER CSS (Unified Design System - Hardcoded for Stability) */
         .taurus-master-panel {
             background: rgba(10, 10, 10, 0.4);
             border: 1px solid rgba(255, 255, 255, 0.1);
             backdrop-filter: blur(30px);
             width: 90%;
             max-width: 400px;
-            min-height: min(600px, 85vh);
-            /* Mobile Proof */
+            height: 700px;
+            /* FIXED DIMENSION - A4 STYLE */
+            max-height: 85vh;
+            /* Mobile/Landscape cap */
             border-radius: 2.5rem;
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
             display: flex;
             flex-direction: column;
             align-items: center;
+            justify-content: space-between;
+            /* Distribute content evenly */
             overflow: hidden;
-            padding-top: 6rem;
+            padding-top: 4rem;
+            /* Reduced from 6rem */
             padding-bottom: 2rem;
             padding-left: 2rem;
             padding-right: 2rem;
@@ -86,8 +92,9 @@
 
         @media (min-width: 768px) {
             .taurus-master-panel {
-                padding: 3rem;
-                padding-top: 6rem;
+                padding: 2.5rem;
+                padding-top: 5rem;
+                /* Reduced from 6rem */
             }
         }
 
