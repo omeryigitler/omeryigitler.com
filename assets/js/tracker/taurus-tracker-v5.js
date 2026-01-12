@@ -511,15 +511,15 @@
             // pt-20/md:pt-24 provides the "Safe Space" for top ripples
             // overflow-hidden prevents ripple clipping
             innerHTMLContent = `
-                < div class= "taurus-panel crystal-panel pt-20 md:pt-24 p-8 md:p-12 flex flex-col items-center overflow-hidden" 
-                     style = "width: 90%; max-width: 400px; min-height: 600px; border-radius: 2.5rem;" >
+                <div class="taurus-panel crystal-panel pt-20 md:pt-24 p-8 md:p-12 flex flex-col items-center overflow-hidden" 
+                     style="width: 90%; max-width: 400px; min-height: 600px; border-radius: 2.5rem;">
                     ${panelContentHTML}
-                </div >
-                `;
+                </div>
+            `;
         }
 
         overlay.innerHTML = `
-                < div class="taurus-grid-bg" ></div >
+            <div class="taurus-grid-bg"></div>
             <div class="taurus-axis-glow"></div>
             <div class="taurus-radial-glow"></div>
             
