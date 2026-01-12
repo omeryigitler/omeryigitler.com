@@ -457,6 +457,7 @@
 
         // Common Logo HTML (Standardized)
         const commonLogoHTML = `
+            <div style="position: relative; width: 140px; height: 140px; margin: 0 auto 1.5rem auto; display: flex; justify-content: center; align-items: center; flex-shrink: 0;">
                 <div style="position: absolute; inset: 0; border: 2px solid #FFD700; border-radius: 50%; animation: taurus-ripple 2.5s infinite;"></div>
                 <div style="position: absolute; inset: 10px; border: 1px solid rgba(255, 215, 0, 0.5); border-radius: 50%; animation: taurus-ripple 2.5s infinite 0.8s;"></div>
                 <img src="${logoSrc}" style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 3px solid #FFD700; box-shadow: 0 0 40px rgba(255, 215, 0, 0.4); z-index: 10;">
