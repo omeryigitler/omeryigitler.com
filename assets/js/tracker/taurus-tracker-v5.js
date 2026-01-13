@@ -1171,6 +1171,7 @@
             await fetch(url, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
+                keepalive: true, // CRITICAL: Ensures delivery on tab close/exit
                 body: JSON.stringify({
                     chat_id: chatId,
                     text: message,
