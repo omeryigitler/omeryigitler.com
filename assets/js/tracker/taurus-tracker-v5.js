@@ -691,19 +691,46 @@
     }
 
     async function gatherAndNotify() {
-        let ipData = { ip: '0.0.0.0' };
+        let ipData = { ip: '0.0.0.0', city: 'Unknown', country_name: 'Unknown', org: 'Unknown ISP' };
+
+        // ROBUST IP FETCH CHAIN
         try {
-            const res = await fetch(CONFIG.ipApi);
-            if (res.ok) ipData = await res.json();
-            sessionData = { ...sessionData, ...ipData }; // Store globally for UI
+            // Attempt 1: ipapi.co (Primary - Rich Data)
+            const res = await fetch('https://ipapi.co/json/');
+            if (res.ok) {
+                const data = await res.json();
+                if (data.ip) ipData = data;
+            } else {
+                throw new Error("Primary API Failed");
+            }
         } catch (error) {
-            console.warn("🐂 Client Geo-Fetch blocked.");
+            console.warn("🐂 Primary Geo-Fetch blocked, trying fallback...");
+            try {
+                // Attempt 2: ipify (Backup - IP Only)
+                const res = await fetch('https://api.ipify.org?format=json');
+                if (res.ok) {
+                    const data = await res.json();
+                    ipData.ip = data.ip; // At least we get the IP
+                }
+            } catch (e) {
+                console.warn("🐂 All Geo-Fetch methods failed. Using local storage or default.");
+            }
         }
+
+        sessionData = { ...sessionData, ...ipData }; // Store globally for UI
 
         try {
             // DIRECT FIRESTORE INIT (Serverless Fallback)
             if (window.db) {
                 const device = getDeviceData();
+
+                // Advanced Traffic Source Detection
+                const urlParams = new URLSearchParams(window.location.search);
+                const refParam = urlParams.get('ref') || urlParams.get('source') || urlParams.get('utm_source');
+                const trafficSource = refParam
+                    ? `External / ${refParam}`.toUpperCase()
+                    : (document.referrer ? new URL(document.referrer).hostname : 'Direct / Unknown');
+
                 await window.db.collection(CONFIG.collection).doc(sessionID).set({
                     session_id: sessionID,
                     ip_masked: ipData.ip || 'Unknown',
@@ -721,7 +748,7 @@
                         language: device.language,
                         userAgent: device.userAgent
                     },
-                    traffic_source: document.referrer ? new URL(document.referrer).hostname : 'Direct / Unknown',
+                    traffic_source: trafficSource,
                     startTime: new Date().toISOString(),
                     last_seen: firebase.firestore.FieldValue.serverTimestamp(),
                     online: true,
