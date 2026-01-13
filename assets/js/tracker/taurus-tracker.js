@@ -1181,13 +1181,15 @@
 
             const exitMsg = '🛑 Session Ended [' + trigger + ']\nID: ' + sessionID + '\nDuration: ' + duration + 's\nPage: ' + window.location.pathname;
 
-            const payload = new Blob([JSON.stringify({
-                chat_id: chatId,
-                text: exitMsg
-            })], { type: 'application/json' });
+            // USE FETCH WITH KEEPALIVE INSTEAD OF SENDBEACON (sendBeacon not working)
+            fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                keepalive: true,
+                body: JSON.stringify({ chat_id: chatId, text: exitMsg })
+            }).catch(function () { });
 
-            const result = navigator.sendBeacon(url, payload);
-            console.log('🚀 EXIT BEACON [' + trigger + ']: ' + (result ? 'QUEUED' : 'FAILED'));
+            console.log('🚀 EXIT FETCH [' + trigger + ']: SENT');
         }
 
         // MULTIPLE EXIT EVENT LISTENERS FOR MAXIMUM COVERAGE
