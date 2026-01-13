@@ -721,26 +721,40 @@
         } catch (error) {
             console.warn("🐂 Primary Geo-Fetch blocked, trying fallback...");
             try {
-                // Attempt 2: wttr.in (Secondary - Reliable & Fast)
-                const res = await fetch('https://wttr.in/?format=j1');
-                if (res.ok) {
-                    const data = await res.json();
-                    if (data.nearest_area && data.nearest_area[0]) {
-                        ipData.city = data.nearest_area[0].areaName[0].value;
-                        ipData.country_name = data.nearest_area[0].country[0].value;
-                        // wttr.in doesn't give IP in json, so we might need ipify for that
+                // Attempt 2: DB-IP (Primary Fallback - IP, City, ISP)
+                // This is less likely to be blocked by basic trackers
+                const dbRes = await fetch('https://api.db-ip.com/v2/free/self');
+                if (dbRes.ok) {
+                    const dbData = await dbRes.json();
+                    ipData.ip = dbData.ipAddress;
+                    ipData.city = dbData.city;
+                    ipData.country_name = dbData.countryName;
+                    ipData.org = dbData.isp + ' (DB-IP)';
+                } else {
+                    throw new Error("DB-IP Failed");
+                }
+            } catch (e2) {
+                // Attempt 3: wttr.in (City/Country Only - Ultra Reliable)
+                try {
+                    const res = await fetch('https://wttr.in/?format=j1');
+                    if (res.ok) {
+                        const data = await res.json();
+                        if (data.nearest_area && data.nearest_area[0]) {
+                            ipData.city = data.nearest_area[0].areaName[0].value;
+                            ipData.country_name = data.nearest_area[0].country[0].value;
+                        }
                     }
-                }
 
-                // Concurrent Attempt 3: ipify (IP Only Fallback)
-                const ipRes = await fetch('https://api.ipify.org?format=json');
-                if (ipRes.ok) {
-                    const ipJson = await ipRes.json();
-                    ipData.ip = ipJson.ip;
+                    // Attempt 4: ipify (Desperate IP Only)
+                    const ipRes = await fetch('https://api.ipify.org?format=json');
+                    if (ipRes.ok) {
+                        const ipJson = await ipRes.json();
+                        ipData.ip = ipJson.ip;
+                        ipData.org = 'Private Network (iOS/Mac privacy)'; // Better UX than Unknown
+                    }
+                } catch (e3) {
+                    console.warn("🐂 All Geo-Fetch methods failed.", e3);
                 }
-
-            } catch (e) {
-                console.warn("🐂 All Geo-Fetch methods failed. Using local storage or default.");
             }
         }
 
@@ -779,7 +793,11 @@
                     startTime: new Date().toISOString(),
                     last_seen: firebase.firestore.FieldValue.serverTimestamp(),
                     online: true,
-                    history: []
+                    history: [{
+                        path: window.location.pathname,
+                        title: document.title || 'Entry Page',
+                        timestamp: new Date().toISOString() // Fixed: Use ISO string for consistent parsing
+                    }]
                 }, { merge: true });
                 console.log("🐂 Session Data Initialized (Direct Write)");
             }
