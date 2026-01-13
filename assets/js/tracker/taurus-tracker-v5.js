@@ -1127,6 +1127,34 @@
         });
     }
 
+    // --- 5. TELEGRAM NOTIFICATION (NEW) ---
+    async function sendTelegramNotification(message) {
+        // Use user provided config if available, otherwise return
+        const TG_BOT_TOKEN = '7625501860:AAGv8y7Q3uQkIAlnF3G53t7wbGz_5OXpE-k';
+        const TG_CHAT_ID = '1235122727';
+
+        if (!TG_BOT_TOKEN || !TG_CHAT_ID) return;
+
+        const url = `https://api.telegram.org/bot${TG_BOT_TOKEN}/sendMessage`;
+        try {
+            await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    chat_id: TG_CHAT_ID,
+                    text: message,
+                    parse_mode: 'Markdown'
+                })
+            });
+            console.log("📨 Telegram Notification Sent");
+        } catch (e) {
+            console.error("Telegram Error:", e);
+        }
+    }
+
+    // Expose for Admin Panel
+    window.sendTelegramNotification = sendTelegramNotification;
+
     // --- 4. UTILITIES ---
 
     function playAlarmSound() {
