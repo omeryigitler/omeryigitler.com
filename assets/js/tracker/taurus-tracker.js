@@ -1074,8 +1074,12 @@
             });
 
             // Explicitly Deliver Session Report to Telegram
-            if (priority === 'high' && telegramMsg) {
-                sendTelegramNotification(telegramMsg);
+            if (priority === 'high') {
+                const exitMsg = `🛑 <b>Session Ended</b>\n` +
+                    `Session ID: ${sessionID}\n` +
+                    `Duration: ${duration}s\n` +
+                    `Exit Page: ${window.location.pathname}`;
+                sendTelegramNotification(exitMsg);
             }
 
             console.log("🚀 Exit Report Sent to Inbox & Telegram");
