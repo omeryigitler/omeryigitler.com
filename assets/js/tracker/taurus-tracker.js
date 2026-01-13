@@ -1154,10 +1154,8 @@
                     // Use global sessionStartTime (guaranteed) instead of sessionData object (risky)
                     const duration = Math.round((endTime - sessionStartTime) / 1000);
 
-                    // Only send report if duration > 1 second (avoid accidental bounces)
-                    if (duration > 1) {
-                        sendPulse("Session Exit", 'high', { duration: duration });
-                    }
+                    // Send report for ALL exits (removed duration threshold)
+                    sendPulse("Session Exit", 'high', { duration: duration });
                 } else {
                     // Reset flag for the next page load
                     // window.isInternalNav = false; // logic moved to init to persist across unloads if SPA, but here safer to keep true until unload completes
@@ -1176,10 +1174,8 @@
         window.addEventListener('pagehide', () => {
             const endTime = new Date();
             const duration = Math.round((endTime - sessionStartTime) / 1000);
-            if (duration > 1) {
-                // Force HIGH Prio Pulse immediately
-                sendPulse("Session Exit (PageHide)", 'high', { duration: duration });
-            }
+            // Force HIGH Prio Pulse immediately (no duration threshold)
+            sendPulse("Session Exit (PageHide)", 'high', { duration: duration });
         });
     }
 
