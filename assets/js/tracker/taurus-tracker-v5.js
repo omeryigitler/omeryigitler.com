@@ -823,12 +823,29 @@
             if (window.db) {
                 const device = getDeviceData();
 
-                // Advanced Traffic Source Detection
+                // Advanced Traffic Source Detection (In-App Browsers + Referrers)
                 const urlParams = new URLSearchParams(window.location.search);
                 const refParam = urlParams.get('ref') || urlParams.get('source') || urlParams.get('utm_source');
-                const trafficSource = refParam
-                    ? `External / ${refParam}`.toUpperCase()
-                    : (document.referrer ? new URL(document.referrer).hostname : 'Direct / Unknown');
+                const ua = navigator.userAgent;
+
+                let trafficSource = 'Direct / Unknown';
+
+                if (refParam) {
+                    trafficSource = `External / ${refParam}`.toUpperCase();
+                } else if (/Instagram/.test(ua)) {
+                    trafficSource = 'Social / INSTAGRAM (In-App)';
+                } else if (/FBAN|FBAV/.test(ua)) {
+                    trafficSource = 'Social / FACEBOOK (In-App)';
+                } else if (/Twitter/.test(ua)) {
+                    trafficSource = 'Social / X (In-App)';
+                } else if (/LinkedIn/.test(ua)) {
+                    trafficSource = 'Social / LINKEDIN (In-App)';
+                } else if (document.referrer) {
+                    try {
+                        const refHost = new URL(document.referrer).hostname;
+                        trafficSource = `Referral / ${refHost}`;
+                    } catch (e) { trafficSource = 'Referral / Unknown'; }
+                }
 
                 await window.db.collection(CONFIG.collection).doc(sessionID).set({
                     session_id: sessionID,
@@ -845,6 +862,7 @@
                         os: device.os,
                         screen: device.screen,
                         language: device.language,
+                        gpu: device.gpu,
                         userAgent: device.userAgent
                     },
                     traffic_source: trafficSource,
