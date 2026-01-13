@@ -1141,8 +1141,8 @@
                     const startTime = sessionData?.startTime ? new Date(sessionData.startTime) : new Date();
                     const duration = Math.round((endTime - startTime) / 1000);
 
-                    // Only send report if duration > 5 seconds (avoid accidental bounces)
-                    if (duration > 5) {
+                    // Only send report if duration > 1 second (avoid accidental bounces)
+                    if (duration > 1) {
                         sendPulse("Session Exit", 'high', { duration: duration });
                     }
                 } else {
