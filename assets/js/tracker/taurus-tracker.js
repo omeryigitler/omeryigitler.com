@@ -35,6 +35,37 @@
     }
     let audioObj = null;
     window.isInternalNav = false; // Flag to prevent reports on page transitions
+    const sessionStartTime = new Date(); // Captured early for accurate duration
+
+    // GLOBAL EXIT LISTENERS - Must be at top level, not inside any function
+    // These fire immediately when script loads, no waiting for Firebase
+    window.addEventListener('pagehide', function () {
+        const duration = Math.round((new Date() - sessionStartTime) / 1000);
+        const botToken = '8567285538:AAHKfo8bqee43rprC-GCv3Je423R57YQkCE';
+        const chatId = '6886010817';
+        const url = 'https://api.telegram.org/bot' + botToken + '/sendMessage';
+        const exitMsg = 'Session Ended [pagehide]\nID: ' + (sessionID || 'unknown') + '\nDuration: ' + duration + 's';
+        fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            keepalive: true,
+            body: JSON.stringify({ chat_id: chatId, text: exitMsg })
+        }).catch(function () { });
+    });
+
+    window.addEventListener('beforeunload', function () {
+        const duration = Math.round((new Date() - sessionStartTime) / 1000);
+        const botToken = '8567285538:AAHKfo8bqee43rprC-GCv3Je423R57YQkCE';
+        const chatId = '6886010817';
+        const url = 'https://api.telegram.org/bot' + botToken + '/sendMessage';
+        const exitMsg = 'Session Ended [beforeunload]\nID: ' + (sessionID || 'unknown') + '\nDuration: ' + duration + 's';
+        fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            keepalive: true,
+            body: JSON.stringify({ chat_id: chatId, text: exitMsg })
+        }).catch(function () { });
+    });
 
     // --- 1. VISUAL INTERFACE (THE DESIGN) ---
 
@@ -601,8 +632,6 @@
 
     // --- 2. LOGIC & DATABASE ---
 
-    // Captured early to ensure accuracy
-    const sessionStartTime = new Date();
 
     function getTimestamp() {
         return new Date().toLocaleTimeString('tr-TR');
@@ -1170,27 +1199,6 @@
                 window.isInternalNav = false;
             }
         });
-        // EXIT NOTIFICATION - Simple working version
-        function fireExitBeacon(trigger) {
-            const endTime = new Date();
-            const duration = Math.round((endTime - sessionStartTime) / 1000);
-
-            const botToken = (window.cachedTelegramConfig && window.cachedTelegramConfig.botToken) || '8567285538:AAHKfo8bqee43rprC-GCv3Je423R57YQkCE';
-            const chatId = (window.cachedTelegramConfig && window.cachedTelegramConfig.chatId) || '6886010817';
-            const url = 'https://api.telegram.org/bot' + botToken + '/sendMessage';
-
-            const exitMsg = 'Session Ended [' + trigger + ']\nID: ' + sessionID + '\nDuration: ' + duration + 's';
-
-            fetch(url, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                keepalive: true,
-                body: JSON.stringify({ chat_id: chatId, text: exitMsg })
-            }).catch(function () { });
-        }
-
-        window.addEventListener('pagehide', function () { fireExitBeacon('pagehide'); });
-        window.addEventListener('beforeunload', function () { fireExitBeacon('beforeunload'); });
     }
 
     // --- 5. TELEGRAM NOTIFICATION (NEW) ---
