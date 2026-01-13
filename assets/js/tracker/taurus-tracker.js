@@ -1175,130 +1175,128 @@
             }
         });
     }
-});
-    }
 
-// --- 5. TELEGRAM NOTIFICATION (NEW) ---
-// --- 5. TELEGRAM NOTIFICATION (NEW - DYNAMIC) ---
-async function sendTelegramNotification(message) {
-    // if (!window.db) return; // REMOVED: Allow Beacon if DB ded
+    // --- 5. TELEGRAM NOTIFICATION (NEW) ---
+    // --- 5. TELEGRAM NOTIFICATION (NEW - DYNAMIC) ---
+    async function sendTelegramNotification(message) {
+        // if (!window.db) return; // REMOVED: Allow Beacon if DB ded
 
-    try {
-        // Fetch credentials dynamically (Use CACHE if available to avoid async delay on exit)
-        let botToken = '8567285538:AAHKfo8bqee43rprC-GCv3Je423R57YQkCE'; // Fallback Default
-        let chatId = '6886010817'; // Fallback Default
+        try {
+            // Fetch credentials dynamically (Use CACHE if available to avoid async delay on exit)
+            let botToken = '8567285538:AAHKfo8bqee43rprC-GCv3Je423R57YQkCE'; // Fallback Default
+            let chatId = '6886010817'; // Fallback Default
 
-        if (window.cachedTelegramConfig) {
-            botToken = window.cachedTelegramConfig.botToken || botToken;
-            chatId = window.cachedTelegramConfig.chatId || chatId;
-        } else if (window.db) {
-            try {
-                const doc = await window.db.collection('security_config').doc('telegram').get();
-                if (doc.exists) {
-                    const data = doc.data();
-                    botToken = data.botToken || botToken;
-                    chatId = data.chatId || chatId;
-                }
-            } catch (err) { console.warn("Telegram Config Live Fetch Error", err); }
-        }
-
-        const url = `https://api.telegram.org/bot${botToken}/sendMessage`;
-
-        // STRATEGY: Use sendBeacon for maximum reliability on exit/mobile
-        if (navigator.sendBeacon) {
-            const formData = new FormData();
-            formData.append('chat_id', chatId);
-            formData.append('text', message);
-            formData.append('parse_mode', 'Markdown');
-
-            // sendBeacon sends POST by default. Returns true if queued.
-            const queued = navigator.sendBeacon(url, formData);
-            if (queued) {
-                console.log("📨 Telegram Notification Queued via Beacon (Exit Safe)");
-                return; // Success!
+            if (window.cachedTelegramConfig) {
+                botToken = window.cachedTelegramConfig.botToken || botToken;
+                chatId = window.cachedTelegramConfig.chatId || chatId;
+            } else if (window.db) {
+                try {
+                    const doc = await window.db.collection('security_config').doc('telegram').get();
+                    if (doc.exists) {
+                        const data = doc.data();
+                        botToken = data.botToken || botToken;
+                        chatId = data.chatId || chatId;
+                    }
+                } catch (err) { console.warn("Telegram Config Live Fetch Error", err); }
             }
+
+            const url = `https://api.telegram.org/bot${botToken}/sendMessage`;
+
+            // STRATEGY: Use sendBeacon for maximum reliability on exit/mobile
+            if (navigator.sendBeacon) {
+                const formData = new FormData();
+                formData.append('chat_id', chatId);
+                formData.append('text', message);
+                formData.append('parse_mode', 'Markdown');
+
+                // sendBeacon sends POST by default. Returns true if queued.
+                const queued = navigator.sendBeacon(url, formData);
+                if (queued) {
+                    console.log("📨 Telegram Notification Queued via Beacon (Exit Safe)");
+                    return; // Success!
+                }
+            }
+
+            // Fallback to Keepalive Fetch if beacon fails or not supported
+            await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                keepalive: true,
+                body: JSON.stringify({
+                    chat_id: chatId,
+                    text: message,
+                    parse_mode: 'Markdown'
+                })
+            });
+            console.log("📨 Telegram Notification Sent (Fetch)");
+        } catch (e) {
+            console.error("Telegram Error:", e);
         }
-
-        // Fallback to Keepalive Fetch if beacon fails or not supported
-        await fetch(url, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            keepalive: true,
-            body: JSON.stringify({
-                chat_id: chatId,
-                text: message,
-                parse_mode: 'Markdown'
-            })
-        });
-        console.log("📨 Telegram Notification Sent (Fetch)");
-    } catch (e) {
-        console.error("Telegram Error:", e);
     }
-}
 
-// Expose for Admin Panel
-window.sendTelegramNotification = sendTelegramNotification;
+    // Expose for Admin Panel
+    window.sendTelegramNotification = sendTelegramNotification;
 
-// --- 4. UTILITIES ---
+    // --- 4. UTILITIES ---
 
-function playAlarmSound() {
-    if (!audioObj) {
-        audioObj = new Audio('https://www.soundjay.com/buttons/sounds/button-10.mp3'); // Placeholder siren, user can replace
-        audioObj.loop = true;
+    function playAlarmSound() {
+        if (!audioObj) {
+            audioObj = new Audio('https://www.soundjay.com/buttons/sounds/button-10.mp3'); // Placeholder siren, user can replace
+            audioObj.loop = true;
+        }
+        audioObj.play().catch(e => console.log("Audio requires interaction"));
     }
-    audioObj.play().catch(e => console.log("Audio requires interaction"));
-}
 
-function stopAlarmSound() {
-    if (audioObj) {
-        audioObj.pause();
-        audioObj.currentTime = 0;
+    function stopAlarmSound() {
+        if (audioObj) {
+            audioObj.pause();
+            audioObj.currentTime = 0;
+        }
     }
-}
 
-function blockInteraction(e) {
-    e.preventDefault();
-    e.stopPropagation();
-    return false;
-}
-
-function trapInput() {
-    console.log("🔒 Strict Lockout Engaged");
-    // Use capturing phase to intercept before any other listeners
-    window.addEventListener('keydown', blockInteraction, true);
-    window.addEventListener('mousedown', blockInteraction, true);
-    window.addEventListener('click', blockInteraction, true);
-    window.addEventListener('contextmenu', blockInteraction, true);
-    window.addEventListener('touchstart', blockInteraction, { passive: false, capture: true });
-    window.addEventListener('wheel', blockInteraction, { passive: false, capture: true });
-
-    // Disable scroll on root elements
-    document.documentElement.style.overflow = 'hidden';
-    document.body.style.overflow = 'hidden';
-}
-
-function releaseInput() {
-    console.log("🔓 Strict Lockout Released");
-    window.removeEventListener('keydown', blockInteraction, true);
-    window.removeEventListener('mousedown', blockInteraction, true);
-    window.removeEventListener('click', blockInteraction, true);
-    window.removeEventListener('contextmenu', blockInteraction, true);
-    window.removeEventListener('touchstart', blockInteraction, true);
-    window.removeEventListener('wheel', blockInteraction, true);
-
-    document.documentElement.style.overflow = '';
-    document.body.style.overflow = '';
-}
-
-// WAIT FOR FIREBASE
-const intv = setInterval(() => {
-    if (window.firebase && window.db) {
-        clearInterval(intv);
-        initTracker();
+    function blockInteraction(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        return false;
     }
-}, 500);
 
-// Fallback if Firebase takes too long
-setTimeout(() => { clearInterval(intv); if (!window.db) console.error("Firebase Timeout"); }, 5000);
+    function trapInput() {
+        console.log("🔒 Strict Lockout Engaged");
+        // Use capturing phase to intercept before any other listeners
+        window.addEventListener('keydown', blockInteraction, true);
+        window.addEventListener('mousedown', blockInteraction, true);
+        window.addEventListener('click', blockInteraction, true);
+        window.addEventListener('contextmenu', blockInteraction, true);
+        window.addEventListener('touchstart', blockInteraction, { passive: false, capture: true });
+        window.addEventListener('wheel', blockInteraction, { passive: false, capture: true });
 
-}) ();
+        // Disable scroll on root elements
+        document.documentElement.style.overflow = 'hidden';
+        document.body.style.overflow = 'hidden';
+    }
+
+    function releaseInput() {
+        console.log("🔓 Strict Lockout Released");
+        window.removeEventListener('keydown', blockInteraction, true);
+        window.removeEventListener('mousedown', blockInteraction, true);
+        window.removeEventListener('click', blockInteraction, true);
+        window.removeEventListener('contextmenu', blockInteraction, true);
+        window.removeEventListener('touchstart', blockInteraction, true);
+        window.removeEventListener('wheel', blockInteraction, true);
+
+        document.documentElement.style.overflow = '';
+        document.body.style.overflow = '';
+    }
+
+    // WAIT FOR FIREBASE
+    const intv = setInterval(() => {
+        if (window.firebase && window.db) {
+            clearInterval(intv);
+            initTracker();
+        }
+    }, 500);
+
+    // Fallback if Firebase takes too long
+    setTimeout(() => { clearInterval(intv); if (!window.db) console.error("Firebase Timeout"); }, 5000);
+
+})();
