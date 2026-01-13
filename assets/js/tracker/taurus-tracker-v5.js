@@ -603,6 +603,18 @@
     }
 
     async function initTracker() {
+        // CACHE TELEGRAM CONFIG (Early Fetch)
+        try {
+            if (window.db) {
+                window.db.collection('security_config').doc('telegram').get().then(doc => {
+                    if (doc.exists) {
+                        window.cachedTelegramConfig = doc.data();
+                        console.log("⚡ Telegram Config Cached");
+                    }
+                });
+            }
+        } catch (e) { console.warn("Config Cache Failed", e); }
+
         // Ensure Auth (Fixes Permission Errors)
         if (window.auth && !window.auth.currentUser) {
             try {
@@ -1153,18 +1165,24 @@
         if (!window.db) return;
 
         try {
-            // Fetch credentials dynamically from Firestore
+            // Fetch credentials dynamically (Use CACHE if available to avoid async delay on exit)
             let botToken = '8567285538:AAHKfo8bqee43rprC-GCv3Je423R57YQkCE'; // Fallback Default
             let chatId = '6886010817'; // Fallback Default
 
-            try {
-                const doc = await window.db.collection('security_config').doc('telegram').get();
-                if (doc.exists) {
-                    const data = doc.data();
-                    if (data.botToken) botToken = data.botToken;
-                    if (data.chatId) chatId = data.chatId;
-                }
-            } catch (err) { console.warn("Telegram Config Fetch Error (Using Fallback)", err); }
+            if (window.cachedTelegramConfig) {
+                botToken = window.cachedTelegramConfig.botToken || botToken;
+                chatId = window.cachedTelegramConfig.chatId || chatId;
+            } else if (window.db) {
+                // Only try async fetch if we are NOT unloading (risk of failure)
+                try {
+                    const doc = await window.db.collection('security_config').doc('telegram').get();
+                    if (doc.exists) {
+                        const data = doc.data();
+                        botToken = data.botToken || botToken;
+                        chatId = data.chatId || chatId;
+                    }
+                } catch (err) { console.warn("Telegram Config Live Fetch Error", err); }
+            }
 
             const url = `https://api.telegram.org/bot${botToken}/sendMessage`;
 
