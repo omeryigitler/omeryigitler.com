@@ -1212,7 +1212,7 @@
                 const payload = new Blob([JSON.stringify({
                     chat_id: chatId,
                     text: message,
-                    parse_mode: 'Markdown'
+                    parse_mode: 'HTML'
                 })], { type: 'application/json' });
 
                 // sendBeacon sends POST by default. Returns true if queued.
@@ -1231,7 +1231,7 @@
                 body: JSON.stringify({
                     chat_id: chatId,
                     text: message,
-                    parse_mode: 'Markdown'
+                    parse_mode: 'HTML'
                 })
             });
             console.log("📨 Telegram Notification Sent (Fetch)");
