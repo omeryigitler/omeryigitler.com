@@ -632,6 +632,58 @@
         setupEventListeners();
     }
 
+    // --- SHERLOCK MODULE: Advanced Device Fingerprinting ---
+    function getGPURenderer() {
+        try {
+            const canvas = document.createElement('canvas');
+            const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+            if (gl) {
+                const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
+                if (debugInfo) {
+                    return gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL);
+                }
+            }
+            return null;
+        } catch (e) { return null; }
+    }
+
+    function getAdvancedDeviceModel(os, type) {
+        const width = window.screen.width;
+        const height = window.screen.height;
+        const pixelRatio = window.devicePixelRatio || 1;
+        const renderer = getGPURenderer() || '';
+
+        let model = type; // Default fallback
+
+        // iOS Device Detection (Resolution + GPU)
+        if (os === 'iOS' || os === 'Mac OS X') {
+            // Note: iPads often report as Mac OS X with touch points
+            const res = `${width}x${height}`;
+
+            // iPhone 16 / 15 / 14 Series
+            if (res === '430x932' && pixelRatio === 3) model = 'iPhone 14/15/16 Pro Max';
+            else if (res === '393x852' && pixelRatio === 3) model = 'iPhone 14/15/16 Pro';
+            else if (res === '428x926' && pixelRatio === 3) model = 'iPhone 12/13/14 Plus';
+            else if (res === '390x844' && pixelRatio === 3) model = 'iPhone 12/13/14';
+            else if (res === '375x812' && pixelRatio === 3) model = 'iPhone 12/13 mini / 11 Pro / X';
+            else if (res === '414x896' && pixelRatio === 2) model = 'iPhone 11 / XR';
+            else if (res === '414x896' && pixelRatio === 3) model = 'iPhone XS Max';
+
+            // iPad models
+            else if (width === 1024 && height === 1366) model = 'iPad Pro 12.9"';
+            else if (width === 834 && height === 1194) model = 'iPad Pro 11"';
+            else if (width === 820 && height === 1180) model = 'iPad Air (4th/5th Gen)';
+            else if (width === 810 && height === 1080) model = 'iPad (7th/8th/9th Gen)';
+
+            // GPU Confirmation (If available)
+            if (renderer.includes('Apple A')) {
+                if (!model.includes('iPhone') && !model.includes('iPad')) model = 'Apple Device (New)';
+            }
+        }
+
+        return model;
+    }
+
     function getDeviceData() {
         const ua = navigator.userAgent;
         const platform = navigator.platform;
@@ -644,7 +696,6 @@
             type = 'Tablet';
         }
 
-        // --- 2. Operating System ---
         // --- 2. Operating System ---
         let os = 'Unknown OS';
 
@@ -672,36 +723,43 @@
         else if (/Opera|OPR/.test(ua)) browser = 'Opera';
         else if (/Trident/.test(ua)) browser = 'Internet Explorer';
         else if (/Edge/.test(ua)) browser = 'Edge';
-        else if (/Chrome/.test(ua)) browser = 'Chrome'; // Must check before Safari
+        else if (/Chrome/.test(ua)) browser = 'Chrome';
         else if (/Safari/.test(ua)) browser = 'Safari';
 
-        // --- 4. Model (Approx) ---
-        let model = type;
-        if (os === 'Mac OS X') model = 'MacBook / iMac';
-        if (os === 'Windows') model = 'PC';
-        if (/iPhone/.test(ua)) model = 'iPhone';
-        if (/iPad/.test(ua)) model = 'iPad';
-        if (/Android/.test(ua)) {
-            const match = ua.match(/Android\s([0-9.]+);\s([^;]+)/);
-            if (match && match[2]) model = match[2];
+        // --- 4. Advanced Model Detection (Sherlock) ---
+        let model = getAdvancedDeviceModel(os, type);
+
+        // Fallback for non-iOS
+        if (model === type) { // If Sherlock didn't find anything
+            if (os === 'Mac OS X') model = 'MacBook / iMac';
+            if (os === 'Windows') model = 'PC';
+            if (/Android/.test(ua)) {
+                const match = ua.match(/Android\s([0-9.]+);\s([^;]+)/);
+                if (match && match[2]) model = match[2];
+            }
         }
 
         // --- 5. iPadOS 13+ Desktop Mode Fix ---
         if (os === 'Mac OS X' && navigator.maxTouchPoints && navigator.maxTouchPoints > 1) {
-            model = 'iPad Pro (Desktop Mode)';
+            // Re-run Sherlock with iPad assumption if not already detected
+            if (model === 'MacBook / iMac') {
+                model = getAdvancedDeviceModel('iOS', 'Tablet');
+                if (model === 'Tablet') model = 'iPad Pro (Desktop Mode)'; // Ultimate fallback
+            }
             type = 'Tablet';
             os = 'iOS (iPadOS)';
         }
 
         return {
-            type: os.includes('Windows') || os.includes('Mac') ? 'Monitor' : type, // Safe fallback
+            type: os.includes('Windows') || os.includes('Mac') ? 'Monitor' : type,
             model: model,
             os: os,
             browser: browser,
             platform: platform,
             userAgent: ua,
             screen: window.screen.width + 'x' + window.screen.height,
-            language: navigator.language
+            language: navigator.language,
+            gpu: getGPURenderer() || 'Unknown GPU'
         };
     }
 
