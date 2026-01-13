@@ -1168,7 +1168,8 @@
                 // If they came back, it wasn't a true exit, but we might have already properly handled logic.
                 // Resetting isInternalNav here ensures fresh state for next interaction
                 window.isInternalNav = false;
-            });
+            }
+        });
 
         // PAGEHIDE LISTENER (Safari/iOS "Unload" Reliability)
         // This is crucial for In-App Browsers where visibilitychange might be skipped
