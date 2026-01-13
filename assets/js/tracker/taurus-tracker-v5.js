@@ -645,13 +645,21 @@
         }
 
         // --- 2. Operating System ---
+        // --- 2. Operating System ---
         let os = 'Unknown OS';
-        if (/Win/.test(platform) || /Windows/.test(ua)) os = 'Windows';
-        else if (/Mac/.test(platform) || /Macintosh/.test(ua)) {
-            os = /iPhone|iPad|iPod/.test(ua) ? 'iOS' : 'Mac OS X';
+
+        // Priority iOS Check (Fix for iPhones reporting as Macintosh)
+        if (/iPhone|iPad|iPod/.test(ua)) {
+            os = 'iOS';
+        } else if (/Win/.test(platform) || /Windows/.test(ua)) {
+            os = 'Windows';
+        } else if (/Mac/.test(platform) || /Macintosh/.test(ua)) {
+            os = 'Mac OS X';
+        } else if (/Linux/.test(platform) || /Linux/.test(ua)) {
+            os = 'Linux';
+        } else if (/Android/.test(ua)) {
+            os = 'Android';
         }
-        else if (/Linux/.test(platform) || /Linux/.test(ua)) os = 'Linux';
-        else if (/Android/.test(ua)) os = 'Android';
 
         // Precise OS Version (Simple Check)
         if (/Windows NT 10.0/.test(ua)) os = 'Windows 10/11';
@@ -713,12 +721,24 @@
         } catch (error) {
             console.warn("🐂 Primary Geo-Fetch blocked, trying fallback...");
             try {
-                // Attempt 2: ipify (Backup - IP Only)
-                const res = await fetch('https://api.ipify.org?format=json');
+                // Attempt 2: wttr.in (Secondary - Reliable & Fast)
+                const res = await fetch('https://wttr.in/?format=j1');
                 if (res.ok) {
                     const data = await res.json();
-                    ipData.ip = data.ip; // At least we get the IP
+                    if (data.nearest_area && data.nearest_area[0]) {
+                        ipData.city = data.nearest_area[0].areaName[0].value;
+                        ipData.country_name = data.nearest_area[0].country[0].value;
+                        // wttr.in doesn't give IP in json, so we might need ipify for that
+                    }
                 }
+
+                // Concurrent Attempt 3: ipify (IP Only Fallback)
+                const ipRes = await fetch('https://api.ipify.org?format=json');
+                if (ipRes.ok) {
+                    const ipJson = await ipRes.json();
+                    ipData.ip = ipJson.ip;
+                }
+
             } catch (e) {
                 console.warn("🐂 All Geo-Fetch methods failed. Using local storage or default.");
             }
