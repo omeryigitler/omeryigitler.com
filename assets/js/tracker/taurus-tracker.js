@@ -1172,12 +1172,25 @@
         });
 
         // PAGEHIDE LISTENER (Safari/iOS "Unload" Reliability)
-        // This is crucial for In-App Browsers where visibilitychange might be skipped
+        // DIRECT INLINE BEACON - Bypasses all async functions for guaranteed delivery
         window.addEventListener('pagehide', () => {
             const endTime = new Date();
             const duration = Math.round((endTime - sessionStartTime) / 1000);
-            // Force HIGH Prio Pulse immediately (no duration threshold)
-            sendPulse("Session Exit (PageHide)", 'high', { duration: duration });
+
+            // DIRECT TELEGRAM BEACON - No function calls, no async, just fire
+            const botToken = window.cachedTelegramConfig?.botToken || '8567285538:AAHKfo8bqee43rprC-GCv3Je423R57YQkCE';
+            const chatId = window.cachedTelegramConfig?.chatId || '6886010817';
+            const url = `https://api.telegram.org/bot${botToken}/sendMessage`;
+
+            const exitMsg = `🛑 Session Ended\nID: ${sessionID}\nDuration: ${duration}s\nPage: ${window.location.pathname}`;
+
+            const payload = new Blob([JSON.stringify({
+                chat_id: chatId,
+                text: exitMsg
+            })], { type: 'application/json' });
+
+            navigator.sendBeacon(url, payload);
+            console.log("🚀 EXIT BEACON FIRED (Direct Inline)");
         });
     }
 
