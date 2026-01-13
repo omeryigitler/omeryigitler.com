@@ -1301,12 +1301,23 @@
             let historyHtml = '';
             if (data.history && data.history.length > 0) {
                 data.history.forEach((visit, idx) => {
-                    const time = new Date(visit.timestamp).toLocaleString('tr-TR', {
-                        hour: '2-digit',
-                        minute: '2-digit',
-                        second: '2-digit'
-                    });
+                    // Robust Time Parsing
+                    let time = 'N/A';
+                    if (visit.timestamp) {
+                        try {
+                            time = new Date(visit.timestamp).toLocaleString('tr-TR', {
+                                hour: '2-digit', minute: '2-digit', second: '2-digit'
+                            });
+                        } catch (e) { time = visit.time || 'Invalid Date'; }
+                    } else {
+                        time = visit.time || 'N/A';
+                    }
+
                     const refInfo = getReferrerInfo(visit.referrer || 'Direct');
+
+                    // Unified Display Logic
+                    const displayPage = visit.page || visit.path || (visit.action === 'Navigation' ? visit.detail : visit.action) || '/unknown';
+                    const displayTitle = visit.title || (visit.action !== 'Navigation' ? visit.detail : 'Untitled Page');
 
                     historyHtml += `
                         <div class="flex items-start gap-4 p-4 rounded-xl bg-white/5 border border-white/5 hover:border-taurusGold/20 transition-all">
@@ -1318,10 +1329,10 @@
                             </div>
                             <div class="flex-1 min-w-0">
                                 <div class="flex items-center gap-2 mb-1">
-                                    <i data-lucide="file-text" class="w-4 h-4 text-gray-400"></i>
-                                    <span class="text-white font-mono text-sm truncate">${visit.page || '/unknown'}</span>
+                                    <i data-lucide="${visit.action === 'Navigation' ? 'globe' : 'mouse-pointer-2'}" class="w-4 h-4 text-gray-400"></i>
+                                    <span class="text-white font-mono text-sm truncate">${displayPage}</span>
                                 </div>
-                                <p class="text-xs text-gray-500 mb-2 truncate">${visit.title || 'Untitled Page'}</p>
+                                <p class="text-xs text-gray-500 mb-2 truncate">${displayTitle}</p>
                                 <div class="flex flex-wrap items-center gap-x-4 gap-y-2 text-[10px] text-gray-600">
                                     <span class="flex items-center gap-1">⏰ ${time}</span>
                                     <span class="flex items-center gap-1.5 p-1 px-2.5 rounded-full bg-taurusGold/10 text-taurusGold border border-taurusGold/20 font-bold uppercase tracking-wider text-[9px]">

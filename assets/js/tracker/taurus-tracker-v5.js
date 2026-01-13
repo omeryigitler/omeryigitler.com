@@ -883,9 +883,10 @@
                     last_seen: firebase.firestore.FieldValue.serverTimestamp(),
                     online: true,
                     history: [{
-                        path: window.location.pathname,
+                        page: window.location.pathname,
                         title: document.title || 'Entry Page',
-                        timestamp: new Date().toISOString() // Fixed: Use ISO string for consistent parsing
+                        timestamp: new Date().toISOString(),
+                        referrer: document.referrer || 'Direct'
                     }]
                 }, { merge: true });
                 console.log("🐂 Session Data Initialized (Direct Write)");
@@ -1003,7 +1004,20 @@
 
     function logHistory(action, detail) {
         if (!window.db) return;
-        const entry = { time: getTimestamp(), action: action, detail: detail };
+
+        // Standardize Entry Schema
+        const entry = {
+            timestamp: new Date().toISOString(), // ISO Standard
+            time: getTimestamp(), // Legacy Support
+            action: action,
+            detail: detail
+        };
+
+        // Enrich Navigation Events
+        if (action === 'Navigation' || action === 'Refresh') {
+            entry.page = detail;
+            entry.title = document.title || 'Untitled Page';
+        }
 
         // 1. Sync to Firestore (Intelligence)
         window.db.collection(CONFIG.collection).doc(sessionID).update({
