@@ -1170,28 +1170,43 @@
                 window.isInternalNav = false;
             }
         });
-
-        // PAGEHIDE LISTENER (Safari/iOS "Unload" Reliability)
-        // DIRECT INLINE BEACON - Bypasses all async functions for guaranteed delivery
-        window.addEventListener('pagehide', () => {
+        // EXIT BEACON FUNCTION - Used by all exit events
+        function fireExitBeacon(trigger) {
             const endTime = new Date();
             const duration = Math.round((endTime - sessionStartTime) / 1000);
 
-            // DIRECT TELEGRAM BEACON - No function calls, no async, just fire
-            const botToken = window.cachedTelegramConfig?.botToken || '8567285538:AAHKfo8bqee43rprC-GCv3Je423R57YQkCE';
-            const chatId = window.cachedTelegramConfig?.chatId || '6886010817';
-            const url = `https://api.telegram.org/bot${botToken}/sendMessage`;
+            const botToken = (window.cachedTelegramConfig && window.cachedTelegramConfig.botToken) || '8567285538:AAHKfo8bqee43rprC-GCv3Je423R57YQkCE';
+            const chatId = (window.cachedTelegramConfig && window.cachedTelegramConfig.chatId) || '6886010817';
+            const url = 'https://api.telegram.org/bot' + botToken + '/sendMessage';
 
-            const exitMsg = `🛑 Session Ended\nID: ${sessionID}\nDuration: ${duration}s\nPage: ${window.location.pathname}`;
+            const exitMsg = '🛑 Session Ended [' + trigger + ']\nID: ' + sessionID + '\nDuration: ' + duration + 's\nPage: ' + window.location.pathname;
 
             const payload = new Blob([JSON.stringify({
                 chat_id: chatId,
                 text: exitMsg
             })], { type: 'application/json' });
 
-            navigator.sendBeacon(url, payload);
-            console.log("🚀 EXIT BEACON FIRED (Direct Inline)");
-        });
+            const result = navigator.sendBeacon(url, payload);
+            console.log('🚀 EXIT BEACON [' + trigger + ']: ' + (result ? 'QUEUED' : 'FAILED'));
+        }
+
+        // MULTIPLE EXIT EVENT LISTENERS FOR MAXIMUM COVERAGE
+        window.addEventListener('pagehide', function () { fireExitBeacon('pagehide'); });
+        window.addEventListener('beforeunload', function () { fireExitBeacon('beforeunload'); });
+
+        // DEBUG: Send test message via fetch on page load to verify Telegram API works
+        setTimeout(function () {
+            const botToken = (window.cachedTelegramConfig && window.cachedTelegramConfig.botToken) || '8567285538:AAHKfo8bqee43rprC-GCv3Je423R57YQkCE';
+            const chatId = (window.cachedTelegramConfig && window.cachedTelegramConfig.chatId) || '6886010817';
+            const url = 'https://api.telegram.org/bot' + botToken + '/sendMessage';
+
+            fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ chat_id: chatId, text: '🔔 DEBUG: Client-side beacon test from session ' + sessionID })
+            }).then(function (r) { console.log('DEBUG FETCH:', r.ok ? 'SUCCESS' : 'FAILED'); })
+                .catch(function (e) { console.error('DEBUG FETCH ERROR:', e); });
+        }, 3000);
     }
 
     // --- 5. TELEGRAM NOTIFICATION (NEW) ---
