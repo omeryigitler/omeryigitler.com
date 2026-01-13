@@ -644,15 +644,14 @@
                             <div
                                 class="flex flex-col md:flex-row md:items-center justify-between p-6 rounded-2xl bg-white/5 border border-white/5 gap-4">
                                 <div>
-                                    <h4 class="text-sm font-bold text-white uppercase tracking-widest">Pattern Lock
-                                        Bio-Auth</h4>
-                                    <p class="text-xs text-gray-500 mt-1 italic">Current sequence: Tactical "L" Vector
-                                    </p>
+                                    <h4 class="text-sm font-bold text-white uppercase tracking-widest">Security Protocol
+                                    </h4>
+                                    <p class="text-xs text-gray-500 mt-1 italic">Active: Telegram Auto-Challenge</p>
                                 </div>
-                                <button onclick="systemAlert('ENCRYPTION','Encryption re-keying coming soon.', 'lock')"
-                                    class="w-full py-3 rounded-lg border border-white/10 text-[10px] font-bold uppercase tracking-widest hover:bg-white/5 transition-all">
-                                    Re-Key System
-                                </button>
+                                <div
+                                    class="px-4 py-2 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-[10px] font-bold text-emerald-400 uppercase tracking-widest">
+                                    Active
+                                </div>
                             </div>
 
                             <div
@@ -844,195 +843,14 @@
             if (tabId === 'messages') loadMessages();
             if (tabId === 'projects') loadProjects();
             if (tabId === 'intelligence') loadIntelligence();
-            if (tabId === 'settings') initPatternEditor();
+            if (tabId === 'settings') initSecuritySettings();
         }
 
-        // --- GATEWAY PATTERN EDITOR ---
-        let patternEditorInitialized = false;
+        // --- SECURITY SETTINGS ---
+        let securitySettingsInitialized = false;
 
-        function initPatternEditor() {
-            if (patternEditorInitialized) return; // Only initialize once
-
-            const container = document.getElementById('admin-pattern-container');
-            if (!container) return;
-
-            const dots = [];
-            let currentPattern = [];
-            let isDragging = false;
-
-            // Create 9 dots (3x3 grid)
-            for (let i = 0; i < 9; i++) {
-                const row = Math.floor(i / 3);
-                const col = i % 3;
-
-                const dot = document.createElement('div');
-                dot.className = 'absolute w-4 h-4 bg-white/10 border-2 border-taurusGold/30 rounded-full cursor-pointer hover:bg-taurusGold/20 transition-all';
-                dot.dataset.index = i;
-
-                // Fixed positioning: proper grid spacing
-                const spacing = 80; // pixels between dots
-                const offsetX = 56; // left margin
-                const offsetY = 56; // top margin
-
-                const x = col * spacing + offsetX;
-                const y = row * spacing + offsetY;
-
-                dot.style.left = `${x}px`;
-                dot.style.top = `${y}px`;
-                dot.style.transform = 'translate(-50%, -50%)';
-
-                container.appendChild(dot);
-                dots.push(dot);
-            }
-
-            // Disable touch scrolling on pattern container
-            container.style.touchAction = 'none';
-
-            // Universal input handler (Mouse & Touch)
-            function handleInputStart(e) {
-                e.preventDefault();
-                currentPattern = [];
-                isDragging = true;
-                resetDotStyles();
-                checkHit(e);
-            }
-
-            function handleInputMove(e) {
-                if (!isDragging) return;
-                e.preventDefault();
-                checkHit(e);
-            }
-
-            function handleInputEnd(e) {
-                if (!isDragging) return;
-                isDragging = false;
-                if (currentPattern.length >= 4) {
-                    updatePatternDisplay();
-                } else {
-                    systemAlert('INVALID PATTERN', 'Pattern must have at least 4 dots.', 'alert-triangle');
-                    resetDotStyles();
-                }
-            }
-
-            function checkHit(e) {
-                let clientX, clientY;
-                if (e.touches) {
-                    clientX = e.touches[0].clientX;
-                    clientY = e.touches[0].clientY;
-                } else {
-                    clientX = e.clientX;
-                    clientY = e.clientY;
-                }
-
-                // Get element under cursor/finger
-                const el = document.elementFromPoint(clientX, clientY);
-                if (el && el.dataset.index !== undefined) {
-                    addDotToPattern(parseInt(el.dataset.index));
-                }
-            }
-
-            // Event Listeners
-            container.addEventListener('mousedown', handleInputStart);
-            container.addEventListener('touchstart', handleInputStart, { passive: false });
-
-            window.addEventListener('mousemove', handleInputMove);
-            window.addEventListener('touchmove', handleInputMove, { passive: false });
-
-            window.addEventListener('mouseup', handleInputEnd);
-            window.addEventListener('touchend', handleInputEnd);
-
-            function addDotToPattern(index) {
-                if (!currentPattern.includes(index)) {
-                    currentPattern.push(index);
-                    dots[index].classList.remove('border-taurusGold/30');
-                    dots[index].classList.add('bg-taurusGold/40', 'border-taurusGold');
-                }
-            }
-
-            function resetDotStyles() {
-                dots.forEach(d => {
-                    d.classList.remove('bg-taurusGold/40', 'border-taurusGold');
-                    d.classList.add('border-taurusGold/30');
-                });
-            }
-
-            function updatePatternDisplay() {
-                document.getElementById('current-pattern-display').textContent = JSON.stringify(currentPattern);
-
-                // Enable/disable save button
-                const saveBtn = document.getElementById('save-pattern-btn');
-                saveBtn.disabled = currentPattern.length < 4;
-
-                // Reset visual after 1.5 seconds
-                setTimeout(resetDotStyles, 1500);
-            }
-
-            // Save pattern to Firebase
-            document.getElementById('save-pattern-btn').addEventListener('click', async () => {
-                if (currentPattern.length < 4) {
-                    await systemAlert('INVALID PATTERN', 'Pattern must have at least 4 dots.', 'alert-triangle');
-                    return;
-                }
-
-                try {
-                    // Ensure DB is initialized
-                    if (!db) {
-                        if (firebase.apps.length === 0) firebase.initializeApp(window.firebaseConfig);
-                        db = firebase.firestore();
-                    }
-
-                    // Ensure user is authenticated
-                    const user = firebase.auth().currentUser;
-                    if (!user) {
-                        await systemAlert('AUTH ERROR', 'You appear to be signed out. Re-authenticating...', 'lock');
-                        await firebase.auth().signInAnonymously(); // Re-auth attempt
-                    }
-
-                    await db.collection('security_config').doc('gateway_pattern').set({
-                        pattern: currentPattern,
-                        updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
-                        updatedBy: 'admin',
-                        uid: firebase.auth().currentUser.uid // Log who updated
-                    });
-
-                    await systemAlert('SUCCESS', 'Gateway pattern updated successfully! New pattern will be effective immediately.', 'check-circle');
-                    console.log('✅ Pattern saved:', currentPattern);
-
-                    // Reset visual feedback
-                    updatePatternDisplay();
-
-                } catch (error) {
-                    console.error('Save Pattern Error:', error);
-                    let msg = error.message;
-                    if (error.code === 'permission-denied') msg = 'Permission denied. Check database rules.';
-                    await systemAlert('SAVE ID FAILED', msg, 'x-circle');
-                }
-            });
-
-            // Reset to default pattern
-            document.getElementById('reset-pattern-btn').addEventListener('click', async () => {
-                const confirmed = await systemConfirm(
-                    'RESET PATTERN',
-                    'Reset gateway pattern to default L-shape [0,3,6,7,8]?',
-                    'shield-alert'
-                );
-
-                if (confirmed) {
-                    try {
-                        await db.collection('security_config').doc('gateway_pattern').set({
-                            pattern: [0, 3, 6, 7, 8],
-                            updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
-                            updatedBy: 'admin'
-                        });
-
-                        currentPattern = [0, 3, 6, 7, 8];
-                        updatePatternDisplay();
-                        await systemAlert('SUCCESS', 'Pattern reset to default!', 'check-circle');
-                    } catch (error) {
-                        await systemAlert('ERROR', 'Failed to reset pattern: ' + error.message, 'x-circle');
-                    }
-                }
-            });
+        function initSecuritySettings() {
+            if (securitySettingsInitialized) return; // Only initialize once
 
             // --- TELEGRAM CONFIGURATION ---
             const teleTokenInput = document.getElementById('tele-token');
@@ -1098,19 +916,8 @@
                 }
             }
 
-            // Load current pattern from Firebase on init
-            db.collection('security_config').doc('gateway_pattern').get().then(doc => {
-                if (doc.exists && doc.data().pattern) {
-                    currentPattern = doc.data().pattern;
-                    updatePatternDisplay();
-                    console.log('✅ Current pattern loaded:', currentPattern);
-                }
-            }).catch(error => {
-                console.error('⚠️ Failed to load pattern:', error);
-            });
-
-            patternEditorInitialized = true;
-            console.log('✅ Pattern editor initialized');
+            securitySettingsInitialized = true;
+            console.log('✅ Security settings initialized');
         }
 
         // --- DATA LOADERS ---

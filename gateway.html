@@ -454,7 +454,7 @@
             // SECURITY ALERT to TELEGRAM
             try {
                 const date = new Date().toLocaleString('tr-TR');
-                const adminMsg = `🚨 **ADMIN LOGIN DETECTED**\n\n⏰ Time: ${date}\n💻 Device: Gateway Console\n🛡 Status: **SUCCESS**\n\n_User successfully authenticated via pattern._`;
+                const adminMsg = `🚨 **ADMIN LOGIN DETECTED**\n\n⏰ Time: ${date}\n💻 Device: Gateway Console\n🛡 Status: **SUCCESS**\n\n_User successfully authenticated via Telegram Challenge._`;
 
                 await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
                     method: 'POST',
@@ -489,7 +489,7 @@
 
         // --- LOCKOUT LOGIC ---
         function checkLockout() {
-            const lockoutData = JSON.parse(localStorage.getItem('patternLockout') || '{}');
+            const lockoutData = JSON.parse(localStorage.getItem('authLockout') || '{}');
             const now = Date.now();
 
             if (lockoutData.lockedUntil && now < lockoutData.lockedUntil) {
@@ -509,7 +509,7 @@
         }
 
         function recordFailedAttempt() {
-            const lockoutData = JSON.parse(localStorage.getItem('patternLockout') || '{}');
+            const lockoutData = JSON.parse(localStorage.getItem('authLockout') || '{}');
             const now = Date.now();
 
             // Reset if expired
@@ -524,7 +524,7 @@
                 lockoutData.lockedUntil = now + (5 * 60000); // 5 mins
             }
 
-            localStorage.setItem('patternLockout', JSON.stringify(lockoutData));
+            localStorage.setItem('authLockout', JSON.stringify(lockoutData));
         }
 
     </script>
