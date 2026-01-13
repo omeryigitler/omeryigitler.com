@@ -26,7 +26,13 @@
     // STATE
     let sessionID = localStorage.getItem('taurus_session_id');
     let sessionData = {};
-    let localHistory = JSON.parse(localStorage.getItem('taurus_history_buffer') || "[]");
+    let localHistory = [];
+    try {
+        localHistory = JSON.parse(localStorage.getItem('taurus_history_buffer') || "[]");
+    } catch (e) {
+        console.warn("🐂 LocalStorage history corrupted, clearing buffer...", e);
+        localStorage.removeItem('taurus_history_buffer');
+    }
     let audioObj = null;
     window.isInternalNav = false; // Flag to prevent reports on page transitions
 
