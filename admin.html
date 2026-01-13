@@ -1143,8 +1143,8 @@
 
         function filterMessages(f) {
             currentMessageFilter = f;
-            document.getElementById('filter-all-messages').className = f === 'all' ? 'px-6 py-2 rounded-lg bg-taurusGold text-black text-[10px] font-black uppercase tracking-widest whitespace-nowrap transition-all' : 'px-6 py-2 rounded-lg text-gray-400 text-[10px] font-black uppercase tracking-widest whitespace-nowrap hover:text-white transition-all';
-            document.getElementById('filter-unread-messages').className = f === 'unread' ? 'px-6 py-2 rounded-lg bg-taurusGold text-black text-[10px] font-black uppercase tracking-widest whitespace-nowrap transition-all' : 'px-6 py-2 rounded-lg text-gray-400 text-[10px] font-black uppercase tracking-widest whitespace-nowrap hover:text-white transition-all';
+            document.getElementById('filter-all-messages').className = f === 'all' ? 'flex-1 justify-center px-6 py-2 rounded-lg bg-taurusGold text-black text-[10px] font-black uppercase tracking-widest whitespace-nowrap transition-all' : 'flex-1 justify-center px-6 py-2 rounded-lg text-gray-400 text-[10px] font-black uppercase tracking-widest whitespace-nowrap hover:text-white transition-all';
+            document.getElementById('filter-unread-messages').className = f === 'unread' ? 'flex-1 justify-center px-6 py-2 rounded-lg bg-taurusGold text-black text-[10px] font-black uppercase tracking-widest whitespace-nowrap transition-all' : 'flex-1 justify-center px-6 py-2 rounded-lg text-gray-400 text-[10px] font-black uppercase tracking-widest whitespace-nowrap hover:text-white transition-all';
             loadMessages();
         }
 
@@ -1831,8 +1831,8 @@
         let currentProjectFilter = 'active';
         function filterProjects(s) {
             currentProjectFilter = s;
-            document.getElementById('filter-active').className = s === 'active' ? 'h-full px-6 rounded-lg text-[10px] font-black uppercase tracking-widest bg-taurusGold text-black transition-all whitespace-nowrap' : 'h-full px-6 rounded-lg text-[10px] font-black uppercase tracking-widest text-gray-400 hover:text-white transition-all whitespace-nowrap';
-            document.getElementById('filter-completed').className = s === 'completed' ? 'h-full px-6 rounded-lg text-[10px] font-black uppercase tracking-widest bg-taurusGold text-black transition-all whitespace-nowrap' : 'h-full px-6 rounded-lg text-[10px] font-black uppercase tracking-widest text-gray-400 hover:text-white transition-all whitespace-nowrap';
+            document.getElementById('filter-active').className = s === 'active' ? 'h-full flex-1 justify-center px-6 rounded-lg text-[10px] font-black uppercase tracking-widest bg-taurusGold text-black transition-all whitespace-nowrap' : 'h-full flex-1 justify-center px-6 rounded-lg text-[10px] font-black uppercase tracking-widest text-gray-400 hover:text-white transition-all whitespace-nowrap';
+            document.getElementById('filter-completed').className = s === 'completed' ? 'h-full flex-1 justify-center px-6 rounded-lg text-[10px] font-black uppercase tracking-widest bg-taurusGold text-black transition-all whitespace-nowrap' : 'h-full flex-1 justify-center px-6 rounded-lg text-[10px] font-black uppercase tracking-widest text-gray-400 hover:text-white transition-all whitespace-nowrap';
             loadProjects();
         }
 
