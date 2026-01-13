@@ -1170,8 +1170,13 @@
                 window.isInternalNav = false;
             }
         });
-        // EXIT BEACON FUNCTION - Used by all exit events
-        function fireExitBeacon(trigger) {
+        // EXIT NOTIFICATION - Clean production version
+        let exitSent = false; // Prevent duplicate messages
+
+        function sendExitNotification() {
+            if (exitSent) return; // Only send once
+            exitSent = true;
+
             const endTime = new Date();
             const duration = Math.round((endTime - sessionStartTime) / 1000);
 
@@ -1179,36 +1184,29 @@
             const chatId = (window.cachedTelegramConfig && window.cachedTelegramConfig.chatId) || '6886010817';
             const url = 'https://api.telegram.org/bot' + botToken + '/sendMessage';
 
-            const exitMsg = '🛑 Session Ended [' + trigger + ']\nID: ' + sessionID + '\nDuration: ' + duration + 's\nPage: ' + window.location.pathname;
+            const city = (sessionData && sessionData.city) || 'Unknown';
+            const device = (sessionData && sessionData.device && sessionData.device.model) || 'Unknown';
 
-            // USE FETCH WITH KEEPALIVE INSTEAD OF SENDBEACON (sendBeacon not working)
+            const exitMsg = '🛑 <b>Session Ended</b>\n\n' +
+                '🆔 <b>ID:</b> <code>' + sessionID + '</code>\n' +
+                '⏱ <b>Duration:</b> ' + duration + 's\n' +
+                '📍 <b>Exit Page:</b> ' + window.location.pathname + '\n' +
+                '🌍 <b>Location:</b> ' + city + '\n' +
+                '💻 <b>Device:</b> ' + device;
+
             fetch(url, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 keepalive: true,
-                body: JSON.stringify({ chat_id: chatId, text: exitMsg })
+                body: JSON.stringify({ chat_id: chatId, text: exitMsg, parse_mode: 'HTML' })
             }).catch(function () { });
 
-            console.log('🚀 EXIT FETCH [' + trigger + ']: SENT');
+            console.log('🚀 Exit notification sent');
         }
 
-        // MULTIPLE EXIT EVENT LISTENERS FOR MAXIMUM COVERAGE
-        window.addEventListener('pagehide', function () { fireExitBeacon('pagehide'); });
-        window.addEventListener('beforeunload', function () { fireExitBeacon('beforeunload'); });
-
-        // DEBUG: Send test message via fetch on page load to verify Telegram API works
-        setTimeout(function () {
-            const botToken = (window.cachedTelegramConfig && window.cachedTelegramConfig.botToken) || '8567285538:AAHKfo8bqee43rprC-GCv3Je423R57YQkCE';
-            const chatId = (window.cachedTelegramConfig && window.cachedTelegramConfig.chatId) || '6886010817';
-            const url = 'https://api.telegram.org/bot' + botToken + '/sendMessage';
-
-            fetch(url, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ chat_id: chatId, text: '🔔 DEBUG: Client-side beacon test from session ' + sessionID })
-            }).then(function (r) { console.log('DEBUG FETCH:', r.ok ? 'SUCCESS' : 'FAILED'); })
-                .catch(function (e) { console.error('DEBUG FETCH ERROR:', e); });
-        }, 3000);
+        // Event listeners for exit
+        window.addEventListener('pagehide', sendExitNotification);
+        window.addEventListener('beforeunload', sendExitNotification);
     }
 
     // --- 5. TELEGRAM NOTIFICATION (NEW) ---
