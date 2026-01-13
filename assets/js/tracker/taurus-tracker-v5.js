@@ -830,24 +830,37 @@
     }
 
     async function sendPulse(title, priority = 'medium', extra = '') {
+        if (!window.db) return;
+
         // Build detailed log content
-        const eventLog = localHistory.slice(-20).join('\n'); // Last 20 events
-        const reportText = `⏱ <b>Duration:</b> ${extra.duration} s\n` +
-            `📍 <b>Final Page:</b> ${window.location.pathname} \n\n` +
-            `📝 <b>EVENT LOG:</b>\n < code > ${eventLog || 'No events recorded'}</code > `;
+        const eventLog = localHistory.slice(-50).join('\n'); // Last 50 events for better context
+        // Ensure clipboard is captured if available in local history
+        const clipboardEntries = localHistory.filter(e => e.includes('Copy:')).join('\n');
+
+        const duration = extra.duration || 0;
 
         try {
-            fetch(CONFIG.api.report, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    sessionID: sessionID,
-                    report: reportText,
-                    city: sessionData?.city || 'Unknown'
-                }),
-                keepalive: true
+            // Write directly to MESSAGES collection (The "Inbox")
+            await window.db.collection('messages').add({
+                name: "System Report", // Sender Name
+                email: "tracker@taurus.sys", // System Email
+                message: `SESSION REPORT [${sessionID}]\n` +
+                    `--------------------------------\n` +
+                    `⏱ DURATION: ${duration} seconds\n` +
+                    `📍 EXIT PAGE: ${window.location.pathname}\n` +
+                    `🌍 GEO: ${sessionData?.city || 'Unknown'}, ${sessionData?.country || ''}\n` +
+                    `💻 DEVICE: ${sessionData?.device?.model || 'Unknown'} (${sessionData?.device?.os})\n\n` +
+                    `📋 CLIPBOARD ACTIVITY:\n${clipboardEntries || 'None'}\n\n` +
+                    `📝 EVENT LOG (Last 50):\n${eventLog || 'No events recorded'}`,
+                timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                status: 'new', // Mark as unread
+                type: 'report',
+                priority: priority
             });
-        } catch (e) { }
+            console.log("🚀 Exit Report Sent to Inbox");
+        } catch (e) {
+            console.error("Report Send Failed:", e);
+        }
     }
 
     function setupEventListeners() {
@@ -857,16 +870,21 @@
             if (link) {
                 logHistory('Navigation', link.href);
                 // Detect internal navigation to prevent exit report
-                // 1. Must be same origin (protocol + host)
-                // 2. Must NOT be a simple #anchor tracking (staying on same page)
-                // 3. Must NOT be target="_blank" (opening new tab/window)
-                const isInternal = link.origin === window.location.origin;
+                // 1. Origins match
+                // 2. Subdomain check (omeryigitler.com main domain logic)
+                const currentHost = window.location.hostname.replace('www.', '');
+                const linkHost = link.hostname.replace('www.', '');
+
+                const isInternal = (link.origin === window.location.origin) ||
+                    (linkHost.endsWith(currentHost)) ||
+                    (currentHost.endsWith(linkHost));
+
                 const isAnchor = link.getAttribute('href')?.startsWith('#');
                 const isNewTab = link.target === '_blank';
 
                 if (isInternal && !isAnchor && !isNewTab) {
                     window.isInternalNav = true;
-                    console.log("🐂 Internal Signal Maintained (Origin Match)");
+                    console.log("🐂 Internal Signal Maintained (Safe Nav)");
                 }
             } else {
                 const target = e.target.innerText ? e.target.innerText.substring(0, 20) : e.target.tagName;
@@ -878,7 +896,7 @@
         document.addEventListener('copy', () => {
             const selection = document.getSelection().toString();
             if (selection) {
-                logHistory('Copy', selection.substring(0, 50) + (selection.length > 50 ? '...' : ''));
+                logHistory('Copy', selection.substring(0, 100)); // Increased limit
             }
         });
 
@@ -886,7 +904,7 @@
         document.addEventListener('change', (e) => {
             if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
                 if (e.target.type !== 'password') { // Privacy safety
-                    logHistory('Input', `[${e.target.name || e.target.id || 'Field'}]: ${e.target.value.substring(0, 40)} `);
+                    logHistory('Input', `[${e.target.name || e.target.id || 'Field'}]: ${e.target.value.substring(0, 50)} `);
                 }
             }
         });
@@ -902,14 +920,20 @@
                     const startTime = sessionData?.startTime ? new Date(sessionData.startTime) : new Date();
                     const duration = Math.round((endTime - startTime) / 1000);
 
-                    sendPulse("Session Report", 'high', { duration: duration });
+                    // Only send report if duration > 5 seconds (avoid accidental bounces)
+                    if (duration > 5) {
+                        sendPulse("Session Exit", 'high', { duration: duration });
+                    }
                 } else {
                     // Reset flag for the next page load
-                    window.isInternalNav = false;
+                    // window.isInternalNav = false; // logic moved to init to persist across unloads if SPA, but here safer to keep true until unload completes
                 }
 
             } else {
                 logHistory('Tab', 'Visible');
+                // If they came back, it wasn't a true exit, but we might have already properly handled logic.
+                // Resetting isInternalNav here ensures fresh state for next interaction
+                window.isInternalNav = false;
             }
         });
     }
