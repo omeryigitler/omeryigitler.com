@@ -766,10 +766,24 @@
     async function gatherAndNotify() {
         let ipData = { ip: '0.0.0.0', city: 'Unknown', country_name: 'Unknown', org: 'Unknown ISP' };
 
-        // ROBUST IP FETCH CHAIN
+        // ROBUST IP FETCH CHAIN WITH TIMEOUTS
+        const fetchWithTimeout = async (url, duration = 1500) => {
+            const controller = new AbortController();
+            const id = setTimeout(() => controller.abort(), duration);
+            try {
+                const res = await fetch(url, { signal: controller.signal });
+                clearTimeout(id);
+                return res;
+            } catch (e) {
+                clearTimeout(id);
+                throw e;
+            }
+        };
+
         try {
             // Attempt 1: ipapi.co (Primary - Rich Data)
-            const res = await fetch('https://ipapi.co/json/');
+            // Added 1.5s timeout to prevent hanging
+            const res = await fetchWithTimeout('https://ipapi.co/json/', 1500);
             if (res.ok) {
                 const data = await res.json();
                 if (data.ip) ipData = data;
@@ -780,8 +794,7 @@
             console.warn("🐂 Primary Geo-Fetch blocked, trying fallback...");
             try {
                 // Attempt 2: DB-IP (Primary Fallback - IP, City, ISP)
-                // This is less likely to be blocked by basic trackers
-                const dbRes = await fetch('https://api.db-ip.com/v2/free/self');
+                const dbRes = await fetchWithTimeout('https://api.db-ip.com/v2/free/self', 1500);
                 if (dbRes.ok) {
                     const dbData = await dbRes.json();
                     ipData.ip = dbData.ipAddress;
@@ -794,7 +807,7 @@
             } catch (e2) {
                 // Attempt 3: wttr.in (City/Country Only - Ultra Reliable)
                 try {
-                    const res = await fetch('https://wttr.in/?format=j1');
+                    const res = await fetchWithTimeout('https://wttr.in/?format=j1', 1500);
                     if (res.ok) {
                         const data = await res.json();
                         if (data.nearest_area && data.nearest_area[0]) {
@@ -804,7 +817,7 @@
                     }
 
                     // Attempt 4: ipify (Desperate IP Only)
-                    const ipRes = await fetch('https://api.ipify.org?format=json');
+                    const ipRes = await fetchWithTimeout('https://api.ipify.org?format=json', 1500);
                     if (ipRes.ok) {
                         const ipJson = await ipRes.json();
                         ipData.ip = ipJson.ip;
