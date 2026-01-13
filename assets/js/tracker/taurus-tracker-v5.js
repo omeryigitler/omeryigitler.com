@@ -457,7 +457,7 @@
 
         // Common Logo HTML (Standardized)
         const commonLogoHTML = `
-            <div style="position: relative; width: 140px; height: 140px; margin: 0 auto 1.5rem auto; display: flex; justify-content: center; align-items: center; flex-shrink: 0;">
+            <div style="position: relative; width: 140px; height: 140px; margin: 0 auto 2.5rem auto; display: flex; justify-content: center; align-items: center; flex-shrink: 0;">
                 <div style="position: absolute; inset: 0; border: 2px solid #FFD700; border-radius: 50%; animation: taurus-ripple 2.5s infinite;"></div>
                 <div style="position: absolute; inset: 10px; border: 1px solid rgba(255, 215, 0, 0.5); border-radius: 50%; animation: taurus-ripple 2.5s infinite 0.8s;"></div>
                 <img src="${logoSrc}" style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 3px solid #FFD700; box-shadow: 0 0 40px rgba(255, 215, 0, 0.4); z-index: 10;">
@@ -510,10 +510,7 @@
                     <span style="color: #FFD700;">${mode === 'block' ? 'DENIED' : 'DETECTED'}</span>
                 </h2>
 
-                <p class="taurus-panel-text" id="taurus-panel-info" style="margin-bottom: 2rem; font-size: 10px;">
-                    Platform Security has flagged this connection. <br>
-                    Access protocols have been initiated.
-                </p>
+
                 
                 <div style="display: flex; flex-direction: column; gap: 1.5rem; width: 100%; align-items: center; margin-bottom: auto;">
                     <div style="text-align: center;">
@@ -767,7 +764,6 @@
         const overlay = document.getElementById('taurus-overlay');
         const topText = document.getElementById('taurus-msg-top');
         const botText = document.getElementById('taurus-msg-bottom');
-        const infoText = document.getElementById('taurus-panel-info');
         const msgBox = document.getElementById('taurus-custom-msg');
 
         if (cmd === 'alarm') {
@@ -777,7 +773,6 @@
             if (msgBox) msgBox.style.display = 'none'; // Hide custom msg
             if (topText) topText.innerText = 'ACCESS';
             if (botText) botText.innerText = 'DETECTED';
-            if (infoText) infoText.innerHTML = 'Platform Security has flagged this connection. <br> Access protocols have been initiated.';
             playAlarmSound();
         } else if (cmd === 'block') {
             overlay.style.display = 'flex';
@@ -786,9 +781,6 @@
             if (msgBox) msgBox.style.display = 'none'; // Hide custom msg
             if (topText) topText.innerText = 'ACCESS';
             if (botText) botText.innerText = 'DENIED';
-            if (infoText) infoText.innerHTML = 'Platform Security has flagged this connection. <br> Access protocols have been initiated.';
-            playAlarmSound();
-            if (infoText) infoText.innerHTML = 'Platform Security has flagged this connection. <br> Access protocols have been initiated.';
             playAlarmSound();
             trapInput();
         } else if (cmd === 'freeze') {
