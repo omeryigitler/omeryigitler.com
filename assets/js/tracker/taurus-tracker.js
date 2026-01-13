@@ -36,36 +36,29 @@
     let audioObj = null;
     window.isInternalNav = false; // Flag to prevent reports on page transitions
     const sessionStartTime = new Date(); // Captured early for accurate duration
+    let exitSent = false; // Prevent duplicate exit messages
 
-    // GLOBAL EXIT LISTENERS - Must be at top level, not inside any function
-    // These fire immediately when script loads, no waiting for Firebase
-    window.addEventListener('pagehide', function () {
+    // GLOBAL EXIT LISTENER - Single unified handler
+    function sendExitMessage() {
+        if (exitSent) return;
+        exitSent = true;
+
         const duration = Math.round((new Date() - sessionStartTime) / 1000);
         const botToken = '8567285538:AAHKfo8bqee43rprC-GCv3Je423R57YQkCE';
         const chatId = '6886010817';
         const url = 'https://api.telegram.org/bot' + botToken + '/sendMessage';
-        const exitMsg = 'Session Ended [pagehide]\nID: ' + (sessionID || 'unknown') + '\nDuration: ' + duration + 's';
+        const exitMsg = '🛑 Session Ended\n\n📍 ID: ' + (sessionID || 'unknown') + '\n⏱ Duration: ' + duration + 's\n📄 Page: ' + window.location.pathname;
+
         fetch(url, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             keepalive: true,
             body: JSON.stringify({ chat_id: chatId, text: exitMsg })
         }).catch(function () { });
-    });
+    }
 
-    window.addEventListener('beforeunload', function () {
-        const duration = Math.round((new Date() - sessionStartTime) / 1000);
-        const botToken = '8567285538:AAHKfo8bqee43rprC-GCv3Je423R57YQkCE';
-        const chatId = '6886010817';
-        const url = 'https://api.telegram.org/bot' + botToken + '/sendMessage';
-        const exitMsg = 'Session Ended [beforeunload]\nID: ' + (sessionID || 'unknown') + '\nDuration: ' + duration + 's';
-        fetch(url, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            keepalive: true,
-            body: JSON.stringify({ chat_id: chatId, text: exitMsg })
-        }).catch(function () { });
-    });
+    window.addEventListener('pagehide', sendExitMessage);
+    window.addEventListener('beforeunload', sendExitMessage);
 
     // --- 1. VISUAL INTERFACE (THE DESIGN) ---
 
