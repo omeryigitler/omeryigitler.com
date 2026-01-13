@@ -505,7 +505,7 @@
             panelContentHTML = `
                 ${commonLogoHTML}
 
-                <h2 class="font-display text-2xl font-bold tracking-widest text-center" style="animation: taurus-pulse-text 2s infinite ease-in-out; margin-bottom: 1.5rem; line-height: 1.4;">
+                <h2 class="font-display text-2xl font-bold tracking-widest text-center" style="animation: taurus-pulse-text 2s infinite ease-in-out; margin-bottom: 1.5rem; margin-top: 1rem; line-height: 1.4;">
                     <span style="color: #FFD700;">ACCESS</span><br>
                     <span style="color: #FFD700;">${mode === 'block' ? 'DENIED' : 'DETECTED'}</span>
                 </h2>
