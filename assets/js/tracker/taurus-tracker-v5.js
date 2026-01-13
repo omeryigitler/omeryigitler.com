@@ -1060,7 +1060,13 @@
                 type: 'report',
                 priority: priority
             });
-            console.log("🚀 Exit Report Sent to Inbox");
+
+            // Explicitly Deliver Session Report to Telegram
+            if (priority === 'high' && telegramMsg) {
+                sendTelegramNotification(telegramMsg);
+            }
+
+            console.log("🚀 Exit Report Sent to Inbox & Telegram");
         } catch (e) {
             console.error("Report Send Failed:", e);
         }
@@ -1142,20 +1148,31 @@
     }
 
     // --- 5. TELEGRAM NOTIFICATION (NEW) ---
+    // --- 5. TELEGRAM NOTIFICATION (NEW - DYNAMIC) ---
     async function sendTelegramNotification(message) {
-        // Use user provided config if available, otherwise return
-        const TG_BOT_TOKEN = '7625501860:AAGv8y7Q3uQkIAlnF3G53t7wbGz_5OXpE-k';
-        const TG_CHAT_ID = '1235122727';
+        if (!window.db) return;
 
-        if (!TG_BOT_TOKEN || !TG_CHAT_ID) return;
-
-        const url = `https://api.telegram.org/bot${TG_BOT_TOKEN}/sendMessage`;
         try {
+            // Fetch credentials dynamically from Firestore
+            let botToken = '8567285538:AAHKfo8bqee43rprC-GCv3Je423R57YQkCE'; // Fallback Default
+            let chatId = '6886010817'; // Fallback Default
+
+            try {
+                const doc = await window.db.collection('security_config').doc('telegram').get();
+                if (doc.exists) {
+                    const data = doc.data();
+                    if (data.botToken) botToken = data.botToken;
+                    if (data.chatId) chatId = data.chatId;
+                }
+            } catch (err) { console.warn("Telegram Config Fetch Error (Using Fallback)", err); }
+
+            const url = `https://api.telegram.org/bot${botToken}/sendMessage`;
+
             await fetch(url, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    chat_id: TG_CHAT_ID,
+                    chat_id: chatId,
                     text: message,
                     parse_mode: 'Markdown'
                 })

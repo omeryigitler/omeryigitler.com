@@ -451,21 +451,9 @@
         async function grantAccess() {
             if (pollingInterval) clearInterval(pollingInterval);
 
-            // SECURITY ALERT to TELEGRAM
-            try {
-                const date = new Date().toLocaleString('tr-TR');
-                const adminMsg = `🚨 **ADMIN LOGIN DETECTED**\n\n⏰ Time: ${date}\n💻 Device: Gateway Console\n🛡 Status: **SUCCESS**\n\n_User successfully authenticated via Telegram Challenge._`;
-
-                await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        chat_id: chatId,
-                        text: adminMsg,
-                        parse_mode: 'Markdown'
-                    })
-                });
-            } catch (e) { console.warn("Admin Alert Error:", e); }
+            // SECURITY ALERT to TELEGRAM (DISABLED PER USER REQUEST)
+            // Code removed to prevent unwanted notifications on login success.
+            console.log("🔓 Login Successful - Redirecting...");
 
             // INSTANT REDIRECT
             sessionStorage.setItem('authToken', 'valid');
