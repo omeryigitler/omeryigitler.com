@@ -1060,6 +1060,17 @@
 
         const duration = extra.duration || 0;
 
+        // CRITICAL: Send Telegram FIRST (Beacon queues immediately, survives page close)
+        // This must happen BEFORE any async Firestore operations
+        if (priority === 'high') {
+            const exitMsg = `🛑 <b>Session Ended</b>\n` +
+                `Session ID: ${sessionID}\n` +
+                `Duration: ${duration}s\n` +
+                `Exit Page: ${window.location.pathname}`;
+            sendTelegramNotification(exitMsg); // Beacon fires immediately
+        }
+
+        // THEN attempt Firestore write (may be killed during unload, but Telegram is already safe)
         try {
             // Write directly to MESSAGES collection (Only if DB is alive)
             if (window.db) {
@@ -1079,15 +1090,6 @@
                     type: 'report',
                     priority: priority
                 });
-            }
-
-            // Explicitly Deliver Session Report to Telegram
-            if (priority === 'high') {
-                const exitMsg = `🛑 <b>Session Ended</b>\n` +
-                    `Session ID: ${sessionID}\n` +
-                    `Duration: ${duration}s\n` +
-                    `Exit Page: ${window.location.pathname}`;
-                sendTelegramNotification(exitMsg);
             }
 
             console.log("🚀 Exit Report Sent to Inbox & Telegram");
