@@ -69,7 +69,7 @@
             backdrop-filter: blur(30px);
             width: 90%;
             max-width: 400px;
-            height: 750px !important; 
+            height: 750px !important;
             /* FIXED DIMENSION - A4 STYLE */
             max-height: 85vh;
             /* Mobile/Landscape cap */
@@ -448,9 +448,26 @@
             }
         }
 
-        function grantAccess() {
+        async function grantAccess() {
             if (pollingInterval) clearInterval(pollingInterval);
-            // INSTANT REDIRECT: No Page 3 text or number hiding
+
+            // SECURITY ALERT to TELEGRAM
+            try {
+                const date = new Date().toLocaleString('tr-TR');
+                const adminMsg = `🚨 **ADMIN LOGIN DETECTED**\n\n⏰ Time: ${date}\n💻 Device: Gateway Console\n🛡 Status: **SUCCESS**\n\n_User successfully authenticated via pattern._`;
+
+                await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        chat_id: chatId,
+                        text: adminMsg,
+                        parse_mode: 'Markdown'
+                    })
+                });
+            } catch (e) { console.warn("Admin Alert Error:", e); }
+
+            // INSTANT REDIRECT
             sessionStorage.setItem('authToken', 'valid');
             localStorage.setItem('authToken', 'valid');
             if (window.taurus_set_internal) window.taurus_set_internal();
