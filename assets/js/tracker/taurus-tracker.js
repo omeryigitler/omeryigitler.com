@@ -1173,7 +1173,6 @@
                 botToken = window.cachedTelegramConfig.botToken || botToken;
                 chatId = window.cachedTelegramConfig.chatId || chatId;
             } else if (window.db) {
-                // Only try async fetch if we are NOT unloading (risk of failure)
                 try {
                     const doc = await window.db.collection('security_config').doc('telegram').get();
                     if (doc.exists) {
@@ -1186,17 +1185,33 @@
 
             const url = `https://api.telegram.org/bot${botToken}/sendMessage`;
 
+            // STRATEGY: Use sendBeacon for maximum reliability on exit/mobile
+            if (navigator.sendBeacon) {
+                const formData = new FormData();
+                formData.append('chat_id', chatId);
+                formData.append('text', message);
+                formData.append('parse_mode', 'Markdown');
+
+                // sendBeacon sends POST by default. Returns true if queued.
+                const queued = navigator.sendBeacon(url, formData);
+                if (queued) {
+                    console.log("📨 Telegram Notification Queued via Beacon (Exit Safe)");
+                    return; // Success!
+                }
+            }
+
+            // Fallback to Keepalive Fetch if beacon fails or not supported
             await fetch(url, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                keepalive: true, // CRITICAL: Ensures delivery on tab close/exit
+                keepalive: true,
                 body: JSON.stringify({
                     chat_id: chatId,
                     text: message,
                     parse_mode: 'Markdown'
                 })
             });
-            console.log("📨 Telegram Notification Sent");
+            console.log("📨 Telegram Notification Sent (Fetch)");
         } catch (e) {
             console.error("Telegram Error:", e);
         }
