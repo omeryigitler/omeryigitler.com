@@ -1135,8 +1135,9 @@
             if (document.hidden) {
                 logHistory('Tab', 'Hidden');
 
-                // EXIT REPORT: Only if NOT an internal navigation
-                if (!window.isInternalNav) {
+                // EXIT REPORT: Force Execution (Debug Mode)
+                // if (!window.isInternalNav) {
+                if (true) {
                     const endTime = new Date();
                     const startTime = sessionData?.startTime ? new Date(sessionData.startTime) : new Date();
                     const duration = Math.round((endTime - startTime) / 1000);
