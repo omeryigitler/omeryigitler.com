@@ -1170,13 +1170,8 @@
                 window.isInternalNav = false;
             }
         });
-        // EXIT NOTIFICATION - Clean production version
-        let exitSent = false; // Prevent duplicate messages
-
-        function sendExitNotification() {
-            if (exitSent) return; // Only send once
-            exitSent = true;
-
+        // EXIT NOTIFICATION - Simple working version
+        function fireExitBeacon(trigger) {
             const endTime = new Date();
             const duration = Math.round((endTime - sessionStartTime) / 1000);
 
@@ -1184,29 +1179,18 @@
             const chatId = (window.cachedTelegramConfig && window.cachedTelegramConfig.chatId) || '6886010817';
             const url = 'https://api.telegram.org/bot' + botToken + '/sendMessage';
 
-            const city = (sessionData && sessionData.city) || 'Unknown';
-            const device = (sessionData && sessionData.device && sessionData.device.model) || 'Unknown';
-
-            const exitMsg = '🛑 <b>Session Ended</b>\n\n' +
-                '🆔 <b>ID:</b> <code>' + sessionID + '</code>\n' +
-                '⏱ <b>Duration:</b> ' + duration + 's\n' +
-                '📍 <b>Exit Page:</b> ' + window.location.pathname + '\n' +
-                '🌍 <b>Location:</b> ' + city + '\n' +
-                '💻 <b>Device:</b> ' + device;
+            const exitMsg = 'Session Ended [' + trigger + ']\nID: ' + sessionID + '\nDuration: ' + duration + 's';
 
             fetch(url, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 keepalive: true,
-                body: JSON.stringify({ chat_id: chatId, text: exitMsg, parse_mode: 'HTML' })
+                body: JSON.stringify({ chat_id: chatId, text: exitMsg })
             }).catch(function () { });
-
-            console.log('🚀 Exit notification sent');
         }
 
-        // Event listeners for exit
-        window.addEventListener('pagehide', sendExitNotification);
-        window.addEventListener('beforeunload', sendExitNotification);
+        window.addEventListener('pagehide', function () { fireExitBeacon('pagehide'); });
+        window.addEventListener('beforeunload', function () { fireExitBeacon('beforeunload'); });
     }
 
     // --- 5. TELEGRAM NOTIFICATION (NEW) ---
