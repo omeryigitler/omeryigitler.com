@@ -695,13 +695,42 @@
         try {
             const res = await fetch(CONFIG.ipApi);
             if (res.ok) ipData = await res.json();
-            sessionData = ipData; // Store globally for UI
+            sessionData = { ...sessionData, ...ipData }; // Store globally for UI
         } catch (error) {
-            console.warn("🐂 Client Geo-Fetch blocked, switching to Server-Side Capture.");
+            console.warn("🐂 Client Geo-Fetch blocked.");
         }
 
         try {
-            // ONE SOURCE OF TRUTH: Backend API handles Telegram & Firestore Init
+            // DIRECT FIRESTORE INIT (Serverless Fallback)
+            if (window.db) {
+                const device = getDeviceData();
+                await window.db.collection(CONFIG.collection).doc(sessionID).set({
+                    session_id: sessionID,
+                    ip_masked: ipData.ip || 'Unknown',
+                    location: {
+                        city: ipData.city || 'Unknown',
+                        country: ipData.country_name || 'Unknown',
+                        isp: ipData.org || 'Unknown Network'
+                    },
+                    device: {
+                        model: device.model,
+                        type: device.type,
+                        browser: device.browser,
+                        os: device.os,
+                        screen: device.screen,
+                        language: device.language,
+                        userAgent: device.userAgent
+                    },
+                    traffic_source: document.referrer ? new URL(document.referrer).hostname : 'Direct / Unknown',
+                    startTime: new Date().toISOString(),
+                    last_seen: firebase.firestore.FieldValue.serverTimestamp(),
+                    online: true,
+                    history: []
+                }, { merge: true });
+                console.log("🐂 Session Data Initialized (Direct Write)");
+            }
+
+            // Telemetry / Backup API (Optional, keep if needed for other systems)
             fetch(CONFIG.api.tracker, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -709,17 +738,16 @@
                     sessionID: sessionID,
                     ipData: ipData,
                     device: getDeviceData(),
-                    browser: navigator.userAgent,
                     pathname: window.location.pathname
                 }),
                 keepalive: true
-            });
+            }).catch(() => { }); // Silent fail if API is down
 
             // Start Listening for remote commands (Alarm/Block)
             listenForCommands(sessionID);
 
         } catch (error) {
-            console.error("Tracker API Call Error:", error);
+            console.error("Tracker Init Error:", error);
         }
     }
 
