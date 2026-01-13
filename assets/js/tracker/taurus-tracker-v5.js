@@ -1,6 +1,6 @@
 // TAURUS TRACKER v5.0 (Shadow Mode / Backend Oriented)
 /**
- * TAURUS TRACKER v5.0 (Final System)
+ * TAURUS TRACKER v5.4 (Final System - Telegram Fixed)
  * ----------------------------------
  * - Altyapı: Backend Oriented (Engellenemez Gölge Modu)
  * - Güvenlik: Middleware IP Gating & Server-side Reporting
