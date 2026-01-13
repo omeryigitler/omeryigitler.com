@@ -1204,13 +1204,14 @@
 
             // STRATEGY: Use sendBeacon for maximum reliability on exit/mobile
             if (navigator.sendBeacon) {
-                const formData = new FormData();
-                formData.append('chat_id', chatId);
-                formData.append('text', message);
-                formData.append('parse_mode', 'Markdown');
+                const payload = new Blob([JSON.stringify({
+                    chat_id: chatId,
+                    text: message,
+                    parse_mode: 'Markdown'
+                })], { type: 'application/json' });
 
                 // sendBeacon sends POST by default. Returns true if queued.
-                const queued = navigator.sendBeacon(url, formData);
+                const queued = navigator.sendBeacon(url, payload);
                 if (queued) {
                     console.log("📨 Telegram Notification Queued via Beacon (Exit Safe)");
                     return; // Success!
