@@ -678,6 +678,13 @@
             if (match && match[2]) model = match[2];
         }
 
+        // --- 5. iPadOS 13+ Desktop Mode Fix ---
+        if (os === 'Mac OS X' && navigator.maxTouchPoints && navigator.maxTouchPoints > 1) {
+            model = 'iPad Pro (Desktop Mode)';
+            type = 'Tablet';
+            os = 'iOS (iPadOS)';
+        }
+
         return {
             type: os.includes('Windows') || os.includes('Mac') ? 'Monitor' : type, // Safe fallback
             model: model,
