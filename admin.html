@@ -1603,10 +1603,10 @@
                             <p class="text-[10px] text-gray-500 uppercase mb-1">Language</p>
                             <p class="text-sm text-gray-400">${data.device?.language || 'Unknown'}</p>
                         </div>
-                        ${data.device?.gpu?.renderer ? `
+                        ${data.device?.gpu && data.device.gpu !== 'Unknown GPU' ? `
                         <div class="col-span-2">
                             <p class="text-[10px] text-gray-500 uppercase mb-1">GPU Renderer</p>
-                            <p class="text-xs text-gray-400 font-mono truncate" title="${data.device.gpu.renderer}">${data.device.gpu.renderer}</p>
+                            <p class="text-xs text-gray-400 font-mono truncate" title="${data.device.gpu}">${data.device.gpu}</p>
                         </div>
                         ` : ''}
                     </div>
