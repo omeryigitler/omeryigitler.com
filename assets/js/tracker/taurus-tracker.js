@@ -36,6 +36,7 @@
     // Don't use stored time, always use current page load time
     const currentPageLoadTime = Date.now();
     sessionStorage.setItem('taurus_page_load_time', currentPageLoadTime);
+    console.log('📍 Page loaded at:', currentPageLoadTime, 'Current time:', Date.now());
 
     let sessionData = {};
     let localHistory = [];
@@ -188,11 +189,9 @@
         }
     }
 
-    // Exit event listeners
-    // Use pagehide (most reliable) + beforeunload (fallback)
-    // Note: visibilitychange removed - it fires on page refresh causing false positives
+    // Exit event: Use ONLY pagehide (most reliable, single trigger)
+    // beforeunload removed - was causing duplicates
     window.addEventListener('pagehide', sendExitMessage);
-    window.addEventListener('beforeunload', sendExitMessage);
 
     // --- 1. VISUAL INTERFACE (THE DESIGN) ---
 
