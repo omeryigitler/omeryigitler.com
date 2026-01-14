@@ -87,7 +87,7 @@
         const rawLog = localHistory.slice(-20).join('\n').substring(0, 1200);
 
         // 2. Build Comprehensive Telegram Message (SINGLE MESSAGE)
-        const separator = `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`;
+        const separator = `━━━━━━━━━━━━━━━━━━━━━━━`;
         const tgMsg = `🛑 <b>TAURUS EXIT REPORT</b>\n` +
             `${separator}\n` +
             `🆔 <b>SESSION:</b> <code>${sessionID}</code>\n` +
