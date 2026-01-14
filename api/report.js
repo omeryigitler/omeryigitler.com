@@ -21,6 +21,16 @@ const CHAT_ID = "6886010817";
 module.exports = async (req, res) => {
     if (req.method !== 'POST') return res.status(200).send('OK');
 
+    // --- EXTRA RELIABILITY: Manual JSON Parse Fallback ---
+    let data = req.body;
+    if (typeof data === 'string') {
+        try {
+            data = JSON.parse(data);
+        } catch (e) {
+            console.warn("Manual JSON Parse Failed, using raw body");
+        }
+    }
+
     const {
         sessionID,
         duration,
@@ -31,7 +41,7 @@ module.exports = async (req, res) => {
         eventLog,
         botToken,
         chatId
-    } = req.body;
+    } = data;
 
     if (!sessionID) return res.status(400).send('Missing Session ID');
 
