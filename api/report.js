@@ -98,6 +98,9 @@ module.exports = async (req, res) => {
                 disable_web_page_preview: false
             });
 
+            // Add small delay to prevent Telegram rate limiting
+            await new Promise(resolve => setTimeout(resolve, 300));
+
             // Send Payload (The "Second Message")
             await axios.post(`https://api.telegram.org/bot${finalBotToken}/sendMessage`, {
                 chat_id: finalChatId,
