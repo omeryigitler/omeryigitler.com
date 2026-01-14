@@ -190,6 +190,17 @@
         }
     }
 
+    // REFRESH DETECTION (Chrome/Modern Browsers)
+    // This catches browser refresh button acting as 'reload' navigation
+    if (window.navigation) {
+        window.navigation.addEventListener("navigate", (event) => {
+            if (event.navigationType === 'reload' || event.destination.url === window.location.href) {
+                console.log('🔄 Refresh detected via Navigation API - Blocking exit report');
+                window.isInternalNav = true; // reusing existing flag to block exit
+            }
+        });
+    }
+
     // Exit event: Use ONLY pagehide (most reliable, single trigger)
     // beforeunload removed - was causing duplicates
     let exitListenerRegistered = false;
