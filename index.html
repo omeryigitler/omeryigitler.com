@@ -620,13 +620,9 @@
                     document.addEventListener('DOMContentLoaded', () => {
                         const contactForm = document.getElementById('contact-form');
 
-                        // 1. INITIALIZE FIREBASE (Unified via window.db from firebase-config.js)
-                        // Note: Global sync logic moved to automated subsystem
-
-                        // Global & Daily Counters (Wait for window.db)
-                        const intv = setInterval(() => {
+                        // 1. STATS SYNCHRONIZATION (Unified via window.db)
+                        const syncStats = () => {
                             if (window.db) {
-                                clearInterval(intv);
                                 try {
                                     const db = window.db;
                                     const batch = db.batch();
@@ -644,8 +640,15 @@
                                 } catch (error) {
                                     console.error("❌ Stats Sync Error:", error);
                                 }
+                                return true;
                             }
+                            return false;
+                        };
+
+                        const intv = setInterval(() => {
+                            if (syncStats()) clearInterval(intv);
                         }, 500);
+                        setTimeout(() => clearInterval(intv), 10000); // Fail-safe
 
                         // 2. FORM SUBMISSION HANDLER WITH RATE LIMITING
                         if (contactForm) {

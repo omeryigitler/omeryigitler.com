@@ -35,15 +35,7 @@
     }
     let audioObj = null;
     window.isInternalNav = false; // Flag to prevent reports on page transitions
-
-    // --- SESSION TIMER SUBSYSTEM ---
-    // Persist true session start time to maintain accuracy across refreshes/pages
-    let sessionStartTime = localStorage.getItem('taurus_session_start');
-    if (!sessionStartTime) {
-        sessionStartTime = new Date().toISOString();
-        localStorage.setItem('taurus_session_start', sessionStartTime);
-    }
-    const trueStartTime = new Date(sessionStartTime);
+    const sessionStartTime = new Date(); // Captured early for accurate duration
     let exitSent = false; // Prevent duplicate exit messages
 
     // GLOBAL EXIT LISTENER - Single unified handler
@@ -57,58 +49,26 @@
             .replace(/'/g, '&#39;');
     }
 
-    // --- 5. TELEGRAM NOTIFICATION (RADICAL RELIABILITY V34) ---
-    function fireTelegramExit(message) {
-        const botToken = window.cachedTelegramConfig?.botToken || '8567285538:AAHKfo8bqee43rprC-GCv3Je423R57YQkCE';
-        const chatId = window.cachedTelegramConfig?.chatId || '6886010817';
-
-        // Add branding link for preview (Radical Branding v35)
-        const brandingLink = `<a href="https://omeryigitler.com/assets/logo.png">&#x200b;</a>`;
-        const enrichedMsg = brandingLink + message;
-
-        // Strategy 1: GET Request (Much more reliable than POST during exit)
-        const encodedMsg = encodeURIComponent(enrichedMsg);
-        const getUrl = `https://api.telegram.org/bot${botToken}/sendMessage?chat_id=${chatId}&text=${encodedMsg}&parse_mode=HTML`;
-
-        // Strategy 2: Image Beacon (Old school but guaranteed trigger)
-        const img = new Image();
-        img.src = getUrl;
-
-        // Strategy 3: fetch keepalive (Modern secondary layer)
-        if (window.fetch) {
-            fetch(getUrl, { mode: 'no-cors', keepalive: true }).catch(() => { });
-        }
-    }
+    // --- 5. TELEGRAM NOTIFICATION (DEPRECATED CLIENT-SIDE) ---
+    // Relying on /api/report for 100% reliability and single-message rule.
 
     // GLOBAL EXIT LISTENER - Single unified handler (Refined V35)
     function sendExitMessage() {
         if (exitSent || window.isInternalNav) return;
 
-        const duration = Math.round((new Date() - trueStartTime) / 1000);
+        const duration = Math.round((new Date() - sessionStartTime) / 1000);
         if (duration < 2) return; // Ignore very short interactions
 
         exitSent = true;
 
-        // Prepare Reports
-        const tgMsg = `🐂 <b>TAURUS INTELLIGENCE REPORT</b>\n` +
-            `━━━━━━━━━━━━━━━\n` +
-            `<b>STATUS:</b> <code>SESSION_EXIT_DETECTED</code>\n` +
-            `<b>ID:</b> <code>${sessionID}</code>\n` +
-            `<b>DUR:</b> ${duration}s\n` +
-            `<b>LOC:</b> ${sessionData?.city || 'Unknown'}\n` +
-            `<b>EXIT:</b> <code>${window.location.pathname}</code>\n` +
-            `━━━━━━━━━━━━━━━`;
-
-        // FIRE IMMEDIATELY (V34 Radical Method)
-        fireTelegramExit(tgMsg);
-
-        // Primary Detailed Report (POST to Backend)
+        // Detailed Report (POST to Backend)
+        // Relying on backend for Telegram notification to ensure single Exit message
         const rawLog = localHistory.slice(-20).join('\n');
         const payload = {
             sessionID: sessionID || 'unknown',
             duration: duration,
             exitPage: window.location.pathname,
-            location: `${sessionData?.city || 'Unknown'}, ${sessionData?.country || ''}`,
+            location: `${sessionData?.city || 'Unknown'}, ${sessionData?.country_name || ''}`,
             deviceInfo: `${sessionData?.device?.model || 'Unknown'} (${sessionData?.device?.os || 'Unknown'})`,
             clipboard: escapeHTML(localHistory.filter(e => e.includes('Copy:')).join('\n')) || 'None',
             eventLog: escapeHTML(rawLog) || 'No events recorded'
@@ -725,6 +685,9 @@
             }
         }
 
+        // POPULATE DEVICE DATA IMMEDIATELY (Fix for 'Unknown' in reports)
+        sessionData.device = getDeviceData();
+
         // Generate Session ID if new
         if (!sessionID) {
             sessionID = 'sess_' + Math.random().toString(36).substr(2, 9);
@@ -981,14 +944,14 @@
                         isp: ipData.org || 'Unknown Network'
                     },
                     device: {
-                        model: device.model,
-                        type: device.type,
-                        browser: device.browser,
-                        os: device.os,
-                        screen: device.screen,
-                        language: device.language,
-                        gpu: device.gpu,
-                        userAgent: device.userAgent
+                        model: sessionData.device.model,
+                        type: sessionData.device.type,
+                        browser: sessionData.device.browser,
+                        os: sessionData.device.os,
+                        screen: sessionData.device.screen,
+                        language: sessionData.device.language,
+                        gpu: sessionData.device.gpu,
+                        userAgent: sessionData.device.userAgent
                     },
                     traffic_source: trafficSource,
                     startTime: new Date().toISOString(),
@@ -1011,7 +974,7 @@
                 body: JSON.stringify({
                     sessionID: sessionID,
                     ipData: ipData,
-                    device: getDeviceData(),
+                    device: sessionData.device,
                     pathname: window.location.pathname
                 }),
                 keepalive: true
@@ -1142,23 +1105,6 @@
         localStorage.setItem('taurus_history_buffer', JSON.stringify(localHistory));
 
         console.log(`📝 Log: ${action} - ${detail} `);
-
-        // 3. FORCE FLUSH FOR NAVIGATION (Radical Reliability v35)
-        // If navigation occurred, we use fetch keepalive to ensure backend is notified
-        // before the memory execution environment is terminated.
-        if (action === 'Navigation') {
-            fetch(CONFIG.api.tracker, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    sessionID: sessionID,
-                    action: 'Navigation',
-                    detail: detail,
-                    timestamp: entry.timestamp
-                }),
-                keepalive: true
-            }).catch(() => { });
-        }
     }
 
     async function sendPulse(title, priority = 'medium', extra = '') {
