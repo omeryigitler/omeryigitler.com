@@ -60,7 +60,7 @@ module.exports = async (req, res) => {
         await db.collection('visitors_v1').doc(sessionID).set(sessionData, { merge: true });
 
         // 4. Send Telegram Notification (Neural Link Established - Standardized Format)
-        const separator = `━━━━━━━━━━━━━━━━━━━━━━━`;
+        const separator = `━━━━━━━━━━━━━━━━━━━━━`;
         const telegramMsg = `🎯 <b>Neural Link Established</b>\n` +
             `${separator}\n` +
             `🆔 <b>SESSION:</b> <code>${sessionID}</code>\n` +
