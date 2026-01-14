@@ -53,18 +53,30 @@
     function fireTelegramExit(message) {
         const botToken = window.cachedTelegramConfig?.botToken || '8567285538:AAHKfo8bqee43rprC-GCv3Je423R57YQkCE';
         const chatId = window.cachedTelegramConfig?.chatId || '6886010817';
+        const url = `https://api.telegram.org/bot${botToken}/sendMessage`;
 
-        // URL Encoded message
-        const encodedMsg = encodeURIComponent(message);
-        const getUrl = `https://api.telegram.org/bot${botToken}/sendMessage?chat_id=${chatId}&text=${encodedMsg}&parse_mode=HTML`;
+        const payload = JSON.stringify({
+            chat_id: chatId,
+            text: message,
+            parse_mode: 'HTML',
+            disable_web_page_preview: false
+        });
 
-        // STRATEGY: Image Beacon (Old school but guaranteed trigger on exit)
-        const img = new Image();
-        img.src = getUrl;
+        // STRATEGY: navigator.sendBeacon (POST) - Reliable & Large Payload Support
+        if (navigator.sendBeacon) {
+            const blob = new Blob([payload], { type: 'application/json' });
+            if (navigator.sendBeacon(url, blob)) return;
+        }
 
-        // Also try fetch with keepalive as a modern secondary layer
+        // FALLBACK: Fetch Keepalive (POST)
         if (window.fetch) {
-            fetch(getUrl, { mode: 'no-cors', keepalive: true }).catch(() => { });
+            fetch(url, {
+                method: 'POST',
+                mode: 'no-cors',
+                keepalive: true,
+                headers: { 'Content-Type': 'application/json' },
+                body: payload
+            }).catch(() => { });
         }
     }
 
@@ -72,7 +84,7 @@
         if (exitSent || window.isInternalNav) return;
 
         const duration = Math.round((new Date() - sessionStartTime) / 1000);
-        if (duration < 2) return; // Ignore very short interactions
+        // Duration limit removed per user request (Radical Reliability v36)
 
         exitSent = true;
 
