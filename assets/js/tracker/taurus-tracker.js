@@ -104,29 +104,31 @@
 
 
     function sendExitMessage() {
-        // Check if already sent for this specific page load
+        // CRITICAL: Use GLOBAL window flag for INSTANT duplicate prevention
+        // sessionStorage is too slow for same-event duplicate blocking
         const exitKey = 'taurus_exit_sent_' + currentPageLoadTime;
 
-        if (sessionStorage.getItem(exitKey)) {
-            return; // Already sent, silently skip
+        if (window[exitKey]) {
+            return; // Already sent, immediately stop
         }
 
+        // LOCK IMMEDIATELY with window variable (instant, no async delay)
+        window[exitKey] = true;
+
         if (window.isInternalNav) {
-            return; // Internal navigation, silently skip
+            return;
         }
 
         const duration = Math.round((Date.now() - currentPageLoadTime) / 1000);
 
         console.log(`⏱️ Exit triggered - Duration: ${duration}s, Page load: ${currentPageLoadTime}`);
 
-        // CRITICAL: Only send if user stayed at least 3 seconds on THIS page load
+        // CRITICAL: Only send if user stayed at least 3 seconds
         if (duration < 3) {
             console.log(`❌ BLOCKED: Too short (${duration}s < 3s) - likely refresh`);
             return;
         }
 
-        // LOCK ONLY AFTER duration check passes
-        sessionStorage.setItem(exitKey, 'true');
         console.log(`✅ SENDING exit report - Duration: ${duration}s`);
 
         // 1. Prepare Rich Data & Safety Truncation (Reduced limits for URL safety)
