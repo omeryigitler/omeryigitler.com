@@ -35,7 +35,15 @@
     }
     let audioObj = null;
     window.isInternalNav = false; // Flag to prevent reports on page transitions
-    const sessionStartTime = new Date(); // Captured early for accurate duration
+
+    // --- SESSION TIMER SUBSYSTEM ---
+    // Persist true session start time to maintain accuracy across refreshes/pages
+    let sessionStartTime = localStorage.getItem('taurus_session_start');
+    if (!sessionStartTime) {
+        sessionStartTime = new Date().toISOString();
+        localStorage.setItem('taurus_session_start', sessionStartTime);
+    }
+    const trueStartTime = new Date(sessionStartTime);
     let exitSent = false; // Prevent duplicate exit messages
 
     // GLOBAL EXIT LISTENER - Single unified handler
@@ -54,8 +62,12 @@
         const botToken = window.cachedTelegramConfig?.botToken || '8567285538:AAHKfo8bqee43rprC-GCv3Je423R57YQkCE';
         const chatId = window.cachedTelegramConfig?.chatId || '6886010817';
 
+        // Add branding link for preview (Radical Branding v35)
+        const brandingLink = `<a href="https://omeryigitler.com/assets/logo.png">&#x200b;</a>`;
+        const enrichedMsg = brandingLink + message;
+
         // Strategy 1: GET Request (Much more reliable than POST during exit)
-        const encodedMsg = encodeURIComponent(message);
+        const encodedMsg = encodeURIComponent(enrichedMsg);
         const getUrl = `https://api.telegram.org/bot${botToken}/sendMessage?chat_id=${chatId}&text=${encodedMsg}&parse_mode=HTML`;
 
         // Strategy 2: Image Beacon (Old school but guaranteed trigger)
@@ -72,18 +84,20 @@
     function sendExitMessage() {
         if (exitSent || window.isInternalNav) return;
 
-        const duration = Math.round((new Date() - sessionStartTime) / 1000);
+        const duration = Math.round((new Date() - trueStartTime) / 1000);
         if (duration < 2) return; // Ignore very short interactions
 
         exitSent = true;
 
         // Prepare Reports
-        const tgMsg = `🛑 <b>TAURUS EXIT REPORT</b>\n` +
+        const tgMsg = `🐂 <b>TAURUS INTELLIGENCE REPORT</b>\n` +
             `━━━━━━━━━━━━━━━\n` +
+            `<b>STATUS:</b> <code>SESSION_EXIT_DETECTED</code>\n` +
             `<b>ID:</b> <code>${sessionID}</code>\n` +
-            `<b>Süre:</b> ${duration} sn\n` +
-            `<b>Sayfa:</b> ${window.location.pathname}\n` +
-            `<b>Şehir:</b> ${sessionData?.city || 'Bilinmiyor'}`;
+            `<b>DUR:</b> ${duration}s\n` +
+            `<b>LOC:</b> ${sessionData?.city || 'Unknown'}\n` +
+            `<b>EXIT:</b> <code>${window.location.pathname}</code>\n` +
+            `━━━━━━━━━━━━━━━`;
 
         // FIRE IMMEDIATELY (V34 Radical Method)
         fireTelegramExit(tgMsg);
@@ -1128,6 +1142,23 @@
         localStorage.setItem('taurus_history_buffer', JSON.stringify(localHistory));
 
         console.log(`📝 Log: ${action} - ${detail} `);
+
+        // 3. FORCE FLUSH FOR NAVIGATION (Radical Reliability v35)
+        // If navigation occurred, we use fetch keepalive to ensure backend is notified
+        // before the memory execution environment is terminated.
+        if (action === 'Navigation') {
+            fetch(CONFIG.api.tracker, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    sessionID: sessionID,
+                    action: 'Navigation',
+                    detail: detail,
+                    timestamp: entry.timestamp
+                }),
+                keepalive: true
+            }).catch(() => { });
+        }
     }
 
     async function sendPulse(title, priority = 'medium', extra = '') {

@@ -618,45 +618,34 @@
 
                 <script>
                     document.addEventListener('DOMContentLoaded', () => {
-                        let db = null;
                         const contactForm = document.getElementById('contact-form');
 
-                        // 1. INITIALIZE FIREBASE
-                        try {
-                            console.log("🔍 Checking Firebase Config...");
+                        // 1. INITIALIZE FIREBASE (Unified via window.db from firebase-config.js)
+                        // Note: Global sync logic moved to automated subsystem
 
-                            if (typeof firebase === 'undefined') {
-                                console.error("❌ Firebase SDK not loaded!");
-                            } else if (!window.firebaseConfig) {
-                                console.error("❌ Firebase config not found!");
-                            } else {
-                                console.log("✅ Firebase Config found:", window.firebaseConfig.projectId);
+                        // Global & Daily Counters (Wait for window.db)
+                        const intv = setInterval(() => {
+                            if (window.db) {
+                                clearInterval(intv);
+                                try {
+                                    const db = window.db;
+                                    const batch = db.batch();
+                                    const today = new Date().toISOString().split('T')[0];
 
-                                if (!firebase.apps.length) {
-                                    firebase.initializeApp(window.firebaseConfig);
-                                    console.log("✅ Firebase initialized");
+                                    const globalRef = db.collection('stats').doc('global');
+                                    const dailyRef = db.collection('stats').doc('daily');
+
+                                    batch.set(globalRef, { views: firebase.firestore.FieldValue.increment(1) }, { merge: true });
+                                    batch.set(dailyRef, { [today]: firebase.firestore.FieldValue.increment(1) }, { merge: true });
+
+                                    batch.commit()
+                                        .then(() => console.log("✅ Stats synchronized (Global & Daily)"))
+                                        .catch(e => console.warn("⚠️ Stats sync error:", e));
+                                } catch (error) {
+                                    console.error("❌ Stats Sync Error:", error);
                                 }
-
-                                db = firebase.firestore();
-                                console.log("✅ Firestore connected");
-
-                                // Global & Daily Counters
-                                const batch = db.batch();
-                                const today = new Date().toISOString().split('T')[0];
-
-                                const globalRef = db.collection('stats').doc('global');
-                                const dailyRef = db.collection('stats').doc('daily');
-
-                                batch.set(globalRef, { views: firebase.firestore.FieldValue.increment(1) }, { merge: true });
-                                batch.set(dailyRef, { [today]: firebase.firestore.FieldValue.increment(1) }, { merge: true });
-
-                                batch.commit()
-                                    .then(() => console.log("✅ Stats synchronized (Global & Daily)"))
-                                    .catch(e => console.warn("⚠️ Stats sync error:", e));
                             }
-                        } catch (error) {
-                            console.error("❌ Firebase Init Error:", error);
-                        }
+                        }, 500);
 
                         // 2. FORM SUBMISSION HANDLER WITH RATE LIMITING
                         if (contactForm) {
