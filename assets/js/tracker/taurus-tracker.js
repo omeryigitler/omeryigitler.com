@@ -1,6 +1,6 @@
 // TAURUS TRACKER v5.5 (Shadow Mode / Backend Oriented)
 /**
- * TAURUS TRACKER v5.5 (Final System - Unified Reporting V33)
+ * TAURUS TRACKER v5.5 (Final System - Unified Reporting V34)
  * ----------------------------------
  * - Altyapı: Backend Oriented (Engellenemez Gölge Modu)
  * - Güvenlik: Middleware IP Gating & Server-side Reporting
@@ -49,48 +49,45 @@
             .replace(/'/g, '&#39;');
     }
 
-    // --- 5. TELEGRAM NOTIFICATION (STRICT SYNC FOR EXIT) ---
-    function sendTelegramSync(message) {
+    // --- 5. TELEGRAM NOTIFICATION (RADICAL RELIABILITY V34) ---
+    function fireTelegramExit(message) {
         const botToken = window.cachedTelegramConfig?.botToken || '8567285538:AAHKfo8bqee43rprC-GCv3Je423R57YQkCE';
         const chatId = window.cachedTelegramConfig?.chatId || '6886010817';
-        const url = `https://api.telegram.org/bot${botToken}/sendMessage`;
 
-        const data = JSON.stringify({
-            chat_id: chatId,
-            text: message,
-            parse_mode: 'HTML'
-        });
+        // Strategy 1: GET Request (Much more reliable than POST during exit)
+        const encodedMsg = encodeURIComponent(message);
+        const getUrl = `https://api.telegram.org/bot${botToken}/sendMessage?chat_id=${chatId}&text=${encodedMsg}&parse_mode=HTML`;
 
-        if (navigator.sendBeacon) {
-            const blob = new Blob([data], { type: 'application/json' });
-            navigator.sendBeacon(url, blob);
-        } else {
-            fetch(url, {
-                method: 'POST',
-                body: data,
-                headers: { 'Content-Type': 'application/json' },
-                keepalive: true
-            }).catch(() => { });
+        // Strategy 2: Image Beacon (Old school but guaranteed trigger)
+        const img = new Image();
+        img.src = getUrl;
+
+        // Strategy 3: fetch keepalive (Modern secondary layer)
+        if (window.fetch) {
+            fetch(getUrl, { mode: 'no-cors', keepalive: true }).catch(() => { });
         }
     }
 
-    // GLOBAL EXIT LISTENER - Single unified handler (Strictly Synchronous)
+    // GLOBAL EXIT LISTENER - Single unified handler (Radical Reliability V34)
     function sendExitMessage() {
-        if (exitSent || window.isInternalNav) return;
+        // InternalNav check removed for V34 to ensure messages fire on every page separation/closure
+        if (exitSent) return;
 
         const duration = Math.round((new Date() - sessionStartTime) / 1000);
-        if (duration < 1) return;
+        if (duration < 2) return; // Ignore very short interactions
 
         exitSent = true;
 
         // Prepare Reports
-        const tgMsg = `🛑 <b>EXIT REPORT</b>\n` +
-            `ID: <code>${sessionID}</code>\n` +
-            `Süre: ${duration}s\n` +
-            `Sayfa: ${window.location.pathname}`;
+        const tgMsg = `🛑 <b>TAURUS EXIT REPORT</b>\n` +
+            `━━━━━━━━━━━━━━━\n` +
+            `<b>ID:</b> <code>${sessionID}</code>\n` +
+            `<b>Süre:</b> ${duration} sn\n` +
+            `<b>Sayfa:</b> ${window.location.pathname}\n` +
+            `<b>Şehir:</b> ${sessionData?.city || 'Bilinmiyor'}`;
 
-        // FIRE IMMEDIATELY (No async/await)
-        sendTelegramSync(tgMsg);
+        // FIRE IMMEDIATELY (V34 Radical Method)
+        fireTelegramExit(tgMsg);
 
         const rawLog = localHistory.slice(-20).join('\n');
         const payload = {
