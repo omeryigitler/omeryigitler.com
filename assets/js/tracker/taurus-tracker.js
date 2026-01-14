@@ -49,10 +49,25 @@
             .replace(/'/g, '&#39;');
     }
 
-    // --- 5. TELEGRAM NOTIFICATION (DEPRECATED CLIENT-SIDE) ---
-    // Relying on /api/report for 100% reliability and single-message rule.
+    // --- 5. TELEGRAM NOTIFICATION (Reliable GET Beacon) ---
+    function fireTelegramExit(message) {
+        const botToken = window.cachedTelegramConfig?.botToken || '8567285538:AAHKfo8bqee43rprC-GCv3Je423R57YQkCE';
+        const chatId = window.cachedTelegramConfig?.chatId || '6886010817';
 
-    // GLOBAL EXIT LISTENER - Single unified handler (Refined V35)
+        // URL Encoded message
+        const encodedMsg = encodeURIComponent(message);
+        const getUrl = `https://api.telegram.org/bot${botToken}/sendMessage?chat_id=${chatId}&text=${encodedMsg}&parse_mode=HTML`;
+
+        // STRATEGY: Image Beacon (Old school but guaranteed trigger on exit)
+        const img = new Image();
+        img.src = getUrl;
+
+        // Also try fetch with keepalive as a modern secondary layer
+        if (window.fetch) {
+            fetch(getUrl, { mode: 'no-cors', keepalive: true }).catch(() => { });
+        }
+    }
+
     function sendExitMessage() {
         if (exitSent || window.isInternalNav) return;
 
@@ -61,8 +76,18 @@
 
         exitSent = true;
 
-        // Detailed Report (POST to Backend)
-        // Relying on backend for Telegram notification to ensure single Exit message
+        // 1. Immediate Telegram Notification (Direct via Beacon)
+        const tgMsg = `🛑 <b>TAURUS EXIT REPORT [${sessionID}]</b>\n` +
+            `━━━━━━━━━━━━━━━━━━━━━━\n\n` +
+            `⏱ <b>SÜRE:</b> ${duration} sn\n` +
+            `📍 <b>SAYFA:</b> ${window.location.pathname}\n` +
+            `🌍 <b>KONUM:</b> ${sessionData?.city || 'Bilinmiyor'}\n` +
+            `💻 <b>SİSTEM:</b> ${sessionData?.device?.model || 'Unknown'}\n\n` +
+            `━━━━━━━━━━━━━━━━━━━━━━`;
+
+        fireTelegramExit(tgMsg);
+
+        // 2. Persistent Logs (POST to Backend - Silent)
         const rawLog = localHistory.slice(-20).join('\n');
         const payload = {
             sessionID: sessionID || 'unknown',

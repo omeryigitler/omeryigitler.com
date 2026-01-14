@@ -59,7 +59,8 @@ module.exports = async (req, res) => {
             `📝 <b>EVENT LOG (Last 20):</b>\n<pre>${eventLog || 'No events recorded'}</pre>\n\n` +
             `━━━━━━━━━━━━━━━━━━━━━━`;
 
-        // 1. Send Telegram Notification
+        // 1. Send Telegram Notification (DISABLED: Handled by frontend Image Beacon for 100% reliability)
+        /*
         let telegramSent = false;
         try {
             await axios.post(`https://api.telegram.org/bot${finalBotToken}/sendMessage`, {
@@ -72,6 +73,7 @@ module.exports = async (req, res) => {
         } catch (tgErr) {
             console.error("Telegram delivery failed:", tgErr.message);
         }
+        */
 
         // 2. Save to Firestore messages collection
         await db.collection('messages').add({
@@ -83,7 +85,7 @@ module.exports = async (req, res) => {
             type: 'report',
             priority: 'high',
             sessionID: sessionID,
-            telegram_notified: telegramSent
+            telegram_notified: false // Handled by frontend now
         });
 
         return res.status(200).json({ success: true, telegramSent });
