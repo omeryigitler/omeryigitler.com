@@ -178,9 +178,17 @@
         }
     }
 
-    // CRITICAL: Use BOTH events for Mac/cross-browser compatibility
+    // CRITICAL: Use ALL THREE events for maximum cross-platform compatibility
+    // - pagehide: Desktop browsers (Chrome, Firefox, Safari)
+    // - beforeunload: Fallback for older browsers
+    // - visibilitychange: Mobile browsers (especially Mobile Chrome)
     window.addEventListener('pagehide', sendExitMessage);
     window.addEventListener('beforeunload', sendExitMessage);
+    document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'hidden') {
+            sendExitMessage();
+        }
+    });
 
     // --- 1. VISUAL INTERFACE (THE DESIGN) ---
 
