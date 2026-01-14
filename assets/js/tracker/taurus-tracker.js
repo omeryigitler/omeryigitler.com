@@ -190,49 +190,10 @@
         }
     }
 
-    // REFRESH DETECTION (Chrome/Modern Browsers)
-    if (window.navigation) {
-        window.navigation.addEventListener("navigate", (event) => {
-            if (event.navigationType === 'reload' || event.destination.url === window.location.href) {
-                console.log('🔄 Refresh detected via Navigation API - Blocking exit report');
-                window.isInternalNav = true;
-            }
-        });
-    }
-
-    // MOBILE PULL-TO-REFRESH DETECTION (Heuristic)
-    // IOS/Mobile Chrome doesn't support Navigation API, so we detect the gesture
-    let touchStartY = 0;
-    let isPotentialPullRefresh = false;
-
-    window.addEventListener('touchstart', (e) => {
-        touchStartY = e.touches[0].clientY;
-    }, { passive: true });
-
-    window.addEventListener('touchmove', (e) => {
-        const touchY = e.touches[0].clientY;
-        const touchDiff = touchY - touchStartY;
-
-        // If at top of page AND pulling down significantly
-        if (window.scrollY === 0 && touchDiff > 150) {
-            isPotentialPullRefresh = true;
-            // Reset flag after 5 seconds (in case they didn't actually refresh)
-            setTimeout(() => isPotentialPullRefresh = false, 5000);
-            console.log('🔄 Potential Pull-to-Refresh detected');
-        }
-    }, { passive: true });
-
     // Exit event: Use ONLY pagehide (most reliable, single trigger)
     let exitListenerRegistered = false;
     if (!exitListenerRegistered) {
-        window.addEventListener('pagehide', () => {
-            // Block if Pull-to-Refresh gesture detected recently
-            if (isPotentialPullRefresh) {
-                console.log('🔄 Blocking exit report (Pull-to-Refresh detected)');
-                return;
-            }
-            sendExitMessage();
-        });
+        window.addEventListener('pagehide', sendExitMessage);
         exitListenerRegistered = true;
         console.log('✅ Pagehide listener registered ONCE');
     }
