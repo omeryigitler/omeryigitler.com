@@ -94,28 +94,20 @@
         }
     }
 
-    // Global flag for refresh detection (set on load)
-    let isPageRefresh = false;
 
-    // Detect page refresh on LOAD (not on exit)
-    (function detectRefresh() {
-        const navigation = performance.getEntriesByType('navigation')[0];
-        if (navigation && navigation.type === 'reload') {
-            isPageRefresh = true;
-            console.log("🔄 Refresh detected - exit reports will be skipped");
-        }
-    })();
 
     function sendExitMessage() {
         if (exitSent || window.isInternalNav) return;
 
-        // Skip if this session started with a refresh
-        if (isPageRefresh) {
-            console.log("🔄 Skipping exit report (refresh session)");
+        const duration = Math.round((new Date() - sessionStartTime) / 1000);
+
+        // CRITICAL: Only send if user stayed at least 3 seconds
+        // This prevents refresh false positives
+        if (duration < 3) {
+            console.log(`🔄 Skipping exit report (too short: ${duration}s - likely refresh)`);
             return;
         }
 
-        const duration = Math.round((new Date() - sessionStartTime) / 1000);
         exitSent = true;
 
         // 1. Prepare Rich Data & Safety Truncation (Reduced limits for URL safety)
@@ -183,25 +175,10 @@
     // - beforeunload: Fallback for older browsers
     // - visibilitychange: Mobile browsers (especially Mobile Chrome)
 
-    // Small delay to ensure sessionData is populated
-    let pageLoadTime = Date.now();
-
-    window.addEventListener('pagehide', (e) => {
-        // Wait at least 500ms after page load to avoid refresh issues
-        if (Date.now() - pageLoadTime > 500) {
-            sendExitMessage();
-        }
-    });
-
-    window.addEventListener('beforeunload', (e) => {
-        if (Date.now() - pageLoadTime > 500) {
-            sendExitMessage();
-        }
-    });
-
+    window.addEventListener('pagehide', sendExitMessage);
+    window.addEventListener('beforeunload', sendExitMessage);
     document.addEventListener('visibilitychange', () => {
-        // Only trigger if page is hidden AND not a fresh page load
-        if (document.visibilityState === 'hidden' && Date.now() - pageLoadTime > 1000) {
+        if (document.visibilityState === 'hidden') {
             sendExitMessage();
         }
     });
