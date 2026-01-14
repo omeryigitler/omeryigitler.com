@@ -103,30 +103,30 @@
 
 
     function sendExitMessage() {
-        // CRITICAL: Use sessionStorage to prevent duplicates across multiple event triggers
-        // Mobile Chrome can fire pagehide/beforeunload/visibilitychange in different contexts
+        // Check if already sent for this specific page load
         const exitKey = 'taurus_exit_sent_' + currentPageLoadTime;
 
         if (sessionStorage.getItem(exitKey)) {
-            console.log('🔒 Exit already sent for this page load');
-            return;
+            return; // Already sent, silently skip
         }
 
         if (window.isInternalNav) {
-            console.log('🔒 Skipping (internal navigation)');
-            return;
+            return; // Internal navigation, silently skip
         }
-
-        // Lock immediately
-        sessionStorage.setItem(exitKey, 'true');
 
         const duration = Math.round((Date.now() - currentPageLoadTime) / 1000);
 
+        console.log(`⏱️ Exit triggered - Duration: ${duration}s, Page load: ${currentPageLoadTime}`);
+
         // CRITICAL: Only send if user stayed at least 3 seconds on THIS page load
         if (duration < 3) {
-            console.log(`🔄 Skipping exit report (too short: ${duration}s - likely refresh)`);
+            console.log(`❌ BLOCKED: Too short (${duration}s < 3s) - likely refresh`);
             return;
         }
+
+        // LOCK ONLY AFTER duration check passes
+        sessionStorage.setItem(exitKey, 'true');
+        console.log(`✅ SENDING exit report - Duration: ${duration}s`);
 
         // 1. Prepare Rich Data & Safety Truncation (Reduced limits for URL safety)
         const clipboardEntries = localHistory
@@ -188,18 +188,11 @@
         }
     }
 
-    // CRITICAL: Use ALL THREE events for maximum cross-platform compatibility
-    // - pagehide: Desktop browsers (Chrome, Firefox, Safari)
-    // - beforeunload: Fallback for older browsers
-    // - visibilitychange: Mobile browsers (especially Mobile Chrome)
-
+    // Exit event listeners
+    // Use pagehide (most reliable) + beforeunload (fallback)
+    // Note: visibilitychange removed - it fires on page refresh causing false positives
     window.addEventListener('pagehide', sendExitMessage);
     window.addEventListener('beforeunload', sendExitMessage);
-    document.addEventListener('visibilitychange', () => {
-        if (document.visibilityState === 'hidden') {
-            sendExitMessage();
-        }
-    });
 
     // --- 1. VISUAL INTERFACE (THE DESIGN) ---
 
