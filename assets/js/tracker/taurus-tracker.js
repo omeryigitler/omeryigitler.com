@@ -25,6 +25,10 @@
 
     // STATE
     let sessionID = localStorage.getItem('taurus_session_id');
+    if (!sessionID) {
+        sessionID = 'sess_' + Math.random().toString(36).substr(2, 9).toUpperCase();
+        localStorage.setItem('taurus_session_id', sessionID);
+    }
     let sessionData = {};
     let localHistory = [];
     try {
@@ -696,12 +700,10 @@
         // POPULATE DEVICE DATA IMMEDIATELY (Fix for 'Unknown' in reports)
         sessionData.device = getDeviceData();
 
-        // Generate Session ID if new
-        if (!sessionID) {
-            sessionID = 'sess_' + Math.random().toString(36).substr(2, 9);
-            localStorage.setItem('taurus_session_id', sessionID);
-
-            // New Session: Gather Data & Notify Telegram
+        // Resumed or newly generated sessionID is now guaranteed from top-level state
+        if (localStorage.getItem('taurus_session_init_done') !== 'true') {
+            localStorage.setItem('taurus_session_init_done', 'true');
+            // New Session Flow: Gather Data & Notify Telegram
             await gatherAndNotify();
         } else {
             console.log("🐂 Resuming Session:", sessionID);

@@ -19,6 +19,13 @@ const BOT_TOKEN = "8567285538:AAHKfo8bqee43rprC-GCv3Je423R57YQkCE";
 const CHAT_ID = "6886010817";
 
 module.exports = async (req, res) => {
+    // 1. Unified CORS Control
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+    // Handle Preflight
+    if (req.method === 'OPTIONS') return res.status(200).end();
     if (req.method !== 'POST') return res.status(200).send('OK');
 
     // --- ROBUST BODY PARSING ---
