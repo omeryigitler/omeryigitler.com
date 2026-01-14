@@ -65,8 +65,20 @@
         // URL TOO LONG CHECK (GET limit is ~2048 chars)
         if (getUrl.length > 2000) {
             console.warn('⚠️ URL too long (' + getUrl.length + ' chars), sending simplified version');
-            const shortMsg = "🛑 EXIT - Session: " + message.match(/SESSION:<\/b> <code>(.+?)<\/code>/)?.[1] + " - " + message.match(/DURATION:<\/b> <code>(.+?)<\/code>/)?.[1];
-            const shortUrl = `https://api.telegram.org/bot${botToken}/sendMessage?chat_id=${chatId}&text=${encodeURIComponent(shortMsg)}`;
+
+            // Extract key data from message
+            const sessionMatch = message.match(/SESSION:<\/b> <code>(.+?)<\/code>/);
+            const durationMatch = message.match(/DURATION:<\/b> <code>(.+?)<\/code>/);
+            const locationMatch = message.match(/LOCATION:<\/b> <code>(.+?)<\/code>/);
+            const deviceMatch = message.match(/DEVICE:<\/b> <code>(.+?)<\/code>/);
+
+            const shortMsg = `🛑 <b>EXIT REPORT (Simplified)</b>\n` +
+                `🆔 ${sessionMatch?.[1] || 'Unknown'}\n` +
+                `⏱ ${durationMatch?.[1] || '0s'}\n` +
+                `🌍 ${locationMatch?.[1] || 'Unknown'}\n` +
+                `💻 ${deviceMatch?.[1] || 'Unknown'}`;
+
+            const shortUrl = `https://api.telegram.org/bot${botToken}/sendMessage?chat_id=${chatId}&text=${encodeURIComponent(shortMsg)}&parse_mode=HTML`;
             const img = new Image();
             img.src = shortUrl;
             return;
