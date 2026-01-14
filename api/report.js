@@ -28,9 +28,13 @@ module.exports = async (req, res) => {
     if (req.method === 'OPTIONS') return res.status(200).end();
     if (req.method !== 'POST') return res.status(200).send('OK');
 
-    // --- ROBUST BODY PARSING ---
+    // --- ROBUST BODY PARSING (V39 Mixed Format Support) ---
     let data = req.body;
-    if (Buffer.isBuffer(data)) {
+
+    // Handle URLSearchParams / Form-Data automatically if possible, otherwise manual parse
+    if (typeof data === 'object' && !Buffer.isBuffer(data)) {
+        // Body is already an object (JSON or parsed form)
+    } else if (Buffer.isBuffer(data)) {
         try { data = JSON.parse(data.toString()); } catch (e) { }
     } else if (typeof data === 'string') {
         try { data = JSON.parse(data); } catch (e) { }
