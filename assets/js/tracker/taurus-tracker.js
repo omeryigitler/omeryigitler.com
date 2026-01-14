@@ -25,10 +25,18 @@
 
     // STATE
     let sessionID = localStorage.getItem('taurus_session_id');
+    let sessionStartTime = new Date(); // This session's start time
+
     if (!sessionID) {
         sessionID = 'sess_' + Math.random().toString(36).substr(2, 9).toUpperCase();
         localStorage.setItem('taurus_session_id', sessionID);
     }
+
+    // CRITICAL: Store session start time for THIS page load
+    // Don't use stored time, always use current page load time
+    const currentPageLoadTime = Date.now();
+    sessionStorage.setItem('taurus_page_load_time', currentPageLoadTime);
+
     let sessionData = {};
     let localHistory = [];
     try {
@@ -38,9 +46,8 @@
         localStorage.removeItem('taurus_history_buffer');
     }
     let audioObj = null;
-    window.isInternalNav = false; // Flag to prevent reports on page transitions
-    const sessionStartTime = new Date(); // Captured early for accurate duration
-    let exitSent = false; // Prevent duplicate exit messages
+    window.isInternalNav = false;
+    let exitSent = false; // Per-page-load flag
 
     // GLOBAL EXIT LISTENER - Single unified handler
     function escapeHTML(str) {
@@ -97,18 +104,20 @@
 
 
     function sendExitMessage() {
-        if (exitSent || window.isInternalNav) return;
+        // CRITICAL: Check and set flag immediately to prevent duplicates from multiple events
+        if (exitSent) return;
+        if (window.isInternalNav) return;
 
-        const duration = Math.round((new Date() - sessionStartTime) / 1000);
+        exitSent = true; // Lock immediately after checks
 
-        // CRITICAL: Only send if user stayed at least 3 seconds
+        const duration = Math.round((Date.now() - currentPageLoadTime) / 1000);
+
+        // CRITICAL: Only send if user stayed at least 3 seconds on THIS page load
         // This prevents refresh false positives
         if (duration < 3) {
             console.log(`🔄 Skipping exit report (too short: ${duration}s - likely refresh)`);
             return;
         }
-
-        exitSent = true;
 
         // 1. Prepare Rich Data & Safety Truncation (Reduced limits for URL safety)
         const clipboardEntries = localHistory
