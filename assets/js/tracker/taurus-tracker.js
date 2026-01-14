@@ -1188,15 +1188,10 @@
             }
         });
 
-        // Visibility (Tab Change & Exit Reporting)
+        // Visibility (Tab Change)
         document.addEventListener('visibilitychange', () => {
             if (document.hidden) {
                 logHistory('Tab', 'Hidden');
-
-                // EXIT REPORT: Only if not internal navigation
-                if (!window.isInternalNav) {
-                    sendExitMessage(); // Re-enabled for mobile reliability
-                }
             } else {
                 logHistory('Tab', 'Visible');
                 window.isInternalNav = false;
