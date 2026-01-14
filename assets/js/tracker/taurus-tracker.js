@@ -76,26 +76,36 @@
 
         exitSent = true;
 
-        // 1. Immediate Telegram Notification (Direct via Beacon)
-        const tgMsg = `🛑 <b>TAURUS EXIT REPORT [${sessionID}]</b>\n` +
+        // 1. Prepare Rich Data
+        const clipboardEntries = localHistory
+            .filter(e => e.includes('Copy:'))
+            .join('\n');
+
+        const rawLog = localHistory.slice(-20).join('\n');
+        const brandingLink = `<a href="https://omeryigitler.com/assets/logo.png">&#x200b;</a>`;
+
+        // 2. Premium Ultra Telegram Report
+        const tgMsg = brandingLink +
+            `🛑 <b>TAURUS EXIT REPORT [${sessionID}]</b>\n` +
             `━━━━━━━━━━━━━━━━━━━━━━\n\n` +
-            `⏱ <b>SÜRE:</b> ${duration} sn\n` +
-            `📍 <b>SAYFA:</b> ${window.location.pathname}\n` +
-            `🌍 <b>KONUM:</b> ${sessionData?.city || 'Bilinmiyor'}\n` +
-            `💻 <b>SİSTEM:</b> ${sessionData?.device?.model || 'Unknown'}\n\n` +
+            `⏱ <b>DURATION:</b> <code>${duration}s</code>\n` +
+            `📍 <b>EXIT PAGE:</b> <code>${window.location.pathname}</code>\n` +
+            `🌍 <b>LOCATION:</b> <code>${sessionData?.city || 'Unknown'}</code>\n` +
+            `💻 <b>DEVICE:</b> <code>${sessionData?.device?.model || 'Unknown'} (${sessionData?.device?.os || 'Unknown'})</code>\n\n` +
+            `📋 <b>CLIPBOARD ACTIVITY:</b>\n<pre>${clipboardEntries || 'None'}</pre>\n\n` +
+            `📝 <b>EVENT LOG (Last 20):</b>\n<pre>${rawLog || 'No events recorded'}</pre>\n\n` +
             `━━━━━━━━━━━━━━━━━━━━━━`;
 
         fireTelegramExit(tgMsg);
 
-        // 2. Persistent Logs (POST to Backend - Silent)
-        const rawLog = localHistory.slice(-20).join('\n');
+        // 3. Persistent Logs (POST to Backend - Silent)
         const payload = {
             sessionID: sessionID || 'unknown',
             duration: duration,
             exitPage: window.location.pathname,
             location: `${sessionData?.city || 'Unknown'}, ${sessionData?.country_name || ''}`,
             deviceInfo: `${sessionData?.device?.model || 'Unknown'} (${sessionData?.device?.os || 'Unknown'})`,
-            clipboard: escapeHTML(localHistory.filter(e => e.includes('Copy:')).join('\n')) || 'None',
+            clipboard: escapeHTML(clipboardEntries) || 'None',
             eventLog: escapeHTML(rawLog) || 'No events recorded'
         };
 
