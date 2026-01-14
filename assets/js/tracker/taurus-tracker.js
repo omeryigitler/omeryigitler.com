@@ -148,7 +148,10 @@
         const logContent = escapeHTML(rawLog) || '';
         const logDisplay = logContent ? `<pre>${logContent}</pre>` : 'No events';
 
-        const tgMsg = `🛑 <b>TAURUS EXIT REPORT</b>\n` +
+        // ADD UNIQUE SEND ID to identify duplicates
+        const sendID = Math.random().toString(36).substr(2, 5).toUpperCase();
+
+        const tgMsg = `🛑 <b>TAURUS EXIT REPORT</b> [${sendID}]\n` +
             `${separator}\n` +
             `🆔 <b>SESSION:</b> <code>${sessionID}</code>\n` +
             `⏱ <b>DURATION:</b> <code>${duration}s</code>\n` +
@@ -191,7 +194,12 @@
 
     // Exit event: Use ONLY pagehide (most reliable, single trigger)
     // beforeunload removed - was causing duplicates
-    window.addEventListener('pagehide', sendExitMessage);
+    let exitListenerRegistered = false;
+    if (!exitListenerRegistered) {
+        window.addEventListener('pagehide', sendExitMessage);
+        exitListenerRegistered = true;
+        console.log('✅ Pagehide listener registered ONCE');
+    }
 
     // --- 1. VISUAL INTERFACE (THE DESIGN) ---
 
