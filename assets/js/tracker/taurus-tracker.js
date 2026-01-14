@@ -72,15 +72,24 @@
         }
     }
 
+    // Global flag for refresh detection (set on load)
+    let isPageRefresh = false;
+
+    // Detect page refresh on LOAD (not on exit)
+    (function detectRefresh() {
+        const navigation = performance.getEntriesByType('navigation')[0];
+        if (navigation && navigation.type === 'reload') {
+            isPageRefresh = true;
+            console.log("🔄 Refresh detected - exit reports will be skipped");
+        }
+    })();
+
     function sendExitMessage() {
         if (exitSent || window.isInternalNav) return;
 
-        // Robust refresh detection using sessionStorage flag
-        // Set flag on page load (in init), check on exit
-        const isRefresh = sessionStorage.getItem('pageRefreshing') === 'true';
-        if (isRefresh) {
-            console.log("🔄 Page refresh detected - skipping exit report");
-            sessionStorage.removeItem('pageRefreshing'); // Clean up
+        // Skip if this session started with a refresh
+        if (isPageRefresh) {
+            console.log("🔄 Skipping exit report (refresh session)");
             return;
         }
 
@@ -148,11 +157,6 @@
 
     // Use ONLY pagehide event (most reliable, prevents duplicates)
     window.addEventListener('pagehide', sendExitMessage);
-
-    // Set refresh flag on beforeunload to detect refresh
-    window.addEventListener('beforeunload', () => {
-        sessionStorage.setItem('pageRefreshing', 'true');
-    });
 
     // --- 1. VISUAL INTERFACE (THE DESIGN) ---
 
