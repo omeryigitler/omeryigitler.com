@@ -56,19 +56,41 @@
     // --- 5. TELEGRAM EXIT NOTIFICATION (Reliable GET Image Beacon) ---
     // Frontend directly sends to Telegram via GET for 100% reliability on page exit
     function fireTelegramExit(message) {
+        console.log('🚀 [EXIT] fireTelegramExit CALLED');
+        console.log('   Message:', message.substring(0, 50));
+
         const botToken = window.cachedTelegramConfig?.botToken || '8567285538:AAHKfo8bqee43rprC-GCv3Je423R57YQkCE';
         const chatId = window.cachedTelegramConfig?.chatId || '6886010817';
 
         const encodedMsg = encodeURIComponent(message);
         const getUrl = `https://api.telegram.org/bot${botToken}/sendMessage?chat_id=${chatId}&text=${encodedMsg}&parse_mode=HTML`;
 
+        console.log('📡 [EXIT] Creating Image Beacon...');
+        console.log('   URL length:', getUrl.length);
+
+        // URL TOO LONG CHECK (GET limit is ~2048 chars)
+        if (getUrl.length > 2000) {
+            console.warn('⚠️ URL too long (' + getUrl.length + ' chars), sending simplified version');
+            const shortMsg = "🛑 EXIT - Session: " + message.match(/SESSION:<\/b> <code>(.+?)<\/code>/)?.[1] + " - " + message.match(/DURATION:<\/b> <code>(.+?)<\/code>/)?.[1];
+            const shortUrl = `https://api.telegram.org/bot${botToken}/sendMessage?chat_id=${chatId}&text=${encodeURIComponent(shortMsg)}`;
+            const img = new Image();
+            img.src = shortUrl;
+            return;
+        }
+
         // Image Beacon - %100 reliable (fires even if page is closing)
         const img = new Image();
+        img.onload = () => console.log('✅ Image Beacon loaded');
+        img.onerror = (e) => console.error('❌ Image Beacon error:', e);
         img.src = getUrl;
+        console.log('📡 [EXIT] Image src set');
 
         // Modern fallback with keepalive
         if (window.fetch) {
-            fetch(getUrl, { mode: 'no-cors', keepalive: true }).catch(() => { });
+            console.log('🔄 [EXIT] Also sending via fetch...');
+            fetch(getUrl, { mode: 'no-cors', keepalive: true })
+                .then(() => console.log('✅ Fetch completed'))
+                .catch(() => console.log('❌ Fetch failed'));
         }
     }
 
@@ -128,6 +150,7 @@
 
         // 3. Send to Telegram via Image Beacon (Immediate, 100% reliable)
         fireTelegramExit(tgMsg);
+        console.log('📤 [DEBUG] fireTelegramExit called');
 
         // 4. Send to Backend for Firestore Only (Silent logging, no Telegram)
         const payload = {
@@ -155,8 +178,11 @@
         }
     }
 
-    // Use ONLY pagehide event (most reliable, prevents duplicates)
+    // CRITICAL: Use BOTH events for Mac compatibility
+    console.log('🎯 Registering exit listeners...');
     window.addEventListener('pagehide', sendExitMessage);
+    window.addEventListener('beforeunload', sendExitMessage);
+    console.log('✅ Exit listeners registered (pagehide + beforeunload)');
 
     // --- 1. VISUAL INTERFACE (THE DESIGN) ---
 
