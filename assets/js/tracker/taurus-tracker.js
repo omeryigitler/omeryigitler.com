@@ -75,6 +75,13 @@
     function sendExitMessage() {
         if (exitSent || window.isInternalNav) return;
 
+        // Check if this is a page refresh (not a real exit)
+        const navigation = performance.getEntriesByType('navigation')[0];
+        if (navigation && navigation.type === 'reload') {
+            console.log("🔄 Page refresh detected - skipping exit report");
+            return;
+        }
+
         const duration = Math.round((new Date() - sessionStartTime) / 1000);
         exitSent = true;
 
