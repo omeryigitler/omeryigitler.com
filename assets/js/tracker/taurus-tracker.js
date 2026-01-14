@@ -664,6 +664,11 @@
                 }
             };
         }
+
+        // Initialize Lucide Icons for the newly created overlay
+        if (window.lucide) {
+            window.lucide.createIcons();
+        }
     }
 
     // --- 2. LOGIC & DATABASE ---
