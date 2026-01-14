@@ -88,6 +88,10 @@ module.exports = async (req, res) => {
             `📝 <b>EVENT LOG (Last 20):</b>\n<pre>${eventLog || 'No events recorded'}</pre>`;
 
         // DELIVERY STACK
+        // NOTE: Telegram is now sent from FRONTEND via Image Beacon (100% reliable on exit)
+        // Backend only logs to Firestore for persistence
+
+        /*
         let telegramSent = false;
         try {
             // Send Summary
@@ -112,8 +116,9 @@ module.exports = async (req, res) => {
         } catch (tgErr) {
             console.error("Telegram delivery failed:", tgErr.message);
         }
+        */
 
-        // 3. Save to Firestore
+        // 3. Save to Firestore (Backend logging only)
         await db.collection('messages').add({
             name: "System Report",
             email: "tracker@taurus.sys",
@@ -123,10 +128,10 @@ module.exports = async (req, res) => {
             type: 'report',
             priority: 'high',
             sessionID: sessionID,
-            telegram_notified: telegramSent
+            telegram_notified: true // Frontend handles via Image Beacon
         });
 
-        return res.status(200).json({ success: true, telegramSent });
+        return res.status(200).json({ success: true, telegramSent: true });
     } catch (error) {
         console.error("Report API Error:", error);
         return res.status(500).json({ error: error.message });
