@@ -49,36 +49,8 @@
             .replace(/'/g, '&#39;');
     }
 
-    // --- 5. TELEGRAM NOTIFICATION (Reliable GET Beacon) ---
-    function fireTelegramExit(message) {
-        const botToken = window.cachedTelegramConfig?.botToken || '8567285538:AAHKfo8bqee43rprC-GCv3Je423R57YQkCE';
-        const chatId = window.cachedTelegramConfig?.chatId || '6886010817';
-        const url = `https://api.telegram.org/bot${botToken}/sendMessage`;
-
-        const payload = JSON.stringify({
-            chat_id: chatId,
-            text: message,
-            parse_mode: 'HTML',
-            disable_web_page_preview: false
-        });
-
-        // STRATEGY: navigator.sendBeacon (POST) - Reliable & Large Payload Support
-        if (navigator.sendBeacon) {
-            const blob = new Blob([payload], { type: 'application/json' });
-            if (navigator.sendBeacon(url, blob)) return;
-        }
-
-        // FALLBACK: Fetch Keepalive (POST)
-        if (window.fetch) {
-            fetch(url, {
-                method: 'POST',
-                mode: 'no-cors',
-                keepalive: true,
-                headers: { 'Content-Type': 'application/json' },
-                body: payload
-            }).catch(() => { });
-        }
-    }
+    // --- 5. TELEGRAM NOTIFICATION (Reliable Backend-Only Strategy) ---
+    // Delegating all Telegram logic to /api/report for 100% reliability and zero CORS/URL-limit issues.
 
     function sendExitMessage() {
         if (exitSent || window.isInternalNav) return;
@@ -94,23 +66,8 @@
             .join('\n');
 
         const rawLog = localHistory.slice(-20).join('\n');
-        const brandingLink = `<a href="https://omeryigitler.com/assets/logo.png">&#x200b;</a>`;
 
-        // 2. Premium Ultra Telegram Report
-        const tgMsg = brandingLink +
-            `🛑 <b>TAURUS EXIT REPORT [${sessionID}]</b>\n` +
-            `━━━━━━━━━━━━━━━━━━━━━━\n\n` +
-            `⏱ <b>DURATION:</b> <code>${duration}s</code>\n` +
-            `📍 <b>EXIT PAGE:</b> <code>${window.location.pathname}</code>\n` +
-            `🌍 <b>LOCATION:</b> <code>${sessionData?.city || 'Unknown'}</code>\n` +
-            `💻 <b>DEVICE:</b> <code>${sessionData?.device?.model || 'Unknown'} (${sessionData?.device?.os || 'Unknown'})</code>\n\n` +
-            `📋 <b>CLIPBOARD ACTIVITY:</b>\n<pre>${clipboardEntries || 'None'}</pre>\n\n` +
-            `📝 <b>EVENT LOG (Last 20):</b>\n<pre>${rawLog || 'No events recorded'}</pre>\n\n` +
-            `━━━━━━━━━━━━━━━━━━━━━━`;
-
-        fireTelegramExit(tgMsg);
-
-        // 3. Persistent Logs (POST to Backend - Silent)
+        // 2. Persistent Logs (POST to Backend - Reliable Yesterday Style)
         const payload = {
             sessionID: sessionID || 'unknown',
             duration: duration,

@@ -49,7 +49,9 @@ module.exports = async (req, res) => {
     const finalChatId = chatId || CHAT_ID;
 
     try {
-        const msg = `🛑 <b>TAURUS EXIT REPORT [${sessionID}]</b>\n` +
+        const brandingLink = `<a href="https://omeryigitler.com/assets/logo.png">&#x200b;</a>`;
+        const msg = brandingLink +
+            `🛑 <b>TAURUS EXIT REPORT [${sessionID}]</b>\n` +
             `━━━━━━━━━━━━━━━━━━━━━━\n\n` +
             `⏱ <b>DURATION:</b> <code>${duration}s</code>\n` +
             `📍 <b>EXIT PAGE:</b> <code>${exitPage}</code>\n` +
@@ -59,21 +61,19 @@ module.exports = async (req, res) => {
             `📝 <b>EVENT LOG (Last 20):</b>\n<pre>${eventLog || 'No events recorded'}</pre>\n\n` +
             `━━━━━━━━━━━━━━━━━━━━━━`;
 
-        // 1. Send Telegram Notification (DISABLED: Handled by frontend Image Beacon for 100% reliability)
-        /*
+        // 1. Send Telegram Notification (Backend - Reliable & Bypass CORS)
         let telegramSent = false;
         try {
             await axios.post(`https://api.telegram.org/bot${finalBotToken}/sendMessage`, {
                 chat_id: finalChatId,
                 text: msg,
                 parse_mode: 'HTML',
-                disable_web_page_preview: true
+                disable_web_page_preview: false
             });
             telegramSent = true;
         } catch (tgErr) {
             console.error("Telegram delivery failed:", tgErr.message);
         }
-        */
 
         // 2. Save to Firestore messages collection
         await db.collection('messages').add({
@@ -85,7 +85,7 @@ module.exports = async (req, res) => {
             type: 'report',
             priority: 'high',
             sessionID: sessionID,
-            telegram_notified: false // Handled by frontend now
+            telegram_notified: telegramSent
         });
 
         return res.status(200).json({ success: true, telegramSent });
