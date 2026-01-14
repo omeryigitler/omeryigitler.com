@@ -47,7 +47,6 @@
     }
     let audioObj = null;
     window.isInternalNav = false;
-    let exitSent = false; // Per-page-load flag
 
     // GLOBAL EXIT LISTENER - Single unified handler
     function escapeHTML(str) {
@@ -104,16 +103,26 @@
 
 
     function sendExitMessage() {
-        // CRITICAL: Check and set flag immediately to prevent duplicates from multiple events
-        if (exitSent) return;
-        if (window.isInternalNav) return;
+        // CRITICAL: Use sessionStorage to prevent duplicates across multiple event triggers
+        // Mobile Chrome can fire pagehide/beforeunload/visibilitychange in different contexts
+        const exitKey = 'taurus_exit_sent_' + currentPageLoadTime;
 
-        exitSent = true; // Lock immediately after checks
+        if (sessionStorage.getItem(exitKey)) {
+            console.log('🔒 Exit already sent for this page load');
+            return;
+        }
+
+        if (window.isInternalNav) {
+            console.log('🔒 Skipping (internal navigation)');
+            return;
+        }
+
+        // Lock immediately
+        sessionStorage.setItem(exitKey, 'true');
 
         const duration = Math.round((Date.now() - currentPageLoadTime) / 1000);
 
         // CRITICAL: Only send if user stayed at least 3 seconds on THIS page load
-        // This prevents refresh false positives
         if (duration < 3) {
             console.log(`🔄 Skipping exit report (too short: ${duration}s - likely refresh)`);
             return;
