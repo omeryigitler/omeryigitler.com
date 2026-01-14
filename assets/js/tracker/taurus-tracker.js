@@ -91,14 +91,10 @@
             return;
         }
 
-        // Image Beacon - %100 reliable (fires even if page is closing)
+        // Image Beacon ONLY - %100 reliable (fires even if page is closing)
+        // Removed fetch fallback - it was causing duplicate messages!
         const img = new Image();
         img.src = getUrl;
-
-        // Modern fallback with keepalive
-        if (window.fetch) {
-            fetch(getUrl, { mode: 'no-cors', keepalive: true }).catch(() => { });
-        }
     }
 
 
