@@ -60,12 +60,13 @@
 
         exitSent = true;
 
-        // 1. Prepare Rich Data
+        // 1. Prepare Rich Data & Safety Truncation (Stay well within limits)
         const clipboardEntries = localHistory
             .filter(e => e.includes('Copy:'))
-            .join('\n');
+            .join('\n')
+            .substring(0, 1500);
 
-        const rawLog = localHistory.slice(-20).join('\n');
+        const rawLog = localHistory.slice(-20).join('\n').substring(0, 1500);
 
         // 2. Persistent Logs (POST to Backend - Reliable Yesterday Style)
         const payload = {
@@ -79,18 +80,21 @@
         };
 
         const reportUrl = CONFIG.api.report;
-        const reportBlob = new Blob([JSON.stringify(payload)], { type: 'application/json' });
 
-        if (navigator.sendBeacon) {
-            navigator.sendBeacon(reportUrl, reportBlob);
-        } else {
-            fetch(reportUrl, {
-                method: 'POST',
-                body: JSON.stringify(payload),
-                headers: { 'Content-Type': 'application/json' },
-                keepalive: true
-            }).catch(() => { });
-        }
+        // Strategy: Fetch with keepalive (Most reliable for JSON POST on exit)
+        fetch(reportUrl, {
+            method: 'POST',
+            body: JSON.stringify(payload),
+            headers: { 'Content-Type': 'application/json' },
+            keepalive: true,
+            mode: 'cors'
+        }).catch(() => {
+            // Fallback to sendBeacon if fetch fails
+            if (navigator.sendBeacon) {
+                const blob = new Blob([JSON.stringify(payload)], { type: 'application/json' });
+                navigator.sendBeacon(reportUrl, blob);
+            }
+        });
     }
 
     window.addEventListener('pagehide', sendExitMessage);

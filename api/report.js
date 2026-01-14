@@ -21,14 +21,12 @@ const CHAT_ID = "6886010817";
 module.exports = async (req, res) => {
     if (req.method !== 'POST') return res.status(200).send('OK');
 
-    // --- EXTRA RELIABILITY: Manual JSON Parse Fallback ---
+    // --- ROBUST BODY PARSING ---
     let data = req.body;
-    if (typeof data === 'string') {
-        try {
-            data = JSON.parse(data);
-        } catch (e) {
-            console.warn("Manual JSON Parse Failed, using raw body");
-        }
+    if (Buffer.isBuffer(data)) {
+        try { data = JSON.parse(data.toString()); } catch (e) { }
+    } else if (typeof data === 'string') {
+        try { data = JSON.parse(data); } catch (e) { }
     }
 
     const {
@@ -41,7 +39,7 @@ module.exports = async (req, res) => {
         eventLog,
         botToken,
         chatId
-    } = data;
+    } = data || {};
 
     if (!sessionID) return res.status(400).send('Missing Session ID');
 
@@ -50,7 +48,7 @@ module.exports = async (req, res) => {
 
     try {
         const brandingLink = `<a href="https://omeryigitler.com/assets/logo.png">&#x200b;</a>`;
-        const msg = brandingLink +
+        let msg = brandingLink +
             `🛑 <b>TAURUS EXIT REPORT [${sessionID}]</b>\n` +
             `━━━━━━━━━━━━━━━━━━━━━━\n\n` +
             `⏱ <b>DURATION:</b> <code>${duration}s</code>\n` +
@@ -61,7 +59,12 @@ module.exports = async (req, res) => {
             `📝 <b>EVENT LOG (Last 20):</b>\n<pre>${eventLog || 'No events recorded'}</pre>\n\n` +
             `━━━━━━━━━━━━━━━━━━━━━━`;
 
-        // 1. Send Telegram Notification (Backend - Reliable & Bypass CORS)
+        // Safety Truncation for Telegram (Max 4096 chars)
+        if (msg.length > 4090) {
+            msg = msg.substring(0, 4000) + "\n\n... (Report Truncated due to Length)";
+        }
+
+        // 1. Send Telegram Notification (Backend - Reliable)
         let telegramSent = false;
         try {
             await axios.post(`https://api.telegram.org/bot${finalBotToken}/sendMessage`, {
@@ -79,7 +82,7 @@ module.exports = async (req, res) => {
         await db.collection('messages').add({
             name: "System Report",
             email: "tracker@taurus.sys",
-            message: msg.replace(/<[^>]*>/g, ''), // Strip HTML for Firestore storage
+            message: msg.replace(/<[^>]*>/g, '').substring(0, 5000),
             timestamp: admin.firestore.FieldValue.serverTimestamp(),
             status: 'new',
             type: 'report',
