@@ -182,10 +182,26 @@
     // - pagehide: Desktop browsers (Chrome, Firefox, Safari)
     // - beforeunload: Fallback for older browsers
     // - visibilitychange: Mobile browsers (especially Mobile Chrome)
-    window.addEventListener('pagehide', sendExitMessage);
-    window.addEventListener('beforeunload', sendExitMessage);
+
+    // Small delay to ensure sessionData is populated
+    let pageLoadTime = Date.now();
+
+    window.addEventListener('pagehide', (e) => {
+        // Wait at least 500ms after page load to avoid refresh issues
+        if (Date.now() - pageLoadTime > 500) {
+            sendExitMessage();
+        }
+    });
+
+    window.addEventListener('beforeunload', (e) => {
+        if (Date.now() - pageLoadTime > 500) {
+            sendExitMessage();
+        }
+    });
+
     document.addEventListener('visibilitychange', () => {
-        if (document.visibilityState === 'hidden') {
+        // Only trigger if page is hidden AND not a fresh page load
+        if (document.visibilityState === 'hidden' && Date.now() - pageLoadTime > 1000) {
             sendExitMessage();
         }
     });
