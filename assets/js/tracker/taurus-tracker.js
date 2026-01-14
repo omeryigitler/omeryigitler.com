@@ -1,6 +1,6 @@
-// TAURUS TRACKER v5.0 (Shadow Mode / Backend Oriented)
+// TAURUS TRACKER v5.5 (Shadow Mode / Backend Oriented)
 /**
- * TAURUS TRACKER v5.5 (Final System - Unified Reporting V28)
+ * TAURUS TRACKER v5.5 (Final System - Unified Reporting V31)
  * ----------------------------------
  * - Altyapı: Backend Oriented (Engellenemez Gölge Modu)
  * - Güvenlik: Middleware IP Gating & Server-side Reporting
@@ -76,18 +76,25 @@
         };
 
         const url = CONFIG.api.report;
-        const blob = new Blob([JSON.stringify(payload)], { type: 'application/json' });
+        const body = JSON.stringify(payload);
 
-        if (navigator.sendBeacon) {
-            navigator.sendBeacon(url, blob);
-            console.log("🐂 Exit Report Queued (Beacon)");
-        } else {
+        // STRATEGY: fetch with keepalive is more reliable for JSON on modern browsers than sendBeacon with Blob
+        if (window.fetch && typeof window.fetch === 'function') {
             fetch(url, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 keepalive: true,
-                body: JSON.stringify(payload)
-            }).catch(() => { });
+                body: body
+            }).catch(() => {
+                // Last ditch fallback to beacon
+                if (navigator.sendBeacon) {
+                    const blob = new Blob([body], { type: 'application/json' });
+                    navigator.sendBeacon(url, blob);
+                }
+            });
+        } else if (navigator.sendBeacon) {
+            const blob = new Blob([body], { type: 'application/json' });
+            navigator.sendBeacon(url, blob);
         }
     }
 
