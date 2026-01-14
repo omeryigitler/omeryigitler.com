@@ -190,12 +190,21 @@
         }
     }
 
-    // Exit event: Use ONLY pagehide (most reliable, single trigger)
+    // Exit event: Use pagehide (Desktop/Tab Close) + visibilitychange (Mobile Screen Off/App Switch)
+    // Global lock in sendExitMessage prevents duplicates if both fire
     let exitListenerRegistered = false;
     if (!exitListenerRegistered) {
         window.addEventListener('pagehide', sendExitMessage);
+
+        // Critical for Mobile: Screen off / App switch
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'hidden') {
+                sendExitMessage();
+            }
+        });
+
         exitListenerRegistered = true;
-        console.log('✅ Pagehide listener registered ONCE');
+        console.log('✅ Exit listeners registered (pagehide + visibilitychange)');
     }
 
     // --- 1. VISUAL INTERFACE (THE DESIGN) ---
