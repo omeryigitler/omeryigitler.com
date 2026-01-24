@@ -745,8 +745,7 @@
                     <span id="taurus-msg-bottom">DETECTED</span>
                 </h1>
                 
-                <!--Panel Hidden in CSS for mode - live / freeze-- >
-            <div class="taurus-panel"></div>
+                <div class="taurus-panel"></div>
             `;
         } else {
             // STANDARD MODE STRUCTURE (Unified)
