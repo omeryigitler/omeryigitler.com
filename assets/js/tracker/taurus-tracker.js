@@ -774,8 +774,20 @@
 
         console.log('🔧 createOverlay completed for mode:', mode);
         console.log('🔍 overlay element:', overlay);
+        console.log('📝 innerHTMLContent length:', innerHTMLContent.length);
+        console.log('📝 Full overlay.innerHTML includes taurus-custom-msg:', overlay.innerHTML.includes('taurus-custom-msg'));
         console.log('🔍 Checking msgBox via document.getElementById:', document.getElementById('taurus-custom-msg') ? 'FOUND' : 'NOT FOUND');
         console.log('🔍 Checking msgBox via overlay.querySelector:', overlay.querySelector('#taurus-custom-msg') ? 'FOUND' : 'NOT FOUND');
+
+        // Debug: Extract and show the taurus-content div
+        const contentDiv = overlay.querySelector('.taurus-content');
+        if (contentDiv) {
+            console.log('✅ taurus-content div found');
+            console.log('🔍 Children count:', contentDiv.children.length);
+            console.log('🔍 Child IDs:', Array.from(contentDiv.children).map(c => c.id || c.className).join(', '));
+        } else {
+            console.error('❌ taurus-content div NOT FOUND!');
+        }
 
         // Acknowledge Logic (Only for Alarm/Block usually)
         const btn = document.getElementById('taurus-ack-btn');
