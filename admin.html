@@ -296,6 +296,11 @@
                 class="nav-item w-full flex items-center px-6 py-4 text-gray-400 hover:text-white hover:bg-white/5 transition-all text-sm font-bold uppercase tracking-[0.2em]">
                 <i data-lucide="file-text" class="w-5 h-5 mr-4"></i> Quotes
             </button>
+            <!-- NEW: Clients Navigation -->
+            <button onclick="switchTab('clients')" id="nav-clients"
+                class="nav-item w-full flex items-center px-6 py-4 text-gray-400 hover:text-white hover:bg-white/5 transition-all text-sm font-bold uppercase tracking-[0.2em]">
+                <i data-lucide="users" class="w-5 h-5 mr-4"></i> Clients
+            </button>
             <button onclick="switchTab('projects')" id="nav-projects"
                 class="nav-item w-full flex items-center px-6 py-4 text-gray-400 hover:text-white hover:bg-white/5 transition-all text-sm font-bold uppercase tracking-[0.2em]">
                 <i data-lucide="folder-kanban" class="w-5 h-5 mr-4"></i> Projects
@@ -642,6 +647,67 @@
                 </div>
             </div>
 
+            <!-- CLIENTS VIEW -->
+            <div id="view-clients" class="hidden fade-in flex flex-col h-full">
+                <!-- Header -->
+                <div class="mb-6">
+                    <h2 class="text-3xl font-display font-bold text-white uppercase">CLIENT MANAGEMENT <span
+                            class="text-taurusGold text-sm align-middle font-body ml-2 uppercase tracking-widest border border-taurusGold/30 px-2 py-1 rounded text-[10px]">V1.0</span>
+                    </h2>
+                    <p class="text-[10px] text-gray-500 uppercase tracking-widest mt-1">CUSTOMER RELATIONSHIP HUB
+                    </p>
+                </div>
+
+                <!-- Stats Summary -->
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                    <div class="p-6 rounded-2xl bg-white/5 border border-white/10 backdrop-blur">
+                        <div class="text-gray-400 text-[10px] font-bold uppercase tracking-widest mb-2">Total Clients
+                        </div>
+                        <div class="text-3xl font-bold text-white" id="clients-total-count">0</div>
+                    </div>
+                    <div class="p-6 rounded-2xl bg-white/5 border border-white/10 backdrop-blur">
+                        <div class="text-gray-400 text-[10px] font-bold uppercase tracking-widest mb-2">Active Messages
+                        </div>
+                        <div class="text-3xl font-bold text-taurusGold" id="clients-total-messages">0</div>
+                    </div>
+                    <div class="p-6 rounded-2xl bg-white/5 border border-white/10 backdrop-blur">
+                        <div class="text-gray-400 text-[10px] font-bold uppercase tracking-widest mb-2">Total Quotes
+                        </div>
+                        <div class="text-3xl font-bold text-blue-400" id="clients-total-quotes">0</div>
+                    </div>
+                    <div class="p-6 rounded-2xl bg-white/5 border border-white/10 backdrop-blur">
+                        <div class="text-gray-400 text-[10px] font-bold uppercase tracking-widest mb-2">Active Projects
+                        </div>
+                        <div class="text-3xl font-bold text-green-400" id="clients-total-projects">0</div>
+                    </div>
+                </div>
+
+                <!-- Clients Table -->
+                <div class="flex-1 overflow-auto">
+                    <div class="bg-white/5 border border-white/10 rounded-2xl overflow-hidden">
+                        <table class="w-full text-left">
+                            <thead class="sticky top-0 bg-black/50 backdrop-blur">
+                                <tr
+                                    class="text-gray-500 text-[10px] font-bold uppercase tracking-widest border-b border-white/5">
+                                    <th class="p-4">Client</th>
+                                    <th class="p-4 text-center">Messages</th>
+                                    <th class="p-4 text-center">Quotes</th>
+                                    <th class="p-4 text-center">Projects</th>
+                                    <th class="p-4">Last Contact</th>
+                                    <th class="p-4 text-right">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="clients-table-body" class="text-sm">
+                                <!-- Dynamic Client Rows -->
+                                <tr>
+                                    <td colspan="6" class="p-8 text-center text-gray-500">Loading clients...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
             <!-- INTELLIGENCE VIEW -->
             <div id="view-intelligence" class="content-view hidden animate-fade-in">
                 <div class="mb-8">
@@ -897,6 +963,7 @@
             document.getElementById('view-messages').classList.add('hidden');
             document.getElementById('view-pricing').classList.add('hidden');
             document.getElementById('view-quotes').classList.add('hidden'); // NEW
+            document.getElementById('view-clients').classList.add('hidden'); // NEW
             document.getElementById('view-projects').classList.add('hidden');
             document.getElementById('view-intelligence').classList.add('hidden');
             document.getElementById('view-settings').classList.add('hidden');
@@ -906,6 +973,7 @@
             else if (tabId === 'messages') document.getElementById('view-messages').classList.remove('hidden');
             else if (tabId === 'pricing') document.getElementById('view-pricing').classList.remove('hidden');
             else if (tabId === 'quotes') document.getElementById('view-quotes').classList.remove('hidden'); // NEW
+            else if (tabId === 'clients') document.getElementById('view-clients').classList.remove('hidden'); // NEW
             else if (tabId === 'projects') document.getElementById('view-projects').classList.remove('hidden');
             else if (tabId === 'intelligence') document.getElementById('view-intelligence').classList.remove('hidden');
             else if (tabId === 'settings') document.getElementById('view-settings').classList.remove('hidden');
@@ -923,6 +991,7 @@
                 'messages': 'Communications Hub',
                 'pricing': 'Pricing Tool',
                 'quotes': 'Quotes Management', // NEW
+                'clients': 'Client Management', // NEW
                 'projects': 'Operational Matrix',
                 'settings': 'Security Protocols',
                 'intelligence': 'Visitor Intelligence Matrix'
@@ -933,6 +1002,7 @@
             // Load relevant data
             if (tabId === 'messages') loadMessages();
             if (tabId === 'quotes') loadQuotes(); // NEW
+            if (tabId === 'clients') loadClients(); // NEW
             if (tabId === 'projects') loadProjects();
             if (tabId === 'intelligence') loadIntelligence();
             if (tabId === 'settings') initSecuritySettings();
@@ -1813,6 +1883,176 @@
         }
 
         // ============================================
+        // CLIENTS
+        // ============================================
+
+        /**
+         * Load all clients from Firestore and populate the clients table
+         * Real-time listener for instant updates
+         */
+        async function loadClients() {
+            const clientsTable = document.getElementById('clients-table-body');
+            if (!clientsTable) return;
+
+            db.collection('clients')
+                .orderBy('lastContactDate', 'desc')
+                .onSnapshot(snapshot => {
+                    let clientsHtml = '';
+                    let totalMessages = 0, totalQuotes = 0, totalProjects = 0;
+
+                    snapshot.forEach(doc => {
+                        const data = doc.data();
+                        const lastContact = data.lastContactDate
+                            ? new Date(data.lastContactDate.seconds * 1000).toLocaleDateString()
+                            : 'Never';
+
+                        // Aggregate stats
+                        totalMessages += data.totalMessages || 0;
+                        totalQuotes += data.totalQuotes || 0;
+                        totalProjects += data.totalProjects || 0;
+
+                        clientsHtml += `
+                            <tr onclick="openClientModal('${doc.id}')" class="border-b border-white/5 hover:bg-white/5 transition-all cursor-pointer group">
+                                <td class="p-4">
+                                    <div class="font-bold text-white group-hover:text-taurusGold transition-colors">${data.name || 'Unknown'}</div>
+                                    <div class="text-xs text-gray-500">${data.email}</div>
+                                </td>
+                                <td class="p-4 text-center text-taurusGold font-bold">${data.totalMessages || 0}</td>
+                                <td class="p-4 text-center text-blue-400 font-bold">${data.totalQuotes || 0}</td>
+                                <td class="p-4 text-center text-green-400 font-bold">${data.totalProjects || 0}</td>
+                                <td class="p-4 text-gray-400 text-xs">${lastContact}</td>
+                                <td class="p-4" onclick="event.stopPropagation()">
+                                    <button onclick="openClientModal('${doc.id}')" class="px-3 py-1 bg-taurusGold/10 text-taurusGold rounded hover:bg-taurusGold hover:text-black transition-all text-xs font-bold uppercase">
+                                        VIEW DETAILS
+                                    </button>
+                                </td>
+                            </tr>
+                        `;
+                    });
+
+                    clientsTable.innerHTML = clientsHtml || '<tr><td colspan="6" class="p-8 text-center text-gray-500">No clients yet</td></tr>';
+
+                    // Update stats summary
+                    document.getElementById('clients-total-count').textContent = snapshot.size;
+                    document.getElementById('clients-total-messages').textContent = totalMessages;
+                    document.getElementById('clients-total-quotes').textContent = totalQuotes;
+                    document.getElementById('clients-total-projects').textContent = totalProjects;
+
+                    lucide.createIcons();
+                });
+        }
+
+        /**
+         * Open client detail modal and display full history
+         * @param {string} clientId - Firestore client document ID
+         */
+        async function openClientModal(clientId) {
+            try {
+                // Fetch client data
+                const clientDoc = await db.collection('clients').doc(clientId).get();
+                if (!clientDoc.exists) {
+                    console.error('Client not found:', clientId);
+                    return;
+                }
+
+                const data = clientDoc.data();
+
+                // Update header
+                document.getElementById('client-modal-name').textContent = data.name || 'Unknown';
+                document.getElementById('client-modal-email').textContent = data.email;
+
+                // Update stats
+                document.getElementById('client-total-messages').textContent = data.totalMessages || 0;
+                document.getElementById('client-total-quotes').textContent = data.totalQuotes || 0;
+                document.getElementById('client-total-projects').textContent = data.totalProjects || 0;
+
+                // Load and render timeline
+                const history = await getClientHistory(clientId);
+                const timelineHtml = renderClientTimeline(history);
+                document.getElementById('client-timeline').innerHTML = timelineHtml;
+
+                // Show modal
+                document.getElementById('client-modal').classList.remove('hidden');
+                lucide.createIcons();
+            } catch (error) {
+                console.error('Error opening client modal:', error);
+            }
+        }
+
+        /**
+         * Close client detail modal
+         */
+        function closeClientModal() {
+            document.getElementById('client-modal').classList.add('hidden');
+        }
+
+        /**
+         * Render client timeline from history data
+         * @param {Object} history - Object with messages, quotes, projects arrays
+         * @returns {string} HTML string for timeline
+         */
+        function renderClientTimeline(history) {
+            const allItems = [
+                ...history.messages.map(m => ({ type: 'message', data: m, date: m.timestamp })),
+                ...history.quotes.map(q => ({ type: 'quote', data: q, date: q.createdAt })),
+                ...history.projects.map(p => ({ type: 'project', data: p, date: p.createdAt }))
+            ];
+
+            // Sort by date descending (newest first)
+            allItems.sort((a, b) => (b.date?.seconds || 0) - (a.date?.seconds || 0));
+
+            if (allItems.length === 0) {
+                return '<p class="text-gray-500 text-center py-8">No activity yet</p>';
+            }
+
+            return allItems.map(item => {
+                const date = item.date?.seconds
+                    ? new Date(item.date.seconds * 1000).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
+                    : 'Unknown';
+
+                switch (item.type) {
+                    case 'message':
+                        return `
+                            <div class="flex gap-3 p-3 bg-taurusGold/5 rounded-lg border border-taurusGold/20 hover:bg-taurusGold/10 transition-all">
+                                <i data-lucide="mail" class="w-4 h-4 text-taurusGold mt-1 flex-shrink-0"></i>
+                                <div class="flex-1 min-w-0">
+                                    <div class="text-white text-sm font-bold">Message Received</div>
+                                    <div class="text-gray-400 text-xs truncate">${(item.data.message || '').substring(0, 100)}...</div>
+                                    <div class="text-gray-600 text-xs mt-1">${date}</div>
+                                </div>
+                            </div>
+                        `;
+                    case 'quote':
+                        return `
+                            <div class="flex gap-3 p-3 bg-blue-500/5 rounded-lg border border-blue-500/20 hover:bg-blue-500/10 transition-all">
+                                <i data-lucide="file-text" class="w-4 h-4 text-blue-400 mt-1 flex-shrink-0"></i>
+                                <div class="flex-1 min-w-0">
+                                    <div class="text-white text-sm font-bold">Quote ${item.data.quoteNumber}</div>
+                                    <div class="text-gray-400 text-xs">${item.data.siteType || 'N/A'} - ${item.data.totalPrice || 0} ${item.data.currency || 'TRY'}</div>
+                                    <div class="text-gray-600 text-xs mt-1">${date}</div>
+                                </div>
+                            </div>
+                        `;
+                    case 'project':
+                        return `
+                            <div class="flex gap-3 p-3 bg-green-500/5 rounded-lg border border-green-500/20 hover:bg-green-500/10 transition-all">
+                                <i data-lucide="rocket" class="w-4 h-4 text-green-400 mt-1 flex-shrink-0"></i>
+                                <div class="flex-1 min-w-0">
+                                    <div class="text-white text-sm font-bold">Project ${item.data.projectNumber}</div>
+                                    <div class="text-gray-400 text-xs truncate">${item.data.name || 'Untitled Project'}</div>
+                                    <div class="text-gray-600 text-xs mt-1">${date}</div>
+                                </div>
+                            </div>
+                        `;
+                    default:
+                        return '';
+                }
+            }).join('');
+        }
+
+
+
+        // ============================================
         // PROJECTS
         // ============================================
 
@@ -2637,6 +2877,55 @@
                 <button onclick="saveProject()"
                     class="w-full md:w-auto px-10 py-4 rounded-xl bg-taurusGold text-black font-black text-[10px] uppercase tracking-widest hover:bg-white hover:scale-[1.02] transition-all">Synchronize
                     Data</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- CLIENT DETAIL MODAL -->
+    <div id="client-modal"
+        class="fixed inset-0 z-[110] hidden flex items-center justify-center lg:p-4 bg-black/90 lg:bg-black/80 backdrop-blur-md transition-opacity duration-300">
+        <div
+            class="glass-card w-full h-full lg:h-[90vh] lg:max-w-4xl lg:rounded-3xl border-y lg:border border-glassBorder bg-[#0a0a0a] shadow-2xl overflow-hidden animate-fade-in-up flex flex-col">
+            <!-- Header -->
+            <div class="p-6 md:p-8 border-b border-white/5 bg-black/40 backdrop-blur-xl flex-shrink-0">
+                <div class="flex items-start justify-between">
+                    <div class="flex-1">
+                        <h3 class="text-2xl font-bold text-white mb-2" id="client-modal-name">Client Name</h3>
+                        <p class="text-gray-400 text-sm" id="client-modal-email">email@example.com</p>
+                    </div>
+                    <button onclick="closeClientModal()"
+                        class="w-10 h-10 flex items-center justify-center rounded-full bg-white/5 text-white hover:bg-red-500 hover:text-white transition-colors">
+                        <i data-lucide="x" class="w-4 h-4"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Content -->
+            <div class="flex-1 overflow-y-auto p-6 md:p-8 space-y-6">
+                <!-- Stats Grid -->
+                <div class="grid grid-cols-3 gap-4">
+                    <div class="p-4 bg-white/5 rounded-xl border border-white/10">
+                        <div class="text-taurusGold text-2xl font-bold" id="client-total-messages">0</div>
+                        <div class="text-gray-500 text-xs uppercase tracking-widest mt-1">Messages</div>
+                    </div>
+                    <div class="p-4 bg-white/5 rounded-xl border border-white/10">
+                        <div class="text-blue-400 text-2xl font-bold" id="client-total-quotes">0</div>
+                        <div class="text-gray-500 text-xs uppercase tracking-widest mt-1">Quotes</div>
+                    </div>
+                    <div class="p-4 bg-white/5 rounded-xl border border-white/10">
+                        <div class="text-green-400 text-2xl font-bold" id="client-total-projects">0</div>
+                        <div class="text-gray-500 text-xs uppercase tracking-widest mt-1">Projects</div>
+                    </div>
+                </div>
+
+                <!-- Timeline -->
+                <div>
+                    <h4 class="text-lg font-bold text-white mb-4 uppercase tracking-widest">Activity Timeline</h4>
+                    <div class="space-y-3" id="client-timeline">
+                        <!-- Dynamic timeline items -->
+                        <p class="text-gray-500 text-center py-8">Loading timeline...</p>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
