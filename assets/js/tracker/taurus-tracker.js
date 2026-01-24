@@ -248,31 +248,25 @@
             z-index: 0;
         }
 
-        /* FREEZE MODE: DARK FLASHLIGHT ORBIT */
+        /* FREEZE MODE: STATIC DARK FLASHLIGHT (FINAL) */
         .mode-freeze .taurus-grid-bg {
             background-image: url('assets/taurus-tracker-globe.jpg'); 
             background-size: 80% auto;
             background-repeat: no-repeat;
             background-position: center center;
             
-            /* DARKER BASE + PULSE ANIMATION */
-            /* User request: "Decrease brightness... make it look illuminated by flashlight... wave part visible" */
-            filter: brightness(1.2) contrast(1.3);
-            opacity: 0.3; /* Much darker start */
-            animation: taurus-flash-pulse 4s infinite ease-in-out;
+            /* STATIC DARK LOOK (as requested: "Sabit dursun", "Data Screen") */
+            filter: brightness(1.2) contrast(1.1);
+            opacity: 0.5; /* Fixed dark visibility, no pulse */
+            animation: none; /* Removed "wavy" pulse effect */
             
-            /* SOFT SPOTLIGHT MASK */
-            /* Tighter gradient: Center visible, rapid fade to black */
-            mask-image: radial-gradient(circle at center, black 0%, rgba(0,0,0,0.6) 30%, transparent 60%);
-            -webkit-mask-image: radial-gradient(circle at center, black 0%, rgba(0,0,0,0.6) 30%, transparent 60%);
+            /* STATIC SPOTLIGHT MASK */
+            /* Fixed radius: Center visible, smooth fade to black */
+            mask-image: radial-gradient(circle at center, black 0%, rgba(0,0,0,0.6) 35%, transparent 70%);
+            -webkit-mask-image: radial-gradient(circle at center, black 0%, rgba(0,0,0,0.6) 35%, transparent 70%);
         }
 
-        @keyframes taurus-flash-pulse {
-            0%, 100% { opacity: 0.3; mask-image: radial-gradient(circle at center, black 0%, rgba(0,0,0,0.5) 30%, transparent 60%); }
-            50% { opacity: 0.6; mask-image: radial-gradient(circle at center, black 0%, rgba(0,0,0,0.8) 35%, transparent 65%); }
-        }
-
-        /* Message Box Visibility Fix (Keep High Priority) */
+        /* Message Box Visibility Fix */
         .mode-freeze #taurus-custom-msg {
             display: block !important;
             margin-top: 2rem !important; 
