@@ -558,7 +558,7 @@ const PricingCalculator: React.FC<Props> = ({ config, addons, onRequestUpdate, o
         {/* Live Summary Sidebar */}
         <div className="lg:col-span-1">
           <div className="sticky top-24 space-y-6">
-            <div className="bg-black rounded-3xl shadow-2xl p-8 overflow-hidden relative border border-zinc-800 group hover:border-yellow-500/50 transition-colors duration-500">
+            <div className="bg-black rounded-3xl shadow-2xl p-8 overflow-hidden relative border border-zinc-800 group hover:border-taurusGold/50 transition-colors duration-500">
               <div className="absolute -top-32 -right-32 w-64 h-64 bg-taurusGold/10 rounded-full blur-3xl pointer-events-none group-hover:bg-taurusGold/20 transition-all duration-500"></div>
               
               <h3 className="text-[10px] font-bold tracking-[0.2em] text-zinc-500 mb-8 relative z-10 border-b border-zinc-900 pb-4">

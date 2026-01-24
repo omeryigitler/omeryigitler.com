@@ -150,27 +150,27 @@ const ProposalView: React.FC<Props> = ({ config, addons, request, breakdown, onB
              <h3 className="text-sm font-bold text-black uppercase tracking-widest mb-6 pb-2 border-b border-zinc-200">{t.extras}</h3>
              <ul className="space-y-5">
                <li className="flex items-center text-zinc-700">
-                  <CheckCircle className={`w-6 h-6 mr-4 ${request.isMultiLang ? 'text-yellow-500' : 'text-zinc-200'}`} />
+                  <CheckCircle className={`w-6 h-6 mr-4 ${request.isMultiLang ? 'text-taurusGold' : 'text-zinc-200'}`} />
                   <span className={!request.isMultiLang ? 'text-zinc-300' : 'font-bold text-black'}>{t.langDiff}</span>
                </li>
                <li className="flex items-center text-zinc-700">
-                  <CheckCircle className={`w-6 h-6 mr-4 ${request.hasSeo ? 'text-yellow-500' : 'text-zinc-200'}`} />
+                  <CheckCircle className={`w-6 h-6 mr-4 ${request.hasSeo ? 'text-taurusGold' : 'text-zinc-200'}`} />
                   <span className={!request.hasSeo ? 'text-zinc-300' : 'font-bold text-black'}>{t.seoSetup}</span>
                </li>
                <li className="flex items-center text-zinc-700">
-                  <CheckCircle className={`w-6 h-6 mr-4 ${request.hasGraphics ? 'text-yellow-500' : 'text-zinc-200'}`} />
+                  <CheckCircle className={`w-6 h-6 mr-4 ${request.hasGraphics ? 'text-taurusGold' : 'text-zinc-200'}`} />
                   <span className={!request.hasGraphics ? 'text-zinc-300' : 'font-bold text-black'}>{t.graphicsDiff}</span>
                </li>
                <li className="flex items-center text-zinc-700">
-                  <CheckCircle className={`w-6 h-6 mr-4 ${request.hasUx ? 'text-yellow-500' : 'text-zinc-200'}`} />
+                  <CheckCircle className={`w-6 h-6 mr-4 ${request.hasUx ? 'text-taurusGold' : 'text-zinc-200'}`} />
                   <span className={!request.hasUx ? 'text-zinc-300' : 'font-bold text-black'}>{t.uxDiff}</span>
                </li>
                <li className="flex items-center text-zinc-700">
-                  <CheckCircle className={`w-6 h-6 mr-4 ${request.hasCrm ? 'text-yellow-500' : 'text-zinc-200'}`} />
+                  <CheckCircle className={`w-6 h-6 mr-4 ${request.hasCrm ? 'text-taurusGold' : 'text-zinc-200'}`} />
                   <span className={!request.hasCrm ? 'text-zinc-300' : 'font-bold text-black'}>{t.crmDiff}</span>
                </li>
                <li className="flex items-center text-zinc-700">
-                  <CheckCircle className={`w-6 h-6 mr-4 ${request.maintenanceLevel !== 'NONE' ? 'text-yellow-500' : 'text-zinc-200'}`} />
+                  <CheckCircle className={`w-6 h-6 mr-4 ${request.maintenanceLevel !== 'NONE' ? 'text-taurusGold' : 'text-zinc-200'}`} />
                   <span className={request.maintenanceLevel === 'NONE' ? 'text-zinc-300' : 'font-bold text-black'}>
                     {labels.maintenance[request.maintenanceLevel]}
                   </span>
@@ -182,7 +182,7 @@ const ProposalView: React.FC<Props> = ({ config, addons, request, breakdown, onB
         {/* Timeline Visualization (New Feature) */}
         <div className="mb-16">
           <h3 className="text-sm font-bold text-black uppercase tracking-widest mb-6 flex items-center">
-            <Calendar className="w-4 h-4 mr-2 text-yellow-500" />
+            <Calendar className="w-4 h-4 mr-2 text-taurusGold" />
             {t.timeline} ({weeks} {t.week})
           </h3>
           <div className="relative pt-6 pb-2">
@@ -349,9 +349,9 @@ const ProposalView: React.FC<Props> = ({ config, addons, request, breakdown, onB
             <div>
               <h4 className="font-bold text-black mb-3 uppercase tracking-wide">{t.terms}</h4>
               <ul className="space-y-2">
-                <li className="flex items-start"><span className="mr-2 text-yellow-500 font-bold">•</span> {t.term1}</li>
-                <li className="flex items-start"><span className="mr-2 text-yellow-500 font-bold">•</span> {t.term2}</li>
-                <li className="flex items-start"><span className="mr-2 text-yellow-500 font-bold">•</span> {t.term3}</li>
+                <li className="flex items-start"><span className="mr-2 text-taurusGold font-bold">•</span> {t.term1}</li>
+                <li className="flex items-start"><span className="mr-2 text-taurusGold font-bold">•</span> {t.term2}</li>
+                <li className="flex items-start"><span className="mr-2 text-taurusGold font-bold">•</span> {t.term3}</li>
               </ul>
             </div>
             <div>
