@@ -56,7 +56,7 @@ const CustomSelect: React.FC<CustomSelectProps> = ({ label, value, options, onCh
         onClick={() => setIsOpen(!isOpen)}
         className={`w-full relative flex items-center justify-between bg-black border px-5 py-4 rounded-xl cursor-pointer transition-all duration-300 select-none ${
           isOpen 
-            ? 'border-yellow-400 ring-1 ring-yellow-400 shadow-[0_0_15px_rgba(250,204,21,0.1)]' 
+            ? 'border-taurusGold ring-1 ring-taurusGold shadow-[0_0_15px_rgba(250,204,21,0.1)]' 
             : 'border-zinc-800 hover:border-zinc-600'
         }`}
       >
@@ -65,8 +65,8 @@ const CustomSelect: React.FC<CustomSelectProps> = ({ label, value, options, onCh
         </span>
         
         <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center pointer-events-none">
-             {icon && <span className={`mr-3 transition-colors ${isOpen ? 'text-yellow-400' : 'text-zinc-600'}`}>{icon}</span>}
-             <ChevronDown className={`w-5 h-5 transition-all duration-300 ${isOpen ? 'rotate-180 text-yellow-400' : 'text-zinc-500'}`} />
+             {icon && <span className={`mr-3 transition-colors ${isOpen ? 'text-taurusGold' : 'text-zinc-600'}`}>{icon}</span>}
+             <ChevronDown className={`w-5 h-5 transition-all duration-300 ${isOpen ? 'rotate-180 text-taurusGold' : 'text-zinc-500'}`} />
         </div>
       </div>
 
@@ -83,12 +83,12 @@ const CustomSelect: React.FC<CustomSelectProps> = ({ label, value, options, onCh
                 }}
                 className={`px-5 py-3.5 flex items-center justify-between cursor-pointer transition-all border-b border-zinc-900/50 last:border-0 ${
                   option.value === value 
-                    ? 'bg-zinc-900 text-yellow-400 font-semibold' 
+                    ? 'bg-zinc-900 text-taurusGold font-semibold' 
                     : 'text-zinc-400 hover:bg-zinc-900 hover:text-white'
                 }`}
               >
                 <span>{option.label}</span>
-                {option.value === value && <Check className="w-4 h-4 text-yellow-400" />}
+                {option.value === value && <Check className="w-4 h-4 text-taurusGold" />}
               </li>
             ))}
           </ul>
@@ -279,8 +279,8 @@ const PricingCalculator: React.FC<Props> = ({ config, addons, onRequestUpdate, o
   // Removed 'uppercase' class from here, handled in JSX with upper()
   const labelClass = "block text-xs font-bold text-zinc-500 tracking-wider mb-2 ml-1";
   const inputContainerClass = "relative group";
-  const inputClass = "w-full appearance-none rounded-xl bg-black border border-zinc-800 px-5 py-4 text-white placeholder-zinc-600 focus:border-yellow-400 focus:ring-1 focus:ring-yellow-400 focus:outline-none transition-all duration-300 font-medium";
-  const iconClass = "absolute right-5 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-600 group-hover:text-yellow-400 group-focus-within:text-yellow-400 transition-colors pointer-events-none";
+  const inputClass = "w-full appearance-none rounded-xl bg-black border border-zinc-800 px-5 py-4 text-white placeholder-zinc-600 focus:border-taurusGold focus:ring-1 focus:ring-taurusGold focus:outline-none transition-all duration-300 font-medium";
+  const iconClass = "absolute right-5 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-600 group-hover:text-taurusGold group-focus-within:text-taurusGold transition-colors pointer-events-none";
 
   const isTr = request.country === Country.TR;
   const isPercentage = request.discountType === DiscountType.PERCENTAGE;
@@ -300,7 +300,7 @@ const PricingCalculator: React.FC<Props> = ({ config, addons, onRequestUpdate, o
           {/* Section 1: Project Scope (Yellow) */}
           <div className="bg-zinc-900 rounded-3xl border border-zinc-800 p-8 sm:p-10 shadow-[0_0_60px_rgba(250,204,21,0.25)] relative">
             <h2 className="text-2xl font-bold text-white mb-8 flex items-center font-poppins">
-              <span className="bg-zinc-800 text-yellow-400 w-10 h-10 flex items-center justify-center rounded-xl mr-4 text-sm font-bold border border-zinc-700">01</span>
+              <span className="bg-zinc-800 text-taurusGold w-10 h-10 flex items-center justify-center rounded-xl mr-4 text-sm font-bold border border-zinc-700">01</span>
               {t.title1}
             </h2>
             
@@ -346,7 +346,7 @@ const PricingCalculator: React.FC<Props> = ({ config, addons, onRequestUpdate, o
               {/* Page Count Slider */}
               <div>
                 <label className={labelClass}>
-                  {upper(t.pageCount)}: <span className="text-yellow-400 ml-1 text-sm">{request.pageCount}</span>
+                  {upper(t.pageCount)}: <span className="text-taurusGold ml-1 text-sm">{request.pageCount}</span>
                 </label>
                 <div className="px-1 py-4">
                   <input 
@@ -355,7 +355,7 @@ const PricingCalculator: React.FC<Props> = ({ config, addons, onRequestUpdate, o
                     max="50" 
                     value={request.pageCount}
                     onChange={(e) => setRequest({...request, pageCount: parseInt(e.target.value)})}
-                    className="w-full h-3 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-yellow-400 hover:accent-yellow-300 transition-all"
+                    className="w-full h-3 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-taurusGold hover:accent-yellow-300 transition-all"
                   />
                   <div className="flex justify-between text-[10px] text-zinc-600 mt-3 font-bold uppercase tracking-wider">
                     <span>1</span>
@@ -369,7 +369,7 @@ const PricingCalculator: React.FC<Props> = ({ config, addons, onRequestUpdate, o
               <div className="md:col-span-2 mt-2">
                 <label className={labelClass}>{upper(t.designPref)}</label>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <label className={`relative group cursor-pointer border rounded-2xl p-5 transition-all duration-300 flex items-start space-x-4 ${request.designType === DesignType.TEMPLATE ? 'border-yellow-400 bg-zinc-900 shadow-[0_0_15px_rgba(250,204,21,0.15)]' : 'border-zinc-800 bg-black hover:border-zinc-600'}`}>
+                  <label className={`relative group cursor-pointer border rounded-2xl p-5 transition-all duration-300 flex items-start space-x-4 ${request.designType === DesignType.TEMPLATE ? 'border-taurusGold bg-zinc-900 shadow-[0_0_15px_rgba(250,204,21,0.15)]' : 'border-zinc-800 bg-black hover:border-zinc-600'}`}>
                     <input 
                       type="radio" 
                       name="design" 
@@ -377,8 +377,8 @@ const PricingCalculator: React.FC<Props> = ({ config, addons, onRequestUpdate, o
                       checked={request.designType === DesignType.TEMPLATE}
                       onChange={() => setRequest({...request, designType: DesignType.TEMPLATE})}
                     />
-                    <div className={`w-5 h-5 rounded-full border-2 mt-1 flex items-center justify-center flex-shrink-0 ${request.designType === DesignType.TEMPLATE ? 'border-yellow-400' : 'border-zinc-600 group-hover:border-zinc-400'}`}>
-                      {request.designType === DesignType.TEMPLATE && <div className="w-2.5 h-2.5 rounded-full bg-yellow-400"></div>}
+                    <div className={`w-5 h-5 rounded-full border-2 mt-1 flex items-center justify-center flex-shrink-0 ${request.designType === DesignType.TEMPLATE ? 'border-taurusGold' : 'border-zinc-600 group-hover:border-zinc-400'}`}>
+                      {request.designType === DesignType.TEMPLATE && <div className="w-2.5 h-2.5 rounded-full bg-taurusGold"></div>}
                     </div>
                     <div>
                       <div className={`font-bold text-lg ${request.designType === DesignType.TEMPLATE ? 'text-white' : 'text-zinc-400 group-hover:text-zinc-200'}`}>{t.template}</div>
@@ -386,7 +386,7 @@ const PricingCalculator: React.FC<Props> = ({ config, addons, onRequestUpdate, o
                     </div>
                   </label>
 
-                  <label className={`relative group cursor-pointer border rounded-2xl p-5 transition-all duration-300 flex items-start space-x-4 ${request.designType === DesignType.CUSTOM ? 'border-yellow-400 bg-zinc-900 shadow-[0_0_15px_rgba(250,204,21,0.15)]' : 'border-zinc-800 bg-black hover:border-zinc-600'}`}>
+                  <label className={`relative group cursor-pointer border rounded-2xl p-5 transition-all duration-300 flex items-start space-x-4 ${request.designType === DesignType.CUSTOM ? 'border-taurusGold bg-zinc-900 shadow-[0_0_15px_rgba(250,204,21,0.15)]' : 'border-zinc-800 bg-black hover:border-zinc-600'}`}>
                     <input 
                       type="radio" 
                       name="design" 
@@ -394,8 +394,8 @@ const PricingCalculator: React.FC<Props> = ({ config, addons, onRequestUpdate, o
                       checked={request.designType === DesignType.CUSTOM}
                       onChange={() => setRequest({...request, designType: DesignType.CUSTOM})}
                     />
-                     <div className={`w-5 h-5 rounded-full border-2 mt-1 flex items-center justify-center flex-shrink-0 ${request.designType === DesignType.CUSTOM ? 'border-yellow-400' : 'border-zinc-600 group-hover:border-zinc-400'}`}>
-                      {request.designType === DesignType.CUSTOM && <div className="w-2.5 h-2.5 rounded-full bg-yellow-400"></div>}
+                     <div className={`w-5 h-5 rounded-full border-2 mt-1 flex items-center justify-center flex-shrink-0 ${request.designType === DesignType.CUSTOM ? 'border-taurusGold' : 'border-zinc-600 group-hover:border-zinc-400'}`}>
+                      {request.designType === DesignType.CUSTOM && <div className="w-2.5 h-2.5 rounded-full bg-taurusGold"></div>}
                     </div>
                     <div>
                       <div className={`font-bold text-lg ${request.designType === DesignType.CUSTOM ? 'text-white' : 'text-zinc-400 group-hover:text-zinc-200'}`}>{t.custom}</div>
@@ -411,8 +411,8 @@ const PricingCalculator: React.FC<Props> = ({ config, addons, onRequestUpdate, o
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                    {/* SEO */}
-                   <label className={`flex items-center space-x-4 p-4 border rounded-xl cursor-pointer transition-all duration-300 group ${request.hasSeo ? 'border-yellow-400 bg-zinc-900' : 'border-zinc-800 bg-black hover:border-zinc-700'}`}>
-                      <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${request.hasSeo ? 'bg-yellow-400 border-yellow-400' : 'border-zinc-600 group-hover:border-zinc-500'}`}>
+                   <label className={`flex items-center space-x-4 p-4 border rounded-xl cursor-pointer transition-all duration-300 group ${request.hasSeo ? 'border-taurusGold bg-zinc-900' : 'border-zinc-800 bg-black hover:border-zinc-700'}`}>
+                      <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${request.hasSeo ? 'bg-taurusGold border-taurusGold' : 'border-zinc-600 group-hover:border-zinc-500'}`}>
                          {request.hasSeo && <Zap className="w-3.5 h-3.5 text-black" fill="currentColor" />}
                       </div>
                       <input type="checkbox" className="hidden" checked={request.hasSeo} onChange={(e) => setRequest({...request, hasSeo: e.target.checked})} />
@@ -420,12 +420,12 @@ const PricingCalculator: React.FC<Props> = ({ config, addons, onRequestUpdate, o
                         <span className={`block font-bold text-sm ${request.hasSeo ? 'text-white' : 'text-zinc-400 group-hover:text-zinc-200'}`}>{t.seoService}</span>
                         <span className="block text-xs text-zinc-600">{t.seoDesc}</span>
                       </div>
-                      <div className="text-xs font-bold text-yellow-400">{formatFactorDisplay(rules.factors.seo)}</div>
+                      <div className="text-xs font-bold text-taurusGold">{formatFactorDisplay(rules.factors.seo)}</div>
                    </label>
 
                    {/* Multi-Lang */}
-                   <label className={`flex items-center space-x-4 p-4 border rounded-xl cursor-pointer transition-all duration-300 group ${request.isMultiLang ? 'border-yellow-400 bg-zinc-900' : 'border-zinc-800 bg-black hover:border-zinc-700'}`}>
-                      <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${request.isMultiLang ? 'bg-yellow-400 border-yellow-400' : 'border-zinc-600 group-hover:border-zinc-500'}`}>
+                   <label className={`flex items-center space-x-4 p-4 border rounded-xl cursor-pointer transition-all duration-300 group ${request.isMultiLang ? 'border-taurusGold bg-zinc-900' : 'border-zinc-800 bg-black hover:border-zinc-700'}`}>
+                      <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${request.isMultiLang ? 'bg-taurusGold border-taurusGold' : 'border-zinc-600 group-hover:border-zinc-500'}`}>
                          {request.isMultiLang && <Globe className="w-3.5 h-3.5 text-black" />}
                       </div>
                       <input type="checkbox" className="hidden" checked={request.isMultiLang} onChange={(e) => setRequest({...request, isMultiLang: e.target.checked})} />
@@ -433,12 +433,12 @@ const PricingCalculator: React.FC<Props> = ({ config, addons, onRequestUpdate, o
                         <span className={`block font-bold text-sm ${request.isMultiLang ? 'text-white' : 'text-zinc-400 group-hover:text-zinc-200'}`}>{t.multiLang}</span>
                         <span className="block text-xs text-zinc-600">{t.multiLangDesc}</span>
                       </div>
-                      <div className="text-xs font-bold text-yellow-400">{formatFactorDisplay(rules.factors.multiLang)}</div>
+                      <div className="text-xs font-bold text-taurusGold">{formatFactorDisplay(rules.factors.multiLang)}</div>
                    </label>
 
                    {/* Graphics */}
-                   <label className={`flex items-center space-x-4 p-4 border rounded-xl cursor-pointer transition-all duration-300 group ${request.hasGraphics ? 'border-yellow-400 bg-zinc-900' : 'border-zinc-800 bg-black hover:border-zinc-700'}`}>
-                      <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${request.hasGraphics ? 'bg-yellow-400 border-yellow-400' : 'border-zinc-600 group-hover:border-zinc-500'}`}>
+                   <label className={`flex items-center space-x-4 p-4 border rounded-xl cursor-pointer transition-all duration-300 group ${request.hasGraphics ? 'border-taurusGold bg-zinc-900' : 'border-zinc-800 bg-black hover:border-zinc-700'}`}>
+                      <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${request.hasGraphics ? 'bg-taurusGold border-taurusGold' : 'border-zinc-600 group-hover:border-zinc-500'}`}>
                          {request.hasGraphics && <PenTool className="w-3.5 h-3.5 text-black" />}
                       </div>
                       <input type="checkbox" className="hidden" checked={request.hasGraphics} onChange={(e) => setRequest({...request, hasGraphics: e.target.checked})} />
@@ -446,12 +446,12 @@ const PricingCalculator: React.FC<Props> = ({ config, addons, onRequestUpdate, o
                         <span className={`block font-bold text-sm ${request.hasGraphics ? 'text-white' : 'text-zinc-400 group-hover:text-zinc-200'}`}>{t.graphics}</span>
                         <span className="block text-xs text-zinc-600">{t.graphicsDesc}</span>
                       </div>
-                      <div className="text-xs font-bold text-yellow-400">{formatFactorDisplay(rules.factors.graphics)}</div>
+                      <div className="text-xs font-bold text-taurusGold">{formatFactorDisplay(rules.factors.graphics)}</div>
                    </label>
 
                    {/* UX */}
-                   <label className={`flex items-center space-x-4 p-4 border rounded-xl cursor-pointer transition-all duration-300 group ${request.hasUx ? 'border-yellow-400 bg-zinc-900' : 'border-zinc-800 bg-black hover:border-zinc-700'}`}>
-                      <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${request.hasUx ? 'bg-yellow-400 border-yellow-400' : 'border-zinc-600 group-hover:border-zinc-500'}`}>
+                   <label className={`flex items-center space-x-4 p-4 border rounded-xl cursor-pointer transition-all duration-300 group ${request.hasUx ? 'border-taurusGold bg-zinc-900' : 'border-zinc-800 bg-black hover:border-zinc-700'}`}>
+                      <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${request.hasUx ? 'bg-taurusGold border-taurusGold' : 'border-zinc-600 group-hover:border-zinc-500'}`}>
                          {request.hasUx && <MousePointer className="w-3.5 h-3.5 text-black" />}
                       </div>
                       <input type="checkbox" className="hidden" checked={request.hasUx} onChange={(e) => setRequest({...request, hasUx: e.target.checked})} />
@@ -459,12 +459,12 @@ const PricingCalculator: React.FC<Props> = ({ config, addons, onRequestUpdate, o
                         <span className={`block font-bold text-sm ${request.hasUx ? 'text-white' : 'text-zinc-400 group-hover:text-zinc-200'}`}>{t.ux}</span>
                         <span className="block text-xs text-zinc-600">{t.uxDesc}</span>
                       </div>
-                      <div className="text-xs font-bold text-yellow-400">{formatFactorDisplay(rules.factors.ux)}</div>
+                      <div className="text-xs font-bold text-taurusGold">{formatFactorDisplay(rules.factors.ux)}</div>
                    </label>
 
                    {/* CRM */}
-                   <label className={`flex items-center space-x-4 p-4 border rounded-xl cursor-pointer transition-all duration-300 group ${request.hasCrm ? 'border-yellow-400 bg-zinc-900' : 'border-zinc-800 bg-black hover:border-zinc-700'}`}>
-                      <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${request.hasCrm ? 'bg-yellow-400 border-yellow-400' : 'border-zinc-600 group-hover:border-zinc-500'}`}>
+                   <label className={`flex items-center space-x-4 p-4 border rounded-xl cursor-pointer transition-all duration-300 group ${request.hasCrm ? 'border-taurusGold bg-zinc-900' : 'border-zinc-800 bg-black hover:border-zinc-700'}`}>
+                      <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${request.hasCrm ? 'bg-taurusGold border-taurusGold' : 'border-zinc-600 group-hover:border-zinc-500'}`}>
                          {request.hasCrm && <Database className="w-3.5 h-3.5 text-black" />}
                       </div>
                       <input type="checkbox" className="hidden" checked={request.hasCrm} onChange={(e) => setRequest({...request, hasCrm: e.target.checked})} />
@@ -472,7 +472,7 @@ const PricingCalculator: React.FC<Props> = ({ config, addons, onRequestUpdate, o
                         <span className={`block font-bold text-sm ${request.hasCrm ? 'text-white' : 'text-zinc-400 group-hover:text-zinc-200'}`}>{t.crm}</span>
                         <span className="block text-xs text-zinc-600">{t.crmDesc}</span>
                       </div>
-                      <div className="text-xs font-bold text-yellow-400">{formatFactorDisplay(rules.factors.crm)}</div>
+                      <div className="text-xs font-bold text-taurusGold">{formatFactorDisplay(rules.factors.crm)}</div>
                    </label>
                 </div>
               </div>
@@ -496,7 +496,7 @@ const PricingCalculator: React.FC<Props> = ({ config, addons, onRequestUpdate, o
                   />
                   
                   {request.deliverySpeed !== DeliverySpeed.STANDARD && (
-                    <div className="mt-3 flex items-center text-xs text-yellow-400 font-bold bg-yellow-400/5 p-3 rounded-lg border border-yellow-400/20">
+                    <div className="mt-3 flex items-center text-xs text-taurusGold font-bold bg-taurusGold/5 p-3 rounded-lg border border-taurusGold/20">
                       <Zap className="w-4 h-4 mr-2" fill="currentColor" />
                       {t.urgentNote}
                     </div>
@@ -559,7 +559,7 @@ const PricingCalculator: React.FC<Props> = ({ config, addons, onRequestUpdate, o
         <div className="lg:col-span-1">
           <div className="sticky top-24 space-y-6">
             <div className="bg-black rounded-3xl shadow-2xl p-8 overflow-hidden relative border border-zinc-800 group hover:border-yellow-500/50 transition-colors duration-500">
-              <div className="absolute -top-32 -right-32 w-64 h-64 bg-yellow-400/10 rounded-full blur-3xl pointer-events-none group-hover:bg-yellow-400/20 transition-all duration-500"></div>
+              <div className="absolute -top-32 -right-32 w-64 h-64 bg-taurusGold/10 rounded-full blur-3xl pointer-events-none group-hover:bg-taurusGold/20 transition-all duration-500"></div>
               
               <h3 className="text-[10px] font-bold tracking-[0.2em] text-zinc-500 mb-8 relative z-10 border-b border-zinc-900 pb-4">
                 {upper(t.budgetSummary)}
@@ -594,20 +594,20 @@ const PricingCalculator: React.FC<Props> = ({ config, addons, onRequestUpdate, o
                    <div className="flex flex-col gap-2 mb-3">
                       <button 
                         onClick={() => setRequest({...request, discountType: DiscountType.FIXED})}
-                        className={`w-full flex items-center justify-between px-4 py-3 rounded-xl border transition-all ${request.discountType === DiscountType.FIXED ? 'bg-zinc-900 border-yellow-400 text-white' : 'bg-black border-zinc-800 text-zinc-500 hover:border-zinc-700'}`}
+                        className={`w-full flex items-center justify-between px-4 py-3 rounded-xl border transition-all ${request.discountType === DiscountType.FIXED ? 'bg-zinc-900 border-taurusGold text-white' : 'bg-black border-zinc-800 text-zinc-500 hover:border-zinc-700'}`}
                       >
                          <span className="text-sm font-bold">{labels.discountTypes[DiscountType.FIXED]}</span>
-                         <span className={`text-lg leading-none font-bold ${request.discountType === DiscountType.FIXED ? 'text-yellow-400' : 'text-zinc-600'}`}>
+                         <span className={`text-lg leading-none font-bold ${request.discountType === DiscountType.FIXED ? 'text-taurusGold' : 'text-zinc-600'}`}>
                            {rules.currencySymbol}
                          </span>
                       </button>
 
                       <button 
                         onClick={() => setRequest({...request, discountType: DiscountType.PERCENTAGE})}
-                        className={`w-full flex items-center justify-between px-4 py-3 rounded-xl border transition-all ${request.discountType === DiscountType.PERCENTAGE ? 'bg-zinc-900 border-yellow-400 text-white' : 'bg-black border-zinc-800 text-zinc-500 hover:border-zinc-700'}`}
+                        className={`w-full flex items-center justify-between px-4 py-3 rounded-xl border transition-all ${request.discountType === DiscountType.PERCENTAGE ? 'bg-zinc-900 border-taurusGold text-white' : 'bg-black border-zinc-800 text-zinc-500 hover:border-zinc-700'}`}
                       >
                          <span className="text-sm font-bold">{labels.discountTypes[DiscountType.PERCENTAGE]}</span>
-                         <Percent className={`w-4 h-4 ${request.discountType === DiscountType.PERCENTAGE ? 'text-yellow-400' : 'text-zinc-600'}`} />
+                         <Percent className={`w-4 h-4 ${request.discountType === DiscountType.PERCENTAGE ? 'text-taurusGold' : 'text-zinc-600'}`} />
                       </button>
                    </div>
                    
@@ -619,7 +619,7 @@ const PricingCalculator: React.FC<Props> = ({ config, addons, onRequestUpdate, o
                         placeholder="0"
                         value={request.discountValue || ''}
                         onChange={(e) => setRequest({...request, discountValue: parseFloat(e.target.value) || 0})}
-                        className="w-full bg-zinc-900 border border-zinc-800 rounded-xl py-4 text-white font-bold text-lg focus:border-yellow-400 focus:outline-none appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                        className="w-full bg-zinc-900 border border-zinc-800 rounded-xl py-4 text-white font-bold text-lg focus:border-taurusGold focus:outline-none appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                         style={{
                            // Add padding to the side where the symbol is located to prevent overlap
                            paddingLeft: showSymbolLeft ? '3rem' : '1.25rem',
@@ -651,7 +651,7 @@ const PricingCalculator: React.FC<Props> = ({ config, addons, onRequestUpdate, o
                 <div className="pt-6 mt-2 border-t border-zinc-900">
                   <div className="flex justify-between items-center">
                     <span className="text-sm font-medium text-zinc-500">{t.monthly}</span>
-                    <span className="font-bold text-yellow-400 text-xl font-poppins">{breakdown && formatPrice(breakdown.totalMonthly)}</span>
+                    <span className="font-bold text-taurusGold text-xl font-poppins">{breakdown && formatPrice(breakdown.totalMonthly)}</span>
                   </div>
                 </div>
               </div>
@@ -659,7 +659,7 @@ const PricingCalculator: React.FC<Props> = ({ config, addons, onRequestUpdate, o
               <div className="mt-10 relative z-10">
                  <button 
                   onClick={handleCreateProposal}
-                  className="w-full flex items-center justify-center space-x-2 bg-yellow-400 hover:bg-yellow-300 text-black py-4 rounded-xl font-bold transition-all shadow-[0_0_20px_rgba(250,204,21,0.2)] hover:shadow-[0_0_30px_rgba(250,204,21,0.4)] hover:-translate-y-1"
+                  className="w-full flex items-center justify-center space-x-2 bg-taurusGold hover:bg-yellow-300 text-black py-4 rounded-xl font-bold transition-all shadow-[0_0_20px_rgba(250,204,21,0.2)] hover:shadow-[0_0_30px_rgba(250,204,21,0.4)] hover:-translate-y-1"
                 >
                   <Save className="w-5 h-5" />
                   <span>{t.createProposal}</span>

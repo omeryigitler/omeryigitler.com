@@ -72,7 +72,7 @@ const ProposalView: React.FC<Props> = ({ config, addons, request, breakdown, onB
   const weeks = getTimelineWeeks();
   const phases = [
     { label: t.phase1, width: '30%', icon: PenTool, color: 'bg-zinc-800' },
-    { label: t.phase2, width: '45%', icon: Code, color: 'bg-yellow-400' },
+    { label: t.phase2, width: '45%', icon: Code, color: 'bg-taurusGold' },
     { label: t.phase3, width: '25%', icon: Rocket, color: 'bg-zinc-800' },
   ];
 
@@ -86,7 +86,7 @@ const ProposalView: React.FC<Props> = ({ config, addons, request, breakdown, onB
         </button>
         <button 
           onClick={() => window.print()} 
-          className="flex items-center bg-yellow-400 text-black px-6 py-3 rounded-xl font-bold hover:bg-yellow-300 transition-colors shadow-lg shadow-yellow-400/20"
+          className="flex items-center bg-taurusGold text-black px-6 py-3 rounded-xl font-bold hover:bg-yellow-300 transition-colors shadow-lg shadow-taurusGold/20"
         >
           <Printer className="w-4 h-4 mr-2" />
           {common.print}
@@ -101,7 +101,7 @@ const ProposalView: React.FC<Props> = ({ config, addons, request, breakdown, onB
           <div>
             {/* Manually uppercased to avoid browser locale issues with 'i' vs 'I' */}
             <h1 className="text-5xl font-extrabold text-black tracking-tighter font-poppins leading-none">ÖMER<br/>YİĞİTLER</h1>
-            <p className="text-black mt-2 font-bold tracking-[0.2em] text-sm uppercase bg-yellow-400 inline-block px-2 py-1">
+            <p className="text-black mt-2 font-bold tracking-[0.2em] text-sm uppercase bg-taurusGold inline-block px-2 py-1">
               {t.agency}
             </p>
           </div>
@@ -189,7 +189,7 @@ const ProposalView: React.FC<Props> = ({ config, addons, request, breakdown, onB
             <div className="flex h-12 rounded-xl overflow-hidden shadow-inner bg-zinc-100">
               {phases.map((phase, idx) => (
                 <div key={idx} style={{ width: phase.width }} className={`relative flex items-center justify-center ${phase.color} ${idx < phases.length - 1 ? 'border-r border-white/20' : ''}`}>
-                  <phase.icon className={`w-5 h-5 ${phase.color === 'bg-yellow-400' ? 'text-black' : 'text-white'}`} />
+                  <phase.icon className={`w-5 h-5 ${phase.color === 'bg-taurusGold' ? 'text-black' : 'text-white'}`} />
                 </div>
               ))}
             </div>
@@ -328,7 +328,7 @@ const ProposalView: React.FC<Props> = ({ config, addons, request, breakdown, onB
            {request.maintenanceLevel !== 'NONE' && (
              <div className="mt-8 flex justify-between items-center bg-zinc-900 border border-black p-6 rounded-xl text-white">
                <div>
-                  <h4 className="font-bold text-yellow-400">{t.monthlyService}</h4>
+                  <h4 className="font-bold text-taurusGold">{t.monthlyService}</h4>
                   <p className="text-sm text-zinc-300">
                     {labels.maintenance[request.maintenanceLevel]} 
                     {rules.maintenanceRates[request.maintenanceLevel].type === PricingFactorType.PERCENTAGE && (

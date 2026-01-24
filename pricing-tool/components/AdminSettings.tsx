@@ -135,7 +135,7 @@ const AdminSettings: React.FC<Props> = ({ config, addons, onUpdateConfig, onUpda
               type="number" 
               value={value} 
               onChange={(e) => onValueChange(parseFloat(e.target.value))}
-              className="bg-zinc-900 border border-zinc-700 rounded px-3 py-2 text-white w-24 text-right focus:border-yellow-400 outline-none text-sm font-bold"
+              className="bg-zinc-900 border border-zinc-700 rounded px-3 py-2 text-white w-24 text-right focus:border-taurusGold outline-none text-sm font-bold"
             />
          </div>
       </div>
@@ -153,7 +153,7 @@ const AdminSettings: React.FC<Props> = ({ config, addons, onUpdateConfig, onUpda
           <button onClick={handleReset} className="flex items-center px-4 py-2 border border-red-900 text-red-500 rounded-lg hover:bg-red-900/20 transition-colors">
             <RotateCcw className="w-4 h-4 mr-2" /> {t.reset}
           </button>
-          <button onClick={handleSave} className="flex items-center px-6 py-2 bg-yellow-400 text-black font-bold rounded-lg hover:bg-yellow-300 transition-colors shadow-lg shadow-yellow-400/20">
+          <button onClick={handleSave} className="flex items-center px-6 py-2 bg-taurusGold text-black font-bold rounded-lg hover:bg-yellow-300 transition-colors shadow-lg shadow-taurusGold/20">
             <Save className="w-4 h-4 mr-2" /> {t.save}
           </button>
         </div>
@@ -185,7 +185,7 @@ const AdminSettings: React.FC<Props> = ({ config, addons, onUpdateConfig, onUpda
             {/* Base Prices */}
             <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6">
               <h2 className="text-xl font-bold text-white mb-6 flex items-center">
-                <Globe className="w-5 h-5 mr-2 text-yellow-400" /> {t.basePrices} ({rules.currencySymbol})
+                <Globe className="w-5 h-5 mr-2 text-taurusGold" /> {t.basePrices} ({rules.currencySymbol})
               </h2>
               <div className="space-y-3">
                 {Object.entries(rules.basePrices).map(([key, value]) => (
@@ -203,7 +203,7 @@ const AdminSettings: React.FC<Props> = ({ config, addons, onUpdateConfig, onUpda
             {/* Maintenance Rates */}
             <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6">
               <h2 className="text-xl font-bold text-white mb-6 flex items-center">
-                 <RotateCcw className="w-5 h-5 mr-2 text-yellow-400" /> {t.maintenanceRates}
+                 <RotateCcw className="w-5 h-5 mr-2 text-taurusGold" /> {t.maintenanceRates}
               </h2>
               <div className="space-y-3">
                 {Object.entries(rules.maintenanceRates).map(([key, value]) => (
@@ -225,7 +225,7 @@ const AdminSettings: React.FC<Props> = ({ config, addons, onUpdateConfig, onUpda
             {/* Unit Rates & Speed (Combined for better logical grouping of 'Rates') */}
             <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6">
               <h2 className="text-xl font-bold text-white mb-6 flex items-center">
-                <Settings className="w-5 h-5 mr-2 text-yellow-400" /> {t.unitRates}
+                <Settings className="w-5 h-5 mr-2 text-taurusGold" /> {t.unitRates}
               </h2>
               <div className="space-y-3">
                  <UniversalInputRow 
@@ -239,7 +239,7 @@ const AdminSettings: React.FC<Props> = ({ config, addons, onUpdateConfig, onUpda
                {/* Speed Multipliers moved here */}
                <div className="border-t border-zinc-800 mt-6 pt-6">
                   <h3 className="text-lg font-bold text-white mb-4 flex items-center">
-                     <Zap className="w-5 h-5 mr-2 text-yellow-400" /> {t.speedMultipliers} (x)
+                     <Zap className="w-5 h-5 mr-2 text-taurusGold" /> {t.speedMultipliers} (x)
                   </h3>
                   <div className="space-y-3">
                     {Object.entries(rules.speedMultipliers).map(([key, value]) => (
@@ -251,7 +251,7 @@ const AdminSettings: React.FC<Props> = ({ config, addons, onUpdateConfig, onUpda
                             step="0.1"
                             value={value} 
                             onChange={(e) => updatePrice(activeTab, ['speedMultipliers', key], parseFloat(e.target.value))}
-                            className="bg-zinc-900 border border-zinc-700 rounded px-3 py-2 text-white w-24 text-right focus:border-yellow-400 outline-none font-bold"
+                            className="bg-zinc-900 border border-zinc-700 rounded px-3 py-2 text-white w-24 text-right focus:border-taurusGold outline-none font-bold"
                           />
                           <span className="absolute right-8 top-1/2 -translate-y-1/2 text-zinc-600 text-xs pointer-events-none">x</span>
                         </div>
@@ -264,7 +264,7 @@ const AdminSettings: React.FC<Props> = ({ config, addons, onUpdateConfig, onUpda
             {/* Flexible Factors */}
             <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6">
               <h2 className="text-xl font-bold text-white mb-4 flex items-center">
-                 <Percent className="w-5 h-5 mr-2 text-yellow-400" /> {t.multipliers}
+                 <Percent className="w-5 h-5 mr-2 text-taurusGold" /> {t.multipliers}
               </h2>
               <p className="text-xs text-zinc-500 mb-6">{t.multiplierDesc}</p>
               <div className="space-y-3">
@@ -320,7 +320,7 @@ const AdminSettings: React.FC<Props> = ({ config, addons, onUpdateConfig, onUpda
       <div className="mt-8 bg-zinc-900 border border-zinc-800 rounded-2xl p-6">
         <div className="flex justify-between items-center mb-6">
            <h2 className="text-xl font-bold text-white flex items-center">
-             <Package className="w-5 h-5 mr-2 text-yellow-400" /> {t.addonsTitle}
+             <Package className="w-5 h-5 mr-2 text-taurusGold" /> {t.addonsTitle}
            </h2>
            <button 
              onClick={() => {
@@ -353,7 +353,7 @@ const AdminSettings: React.FC<Props> = ({ config, addons, onUpdateConfig, onUpda
                         type="text" 
                         value={addon.label}
                         onChange={(e) => updateAddon(addon.id, 'label', e.target.value)}
-                        className="w-full bg-zinc-900 border border-zinc-700 rounded px-3 py-2 text-white text-sm focus:border-yellow-400 outline-none h-[42px]"
+                        className="w-full bg-zinc-900 border border-zinc-700 rounded px-3 py-2 text-white text-sm focus:border-taurusGold outline-none h-[42px]"
                      />
                    </div>
                    <div className="md:col-span-6">
@@ -362,7 +362,7 @@ const AdminSettings: React.FC<Props> = ({ config, addons, onUpdateConfig, onUpda
                         type="text" 
                         value={addon.description}
                         onChange={(e) => updateAddon(addon.id, 'description', e.target.value)}
-                        className="w-full bg-zinc-900 border border-zinc-700 rounded px-3 py-2 text-zinc-300 text-sm focus:border-yellow-400 outline-none h-[42px]"
+                        className="w-full bg-zinc-900 border border-zinc-700 rounded px-3 py-2 text-zinc-300 text-sm focus:border-taurusGold outline-none h-[42px]"
                      />
                    </div>
                    
@@ -372,7 +372,7 @@ const AdminSettings: React.FC<Props> = ({ config, addons, onUpdateConfig, onUpda
                        {activeTab === Country.TR ? t.priceTR : t.priceMT}
                      </label>
                      
-                     <div className="flex items-center space-x-2 bg-zinc-900 border border-zinc-700 rounded px-2 h-[42px] focus-within:border-yellow-400 transition-colors">
+                     <div className="flex items-center space-x-2 bg-zinc-900 border border-zinc-700 rounded px-2 h-[42px] focus-within:border-taurusGold transition-colors">
                         {/* Type Toggles */}
                         <div className="flex bg-zinc-800 rounded p-0.5 border border-zinc-600">
                            <button 
