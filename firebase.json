@@ -1,0 +1,61 @@
+{
+    "hosting": {
+        "public": ".",
+        "ignore": [
+            "firebase.json",
+            "**/.*",
+            "**/node_modules/**",
+            "pricing-tool/src/**",
+            "pricing-tool/node_modules/**",
+            "api/**",
+            "src/**",
+            "*.md",
+            "*.py",
+            "*.sh",
+            "check_bounds.py",
+            "diagnose.js",
+            "middleware.js",
+            "tailwind.config.js",
+            "package.json",
+            "package-lock.json",
+            "vercel.json",
+            "CNAME"
+        ],
+        "rewrites": [],
+        "headers": [
+            {
+                "source": "**/*.@(jpg|jpeg|gif|png|webp|svg|ico)",
+                "headers": [
+                    {
+                        "key": "Cache-Control",
+                        "value": "public, max-age=31536000, immutable"
+                    }
+                ]
+            },
+            {
+                "source": "**/*.@(css|js)",
+                "headers": [
+                    {
+                        "key": "Cache-Control",
+                        "value": "public, max-age=31536000, immutable"
+                    }
+                ]
+            },
+            {
+                "source": "**/*.@(html)",
+                "headers": [
+                    {
+                        "key": "Cache-Control",
+                        "value": "public, max-age=3600, must-revalidate"
+                    }
+                ]
+            }
+        ],
+        "cleanUrls": true,
+        "trailingSlash": false
+    },
+    "firestore": {
+        "rules": "firestore.rules",
+        "indexes": "firestore.indexes.json"
+    }
+}
