@@ -600,7 +600,7 @@
         /* Custom Message (Hacker Typewriter) */
         #taurus-custom-msg {
             display: none;
-            margin-top: 5rem; /* Increased from 2rem to clear large logo */
+            margin-top: 12rem; /* Increased to push text below globe wave */
             color: #FFD700;
             font-family: 'Courier New', monospace;
             font-size: 1.5rem;
@@ -770,23 +770,6 @@
 
 
         `;
-
-        console.log('🔧 createOverlay completed for mode:', mode);
-        console.log('🔍 overlay element:', overlay);
-        console.log('📝 innerHTMLContent length:', innerHTMLContent.length);
-        console.log('📝 Full overlay.innerHTML includes taurus-custom-msg:', overlay.innerHTML.includes('taurus-custom-msg'));
-        console.log('🔍 Checking msgBox via document.getElementById:', document.getElementById('taurus-custom-msg') ? 'FOUND' : 'NOT FOUND');
-        console.log('🔍 Checking msgBox via overlay.querySelector:', overlay.querySelector('#taurus-custom-msg') ? 'FOUND' : 'NOT FOUND');
-
-        // Debug: Extract and show the taurus-content div
-        const contentDiv = overlay.querySelector('.taurus-content');
-        if (contentDiv) {
-            console.log('✅ taurus-content div found');
-            console.log('🔍 Children count:', contentDiv.children.length);
-            console.log('🔍 Child IDs:', Array.from(contentDiv.children).map(c => c.id || c.className).join(', '));
-        } else {
-            console.error('❌ taurus-content div NOT FOUND!');
-        }
 
         // Acknowledge Logic (Only for Alarm/Block usually)
         const btn = document.getElementById('taurus-ack-btn');
@@ -1145,11 +1128,6 @@
             .onSnapshot((doc) => {
                 if (doc.exists) {
                     const data = doc.data();
-                    console.log('🔔 Firestore Update Received:', {
-                        action: data.action,
-                        message: data.message,
-                        timestamp: data.action_timestamp
-                    });
                     handleCommand(data); // Pass full object
                 }
             });
@@ -1204,46 +1182,28 @@
             playAlarmSound();
             trapInput();
         } else if (cmd === 'freeze') {
-            console.log('❄️ FREEZE Command Triggered:', { cmd, msg, fullPayload: payload });
-
             overlay.style.display = 'flex';
             document.body.style.overflow = 'hidden';
             overlay.className = 'mode-freeze';
 
-            // CRITICAL FIX: Query msgBox from overlay element directly
+            // Get msgBox from overlay after DOM is ready
             setTimeout(() => {
                 const overlay = document.getElementById('taurus-overlay');
                 const msgBox = overlay ? overlay.querySelector('#taurus-custom-msg') : null;
 
-                console.log('🔍 Overlay found:', !!overlay);
-                console.log('🔍 msgBox found via querySelector:', !!msgBox);
-
-                // Handle Custom Message - ENHANCED DEBUG
                 if (msgBox) {
-                    console.log('📦 msgBox element found:', msgBox);
-
                     if (msg && msg.trim().length > 0) {
-                        console.log('✅ Displaying Message:', msg, '| Length:', msg.length);
                         msgBox.innerText = msg;
                         msgBox.style.display = 'block';
                         msgBox.style.visibility = 'visible';
                         msgBox.style.opacity = '1';
                         msgBox.style.zIndex = '99999999';
-                        console.log('🎨 msgBox styles applied:', msgBox.style.cssText);
                     } else {
-                        console.log('⚠️ No message to display (empty or null):', msg);
                         msgBox.innerText = '';
                         msgBox.style.display = 'none';
                     }
-                } else {
-                    console.error('❌ msgBox element NOT FOUND even with querySelector!');
-                    if (overlay) {
-                        console.log('📋 Overlay HTML:', overlay.innerHTML.substring(0, 500));
-                    } else {
-                        console.error('❌ Overlay element itself not found!');
-                    }
                 }
-            }, 50); // Small delay to ensure DOM is fully parsed
+            }, 50);
 
             stopAlarmSound(); // Silence for dramatic effect
             trapInput();
