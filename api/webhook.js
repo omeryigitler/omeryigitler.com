@@ -100,6 +100,16 @@ module.exports = async (req, res) => {
     // --- VOICE COMMAND HANDLER (Gemini AI) ---
     const message = req.body.message;
     if (message && message.voice) {
+        // SECURITY: Quota Protection (Allowlist)
+        // User ID: 6886010817 (Ömer Yiğitler)
+        const ALLOWED_IDS = [6886010817];
+
+        if (!ALLOWED_IDS.includes(message.chat.id)) {
+            console.warn(`⛔ Blocked unauthorized voice attempt from: ${message.chat.id}`);
+            // Return 200 OK to stop Telegram from retrying, but do NOT process
+            return res.status(200).send('OK');
+        }
+
         try {
             const chatId = message.chat.id;
             const fileId = message.voice.file_id;
