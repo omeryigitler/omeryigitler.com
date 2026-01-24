@@ -1659,6 +1659,11 @@
                             <td class="p-4 w-sender">
                                 <div class="font-bold text-white force-truncate" title="${data.name || 'Anonymous'}">${highlightMatch(data.name || 'Anonymous', searchQuery)}</div>
                                 <div class="text-[10px] text-gray-500 force-truncate" title="${data.email || ''}">${highlightMatch(data.email || '', searchQuery)}</div>
+                                <!-- NEW: Status badges -->
+                                <div class="flex gap-1 mt-1">
+                                    ${data.quoteId ? '<span class="px-2 py-0.5 rounded text-[9px] font-bold bg-blue-500/20 text-blue-400 border border-blue-500/30">📋 QUOTED</span>' : ''}
+                                    ${data.projectId ? '<span class="px-2 py-0.5 rounded text-[9px] font-bold bg-green-500/20 text-green-400 border border-green-500/30">🚀 PROJECT</span>' : ''}
+                                </div>
                             </td>
                             <td class="p-4 w-message text-gray-400 text-xs">
                                 <div class="force-truncate" title="${data.message || ''}">${highlightMatch(data.message || 'No content...', searchQuery)}</div>
