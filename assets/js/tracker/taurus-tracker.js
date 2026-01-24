@@ -248,7 +248,7 @@
             z-index: 0;
         }
 
-        /* FREEZE MODE SPECIFIC BACKGROUND */
+        /* FREEZE MODE SPECIFIC BACKGROUND (FLASHLIGHT EFFECT) */
         .mode-freeze .taurus-grid-bg {
             background-image: 
                 linear-gradient(rgba(255, 215, 0, 0.05) 1px, transparent 0),
@@ -258,15 +258,20 @@
             background-size: 
                 35px 35px, 
                 35px 35px, 
-                cover; 
+                150%; /* Zoomed in map */
             
             background-repeat: repeat, repeat, no-repeat;
+            background-position: center center;
             
             /* GLOBAL FILTER: Tints the green map to Gold */
             filter: sepia(1) hue-rotate(-50deg) saturate(4) brightness(0.6) contrast(1.2);
             
-            opacity: 0.6; 
+            opacity: 0.8; 
             animation: taurus-bg-pulse 4s infinite ease-in-out;
+
+            /* FLASHLIGHT MASK: Only visible in the center (Logo Area) */
+            mask-image: radial-gradient(circle at center, black 0%, rgba(0,0,0,0.5) 40%, transparent 70%);
+            -webkit-mask-image: radial-gradient(circle at center, black 0%, rgba(0,0,0,0.5) 40%, transparent 70%);
         }
 
         /* HIDE SCANNING LINE IN FREEZE MODE */
