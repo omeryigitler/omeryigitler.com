@@ -144,7 +144,7 @@ module.exports = async (req, res) => {
             Schema: { "command": "FREEZE" | "CLEAR" | "ALARM" | "BLOCK" | "UNKNOWN", "message": string | null }
             
             Rules:
-            1. "Durdur", "Kapat", "Freeze", "Stop", "Don", "Orospu çocuğu", "Piç", "O.Ç" -> { "command": "FREEZE", "message": null }
+            1. "Durdur", "Kapat", "Freeze", "Stop", "Don" -> { "command": "FREEZE", "message": null }
             2. "Durdur ve [X] yaz", "Ekrana [X] yaz", "Mesaj: [X]" -> { "command": "FREEZE", "message": "[X]" }
             3. "Temizle", "Aç", "Devam et", "Clear", "İptal" -> { "command": "CLEAR", "message": null }
             4. "Alarm" -> ALARM, "Engelle" -> BLOCK.
