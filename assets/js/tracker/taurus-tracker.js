@@ -238,12 +238,45 @@
         .taurus-grid-bg {
             position: absolute;
             inset: 0;
-            background-image: radial-gradient(circle at center, transparent 0, #050505 100%),
-                              linear-gradient(rgba(255, 215, 0, 0.08) 1px, transparent 0),
-                              linear-gradient(90deg, rgba(255, 215, 0, 0.08) 1px, transparent 0);
-            background-size: 100% 100%, 35px 35px, 35px 35px;
+            background-image: 
+                linear-gradient(rgba(255, 215, 0, 0.05) 1px, transparent 0),
+                linear-gradient(90deg, rgba(255, 215, 0, 0.05) 1px, transparent 0);
+            background-size: 35px 35px;
+            background-position: center center;
             opacity: 0.4;
             pointer-events: none;
+            z-index: 0;
+        }
+
+        /* FREEZE MODE SPECIFIC BACKGROUND */
+        .mode-freeze .taurus-grid-bg {
+            background-image: 
+                linear-gradient(rgba(255, 215, 0, 0.05) 1px, transparent 0),
+                linear-gradient(90deg, rgba(255, 215, 0, 0.05) 1px, transparent 0),
+                url('assets/taurus-tracker-bg.png'); /* Radar Map */
+            
+            background-size: 
+                35px 35px, 
+                35px 35px, 
+                cover; 
+            
+            background-repeat: repeat, repeat, no-repeat;
+            
+            /* GLOBAL FILTER: Tints the green map to Gold */
+            filter: sepia(1) hue-rotate(-50deg) saturate(4) brightness(0.6) contrast(1.2);
+            
+            opacity: 0.6; 
+            animation: taurus-bg-pulse 4s infinite ease-in-out;
+        }
+
+        /* HIDE SCANNING LINE IN FREEZE MODE */
+        .mode-freeze .taurus-axis-glow {
+            display: none !important;
+        }
+
+        @keyframes taurus-bg-pulse {
+            0%, 100% { filter: sepia(1) hue-rotate(-50deg) saturate(4) brightness(0.6) contrast(1.2) opacity(0.6); }
+            50% { filter: sepia(1) hue-rotate(-50deg) saturate(4) brightness(0.8) contrast(1.4) opacity(0.8); }
         }
 
         .taurus-axis-glow {
