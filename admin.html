@@ -289,7 +289,7 @@
             </button>
             <button onclick="switchTab('pricing')" id="nav-pricing"
                 class="nav-item w-full flex items-center px-6 py-4 text-gray-400 hover:text-white hover:bg-white/5 transition-all text-sm font-bold uppercase tracking-[0.2em]">
-                <i data-lucide="calculator" class="w-5 h-5 mr-4"></i> Fiyatlandırma
+                <i data-lucide="calculator" class="w-5 h-5 mr-4"></i> Pricing
             </button>
             <button onclick="switchTab('projects')" id="nav-projects"
                 class="nav-item w-full flex items-center px-6 py-4 text-gray-400 hover:text-white hover:bg-white/5 transition-all text-sm font-bold uppercase tracking-[0.2em]">
@@ -536,18 +536,27 @@
 
             <!-- PRICING VIEW -->
             <div id="view-pricing" class="hidden fade-in">
-                <div class="mb-8">
-                    <h2 class="text-3xl font-display font-bold text-white uppercase">FİYATLANDIRMA ARACI <span
-                            class="text-taurusGold text-sm align-middle font-body ml-2 uppercase tracking-widest border border-taurusGold/30 px-2 py-1 rounded text-[10px]">V1.0</span>
-                    </h2>
-                    <p class="text-[10px] text-gray-500 uppercase tracking-widest mt-1">GLOBAL PRICING CALCULATOR</p>
+                <div class="mb-6 flex items-center justify-between">
+                    <div>
+                        <h2 class="text-3xl font-display font-bold text-white uppercase">PRICING TOOL <span
+                                class="text-taurusGold text-sm align-middle font-body ml-2 uppercase tracking-widest border border-taurusGold/30 px-2 py-1 rounded text-[10px]">V1.0</span>
+                        </h2>
+                        <p class="text-[10px] text-gray-500 uppercase tracking-widest mt-1">GLOBAL PRICING CALCULATOR
+                        </p>
+                    </div>
+                    <div class="flex gap-3">
+                        <button onclick="window.open('pricing-tool/dist/index.html', '_blank')"
+                            class="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-white text-[10px] font-black uppercase tracking-widest hover:bg-taurusGold hover:text-black hover:border-taurusGold transition-all">
+                            <i data-lucide="external-link" class="w-4 h-4"></i> Open in New Tab
+                        </button>
+                    </div>
                 </div>
 
                 <!-- Pricing Tool iFrame -->
                 <div
                     class="w-full h-[calc(100vh-280px)] lg:h-[calc(100vh-200px)] bg-white/5 border border-glassBorder rounded-3xl overflow-hidden backdrop-blur-md">
-                    <iframe src="pricing-tool/dist/index.html" class="w-full h-full" frameborder="0"
-                        style="border: none;" title="Fiyatlandırma Aracı">
+                    <iframe id="pricing-iframe" src="pricing-tool/dist/index.html" class="w-full h-full" frameborder="0"
+                        style="border: none;" title="Pricing Tool">
                     </iframe>
                 </div>
             </div>
@@ -855,7 +864,7 @@
             const titles = {
                 'dashboard': 'Dashboard Overview',
                 'messages': 'Communications Hub',
-                'pricing': 'Fiyatlandırma Aracı',
+                'pricing': 'Pricing Tool',
                 'projects': 'Operational Matrix',
                 'settings': 'Security Protocols',
                 'intelligence': 'Visitor Intelligence Matrix'
