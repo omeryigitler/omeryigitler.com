@@ -177,7 +177,7 @@ const SeoTracker: React.FC<Props> = ({ language, initialClientName }) => {
           <h2 className="text-xl font-bold text-white font-poppins mb-4">{t.myProjects}</h2>
           <button 
             onClick={handleOpenModal}
-            className="w-full flex items-center justify-center space-x-2 bg-taurusGold hover:bg-taurusGold text-black py-3 rounded-lg font-bold transition-colors"
+            className="w-full flex items-center justify-center space-x-2 bg-[#FFD700] hover:bg-[#FFD700] text-black py-3 rounded-lg font-bold transition-colors"
           >
             <Plus className="w-4 h-4" />
             <span>{t.newProject}</span>
@@ -198,7 +198,7 @@ const SeoTracker: React.FC<Props> = ({ language, initialClientName }) => {
                 onClick={() => setActiveProjectId(project.id)}
                 className={`group p-4 rounded-xl cursor-pointer border transition-all ${
                   activeProjectId === project.id 
-                  ? 'bg-black border-taurusGold shadow-[0_0_15px_rgba(255,215,0,0.1)]' 
+                  ? 'bg-black border-[#FFD700] shadow-[0_0_15px_rgba(255,215,0,0.1)]' 
                   : 'bg-zinc-900/50 border-zinc-800 hover:border-zinc-600'
                 }`}
               >
@@ -217,13 +217,13 @@ const SeoTracker: React.FC<Props> = ({ language, initialClientName }) => {
                 {/* Mini Progress Bar */}
                 <div className="w-full bg-zinc-800 h-1.5 rounded-full overflow-hidden">
                   <div 
-                    className="bg-taurusGold h-full transition-all duration-500" 
+                    className="bg-[#FFD700] h-full transition-all duration-500" 
                     style={{ width: `${progress}%` }}
                   ></div>
                 </div>
                 <div className="flex justify-between mt-2 text-[10px] text-zinc-500 font-bold uppercase tracking-wider">
                    <span>{t.progress}</span>
-                   <span className={progress === 100 ? 'text-green-500' : 'text-taurusGold'}>%{progress}</span>
+                   <span className={progress === 100 ? 'text-green-500' : 'text-[#FFD700]'}>%{progress}</span>
                 </div>
               </div>
             );
@@ -239,7 +239,7 @@ const SeoTracker: React.FC<Props> = ({ language, initialClientName }) => {
             <div className="flex items-end justify-between mb-10 pb-6 border-b border-zinc-800">
                <div>
                   <h1 className="text-4xl font-extrabold text-white font-poppins mb-2">{activeProject.clientName}</h1>
-                  <a href={activeProject.websiteUrl} target="_blank" rel="noreferrer" className="text-taurusGold hover:underline flex items-center space-x-2 text-sm">
+                  <a href={activeProject.websiteUrl} target="_blank" rel="noreferrer" className="text-[#FFD700] hover:underline flex items-center space-x-2 text-sm">
                     <Globe className="w-4 h-4" />
                     <span>{activeProject.websiteUrl}</span>
                   </a>
@@ -254,7 +254,7 @@ const SeoTracker: React.FC<Props> = ({ language, initialClientName }) => {
                         <Percent className="w-8 h-8 text-zinc-700 absolute" />
                         <svg className="w-full h-full transform -rotate-90">
                            <circle cx="32" cy="32" r="28" stroke="currentColor" strokeWidth="4" fill="transparent" className="text-zinc-800" />
-                           <circle cx="32" cy="32" r="28" stroke="currentColor" strokeWidth="4" fill="transparent" className="text-taurusGold" strokeDasharray={175} strokeDashoffset={175 - (175 * calculateProgress(activeProject) / 100)} />
+                           <circle cx="32" cy="32" r="28" stroke="currentColor" strokeWidth="4" fill="transparent" className="text-[#FFD700]" strokeDasharray={175} strokeDashoffset={175 - (175 * calculateProgress(activeProject) / 100)} />
                         </svg>
                      </div>
                   </div>
@@ -262,7 +262,7 @@ const SeoTracker: React.FC<Props> = ({ language, initialClientName }) => {
                     <span className="text-xs text-zinc-500">{t.hideCompleted}</span>
                     <button 
                       onClick={() => setHideCompleted(!hideCompleted)}
-                      className={`w-10 h-5 rounded-full p-1 transition-colors ${hideCompleted ? 'bg-taurusGold' : 'bg-zinc-700'}`}
+                      className={`w-10 h-5 rounded-full p-1 transition-colors ${hideCompleted ? 'bg-[#FFD700]' : 'bg-zinc-700'}`}
                     >
                       <div className={`w-3 h-3 bg-white rounded-full shadow-md transform transition-transform ${hideCompleted ? 'translate-x-5' : ''}`}></div>
                     </button>
@@ -280,7 +280,7 @@ const SeoTracker: React.FC<Props> = ({ language, initialClientName }) => {
                     className="flex items-center justify-between p-6 cursor-pointer bg-zinc-900 hover:bg-zinc-800/80 transition-colors border-b border-zinc-800/50 select-none"
                   >
                     <div className="flex items-center space-x-4">
-                       <div className={`p-2 rounded-lg ${expandedCategories.includes(category.id) ? 'bg-taurusGold text-black' : 'bg-zinc-800 text-zinc-400'}`}>
+                       <div className={`p-2 rounded-lg ${expandedCategories.includes(category.id) ? 'bg-[#FFD700] text-black' : 'bg-zinc-800 text-zinc-400'}`}>
                           {expandedCategories.includes(category.id) ? <ChevronDown className="w-5 h-5" /> : <ChevronRight className="w-5 h-5" />}
                        </div>
                        <h3 className="text-xl font-bold text-white">{category.title}</h3>
@@ -316,7 +316,7 @@ const SeoTracker: React.FC<Props> = ({ language, initialClientName }) => {
                                           value={task.note}
                                           onChange={(e) => updateNote(category.id, task.id, e.target.value)}
                                           placeholder={t.addNote}
-                                          className="w-full bg-zinc-950 border border-zinc-800 rounded-lg p-3 text-sm text-zinc-300 focus:border-taurusGold focus:outline-none focus:ring-1 focus:ring-taurusGold transition-all resize-none h-20 placeholder-zinc-700"
+                                          className="w-full bg-zinc-950 border border-zinc-800 rounded-lg p-3 text-sm text-zinc-300 focus:border-[#FFD700] focus:outline-none focus:ring-1 focus:ring-taurusGold transition-all resize-none h-20 placeholder-zinc-700"
                                         />
                                         <div className="absolute top-3 right-3 text-zinc-700 pointer-events-none">
                                            <FileText className="w-4 h-4" />
@@ -332,7 +332,7 @@ const SeoTracker: React.FC<Props> = ({ language, initialClientName }) => {
                       {/* Add Task Button */}
                       <button 
                         onClick={() => addNewTask(category.id)}
-                        className="w-full py-4 flex items-center justify-center text-sm font-bold text-zinc-500 hover:text-taurusGold hover:bg-zinc-900 transition-colors border-t border-zinc-800 border-dashed"
+                        className="w-full py-4 flex items-center justify-center text-sm font-bold text-zinc-500 hover:text-[#FFD700] hover:bg-zinc-900 transition-colors border-t border-zinc-800 border-dashed"
                       >
                          <Plus className="w-4 h-4 mr-2" />
                          {t.addTask}
@@ -354,7 +354,7 @@ const SeoTracker: React.FC<Props> = ({ language, initialClientName }) => {
             </p>
             <button 
               onClick={handleOpenModal}
-              className="mt-8 px-8 py-3 bg-taurusGold text-black font-bold rounded-lg hover:bg-taurusGold transition-all shadow-lg shadow-taurusGold/20"
+              className="mt-8 px-8 py-3 bg-[#FFD700] text-black font-bold rounded-lg hover:bg-[#FFD700] transition-all shadow-lg shadow-taurusGold/20"
             >
               {t.startNow}
             </button>
@@ -382,7 +382,7 @@ const SeoTracker: React.FC<Props> = ({ language, initialClientName }) => {
                       type="text" 
                       value={newProjectName}
                       onChange={(e) => setNewProjectName(e.target.value)}
-                      className="w-full bg-black border border-zinc-700 rounded-xl p-4 text-white focus:border-taurusGold focus:outline-none"
+                      className="w-full bg-black border border-zinc-700 rounded-xl p-4 text-white focus:border-[#FFD700] focus:outline-none"
                       placeholder="Örn: ABC Lojistik"
                     />
                  </div>
@@ -392,7 +392,7 @@ const SeoTracker: React.FC<Props> = ({ language, initialClientName }) => {
                       type="text" 
                       value={newProjectUrl}
                       onChange={(e) => setNewProjectUrl(e.target.value)}
-                      className="w-full bg-black border border-zinc-700 rounded-xl p-4 text-white focus:border-taurusGold focus:outline-none"
+                      className="w-full bg-black border border-zinc-700 rounded-xl p-4 text-white focus:border-[#FFD700] focus:outline-none"
                       placeholder={t.urlPlaceholder}
                     />
                  </div>
@@ -400,7 +400,7 @@ const SeoTracker: React.FC<Props> = ({ language, initialClientName }) => {
                  <button 
                    onClick={handleCreateProject}
                    disabled={!newProjectName}
-                   className="w-full bg-taurusGold hover:bg-taurusGold disabled:opacity-50 disabled:cursor-not-allowed text-black font-bold py-4 rounded-xl transition-all mt-4"
+                   className="w-full bg-[#FFD700] hover:bg-[#FFD700] disabled:opacity-50 disabled:cursor-not-allowed text-black font-bold py-4 rounded-xl transition-all mt-4"
                  >
                    {t.createBtn}
                  </button>

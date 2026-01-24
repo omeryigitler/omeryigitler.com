@@ -23,7 +23,7 @@ const PackageTable: React.FC<Props> = ({ language }) => {
   // MT: €1,000 (Symbol first, comma separator)
   const packageMeta = [
     { key: 'starter', priceTR: '10.000 ₺', priceMT: '€1,000', color: 'border-zinc-800 bg-zinc-900', btnColor: 'bg-zinc-800 text-white hover:bg-zinc-700', checks: [true, true, false, true, true, false, true] },
-    { key: 'business', priceTR: '25.000 ₺', priceMT: '€2,500', color: 'border-taurusGold/50 bg-zinc-900 shadow-[0_0_30px_rgba(255,215,0,0.1)] scale-105 z-10', btnColor: 'bg-taurusGold text-black hover:bg-taurusGold font-bold', checks: [true, true, true, true, true, true, true] },
+    { key: 'business', priceTR: '25.000 ₺', priceMT: '€2,500', color: 'border-[#FFD700]/50 bg-zinc-900 shadow-[0_0_30px_rgba(255,215,0,0.1)] scale-105 z-10', btnColor: 'bg-[#FFD700] text-black hover:bg-[#FFD700] font-bold', checks: [true, true, true, true, true, true, true] },
     { key: 'premium', priceTR: '50.000 ₺', priceMT: '€5,000', color: 'border-zinc-800 bg-zinc-900', btnColor: 'bg-zinc-800 text-white hover:bg-zinc-700', checks: [true, true, true, true, true, true, true] },
   ];
 
@@ -36,13 +36,13 @@ const PackageTable: React.FC<Props> = ({ language }) => {
         <div className="mt-8 inline-flex bg-zinc-900 rounded-xl p-1.5 border border-zinc-800">
           <button 
             onClick={() => setActiveCountry(Country.TR)}
-            className={`px-6 py-2.5 rounded-lg text-sm font-bold transition-all ${activeCountry === Country.TR ? 'bg-taurusGold shadow-sm text-black' : 'text-zinc-500 hover:text-white'}`}
+            className={`px-6 py-2.5 rounded-lg text-sm font-bold transition-all ${activeCountry === Country.TR ? 'bg-[#FFD700] shadow-sm text-black' : 'text-zinc-500 hover:text-white'}`}
           >
             Türkiye (₺)
           </button>
           <button 
              onClick={() => setActiveCountry(Country.MT)}
-             className={`px-6 py-2.5 rounded-lg text-sm font-bold transition-all ${activeCountry === Country.MT ? 'bg-taurusGold shadow-sm text-black' : 'text-zinc-500 hover:text-white'}`}
+             className={`px-6 py-2.5 rounded-lg text-sm font-bold transition-all ${activeCountry === Country.MT ? 'bg-[#FFD700] shadow-sm text-black' : 'text-zinc-500 hover:text-white'}`}
           >
             Malta (€)
           </button>
@@ -56,7 +56,7 @@ const PackageTable: React.FC<Props> = ({ language }) => {
             return (
               <div key={pkg.key} className={`relative rounded-3xl p-10 transition-transform border ${pkg.color}`}>
                 {pkgTrans.badge && (
-                  <span className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-taurusGold text-black text-xs font-bold px-4 py-1.5 rounded-full uppercase tracking-wide shadow-lg">
+                  <span className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-[#FFD700] text-black text-xs font-bold px-4 py-1.5 rounded-full uppercase tracking-wide shadow-lg">
                     {pkgTrans.badge}
                   </span>
                 )}
@@ -72,7 +72,7 @@ const PackageTable: React.FC<Props> = ({ language }) => {
                   {pkgTrans.features.map((featureName: string, idx: number) => (
                     <li key={idx} className="flex items-start">
                       {pkg.checks[idx] ? (
-                        <Check className="w-5 h-5 text-taurusGold mr-3 flex-shrink-0" strokeWidth={3} />
+                        <Check className="w-5 h-5 text-[#FFD700] mr-3 flex-shrink-0" strokeWidth={3} />
                       ) : (
                         <X className="w-5 h-5 text-zinc-700 mr-3 flex-shrink-0" />
                       )}

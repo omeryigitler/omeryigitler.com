@@ -72,7 +72,7 @@ const ProposalView: React.FC<Props> = ({ config, addons, request, breakdown, onB
   const weeks = getTimelineWeeks();
   const phases = [
     { label: t.phase1, width: '30%', icon: PenTool, color: 'bg-zinc-800' },
-    { label: t.phase2, width: '45%', icon: Code, color: 'bg-taurusGold' },
+    { label: t.phase2, width: '45%', icon: Code, color: 'bg-[#FFD700]' },
     { label: t.phase3, width: '25%', icon: Rocket, color: 'bg-zinc-800' },
   ];
 
@@ -86,7 +86,7 @@ const ProposalView: React.FC<Props> = ({ config, addons, request, breakdown, onB
         </button>
         <button 
           onClick={() => window.print()} 
-          className="flex items-center bg-taurusGold text-black px-6 py-3 rounded-xl font-bold hover:bg-taurusGold transition-colors shadow-lg shadow-taurusGold/20"
+          className="flex items-center bg-[#FFD700] text-black px-6 py-3 rounded-xl font-bold hover:bg-[#FFD700] transition-colors shadow-lg shadow-taurusGold/20"
         >
           <Printer className="w-4 h-4 mr-2" />
           {common.print}
@@ -101,7 +101,7 @@ const ProposalView: React.FC<Props> = ({ config, addons, request, breakdown, onB
           <div>
             {/* Manually uppercased to avoid browser locale issues with 'i' vs 'I' */}
             <h1 className="text-5xl font-extrabold text-black tracking-tighter font-poppins leading-none">ÖMER<br/>YİĞİTLER</h1>
-            <p className="text-black mt-2 font-bold tracking-[0.2em] text-sm uppercase bg-taurusGold inline-block px-2 py-1">
+            <p className="text-black mt-2 font-bold tracking-[0.2em] text-sm uppercase bg-[#FFD700] inline-block px-2 py-1">
               {t.agency}
             </p>
           </div>
@@ -150,27 +150,27 @@ const ProposalView: React.FC<Props> = ({ config, addons, request, breakdown, onB
              <h3 className="text-sm font-bold text-black uppercase tracking-widest mb-6 pb-2 border-b border-zinc-200">{t.extras}</h3>
              <ul className="space-y-5">
                <li className="flex items-center text-zinc-700">
-                  <CheckCircle className={`w-6 h-6 mr-4 ${request.isMultiLang ? 'text-taurusGold' : 'text-zinc-200'}`} />
+                  <CheckCircle className={`w-6 h-6 mr-4 ${request.isMultiLang ? 'text-[#FFD700]' : 'text-zinc-200'}`} />
                   <span className={!request.isMultiLang ? 'text-zinc-300' : 'font-bold text-black'}>{t.langDiff}</span>
                </li>
                <li className="flex items-center text-zinc-700">
-                  <CheckCircle className={`w-6 h-6 mr-4 ${request.hasSeo ? 'text-taurusGold' : 'text-zinc-200'}`} />
+                  <CheckCircle className={`w-6 h-6 mr-4 ${request.hasSeo ? 'text-[#FFD700]' : 'text-zinc-200'}`} />
                   <span className={!request.hasSeo ? 'text-zinc-300' : 'font-bold text-black'}>{t.seoSetup}</span>
                </li>
                <li className="flex items-center text-zinc-700">
-                  <CheckCircle className={`w-6 h-6 mr-4 ${request.hasGraphics ? 'text-taurusGold' : 'text-zinc-200'}`} />
+                  <CheckCircle className={`w-6 h-6 mr-4 ${request.hasGraphics ? 'text-[#FFD700]' : 'text-zinc-200'}`} />
                   <span className={!request.hasGraphics ? 'text-zinc-300' : 'font-bold text-black'}>{t.graphicsDiff}</span>
                </li>
                <li className="flex items-center text-zinc-700">
-                  <CheckCircle className={`w-6 h-6 mr-4 ${request.hasUx ? 'text-taurusGold' : 'text-zinc-200'}`} />
+                  <CheckCircle className={`w-6 h-6 mr-4 ${request.hasUx ? 'text-[#FFD700]' : 'text-zinc-200'}`} />
                   <span className={!request.hasUx ? 'text-zinc-300' : 'font-bold text-black'}>{t.uxDiff}</span>
                </li>
                <li className="flex items-center text-zinc-700">
-                  <CheckCircle className={`w-6 h-6 mr-4 ${request.hasCrm ? 'text-taurusGold' : 'text-zinc-200'}`} />
+                  <CheckCircle className={`w-6 h-6 mr-4 ${request.hasCrm ? 'text-[#FFD700]' : 'text-zinc-200'}`} />
                   <span className={!request.hasCrm ? 'text-zinc-300' : 'font-bold text-black'}>{t.crmDiff}</span>
                </li>
                <li className="flex items-center text-zinc-700">
-                  <CheckCircle className={`w-6 h-6 mr-4 ${request.maintenanceLevel !== 'NONE' ? 'text-taurusGold' : 'text-zinc-200'}`} />
+                  <CheckCircle className={`w-6 h-6 mr-4 ${request.maintenanceLevel !== 'NONE' ? 'text-[#FFD700]' : 'text-zinc-200'}`} />
                   <span className={request.maintenanceLevel === 'NONE' ? 'text-zinc-300' : 'font-bold text-black'}>
                     {labels.maintenance[request.maintenanceLevel]}
                   </span>
@@ -182,14 +182,14 @@ const ProposalView: React.FC<Props> = ({ config, addons, request, breakdown, onB
         {/* Timeline Visualization (New Feature) */}
         <div className="mb-16">
           <h3 className="text-sm font-bold text-black uppercase tracking-widest mb-6 flex items-center">
-            <Calendar className="w-4 h-4 mr-2 text-taurusGold" />
+            <Calendar className="w-4 h-4 mr-2 text-[#FFD700]" />
             {t.timeline} ({weeks} {t.week})
           </h3>
           <div className="relative pt-6 pb-2">
             <div className="flex h-12 rounded-xl overflow-hidden shadow-inner bg-zinc-100">
               {phases.map((phase, idx) => (
                 <div key={idx} style={{ width: phase.width }} className={`relative flex items-center justify-center ${phase.color} ${idx < phases.length - 1 ? 'border-r border-white/20' : ''}`}>
-                  <phase.icon className={`w-5 h-5 ${phase.color === 'bg-taurusGold' ? 'text-black' : 'text-white'}`} />
+                  <phase.icon className={`w-5 h-5 ${phase.color === 'bg-[#FFD700]' ? 'text-black' : 'text-white'}`} />
                 </div>
               ))}
             </div>
@@ -328,7 +328,7 @@ const ProposalView: React.FC<Props> = ({ config, addons, request, breakdown, onB
            {request.maintenanceLevel !== 'NONE' && (
              <div className="mt-8 flex justify-between items-center bg-zinc-900 border border-black p-6 rounded-xl text-white">
                <div>
-                  <h4 className="font-bold text-taurusGold">{t.monthlyService}</h4>
+                  <h4 className="font-bold text-[#FFD700]">{t.monthlyService}</h4>
                   <p className="text-sm text-zinc-300">
                     {labels.maintenance[request.maintenanceLevel]} 
                     {rules.maintenanceRates[request.maintenanceLevel].type === PricingFactorType.PERCENTAGE && (
@@ -349,9 +349,9 @@ const ProposalView: React.FC<Props> = ({ config, addons, request, breakdown, onB
             <div>
               <h4 className="font-bold text-black mb-3 uppercase tracking-wide">{t.terms}</h4>
               <ul className="space-y-2">
-                <li className="flex items-start"><span className="mr-2 text-taurusGold font-bold">•</span> {t.term1}</li>
-                <li className="flex items-start"><span className="mr-2 text-taurusGold font-bold">•</span> {t.term2}</li>
-                <li className="flex items-start"><span className="mr-2 text-taurusGold font-bold">•</span> {t.term3}</li>
+                <li className="flex items-start"><span className="mr-2 text-[#FFD700] font-bold">•</span> {t.term1}</li>
+                <li className="flex items-start"><span className="mr-2 text-[#FFD700] font-bold">•</span> {t.term2}</li>
+                <li className="flex items-start"><span className="mr-2 text-[#FFD700] font-bold">•</span> {t.term3}</li>
               </ul>
             </div>
             <div>
