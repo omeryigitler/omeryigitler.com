@@ -127,12 +127,14 @@ module.exports = async (req, res) => {
             const prompt = `
             Analyze audio intent. Return ONLY raw JSON.
             Schema: { "command": "FREEZE" | "CLEAR" | "ALARM" | "BLOCK" | "UNKNOWN", "message": string | null }
+            Schema: { "command": "FREEZE" | "CLEAR" | "ALARM" | "BLOCK" | "UNKNOWN", "message": string | null }
             Rules:
-            1. "Durdur", "Kapat", "Freeze" -> { "command": "FREEZE", "message": null }
-            2. "Durdur ve [X] yaz", "Write [X]" -> { "command": "FREEZE", "message": "[X]" }
-            3. "Temizle", "Aç", "Clear" -> { "command": "CLEAR", "message": null }
+            1. "Durdur", "Kapat", "Freeze", "Stop" -> { "command": "FREEZE", "message": null }
+            2. "Durdur ve [X] yaz", "Freeze and write [X]", "Ekrana [X] yaz", "Mesaj: [X]" -> { "command": "FREEZE", "message": "[X]" }
+            3. "Temizle", "Aç", "Clear", "İptal" -> { "command": "CLEAR", "message": null }
             4. "Alarm" -> ALARM, "Engelle" -> BLOCK.
-            5. Sentence without command -> FREEZE with message.
+            5. "Sadece [X] yaz" -> { "command": "FREEZE", "message": "[X]" }
+            6. "Phrase" triggers -> { "command": "FREEZE", "message": "SYSTEM LOCKED" }
             `;
 
             const result = await model.generateContent([
