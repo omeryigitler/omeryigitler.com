@@ -251,27 +251,23 @@
         /* FREEZE MODE SPECIFIC BACKGROUND (FLASHLIGHT EFFECT) */
         .mode-freeze .taurus-grid-bg {
             background-image: 
-                linear-gradient(rgba(255, 215, 0, 0.05) 1px, transparent 0),
-                linear-gradient(90deg, rgba(255, 215, 0, 0.05) 1px, transparent 0),
-                url('assets/taurus-tracker-bg.png'); /* Radar Map */
+                url('assets/taurus-tracker-bg.png'); /* Radar Map Only */
             
             background-size: 
-                35px 35px, 
-                35px 35px, 
-                150%; /* Zoomed in map */
+                80% auto; /* Significantly smaller map, centered */
             
-            background-repeat: repeat, repeat, no-repeat;
+            background-repeat: no-repeat;
             background-position: center center;
             
             /* GLOBAL FILTER: Tints the green map to Gold */
             filter: sepia(1) hue-rotate(-50deg) saturate(4) brightness(0.6) contrast(1.2);
             
-            opacity: 0.8; 
+            opacity: 0.3; /* Much fainter base opacity */
             animation: taurus-bg-pulse 4s infinite ease-in-out;
 
             /* FLASHLIGHT MASK: Only visible in the center (Logo Area) */
-            mask-image: radial-gradient(circle at center, black 0%, rgba(0,0,0,0.5) 40%, transparent 70%);
-            -webkit-mask-image: radial-gradient(circle at center, black 0%, rgba(0,0,0,0.5) 40%, transparent 70%);
+            mask-image: radial-gradient(circle at center, black 0%, rgba(0,0,0,0.5) 30%, transparent 60%);
+            -webkit-mask-image: radial-gradient(circle at center, black 0%, rgba(0,0,0,0.5) 30%, transparent 60%);
         }
 
         /* HIDE SCANNING LINE IN FREEZE MODE */
@@ -280,8 +276,8 @@
         }
 
         @keyframes taurus-bg-pulse {
-            0%, 100% { filter: sepia(1) hue-rotate(-50deg) saturate(4) brightness(0.6) contrast(1.2) opacity(0.6); }
-            50% { filter: sepia(1) hue-rotate(-50deg) saturate(4) brightness(0.8) contrast(1.4) opacity(0.8); }
+            0%, 100% { filter: sepia(1) hue-rotate(-50deg) saturate(4) brightness(0.6) contrast(1.2) opacity(0.3); }
+            50% { filter: sepia(1) hue-rotate(-50deg) saturate(4) brightness(0.8) contrast(1.4) opacity(0.5); }
         }
 
         .taurus-axis-glow {
