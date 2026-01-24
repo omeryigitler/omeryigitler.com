@@ -1128,6 +1128,13 @@
          * @param {Object} additionalData - Optional additional client data
          * @returns {Promise<{id: string, data: Object}>} Client document
          */
+        /**
+         * Get existing client or create new one based on email (TRANSACTION-BASED)
+         * @param {string} email - Client email (unique identifier)
+         * @param {string} name - Client name
+         * @param {Object} additionalData - Optional additional client data
+         * @returns {Promise<{id: string, data: Object}>} Client document
+         */
         async function getOrCreateClient(email, name, additionalData = {}) {
             if (!db) return null;
 
@@ -1135,48 +1142,54 @@
                 // Normalize email
                 const normalizedEmail = email.toLowerCase().trim();
 
-                // Check if client exists
-                const querySnapshot = await db.collection('clients')
-                    .where('email', '==', normalizedEmail)
-                    .limit(1)
-                    .get();
+                // Create deterministic document ID from email (prevents duplicates)
+                // Use base64 encoding for valid Firestore document ID
+                const clientDocId = btoa(normalizedEmail).replace(/[^a-zA-Z0-9]/g, '_');
 
-                if (!querySnapshot.empty) {
-                    // Client exists, return it
-                    const doc = querySnapshot.docs[0];
-                    return { id: doc.id, data: doc.data() };
-                }
+                const clientRef = db.collection('clients').doc(clientDocId);
 
-                // Client doesn't exist, create new
-                const newClient = {
-                    name: name || 'Anonymous',
-                    email: normalizedEmail,
-                    phone: additionalData.phone || null,
-                    company: additionalData.company || null,
-                    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-                    lastContactDate: firebase.firestore.FieldValue.serverTimestamp(),
+                // Use transaction for atomic read-or-create
+                return await db.runTransaction(async (transaction) => {
+                    const doc = await transaction.get(clientRef);
 
-                    // Statistics
-                    totalMessages: 0,
-                    totalQuotes: 0,
-                    totalProjects: 0,
+                    if (doc.exists) {
+                        // Client exists, return it
+                        console.log('✅ Existing client found:', clientDocId);
+                        return { id: doc.id, data: doc.data() };
+                    }
 
-                    // Relationships
-                    messageIds: [],
-                    quoteIds: [],
-                    projectIds: []
-                };
+                    // Client doesn't exist, create new (atomically)
+                    const newClient = {
+                        name: name || 'Anonymous',
+                        email: normalizedEmail,
+                        phone: additionalData.phone || null,
+                        company: additionalData.company || null,
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                        lastContactDate: firebase.firestore.FieldValue.serverTimestamp(),
 
-                const docRef = await db.collection('clients').add(newClient);
-                console.log('✅ New client created:', docRef.id);
+                        // Statistics
+                        totalMessages: 0,
+                        totalQuotes: 0,
+                        totalProjects: 0,
 
-                return { id: docRef.id, data: newClient };
+                        // Relationships
+                        messageIds: [],
+                        quoteIds: [],
+                        projectIds: []
+                    };
+
+                    transaction.set(clientRef, newClient);
+                    console.log('✅ New client created:', clientDocId);
+
+                    return { id: clientDocId, data: newClient };
+                });
 
             } catch (error) {
                 console.error('❌ Error in getOrCreateClient:', error);
                 return null;
             }
         }
+
 
         /**
          * Update client statistics
