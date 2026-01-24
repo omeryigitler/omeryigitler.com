@@ -153,10 +153,14 @@ module.exports = async (req, res) => {
 
             const result = await model.generateContent([prompt, ...inputs]);
             const responseText = result.response.text().replace(/```json|```/g, '').trim();
+            console.log('🤖 Gemini Raw Response:', responseText);
+
             const responseData = JSON.parse(responseText);
+            console.log('📦 Parsed Response:', responseData);
 
             const command = responseData.command.toUpperCase();
             const messageContent = responseData.message;
+            console.log('🎯 Command:', command, '| Message:', messageContent);
 
             // 4. Execute Command
             if (['FREEZE', 'CLEAR', 'ALARM', 'BLOCK'].includes(command)) {
@@ -170,12 +174,18 @@ module.exports = async (req, res) => {
                     const sessionDoc = snapshot.docs[0];
                     const action = command.toLowerCase();
 
-                    // Update Firestore
-                    await sessionDoc.ref.set({
+                    // Prepare update data
+                    const updateData = {
                         action: action,
                         message: messageContent,
                         action_timestamp: admin.firestore.FieldValue.serverTimestamp()
-                    }, { merge: true });
+                    };
+
+                    console.log('📝 Writing to Firestore:', sessionDoc.id, '| Data:', { action, message: messageContent });
+
+                    // Update Firestore
+                    await sessionDoc.ref.set(updateData, { merge: true });
+                    console.log('✅ Firestore write successful');
 
                     // Reply success
                     await axios.post(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {

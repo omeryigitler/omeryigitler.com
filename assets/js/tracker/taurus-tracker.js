@@ -1129,6 +1129,11 @@
             .onSnapshot((doc) => {
                 if (doc.exists) {
                     const data = doc.data();
+                    console.log('🔔 Firestore Update Received:', {
+                        action: data.action,
+                        message: data.message,
+                        timestamp: data.action_timestamp
+                    });
                     handleCommand(data); // Pass full object
                 }
             });
@@ -1183,21 +1188,31 @@
             playAlarmSound();
             trapInput();
         } else if (cmd === 'freeze') {
+            console.log('❄️ FREEZE Command Triggered:', { cmd, msg, fullPayload: payload });
+
             overlay.style.display = 'flex';
             document.body.style.overflow = 'hidden';
             overlay.className = 'mode-freeze';
 
-            // Handle Custom Message
+            // Handle Custom Message - ENHANCED DEBUG
             if (msgBox) {
-                if (msg) {
-                    console.log("❄️ Freeze Message Update:", msg);
+                console.log('📦 msgBox element found:', msgBox);
+
+                if (msg && msg.trim().length > 0) {
+                    console.log('✅ Displaying Message:', msg, '| Length:', msg.length);
                     msgBox.innerText = msg;
                     msgBox.style.display = 'block'; // Force visibility inline
-                    msgBox.style.zIndex = '9999999'; // Ensure top z-index
+                    msgBox.style.visibility = 'visible';
+                    msgBox.style.opacity = '1';
+                    msgBox.style.zIndex = '99999999'; // Ensure top z-index
+                    console.log('🎨 msgBox styles applied:', msgBox.style.cssText);
                 } else {
+                    console.log('⚠️ No message to display (empty or null):', msg);
                     msgBox.innerText = '';
                     msgBox.style.display = 'none';
                 }
+            } else {
+                console.error('❌ msgBox element NOT FOUND!');
             }
 
             stopAlarmSound(); // Silence for dramatic effect
