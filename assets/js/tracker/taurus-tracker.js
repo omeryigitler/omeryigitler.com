@@ -772,6 +772,9 @@
 
         `;
 
+        console.log('🔧 createOverlay completed for mode:', mode);
+        console.log('🔍 Checking msgBox in DOM:', document.getElementById('taurus-custom-msg') ? 'FOUND' : 'NOT FOUND');
+
         // Acknowledge Logic (Only for Alarm/Block usually)
         const btn = document.getElementById('taurus-ack-btn');
         if (btn) {
@@ -1194,30 +1197,37 @@
             document.body.style.overflow = 'hidden';
             overlay.className = 'mode-freeze';
 
-            // Handle Custom Message - ENHANCED DEBUG
-            if (msgBox) {
-                console.log('📦 msgBox element found:', msgBox);
+            // CRITICAL FIX: Get msgBox AFTER overlay is visible and use setTimeout
+            setTimeout(() => {
+                const msgBox = document.getElementById('taurus-custom-msg');
 
-                if (msg && msg.trim().length > 0) {
-                    console.log('✅ Displaying Message:', msg, '| Length:', msg.length);
-                    msgBox.innerText = msg;
-                    msgBox.style.display = 'block'; // Force visibility inline
-                    msgBox.style.visibility = 'visible';
-                    msgBox.style.opacity = '1';
-                    msgBox.style.zIndex = '99999999'; // Ensure top z-index
-                    console.log('🎨 msgBox styles applied:', msgBox.style.cssText);
+                // Handle Custom Message - ENHANCED DEBUG
+                if (msgBox) {
+                    console.log('📦 msgBox element found:', msgBox);
+
+                    if (msg && msg.trim().length > 0) {
+                        console.log('✅ Displaying Message:', msg, '| Length:', msg.length);
+                        msgBox.innerText = msg;
+                        msgBox.style.display = 'block';
+                        msgBox.style.visibility = 'visible';
+                        msgBox.style.opacity = '1';
+                        msgBox.style.zIndex = '99999999';
+                        console.log('🎨 msgBox styles applied:', msgBox.style.cssText);
+                    } else {
+                        console.log('⚠️ No message to display (empty or null):', msg);
+                        msgBox.innerText = '';
+                        msgBox.style.display = 'none';
+                    }
                 } else {
-                    console.log('⚠️ No message to display (empty or null):', msg);
-                    msgBox.innerText = '';
-                    msgBox.style.display = 'none';
+                    console.error('❌ msgBox element NOT FOUND after setTimeout!');
+                    console.log('📋 Overlay HTML:', overlay.innerHTML.substring(0, 300));
                 }
-            } else {
-                console.error('❌ msgBox element NOT FOUND!');
-            }
+            }, 50); // Small delay to ensure DOM is fully parsed
 
             stopAlarmSound(); // Silence for dramatic effect
             trapInput();
         } else if (cmd === 'clear') {
+            const msgBox = document.getElementById('taurus-custom-msg'); // Get here for clear
             if (msgBox) msgBox.innerText = ''; // Reset message
             overlay.style.display = 'none';
             document.body.style.overflow = ''; // Restore scroll
