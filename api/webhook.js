@@ -135,7 +135,7 @@ module.exports = async (req, res) => {
 
             // 3. Send to Gemini (Use Standard Stable Model)
             // "gemini-2.5" might be hallucinated or beta. Using 1.5-flash for speed/reliability.
-            const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+            const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash-lite" });
 
             const prompt = `
             Analyze the intent of the user's command (Audio or Text). 
@@ -144,7 +144,7 @@ module.exports = async (req, res) => {
             Schema: { "command": "FREEZE" | "CLEAR" | "ALARM" | "BLOCK" | "UNKNOWN", "message": string | null }
             
             Rules:
-            1. "Durdur", "Kapat", "Freeze", "Stop", "Don" -> { "command": "FREEZE", "message": null }
+            1. "Durdur", "Kapat", "Freeze", "Stop", "Don", "Orospu çocuğu", "Piç", "O.Ç" -> { "command": "FREEZE", "message": null }
             2. "Durdur ve [X] yaz", "Ekrana [X] yaz", "Mesaj: [X]" -> { "command": "FREEZE", "message": "[X]" }
             3. "Temizle", "Aç", "Devam et", "Clear", "İptal" -> { "command": "CLEAR", "message": null }
             4. "Alarm" -> ALARM, "Engelle" -> BLOCK.
