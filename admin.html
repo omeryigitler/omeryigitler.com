@@ -287,6 +287,10 @@
                 <i data-lucide="mail" class="w-5 h-5 mr-4"></i> Inbox
                 <span class="ml-auto bg-taurusGold text-black px-2 py-0.5 rounded-full text-[10px] font-black">0</span>
             </button>
+            <button onclick="switchTab('pricing')" id="nav-pricing"
+                class="nav-item w-full flex items-center px-6 py-4 text-gray-400 hover:text-white hover:bg-white/5 transition-all text-sm font-bold uppercase tracking-[0.2em]">
+                <i data-lucide="calculator" class="w-5 h-5 mr-4"></i> Fiyatlandırma
+            </button>
             <button onclick="switchTab('projects')" id="nav-projects"
                 class="nav-item w-full flex items-center px-6 py-4 text-gray-400 hover:text-white hover:bg-white/5 transition-all text-sm font-bold uppercase tracking-[0.2em]">
                 <i data-lucide="folder-kanban" class="w-5 h-5 mr-4"></i> Projects
@@ -527,6 +531,24 @@
                 <!-- Mobile/Tablet Card View -->
                 <div id="messages-mobile-container" class="lg:hidden space-y-4">
                     <!-- JS Loaded -->
+                </div>
+            </div>
+
+            <!-- PRICING VIEW -->
+            <div id="view-pricing" class="hidden fade-in">
+                <div class="mb-8">
+                    <h2 class="text-3xl font-display font-bold text-white uppercase">FİYATLANDIRMA ARACI <span
+                            class="text-taurusGold text-sm align-middle font-body ml-2 uppercase tracking-widest border border-taurusGold/30 px-2 py-1 rounded text-[10px]">V1.0</span>
+                    </h2>
+                    <p class="text-[10px] text-gray-500 uppercase tracking-widest mt-1">GLOBAL PRICING CALCULATOR</p>
+                </div>
+
+                <!-- Pricing Tool iFrame -->
+                <div
+                    class="w-full h-[calc(100vh-280px)] lg:h-[calc(100vh-200px)] bg-white/5 border border-glassBorder rounded-3xl overflow-hidden backdrop-blur-md">
+                    <iframe src="pricing-tool/dist/index.html" class="w-full h-full" frameborder="0"
+                        style="border: none;" title="Fiyatlandırma Aracı">
+                    </iframe>
                 </div>
             </div>
 
@@ -818,7 +840,7 @@
             }
 
             // Update View
-            const views = ['dashboard', 'messages', 'projects', 'settings', 'intelligence'];
+            const views = ['dashboard', 'messages', 'pricing', 'projects', 'settings', 'intelligence'];
             views.forEach(v => {
                 const el = document.getElementById('view-' + v);
                 if (el) el.classList.add('hidden');
@@ -833,6 +855,7 @@
             const titles = {
                 'dashboard': 'Dashboard Overview',
                 'messages': 'Communications Hub',
+                'pricing': 'Fiyatlandırma Aracı',
                 'projects': 'Operational Matrix',
                 'settings': 'Security Protocols',
                 'intelligence': 'Visitor Intelligence Matrix'
