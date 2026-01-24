@@ -248,19 +248,17 @@
             z-index: 0;
         }
 
-        /* FREEZE MODE: GOLDEN GLOBE HOLOGRAM */
+        /* FREEZE MODE: GOLDEN DASHBOARD MAP */
         .mode-freeze .taurus-grid-bg {
             background-image: url('assets/taurus-tracker-globe.jpg'); 
-            background-size: 70% auto; /* Large enough to be clear, contained to stay centered */
+            background-size: 80% auto; /* Widescreen dashboard, 80% width covers well */
             background-repeat: no-repeat;
             background-position: center center;
             
-            /* FILTER: Turn Blue to Gold */
-            /* Sepia makes it brown, hue-rotate shifts to gold, saturate boosts it */
-            filter: sepia(1) hue-rotate(-20deg) saturate(3) brightness(0.8) contrast(1.2);
+            /* FILTER: Minimal adjustments - Image is already Gold */
+            filter: brightness(1.1) contrast(1.1);
             
-            opacity: 0.8; /* High visibility */
-            /* No mask - show full globe */
+            opacity: 0.9; /* High visibility */
         }
 
         /* Message Box Visibility Fix (Keep High Priority) */
