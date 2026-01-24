@@ -254,54 +254,35 @@
                 url('assets/taurus-tracker-bg.png'); /* Radar Map Only */
             
             background-size: 
-                80% auto; /* Significantly smaller map, centered */
+                50% auto; /* STRICT: 50% Width, Aspect Ratio Maintained */
             
             background-repeat: no-repeat;
             background-position: center center;
             
-            /* GLOBAL FILTER: Tints the green map to Gold - Brightened */
-            filter: sepia(1) hue-rotate(-50deg) saturate(5) brightness(0.8) contrast(1.3);
+            /* GLOBAL FILTER: Tints the grey map to Gold */
+            /* Using standard gold filter for grey input */
+            filter: invert(1) sepia(1) saturate(5) hue-rotate(0deg) brightness(0.7) contrast(1.5);
             
-            opacity: 0.8; /* Increased from 0.3 for better visibility */
+            opacity: 0.6; 
             animation: taurus-bg-pulse 4s infinite ease-in-out;
 
-            /* FLASHLIGHT MASK: Expanded radius for clearer view */
-            mask-image: radial-gradient(circle at center, black 0%, rgba(0,0,0,0.8) 40%, transparent 75%);
-            -webkit-mask-image: radial-gradient(circle at center, black 0%, rgba(0,0,0,0.8) 40%, transparent 75%);
+            /* FLASHLIGHT MASK: Matching the 50% Scale */
+            mask-image: radial-gradient(circle at center, black 0%, rgba(0,0,0,0.8) 25%, transparent 50%);
+            -webkit-mask-image: radial-gradient(circle at center, black 0%, rgba(0,0,0,0.8) 25%, transparent 50%);
         }
 
-        /* HIDE SCANNING LINE IN FREEZE MODE */
-        .mode-freeze .taurus-axis-glow {
+        /* HIDE SCANNING LINE & RADIAL GLOW IN FREEZE MODE */
+        .mode-freeze .taurus-axis-glow,
+        .mode-freeze .taurus-radial-glow {
             display: none !important;
         }
 
         @keyframes taurus-bg-pulse {
-            0%, 100% { filter: sepia(1) hue-rotate(-50deg) saturate(5) brightness(0.8) contrast(1.3) opacity(0.8); }
-            50% { filter: sepia(1) hue-rotate(-50deg) saturate(5) brightness(1.0) contrast(1.5) opacity(1.0); }
+            0%, 100% { opacity: 0.6; }
+            50% { opacity: 0.8; }
         }
 
-        .taurus-axis-glow {
-            position: absolute;
-            top: 0; left: 50%;
-            transform: translateX(-50%);
-            width: 1px; height: 100%;
-            background: rgba(255, 215, 0, 0.2);
-            filter: blur(1px);
-            pointer-events: none;
-        }
-
-        .taurus-radial-glow {
-            position: absolute;
-            top: 50%; left: 50%;
-            transform: translate(-50%, -50%);
-            width: 500px; height: 500px;
-            background: rgba(239, 68, 68, 0.2);
-            border-radius: 50%;
-            filter: blur(100px);
-            animation: taurus-pulse-glow 4s infinite ease-in-out;
-            pointer-events: none;
-        }
-
+        /* Standard Glow Animations */
         @keyframes taurus-pulse-glow {
             0%, 100% { opacity: 0.2; transform: translate(-50%, -50%) scale(1); }
             50% { opacity: 0.4; transform: translate(-50%, -50%) scale(1.1); }
