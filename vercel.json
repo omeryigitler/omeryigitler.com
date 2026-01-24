@@ -66,6 +66,15 @@
                     "value": "text/plain"
                 }
             ]
+        },
+        {
+            "source": "/pricing-tool/dist/(.*)",
+            "headers": [
+                {
+                    "key": "X-Frame-Options",
+                    "value": "SAMEORIGIN"
+                }
+            ]
         }
     ],
     "rewrites": [
