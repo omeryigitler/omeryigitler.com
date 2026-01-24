@@ -259,15 +259,15 @@
             background-repeat: no-repeat;
             background-position: center center;
             
-            /* GLOBAL FILTER: Tints the green map to Gold */
-            filter: sepia(1) hue-rotate(-50deg) saturate(4) brightness(0.6) contrast(1.2);
+            /* GLOBAL FILTER: Tints the green map to Gold - Brightened */
+            filter: sepia(1) hue-rotate(-50deg) saturate(5) brightness(0.8) contrast(1.3);
             
-            opacity: 0.3; /* Much fainter base opacity */
+            opacity: 0.8; /* Increased from 0.3 for better visibility */
             animation: taurus-bg-pulse 4s infinite ease-in-out;
 
-            /* FLASHLIGHT MASK: Only visible in the center (Logo Area) */
-            mask-image: radial-gradient(circle at center, black 0%, rgba(0,0,0,0.5) 30%, transparent 60%);
-            -webkit-mask-image: radial-gradient(circle at center, black 0%, rgba(0,0,0,0.5) 30%, transparent 60%);
+            /* FLASHLIGHT MASK: Expanded radius for clearer view */
+            mask-image: radial-gradient(circle at center, black 0%, rgba(0,0,0,0.8) 40%, transparent 75%);
+            -webkit-mask-image: radial-gradient(circle at center, black 0%, rgba(0,0,0,0.8) 40%, transparent 75%);
         }
 
         /* HIDE SCANNING LINE IN FREEZE MODE */
@@ -276,8 +276,8 @@
         }
 
         @keyframes taurus-bg-pulse {
-            0%, 100% { filter: sepia(1) hue-rotate(-50deg) saturate(4) brightness(0.6) contrast(1.2) opacity(0.3); }
-            50% { filter: sepia(1) hue-rotate(-50deg) saturate(4) brightness(0.8) contrast(1.4) opacity(0.5); }
+            0%, 100% { filter: sepia(1) hue-rotate(-50deg) saturate(5) brightness(0.8) contrast(1.3) opacity(0.8); }
+            50% { filter: sepia(1) hue-rotate(-50deg) saturate(5) brightness(1.0) contrast(1.5) opacity(1.0); }
         }
 
         .taurus-axis-glow {
