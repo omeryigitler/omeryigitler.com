@@ -1175,10 +1175,13 @@
             // Handle Custom Message
             if (msgBox) {
                 if (msg) {
+                    console.log("❄️ Freeze Message Update:", msg);
                     msgBox.innerText = msg;
-                    // Visibility handled by CSS adding .mode-freeze to overlay
+                    msgBox.style.display = 'block'; // Force visibility inline
+                    msgBox.style.zIndex = '9999999'; // Ensure top z-index
                 } else {
                     msgBox.innerText = '';
+                    msgBox.style.display = 'none';
                 }
             }
 
