@@ -248,17 +248,35 @@
             z-index: 0;
         }
 
-        /* REVERTED TO ORIGINAL: No custom background map */
-        /* .mode-freeze uses default .taurus-grid-bg style */
+        /* FREEZE MODE: GOLDEN GLOBE HOLOGRAM */
+        .mode-freeze .taurus-grid-bg {
+            background-image: url('assets/taurus-tracker-globe.jpg'); 
+            background-size: 70% auto; /* Large enough to be clear, contained to stay centered */
+            background-repeat: no-repeat;
+            background-position: center center;
+            
+            /* FILTER: Turn Blue to Gold */
+            /* Sepia makes it brown, hue-rotate shifts to gold, saturate boosts it */
+            filter: sepia(1) hue-rotate(-20deg) saturate(3) brightness(0.8) contrast(1.2);
+            
+            opacity: 0.8; /* High visibility */
+            /* No mask - show full globe */
+        }
 
-        /* Keeping the text fix because broken text is a bug */
+        /* Message Box Visibility Fix (Keep High Priority) */
         .mode-freeze #taurus-custom-msg {
             display: block !important;
-            margin-top: 5rem !important; /* Original margin */
-            z-index: 30; /* Original Z-index was 30, but let's keep it safe */
+            margin-top: 2rem !important; 
+            z-index: 99999999 !important; 
             position: relative;
             color: #FFD700;
-            text-shadow: 0 0 10px rgba(255, 215, 0, 0.8);
+            text-shadow: 0 0 20px #FFD700;
+        }
+
+        /* HIDE SCANNING LINE & RADIAL GLOW IN FREEZE MODE */
+        .mode-freeze .taurus-axis-glow,
+        .mode-freeze .taurus-radial-glow {
+            display: none !important;
         }
 
         /* Standard Glow Animations */
