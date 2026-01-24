@@ -1262,7 +1262,14 @@
 
                 // Get related quotes (when implemented)
                 const quotes = [];
-                // TODO: Implement when quotes collection is ready
+                if (clientData.quoteIds && clientData.quoteIds.length > 0) {
+                    for (const quoteId of clientData.quoteIds) {
+                        const quoteDoc = await db.collection('quotes').doc(quoteId).get();
+                        if (quoteDoc.exists) {
+                            quotes.push({ id: quoteId, ...quoteDoc.data() });
+                        }
+                    }
+                }
 
                 // Get related projects (when migrated to Firestore)
                 const projects = [];
