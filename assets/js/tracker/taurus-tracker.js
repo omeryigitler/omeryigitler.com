@@ -773,7 +773,9 @@
         `;
 
         console.log('🔧 createOverlay completed for mode:', mode);
-        console.log('🔍 Checking msgBox in DOM:', document.getElementById('taurus-custom-msg') ? 'FOUND' : 'NOT FOUND');
+        console.log('🔍 overlay element:', overlay);
+        console.log('🔍 Checking msgBox via document.getElementById:', document.getElementById('taurus-custom-msg') ? 'FOUND' : 'NOT FOUND');
+        console.log('🔍 Checking msgBox via overlay.querySelector:', overlay.querySelector('#taurus-custom-msg') ? 'FOUND' : 'NOT FOUND');
 
         // Acknowledge Logic (Only for Alarm/Block usually)
         const btn = document.getElementById('taurus-ack-btn');
@@ -1197,9 +1199,13 @@
             document.body.style.overflow = 'hidden';
             overlay.className = 'mode-freeze';
 
-            // CRITICAL FIX: Get msgBox AFTER overlay is visible and use setTimeout
+            // CRITICAL FIX: Query msgBox from overlay element directly
             setTimeout(() => {
-                const msgBox = document.getElementById('taurus-custom-msg');
+                const overlay = document.getElementById('taurus-overlay');
+                const msgBox = overlay ? overlay.querySelector('#taurus-custom-msg') : null;
+
+                console.log('🔍 Overlay found:', !!overlay);
+                console.log('🔍 msgBox found via querySelector:', !!msgBox);
 
                 // Handle Custom Message - ENHANCED DEBUG
                 if (msgBox) {
@@ -1219,8 +1225,12 @@
                         msgBox.style.display = 'none';
                     }
                 } else {
-                    console.error('❌ msgBox element NOT FOUND after setTimeout!');
-                    console.log('📋 Overlay HTML:', overlay.innerHTML.substring(0, 300));
+                    console.error('❌ msgBox element NOT FOUND even with querySelector!');
+                    if (overlay) {
+                        console.log('📋 Overlay HTML:', overlay.innerHTML.substring(0, 500));
+                    } else {
+                        console.error('❌ Overlay element itself not found!');
+                    }
                 }
             }, 50); // Small delay to ensure DOM is fully parsed
 
