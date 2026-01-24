@@ -820,6 +820,14 @@
             }
         });
 
+        // POST MESSAGE LISTENER - Pricing Tool Integration
+        window.addEventListener('message', async (event) => {
+            if (!event.data || event.data.type !== 'SAVE_QUOTE') return;
+            console.log('📨 Save Quote Request');
+            const id = await saveQuoteToFirestore(event.data.data, event.data.messageId);
+            if (id) event.source.postMessage({ type: 'QUOTE_SAVED', success: true, quoteId: id }, '*');
+        });
+
         // --- UI LOGIC ---
         function toggleSidebar() {
             const sidebar = document.getElementById('sidebar-menu');
@@ -1142,6 +1150,144 @@
 
             } catch (error) {
                 console.error('❌ Error getting client history:', error);
+                return null;
+            }
+        }
+
+        // ============================================
+        // QUOTE MANAGEMENT SYSTEM (Phase 2)
+        // ============================================
+
+        /**
+         * Generate next quote number in format Q-YYYY-NNN
+         * @returns {Promise<string>} Quote number like "Q-2026-001"
+         */
+        async function getNextQuoteNumber() {
+            if (!db) return null;
+
+            try {
+                const year = new Date().getFullYear();
+                const prefix = `Q-${year}-`;
+
+                // Get all quotes from this year
+                const snapshot = await db.collection('quotes')
+                    .where('quoteNumber', '>=', prefix + '000')
+                    .where('quoteNumber', '<', prefix + 'ZZZ')
+                    .orderBy('quoteNumber', 'desc')
+                    .limit(1)
+                    .get();
+
+                if (snapshot.empty) {
+                    // First quote of the year
+                    return `${prefix}001`;
+                }
+
+                // Get last number and increment
+                const lastQuote = snapshot.docs[0].data();
+                const lastNumber = parseInt(lastQuote.quoteNumber.split('-')[2]);
+                const nextNumber = (lastNumber + 1).toString().padStart(3, '0');
+
+                return `${prefix}${nextNumber}`;
+
+            } catch (error) {
+                console.error('❌ Error generating quote number:', error);
+                // Fallback to timestamp-based
+                const timestamp = Date.now().toString().slice(-6);
+                return `Q-${new Date().getFullYear()}-${timestamp}`;
+            }
+        }
+
+        /**
+         * Save quote to Firestore from Pricing Tool
+         * @param {Object} quoteData - Quote data from pricing tool
+         * @param {string} messageId - Optional related message ID
+         * @returns {Promise<string>} Quote document ID
+         */
+        async function saveQuoteToFirestore(quoteData, messageId = null) {
+            if (!db) return null;
+
+            try {
+                // Get or create client
+                const client = await getOrCreateClient(quoteData.clientEmail, quoteData.clientName);
+                if (!client) {
+                    console.error('Failed to get/create client');
+                    return null;
+                }
+
+                // Generate quote number
+                const quoteNumber = await getNextQuoteNumber();
+
+                // Prepare quote document
+                const quote = {
+                    quoteNumber: quoteNumber,
+
+                    // Client info
+                    clientId: client.id,
+                    clientName: quoteData.clientName || 'Anonymous',
+                    clientEmail: quoteData.clientEmail,
+
+                    // Pricing data
+                    country: quoteData.country || 'TR',
+                    siteType: quoteData.siteType || 'Unknown',
+                    pageCount: quoteData.pageCount || 0,
+                    totalPrice: quoteData.totalPrice || 0,
+                    currency: quoteData.country === 'MT' ? 'EUR' : 'TRY',
+
+                    // Detailed breakdown
+                    breakdown: quoteData.breakdown || {},
+
+                    // Status
+                    status: 'draft',
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    sentAt: null,
+
+                    // Relationships
+                    messageId: messageId,
+                    projectId: null,
+
+                    // Optional
+                    pdfUrl: null,
+                    notes: quoteData.notes || ''
+                };
+
+                // Save to Firestore
+                const docRef = await db.collection('quotes').add(quote);
+                console.log('✅ Quote saved:', quoteNumber, docRef.id);
+
+                // Update client stats
+                await updateClientStats(client.id, 'quote', docRef.id);
+
+                // If linked to message, update message
+                if (messageId) {
+                    await db.collection('messages').doc(messageId).update({
+                        quoteId: docRef.id,
+                        status: 'quoted'
+                    });
+                }
+
+                return docRef.id;
+
+            } catch (error) {
+                console.error('❌ Error saving quote:', error);
+                return null;
+            }
+        }
+
+        /**
+         * Get quote by ID
+         * @param {string} quoteId - Quote document ID
+         * @returns {Promise<Object>} Quote data
+         */
+        async function getQuote(quoteId) {
+            if (!db || !quoteId) return null;
+
+            try {
+                const doc = await db.collection('quotes').doc(quoteId).get();
+                if (!doc.exists) return null;
+
+                return { id: doc.id, ...doc.data() };
+            } catch (error) {
+                console.error('❌ Error getting quote:', error);
                 return null;
             }
         }
