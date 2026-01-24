@@ -248,24 +248,28 @@
             z-index: 0;
         }
 
-        /* FREEZE MODE: GOLDEN DASHBOARD MAP (FLASHLIGHT EFFECT) */
+        /* FREEZE MODE: DARK FLASHLIGHT ORBIT */
         .mode-freeze .taurus-grid-bg {
             background-image: url('assets/taurus-tracker-globe.jpg'); 
-            background-size: 80% auto; /* Widescreen dashboard */
+            background-size: 80% auto;
             background-repeat: no-repeat;
             background-position: center center;
             
-            /* FILTER: Minimal adjustments - bright and sharp */
-            filter: brightness(1.2) contrast(1.2);
+            /* DARKER BASE + PULSE ANIMATION */
+            /* User request: "Decrease brightness... make it look illuminated by flashlight... wave part visible" */
+            filter: brightness(1.2) contrast(1.3);
+            opacity: 0.3; /* Much darker start */
+            animation: taurus-flash-pulse 4s infinite ease-in-out;
             
-            opacity: 1; /* Full opacity, mask handles visibility */
-            
-            /* FLASHLIGHT MASK: Center (Logo) is visible, Edges fade to Black */
-            /* Gradient: Transparent (0%) -> Black (Visible) -> Transparent */
-            /* Standard mask approach: Alpha channel determines visibility. */
-            /* visible = opaque pixel, hidden = transparent pixel */
-            mask-image: radial-gradient(circle at center, black 0%, rgba(0,0,0,0.8) 40%, transparent 80%);
-            -webkit-mask-image: radial-gradient(circle at center, black 0%, rgba(0,0,0,0.8) 40%, transparent 80%);
+            /* SOFT SPOTLIGHT MASK */
+            /* Tighter gradient: Center visible, rapid fade to black */
+            mask-image: radial-gradient(circle at center, black 0%, rgba(0,0,0,0.6) 30%, transparent 60%);
+            -webkit-mask-image: radial-gradient(circle at center, black 0%, rgba(0,0,0,0.6) 30%, transparent 60%);
+        }
+
+        @keyframes taurus-flash-pulse {
+            0%, 100% { opacity: 0.3; mask-image: radial-gradient(circle at center, black 0%, rgba(0,0,0,0.5) 30%, transparent 60%); }
+            50% { opacity: 0.6; mask-image: radial-gradient(circle at center, black 0%, rgba(0,0,0,0.8) 35%, transparent 65%); }
         }
 
         /* Message Box Visibility Fix (Keep High Priority) */
