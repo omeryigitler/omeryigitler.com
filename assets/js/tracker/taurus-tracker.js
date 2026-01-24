@@ -248,38 +248,36 @@
             z-index: 0;
         }
 
-        /* FREEZE MODE SPECIFIC BACKGROUND (FLASHLIGHT EFFECT) */
+        /* FREEZE MODE SPECIFIC BACKGROUND (SIMPLIFIED & ROBUST) */
         .mode-freeze .taurus-grid-bg {
-            background-image: 
-                url('assets/taurus-tracker-bg.png'); /* Radar Map Only */
-            
-            background-size: 
-                50% auto; /* STRICT: 50% Width, Aspect Ratio Maintained */
-            
+            background-image: url('assets/taurus-tracker-bg.png'); 
+            background-size: 50% auto; /* Fixed 50% Scale */
             background-repeat: no-repeat;
-            background-position: center center;
+            background-position: center 45%; /* Slightly higher to sit under logo */
             
-            /* GLOBAL FILTER: Tints the grey map to Gold */
-            /* Using standard gold filter for grey input */
+            /* Simple Gold Tint */
             filter: invert(1) sepia(1) saturate(5) hue-rotate(0deg) brightness(0.7) contrast(1.5);
             
-            opacity: 0.6; 
-            animation: taurus-bg-pulse 4s infinite ease-in-out;
+            opacity: 0.6; /* Visible opacity */
+            animation: none; /* Remove pulse to ensure stability */
+            mask-image: none; /* REMOVE MASK to prevent invisibility issues */
+            -webkit-mask-image: none;
+        }
 
-            /* FLASHLIGHT MASK: Matching the 50% Scale */
-            mask-image: radial-gradient(circle at center, black 0%, rgba(0,0,0,0.8) 25%, transparent 50%);
-            -webkit-mask-image: radial-gradient(circle at center, black 0%, rgba(0,0,0,0.8) 25%, transparent 50%);
+        /* Message Box Visibility Fix */
+        .mode-freeze #taurus-custom-msg {
+            display: block !important;
+            margin-top: 2rem !important; /* Move closer to logo */
+            z-index: 99999999 !important; /* Absolute top */
+            position: relative;
+            color: #FFD700;
+            text-shadow: 0 0 20px #FFD700;
         }
 
         /* HIDE SCANNING LINE & RADIAL GLOW IN FREEZE MODE */
         .mode-freeze .taurus-axis-glow,
         .mode-freeze .taurus-radial-glow {
             display: none !important;
-        }
-
-        @keyframes taurus-bg-pulse {
-            0%, 100% { opacity: 0.6; }
-            50% { opacity: 0.8; }
         }
 
         /* Standard Glow Animations */
