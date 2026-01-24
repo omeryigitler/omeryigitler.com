@@ -248,36 +248,17 @@
             z-index: 0;
         }
 
-        /* FREEZE MODE SPECIFIC BACKGROUND (SIMPLIFIED & ROBUST) */
-        .mode-freeze .taurus-grid-bg {
-            background-image: url('assets/taurus-tracker-bg.png'); 
-            background-size: 50% auto; /* Fixed 50% Scale */
-            background-repeat: no-repeat;
-            background-position: center 45%; /* Slightly higher to sit under logo */
-            
-            /* Simple Gold Tint */
-            filter: invert(1) sepia(1) saturate(5) hue-rotate(0deg) brightness(0.7) contrast(1.5);
-            
-            opacity: 0.6; /* Visible opacity */
-            animation: none; /* Remove pulse to ensure stability */
-            mask-image: none; /* REMOVE MASK to prevent invisibility issues */
-            -webkit-mask-image: none;
-        }
+        /* REVERTED TO ORIGINAL: No custom background map */
+        /* .mode-freeze uses default .taurus-grid-bg style */
 
-        /* Message Box Visibility Fix */
+        /* Keeping the text fix because broken text is a bug */
         .mode-freeze #taurus-custom-msg {
             display: block !important;
-            margin-top: 2rem !important; /* Move closer to logo */
-            z-index: 99999999 !important; /* Absolute top */
+            margin-top: 5rem !important; /* Original margin */
+            z-index: 30; /* Original Z-index was 30, but let's keep it safe */
             position: relative;
             color: #FFD700;
-            text-shadow: 0 0 20px #FFD700;
-        }
-
-        /* HIDE SCANNING LINE & RADIAL GLOW IN FREEZE MODE */
-        .mode-freeze .taurus-axis-glow,
-        .mode-freeze .taurus-radial-glow {
-            display: none !important;
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.8);
         }
 
         /* Standard Glow Animations */
