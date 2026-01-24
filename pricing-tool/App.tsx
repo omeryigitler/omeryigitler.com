@@ -7,16 +7,16 @@ import ProposalView from './components/ProposalView';
 import ContractView from './components/ContractView';
 import SeoTracker from './components/SeoTracker';
 import AdminSettings from './components/AdminSettings';
-import { 
-  Country, SiteType, DesignType, DeliverySpeed, MaintenanceLevel, QuoteRequest, CostBreakdown, PricingRules, Language, DiscountType, AddonService 
+import {
+  Country, SiteType, DesignType, DeliverySpeed, MaintenanceLevel, QuoteRequest, CostBreakdown, PricingRules, Language, DiscountType, AddonService
 } from './types';
 import { DEFAULT_PRICING_CONFIG, DEFAULT_AVAILABLE_ADDONS } from './constants';
 import { TRANSLATIONS } from './translations';
 
 const App: React.FC = () => {
   const [currentView, setCurrentView] = useState('dashboard');
-  const [language, setLanguage] = useState<Language>(Language.TR);
-  
+  const [language, setLanguage] = useState<Language>(Language.EN);
+
   // -- Dynamic Configuration State --
   const [pricingConfig, setPricingConfig] = useState<Record<Country, PricingRules>>(DEFAULT_PRICING_CONFIG);
   const [availableAddons, setAvailableAddons] = useState<AddonService[]>(DEFAULT_AVAILABLE_ADDONS);
@@ -76,21 +76,21 @@ const App: React.FC = () => {
     document.documentElement.lang = language === Language.TR ? 'tr' : 'en';
 
     if (language === Language.TR) {
-        setQuoteRequest(prev => ({ ...prev, country: Country.TR }));
+      setQuoteRequest(prev => ({ ...prev, country: Country.TR }));
     } else {
-        setQuoteRequest(prev => ({ ...prev, country: Country.MT }));
+      setQuoteRequest(prev => ({ ...prev, country: Country.MT }));
     }
   }, [language]);
 
   const [lastBreakdown, setLastBreakdown] = useState<CostBreakdown | null>(null);
 
   const renderView = () => {
-    switch(currentView) {
+    switch (currentView) {
       case 'dashboard':
         return <Dashboard onNavigate={setCurrentView} language={language} />;
       case 'calculator':
         return (
-          <PricingCalculator 
+          <PricingCalculator
             config={pricingConfig}
             addons={availableAddons}
             initialRequest={quoteRequest}
@@ -102,7 +102,7 @@ const App: React.FC = () => {
         );
       case 'proposal':
         if (!lastBreakdown) {
-          return <PricingCalculator 
+          return <PricingCalculator
             config={pricingConfig}
             addons={availableAddons}
             initialRequest={quoteRequest}
@@ -113,32 +113,32 @@ const App: React.FC = () => {
           />
         }
         return (
-          <ProposalView 
-            config={pricingConfig} 
-            addons={availableAddons} 
-            request={quoteRequest} 
-            breakdown={lastBreakdown} 
-            onBack={() => setCurrentView('calculator')} 
+          <ProposalView
+            config={pricingConfig}
+            addons={availableAddons}
+            request={quoteRequest}
+            breakdown={lastBreakdown}
+            onBack={() => setCurrentView('calculator')}
             language={language}
           />
         );
       case 'seo':
         return <SeoTracker language={language} initialClientName={quoteRequest.customerName} />;
       case 'contract':
-         return (
-            <ContractView 
-              config={pricingConfig} 
-              request={quoteRequest} 
-              breakdown={lastBreakdown}
-              onBack={() => setCurrentView('calculator')} 
-              language={language}
-            />
-         );
+        return (
+          <ContractView
+            config={pricingConfig}
+            request={quoteRequest}
+            breakdown={lastBreakdown}
+            onBack={() => setCurrentView('calculator')}
+            language={language}
+          />
+        );
       case 'admin':
         return (
-          <AdminSettings 
-            config={pricingConfig} 
-            addons={availableAddons} 
+          <AdminSettings
+            config={pricingConfig}
+            addons={availableAddons}
             onUpdateConfig={updateConfig}
             onUpdateAddons={updateAddons}
             onResetDefaults={resetDefaults}
