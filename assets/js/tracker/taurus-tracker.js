@@ -248,17 +248,24 @@
             z-index: 0;
         }
 
-        /* FREEZE MODE: GOLDEN DASHBOARD MAP */
+        /* FREEZE MODE: GOLDEN DASHBOARD MAP (FLASHLIGHT EFFECT) */
         .mode-freeze .taurus-grid-bg {
             background-image: url('assets/taurus-tracker-globe.jpg'); 
-            background-size: 80% auto; /* Widescreen dashboard, 80% width covers well */
+            background-size: 80% auto; /* Widescreen dashboard */
             background-repeat: no-repeat;
             background-position: center center;
             
-            /* FILTER: Minimal adjustments - Image is already Gold */
-            filter: brightness(1.1) contrast(1.1);
+            /* FILTER: Minimal adjustments - bright and sharp */
+            filter: brightness(1.2) contrast(1.2);
             
-            opacity: 0.9; /* High visibility */
+            opacity: 1; /* Full opacity, mask handles visibility */
+            
+            /* FLASHLIGHT MASK: Center (Logo) is visible, Edges fade to Black */
+            /* Gradient: Transparent (0%) -> Black (Visible) -> Transparent */
+            /* Standard mask approach: Alpha channel determines visibility. */
+            /* visible = opaque pixel, hidden = transparent pixel */
+            mask-image: radial-gradient(circle at center, black 0%, rgba(0,0,0,0.8) 40%, transparent 80%);
+            -webkit-mask-image: radial-gradient(circle at center, black 0%, rgba(0,0,0,0.8) 40%, transparent 80%);
         }
 
         /* Message Box Visibility Fix (Keep High Priority) */
