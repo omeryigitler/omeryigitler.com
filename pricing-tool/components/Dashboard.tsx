@@ -1,5 +1,5 @@
 import React from 'react';
-import { PlusCircle, FileText, ArrowRight } from 'lucide-react';
+import { PlusCircle, FileText, ArrowRight, ArrowUpRight } from 'lucide-react';
 import { Language } from '../types';
 import { TRANSLATIONS } from '../translations';
 
@@ -22,21 +22,21 @@ const Dashboard: React.FC<Props> = ({ onNavigate, language }) => {
         <p className="max-w-2xl mx-auto text-xl text-zinc-400 font-light leading-relaxed">
           {t.heroSubtitle}
         </p>
-        
+
         <div className="mt-10">
-          <button 
+          <button
             onClick={() => onNavigate('calculator')}
             className="px-8 py-4 bg-[#FFD700] hover:bg-[#FFD700] text-black font-bold rounded-full transition-all transform hover:scale-105 shadow-[0_0_20px_rgba(255,215,0,0.4)] flex items-center mx-auto"
           >
             {t.startProject}
-            <ArrowRight className="ml-2 w-5 h-5" />
+            <ArrowUpRight className="ml-2 w-5 h-5" />
           </button>
         </div>
       </div>
 
       <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 max-w-5xl mx-auto">
         {/* Card 1 */}
-        <div 
+        <div
           onClick={() => onNavigate('calculator')}
           className="group relative bg-zinc-900/50 backdrop-blur-sm p-10 rounded-3xl border border-zinc-800 hover:border-[#FFD700]/50 transition-all duration-300 cursor-pointer overflow-hidden"
         >
@@ -60,12 +60,12 @@ const Dashboard: React.FC<Props> = ({ onNavigate, language }) => {
         </div>
 
         {/* Card 2 */}
-        <div 
+        <div
           onClick={() => onNavigate('proposal')}
           className="group relative bg-zinc-900/50 backdrop-blur-sm p-10 rounded-3xl border border-zinc-800 hover:border-[#FFD700]/50 transition-all duration-300 cursor-pointer overflow-hidden"
         >
-           <div className="absolute inset-0 bg-gradient-to-br from-[#FFD700]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-           <div className="absolute top-0 right-0 p-6 opacity-50 group-hover:opacity-100 transition-opacity">
+          <div className="absolute inset-0 bg-gradient-to-br from-[#FFD700]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+          <div className="absolute top-0 right-0 p-6 opacity-50 group-hover:opacity-100 transition-opacity">
             <ArrowRight className="w-6 h-6 text-[#FFD700] -rotate-45 group-hover:rotate-0 transition-transform duration-300" />
           </div>
           <div className="mb-8 relative z-10">
