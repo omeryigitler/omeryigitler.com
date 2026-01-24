@@ -49,7 +49,7 @@ const Navbar: React.FC<NavbarProps> = ({ currentView, setView, language, setLang
                   key={item.id}
                   onClick={() => setView(item.id)}
                   className={`flex items-center px-4 py-2.5 rounded-xl text-sm font-bold transition-all duration-300 ${currentView === item.id
-                      ? 'bg-taurusGold text-black shadow-[0_0_15px_rgba(250,204,21,0.3)]'
+                      ? 'bg-taurusGold text-black shadow-[0_0_15px_rgba(255,215,0,0.3)]'
                       : 'text-zinc-400 hover:text-white hover:bg-zinc-900'
                     }`}
                 >

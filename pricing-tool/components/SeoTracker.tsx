@@ -177,7 +177,7 @@ const SeoTracker: React.FC<Props> = ({ language, initialClientName }) => {
           <h2 className="text-xl font-bold text-white font-poppins mb-4">{t.myProjects}</h2>
           <button 
             onClick={handleOpenModal}
-            className="w-full flex items-center justify-center space-x-2 bg-yellow-400 hover:bg-yellow-300 text-black py-3 rounded-lg font-bold transition-colors"
+            className="w-full flex items-center justify-center space-x-2 bg-yellow-400 hover:bg-taurusGold text-black py-3 rounded-lg font-bold transition-colors"
           >
             <Plus className="w-4 h-4" />
             <span>{t.newProject}</span>
@@ -198,7 +198,7 @@ const SeoTracker: React.FC<Props> = ({ language, initialClientName }) => {
                 onClick={() => setActiveProjectId(project.id)}
                 className={`group p-4 rounded-xl cursor-pointer border transition-all ${
                   activeProjectId === project.id 
-                  ? 'bg-black border-yellow-400 shadow-[0_0_15px_rgba(250,204,21,0.1)]' 
+                  ? 'bg-black border-yellow-400 shadow-[0_0_15px_rgba(255,215,0,0.1)]' 
                   : 'bg-zinc-900/50 border-zinc-800 hover:border-zinc-600'
                 }`}
               >
@@ -354,7 +354,7 @@ const SeoTracker: React.FC<Props> = ({ language, initialClientName }) => {
             </p>
             <button 
               onClick={handleOpenModal}
-              className="mt-8 px-8 py-3 bg-yellow-400 text-black font-bold rounded-lg hover:bg-yellow-300 transition-all shadow-lg shadow-yellow-400/20"
+              className="mt-8 px-8 py-3 bg-yellow-400 text-black font-bold rounded-lg hover:bg-taurusGold transition-all shadow-lg shadow-yellow-400/20"
             >
               {t.startNow}
             </button>
@@ -400,7 +400,7 @@ const SeoTracker: React.FC<Props> = ({ language, initialClientName }) => {
                  <button 
                    onClick={handleCreateProject}
                    disabled={!newProjectName}
-                   className="w-full bg-yellow-400 hover:bg-yellow-300 disabled:opacity-50 disabled:cursor-not-allowed text-black font-bold py-4 rounded-xl transition-all mt-4"
+                   className="w-full bg-yellow-400 hover:bg-taurusGold disabled:opacity-50 disabled:cursor-not-allowed text-black font-bold py-4 rounded-xl transition-all mt-4"
                  >
                    {t.createBtn}
                  </button>

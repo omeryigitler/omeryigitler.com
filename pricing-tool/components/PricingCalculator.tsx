@@ -56,7 +56,7 @@ const CustomSelect: React.FC<CustomSelectProps> = ({ label, value, options, onCh
         onClick={() => setIsOpen(!isOpen)}
         className={`w-full relative flex items-center justify-between bg-black border px-5 py-4 rounded-xl cursor-pointer transition-all duration-300 select-none ${
           isOpen 
-            ? 'border-taurusGold ring-1 ring-taurusGold shadow-[0_0_15px_rgba(250,204,21,0.1)]' 
+            ? 'border-taurusGold ring-1 ring-taurusGold shadow-[0_0_15px_rgba(255,215,0,0.1)]' 
             : 'border-zinc-800 hover:border-zinc-600'
         }`}
       >
@@ -298,7 +298,7 @@ const PricingCalculator: React.FC<Props> = ({ config, addons, onRequestUpdate, o
         <div className="lg:col-span-2 space-y-8">
           
           {/* Section 1: Project Scope (Yellow) */}
-          <div className="bg-zinc-900 rounded-3xl border border-zinc-800 p-8 sm:p-10 shadow-[0_0_60px_rgba(250,204,21,0.25)] relative">
+          <div className="bg-zinc-900 rounded-3xl border border-zinc-800 p-8 sm:p-10 shadow-[0_0_60px_rgba(255,215,0,0.25)] relative">
             <h2 className="text-2xl font-bold text-white mb-8 flex items-center font-poppins">
               <span className="bg-zinc-800 text-taurusGold w-10 h-10 flex items-center justify-center rounded-xl mr-4 text-sm font-bold border border-zinc-700">01</span>
               {t.title1}
@@ -355,7 +355,7 @@ const PricingCalculator: React.FC<Props> = ({ config, addons, onRequestUpdate, o
                     max="50" 
                     value={request.pageCount}
                     onChange={(e) => setRequest({...request, pageCount: parseInt(e.target.value)})}
-                    className="w-full h-3 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-taurusGold hover:accent-yellow-300 transition-all"
+                    className="w-full h-3 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-taurusGold hover:accent-taurusGold transition-all"
                   />
                   <div className="flex justify-between text-[10px] text-zinc-600 mt-3 font-bold uppercase tracking-wider">
                     <span>1</span>
@@ -369,7 +369,7 @@ const PricingCalculator: React.FC<Props> = ({ config, addons, onRequestUpdate, o
               <div className="md:col-span-2 mt-2">
                 <label className={labelClass}>{upper(t.designPref)}</label>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <label className={`relative group cursor-pointer border rounded-2xl p-5 transition-all duration-300 flex items-start space-x-4 ${request.designType === DesignType.TEMPLATE ? 'border-taurusGold bg-zinc-900 shadow-[0_0_15px_rgba(250,204,21,0.15)]' : 'border-zinc-800 bg-black hover:border-zinc-600'}`}>
+                  <label className={`relative group cursor-pointer border rounded-2xl p-5 transition-all duration-300 flex items-start space-x-4 ${request.designType === DesignType.TEMPLATE ? 'border-taurusGold bg-zinc-900 shadow-[0_0_15px_rgba(255,215,0,0.15)]' : 'border-zinc-800 bg-black hover:border-zinc-600'}`}>
                     <input 
                       type="radio" 
                       name="design" 
@@ -386,7 +386,7 @@ const PricingCalculator: React.FC<Props> = ({ config, addons, onRequestUpdate, o
                     </div>
                   </label>
 
-                  <label className={`relative group cursor-pointer border rounded-2xl p-5 transition-all duration-300 flex items-start space-x-4 ${request.designType === DesignType.CUSTOM ? 'border-taurusGold bg-zinc-900 shadow-[0_0_15px_rgba(250,204,21,0.15)]' : 'border-zinc-800 bg-black hover:border-zinc-600'}`}>
+                  <label className={`relative group cursor-pointer border rounded-2xl p-5 transition-all duration-300 flex items-start space-x-4 ${request.designType === DesignType.CUSTOM ? 'border-taurusGold bg-zinc-900 shadow-[0_0_15px_rgba(255,215,0,0.15)]' : 'border-zinc-800 bg-black hover:border-zinc-600'}`}>
                     <input 
                       type="radio" 
                       name="design" 
@@ -659,7 +659,7 @@ const PricingCalculator: React.FC<Props> = ({ config, addons, onRequestUpdate, o
               <div className="mt-10 relative z-10">
                  <button 
                   onClick={handleCreateProposal}
-                  className="w-full flex items-center justify-center space-x-2 bg-taurusGold hover:bg-yellow-300 text-black py-4 rounded-xl font-bold transition-all shadow-[0_0_20px_rgba(250,204,21,0.2)] hover:shadow-[0_0_30px_rgba(250,204,21,0.4)] hover:-translate-y-1"
+                  className="w-full flex items-center justify-center space-x-2 bg-taurusGold hover:bg-taurusGold text-black py-4 rounded-xl font-bold transition-all shadow-[0_0_20px_rgba(255,215,0,0.2)] hover:shadow-[0_0_30px_rgba(255,215,0,0.4)] hover:-translate-y-1"
                 >
                   <Save className="w-5 h-5" />
                   <span>{t.createProposal}</span>

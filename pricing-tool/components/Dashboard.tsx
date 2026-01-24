@@ -17,7 +17,7 @@ const Dashboard: React.FC<Props> = ({ onNavigate, language }) => {
       <div className="text-center mb-24">
         {/* Removed 'uppercase' class and used toLocaleUpperCase(locale) for correct i/I handling */}
         <h1 className="text-5xl font-extrabold text-white sm:text-6xl sm:tracking-tight lg:text-7xl font-poppins mb-6">
-          {t.heroTitlePrefix.toLocaleUpperCase(locale)} <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-yellow-500 drop-shadow-[0_0_10px_rgba(250,204,21,0.3)]">{t.heroTitleHighlight.toLocaleUpperCase(locale)}</span>
+          {t.heroTitlePrefix.toLocaleUpperCase(locale)} <span className="text-transparent bg-clip-text bg-gradient-to-r from-taurusGold to-yellow-500 drop-shadow-[0_0_10px_rgba(255,215,0,0.3)]">{t.heroTitleHighlight.toLocaleUpperCase(locale)}</span>
         </h1>
         <p className="max-w-2xl mx-auto text-xl text-zinc-400 font-light leading-relaxed">
           {t.heroSubtitle}
@@ -26,7 +26,7 @@ const Dashboard: React.FC<Props> = ({ onNavigate, language }) => {
         <div className="mt-10">
           <button 
             onClick={() => onNavigate('calculator')}
-            className="px-8 py-4 bg-yellow-400 hover:bg-yellow-300 text-black font-bold rounded-full transition-all transform hover:scale-105 shadow-[0_0_20px_rgba(250,204,21,0.4)] flex items-center mx-auto"
+            className="px-8 py-4 bg-yellow-400 hover:bg-taurusGold text-black font-bold rounded-full transition-all transform hover:scale-105 shadow-[0_0_20px_rgba(255,215,0,0.4)] flex items-center mx-auto"
           >
             {t.startProject}
             <ArrowRight className="ml-2 w-5 h-5" />

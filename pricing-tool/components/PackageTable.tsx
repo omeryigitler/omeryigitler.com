@@ -23,7 +23,7 @@ const PackageTable: React.FC<Props> = ({ language }) => {
   // MT: €1,000 (Symbol first, comma separator)
   const packageMeta = [
     { key: 'starter', priceTR: '10.000 ₺', priceMT: '€1,000', color: 'border-zinc-800 bg-zinc-900', btnColor: 'bg-zinc-800 text-white hover:bg-zinc-700', checks: [true, true, false, true, true, false, true] },
-    { key: 'business', priceTR: '25.000 ₺', priceMT: '€2,500', color: 'border-taurusGold/50 bg-zinc-900 shadow-[0_0_30px_rgba(250,204,21,0.1)] scale-105 z-10', btnColor: 'bg-taurusGold text-black hover:bg-yellow-300 font-bold', checks: [true, true, true, true, true, true, true] },
+    { key: 'business', priceTR: '25.000 ₺', priceMT: '€2,500', color: 'border-taurusGold/50 bg-zinc-900 shadow-[0_0_30px_rgba(255,215,0,0.1)] scale-105 z-10', btnColor: 'bg-taurusGold text-black hover:bg-taurusGold font-bold', checks: [true, true, true, true, true, true, true] },
     { key: 'premium', priceTR: '50.000 ₺', priceMT: '€5,000', color: 'border-zinc-800 bg-zinc-900', btnColor: 'bg-zinc-800 text-white hover:bg-zinc-700', checks: [true, true, true, true, true, true, true] },
   ];
 

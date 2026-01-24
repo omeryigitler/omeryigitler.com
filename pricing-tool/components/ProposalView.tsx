@@ -86,7 +86,7 @@ const ProposalView: React.FC<Props> = ({ config, addons, request, breakdown, onB
         </button>
         <button 
           onClick={() => window.print()} 
-          className="flex items-center bg-taurusGold text-black px-6 py-3 rounded-xl font-bold hover:bg-yellow-300 transition-colors shadow-lg shadow-taurusGold/20"
+          className="flex items-center bg-taurusGold text-black px-6 py-3 rounded-xl font-bold hover:bg-taurusGold transition-colors shadow-lg shadow-taurusGold/20"
         >
           <Printer className="w-4 h-4 mr-2" />
           {common.print}

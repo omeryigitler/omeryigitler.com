@@ -153,7 +153,7 @@ const AdminSettings: React.FC<Props> = ({ config, addons, onUpdateConfig, onUpda
           <button onClick={handleReset} className="flex items-center px-4 py-2 border border-red-900 text-red-500 rounded-lg hover:bg-red-900/20 transition-colors">
             <RotateCcw className="w-4 h-4 mr-2" /> {t.reset}
           </button>
-          <button onClick={handleSave} className="flex items-center px-6 py-2 bg-taurusGold text-black font-bold rounded-lg hover:bg-yellow-300 transition-colors shadow-lg shadow-taurusGold/20">
+          <button onClick={handleSave} className="flex items-center px-6 py-2 bg-taurusGold text-black font-bold rounded-lg hover:bg-taurusGold transition-colors shadow-lg shadow-taurusGold/20">
             <Save className="w-4 h-4 mr-2" /> {t.save}
           </button>
         </div>
