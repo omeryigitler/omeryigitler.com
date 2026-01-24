@@ -97,51 +97,61 @@ module.exports = async (req, res) => {
         }
     }
 
-    // --- VOICE COMMAND HANDLER (Gemini AI) ---
+    // --- INTELLIGENT COMMAND HANDLER (Voice & Text) ---
     const message = req.body.message;
-    if (message && message.voice) {
+    if (message && (message.voice || message.text)) {
         // SECURITY: Quota Protection (Allowlist)
         // User ID: 6886010817 (Ömer Yiğitler)
         const ALLOWED_IDS = [6886010817];
 
         if (!ALLOWED_IDS.includes(message.chat.id)) {
-            console.warn(`⛔ Blocked unauthorized voice attempt from: ${message.chat.id}`);
-            // Return 200 OK to stop Telegram from retrying, but do NOT process
+            console.warn(`⛔ Blocked unauthorized attempt from: ${message.chat.id}`);
             return res.status(200).send('OK');
         }
 
         try {
             const chatId = message.chat.id;
-            const fileId = message.voice.file_id;
+            let inputs = [];
 
-            // 1. Get File Path
-            const fileRes = await axios.get(`https://api.telegram.org/bot${BOT_TOKEN}/getFile?file_id=${fileId}`);
-            const filePath = fileRes.data.result.file_path;
-            const fileUrl = `https://api.telegram.org/file/bot${BOT_TOKEN}/${filePath}`;
+            // Case A: Voice Note
+            if (message.voice) {
+                const fileId = message.voice.file_id;
+                const fileRes = await axios.get(`https://api.telegram.org/bot${BOT_TOKEN}/getFile?file_id=${fileId}`);
+                const filePath = fileRes.data.result.file_path;
+                const fileUrl = `https://api.telegram.org/file/bot${BOT_TOKEN}/${filePath}`;
+                const audioRes = await axios.get(fileUrl, { responseType: 'arraybuffer' });
+                const base64Audio = Buffer.from(audioRes.data).toString('base64');
 
-            // 2. Download Audio
-            const audioRes = await axios.get(fileUrl, { responseType: 'arraybuffer' });
-            const base64Audio = Buffer.from(audioRes.data).toString('base64');
+                inputs = [
+                    { inlineData: { data: base64Audio, mimeType: "audio/ogg" } }
+                ];
+            }
+            // Case B: Text Message
+            else if (message.text) {
+                inputs = [
+                    `COMMAND TEXT: "${message.text}"`
+                ];
+            }
 
-            // 3. Send to Gemini
+            // 3. Send to Gemini (Use Standard Stable Model)
+            // "gemini-2.5" might be hallucinated or beta. Using 1.5-flash for speed/reliability.
+            const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+
             const prompt = `
-            Analyze audio intent. Return ONLY raw JSON.
+            Analyze the intent of the user's command (Audio or Text). 
+            Return ONLY raw JSON. No markdown formatting.
+            
             Schema: { "command": "FREEZE" | "CLEAR" | "ALARM" | "BLOCK" | "UNKNOWN", "message": string | null }
-            Schema: { "command": "FREEZE" | "CLEAR" | "ALARM" | "BLOCK" | "UNKNOWN", "message": string | null }
+            
             Rules:
-            1. "Durdur", "Kapat", "Freeze", "Stop" -> { "command": "FREEZE", "message": null }
-            2. "Durdur ve [X] yaz", "Freeze and write [X]", "Ekrana [X] yaz", "Mesaj: [X]" -> { "command": "FREEZE", "message": "[X]" }
-            3. "Temizle", "Aç", "Clear", "İptal" -> { "command": "CLEAR", "message": null }
+            1. "Durdur", "Kapat", "Freeze", "Stop", "Don" -> { "command": "FREEZE", "message": null }
+            2. "Durdur ve [X] yaz", "Ekrana [X] yaz", "Mesaj: [X]" -> { "command": "FREEZE", "message": "[X]" }
+            3. "Temizle", "Aç", "Devam et", "Clear", "İptal" -> { "command": "CLEAR", "message": null }
             4. "Alarm" -> ALARM, "Engelle" -> BLOCK.
-            5. "Sadece [X] yaz" -> { "command": "FREEZE", "message": "[X]" }
-            6. "Phrase" triggers -> { "command": "FREEZE", "message": "SYSTEM LOCKED" }
+            5. If unknown -> UNKNOWN.
             `;
 
-            const result = await model.generateContent([
-                prompt,
-                { inlineData: { data: base64Audio, mimeType: "audio/ogg" } }
-            ]);
-
+            const result = await model.generateContent([prompt, ...inputs]);
             const responseText = result.response.text().replace(/```json|```/g, '').trim();
             const responseData = JSON.parse(responseText);
 
@@ -150,7 +160,7 @@ module.exports = async (req, res) => {
 
             // 4. Execute Command
             if (['FREEZE', 'CLEAR', 'ALARM', 'BLOCK'].includes(command)) {
-                // Find most recent active session to apply command
+                // Find most recent active session
                 const snapshot = await db.collection('visitors_v1')
                     .orderBy('startTime', 'desc')
                     .limit(1)
@@ -158,52 +168,43 @@ module.exports = async (req, res) => {
 
                 if (!snapshot.empty) {
                     const sessionDoc = snapshot.docs[0];
-                    const sessionID = sessionDoc.id;
                     const action = command.toLowerCase();
 
                     // Update Firestore
                     await sessionDoc.ref.set({
                         action: action,
-                        message: messageContent, // NEW: Save the custom message
+                        message: messageContent,
                         action_timestamp: admin.firestore.FieldValue.serverTimestamp()
                     }, { merge: true });
 
-                    // Reply to User (Only for critical actions: ALARM & BLOCK)
-                    if (!['FREEZE', 'CLEAR'].includes(command)) {
-                        await axios.post(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
-                            chat_id: chatId,
-                            text: `🎤 <b>Voice Command:</b> ${command} \n✅ Applied to active session.`,
-                            parse_mode: 'HTML'
-                        });
-                    }
+                    // Reply success
+                    await axios.post(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+                        chat_id: chatId,
+                        text: `🤖 <b>Command Executed:</b> ${command} \n📝 ${messageContent || 'No message'}`,
+                        parse_mode: 'HTML'
+                    });
+                } else {
+                    await axios.post(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+                        chat_id: chatId,
+                        text: `⚠️ No active sessions found to control.`
+                    });
                 }
             } else {
-                await axios.post(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
-                    chat_id: chatId,
-                    text: `❓ Could not understand command (${command}).`,
-                });
+                // Only reply if it was a direct text match attempt, otherwise silent
+                if (message.text) {
+                    await axios.post(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+                        chat_id: chatId,
+                        text: `❓ Unknown command: "${message.text}"`
+                    });
+                }
             }
 
         } catch (error) {
-            console.error("Voice Handler Error:", error);
-            let errorMsg = `⚠️ Voice Error: ${error.message}`;
-
-            // 429: Quota Exceeded
-            if (error.message.includes('429') || (error.response && error.response.status === 429)) {
-                errorMsg = "⚠️ <b>Gemini Quota Exceeded</b>\n\nFree tier limit reached (20 RPM). Please wait about 10 seconds and try again.";
-            }
-            // 404: Model Not Found
-            else if (error.message.includes('404') || (error.response && error.response.status === 404)) {
-                errorMsg = "⚠️ <b>AI Model Connection Error (404)</b>\n\nThe specified AI model is currently unavailable for this API key. Contact administrator.";
-            }
-
-            try {
-                await axios.post(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
-                    chat_id: message.chat.id,
-                    text: errorMsg,
-                    parse_mode: 'HTML'
-                });
-            } catch (e) { }
+            console.error("Handler Error:", error);
+            await axios.post(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+                chat_id: message.chat.id,
+                text: `⚠️ System Error: ${error.message}`
+            });
         }
     }
 
