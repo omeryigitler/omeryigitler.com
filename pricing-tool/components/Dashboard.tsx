@@ -1,5 +1,5 @@
-import React from 'react';
-import { PlusCircle, FileText, ArrowRight, ArrowUpRight } from 'lucide-react';
+import React, { useState } from 'react';
+import { PlusCircle, FileText, ArrowRight, ArrowUpRight, Save } from 'lucide-react';
 import { Language } from '../types';
 import { TRANSLATIONS } from '../translations';
 
@@ -12,6 +12,41 @@ const Dashboard: React.FC<Props> = ({ onNavigate, language }) => {
   const t = TRANSLATIONS[language].home;
   const locale = language === Language.TR ? 'tr-TR' : 'en-US';
 
+  // Client info for quote saving
+  const [clientName, setClientName] = useState('');
+  const [clientEmail, setClientEmail] = useState('');
+
+  const handleSaveQuote = () => {
+    if (!clientName.trim() || !clientEmail.trim()) {
+      alert(language === Language.TR ? 'Lütfen müşteri bilgilerini girin' : 'Please enter client information');
+      return;
+    }
+
+    // Send to parent window (admin panel)
+    if (window.parent && window.parent !== window) {
+      window.parent.postMessage({
+        type: 'SAVE_QUOTE',
+        data: {
+          clientName: clientName.trim(),
+          clientEmail: clientEmail.trim(),
+          country: language === Language.TR ? 'TR' : 'MT',
+          siteType: 'Corporate',
+          pageCount: 10,
+          totalPrice: 0,
+          breakdown: {}
+        }
+      }, '*');
+
+      alert(language === Language.TR ? '✅ Teklif kaydedildi!' : '✅ Quote saved!');
+      setClientName('');
+      setClientEmail('');
+    } else {
+      alert(language === Language.TR
+        ? 'Not: Bu özellik sadece admin panelden çalışır'
+        : 'Note: This feature only works from admin panel');
+    }
+  };
+
   return (
     <div className="max-w-7xl mx-auto px-4 py-24 sm:px-6 lg:px-8">
       <div className="text-center mb-24">
@@ -23,13 +58,39 @@ const Dashboard: React.FC<Props> = ({ onNavigate, language }) => {
           {t.heroSubtitle}
         </p>
 
-        <div className="mt-10">
+        {/* Client Information Form */}
+        <div className="max-w-md mx-auto mt-12 space-y-4">
+          <input
+            type="text"
+            placeholder={language === Language.TR ? "Müşteri Adı" : "Client Name"}
+            value={clientName}
+            onChange={(e) => setClientName(e.target.value)}
+            className="w-full px-4 py-3 bg-zinc-900 border border-zinc-800 rounded-lg text-white placeholder-gray-500 focus:border-[#FFD700] focus:outline-none transition-colors"
+          />
+          <input
+            type="email"
+            placeholder={language === Language.TR ? "Müşteri Email" : "Client Email"}
+            value={clientEmail}
+            onChange={(e) => setClientEmail(e.target.value)}
+            className="w-full px-4 py-3 bg-zinc-900 border border-zinc-800 rounded-lg text-white placeholder-gray-500 focus:border-[#FFD700] focus:outline-none transition-colors"
+          />
+        </div>
+
+        <div className="mt-10 flex flex-col sm:flex-row gap-4 justify-center items-center">
           <button
             onClick={() => onNavigate('calculator')}
-            className="px-8 py-4 bg-[#FFD700] hover:bg-[#FFD700] text-black font-bold rounded-full transition-all transform hover:scale-105 shadow-[0_0_20px_rgba(255,215,0,0.4)] flex items-center mx-auto"
+            className="px-8 py-4 bg-[#FFD700] hover:bg-[#FFD700] text-black font-bold rounded-full transition-all transform hover:scale-105 shadow-[0_0_20px_rgba(255,215,0,0.4)] flex items-center"
           >
             {t.startProject}
             <ArrowUpRight className="ml-2 w-5 h-5" />
+          </button>
+
+          <button
+            onClick={handleSaveQuote}
+            className="px-8 py-4 bg-zinc-900 hover:bg-zinc-800 text-[#FFD700] font-bold rounded-full transition-all border border-[#FFD700]/30 flex items-center"
+          >
+            <Save className="mr-2 w-5 h-5" />
+            {language === Language.TR ? 'Teklifi Kaydet' : 'Save Quote'}
           </button>
         </div>
       </div>
@@ -50,11 +111,9 @@ const Dashboard: React.FC<Props> = ({ onNavigate, language }) => {
             </span>
           </div>
           <div className="relative z-10">
-            <h3 className="text-2xl font-bold text-white font-poppins mb-3">
-              {t.card1Title}
-            </h3>
-            <p className="text-zinc-400 leading-relaxed group-hover:text-zinc-300 transition-colors">
-              {t.card1Desc}
+            <h3 className="text-2xl font-bold text-white mb-4 uppercase">{t.calculatePriceTitle}</h3>
+            <p className="text-zinc-400 leading-relaxed">
+              {t.calculatePriceDesc}
             </p>
           </div>
         </div>
@@ -74,11 +133,9 @@ const Dashboard: React.FC<Props> = ({ onNavigate, language }) => {
             </span>
           </div>
           <div className="relative z-10">
-            <h3 className="text-2xl font-bold text-white font-poppins mb-3">
-              {t.card2Title}
-            </h3>
-            <p className="text-zinc-400 leading-relaxed group-hover:text-zinc-300 transition-colors">
-              {t.card2Desc}
+            <h3 className="text-2xl font-bold text-white mb-4 uppercase">{t.proposalTitle}</h3>
+            <p className="text-zinc-400 leading-relaxed">
+              {t.proposalDesc}
             </p>
           </div>
         </div>
