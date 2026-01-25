@@ -770,6 +770,10 @@
                                             // Include the rich HTML receipt if available
                                             message_html: window.projectConfigHtml || '',
                                             project_type: window.projectConfigData?.siteType || 'Standard',
+                                            // Common fields for "To" address mapping
+                                            to_email: emailVal,
+                                            from_email: emailVal,
+                                            email: emailVal,
                                             is_auto_receipt: true
                                         };
 
