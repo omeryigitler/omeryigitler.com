@@ -609,10 +609,11 @@
                             style="position: absolute; left: -9999px; top: -9999px; width: 1px; height: 1px; opacity: 0;"
                             tabindex="-1" autocomplete="off" aria-hidden="true">
 
-                        <button type="submit" id="submit-btn"
+                        <button type="button" id="init-project-btn"
                             class="w-full py-4 rounded-xl bg-taurusGold text-black font-bold uppercase tracking-widest text-xs hover:bg-white hover:scale-[1.02] active:scale-95 transition-all duration-300 shadow-[0_0_20px_-5px_rgba(255,215,0,0.3)]">
-                            Send Request
+                            Configure Project & Request Quote
                         </button>
+                        <button type="submit" id="submit-btn" class="hidden"></button>
                     </form>
                 </div>
 
@@ -715,32 +716,65 @@
                                 let submissionSuccess = false;
 
                                 // --- TASK A: SAVE TO FIRESTORE ---
-                                if (db) {
-                                    try {
-                                        await db.collection('messages').add({
-                                            name: nameVal,
-                                            email: emailVal,
-                                            message: messageVal,
-                                            status: 'new',
-                                            timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-                                            source: 'website_main_form'
-                                        });
-                                        console.log("Database: Entry Created");
-                                        submissionSuccess = true;
-                                    } catch (dbError) {
-                                        console.error("Database Error:", dbError);
-                                    }
+                                try {
+                                    // Merge basic form data with advanced config data
+                                    const configData = window.projectConfigData || {};
+
+                                    await db.collection('messages').add({
+                                        name: nameVal,
+                                        email: emailVal,
+                                        message: messageVal,
+                                        // New detailed fields
+                                        // Expanded Config Fields
+                                        // 'projectType' kept for backend compatibility
+                                        projectType: configData.siteType || 'LANDING',
+                                        siteType: configData.siteType || 'LANDING',
+                                        designType: configData.designType || 'TEMPLATE',
+                                        pageCount: configData.pageCount || '10',
+
+                                        // Features
+                                        hasSeo: configData.hasSeo || false,
+                                        isMultiLang: configData.isMultiLang || false,
+                                        hasGraphics: configData.hasGraphics || false,
+                                        hasUx: configData.hasUx || false,
+                                        hasCrm: configData.hasCrm || false,
+
+                                        // Addons & Settings
+                                        selectedAddons: configData.selectedAddons || [],
+                                        deliverySpeed: configData.deliverySpeed || 'STANDARD',
+                                        maintenanceLevel: configData.maintenanceLevel || 'NONE',
+
+                                        // Defaults
+                                        country: configData.country || 'MT',
+
+                                        status: 'new',
+                                        timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                                        source: 'website_advanced_form'
+                                    });
+                                    console.log("Database: Entry Created with Advanced Config");
+                                    submissionSuccess = true;
+                                } catch (dbError) {
+                                    console.error("Database Error:", dbError);
+                                    // DEBUG: Show DB error to user
+                                    await systemAlert('DATABASE ERROR', 'DB Failed: ' + dbError.message, 'alert-triangle');
                                 }
+
 
                                 // --- TASK B: EMAIL NOTIFICATION (EmailJS) ---
                                 try {
                                     if (typeof emailjs !== 'undefined') {
-                                        await emailjs.send("service_z24kvj8", "template_frpxeef", {
+                                        const templateParams = {
                                             from_name: nameVal,
-                                            from_email: emailVal,
-                                            message: messageVal,
-                                            reply_to: emailVal
-                                        });
+                                            reply_to: emailVal,
+                                            message: messageVal + "\n\n--- TECHNICAL DETAILS ---\n" + JSON.stringify(window.projectConfigData || {}, null, 2),
+                                            // Include the rich HTML receipt if available
+                                            message_html: window.projectConfigHtml || '',
+                                            project_type: window.projectConfigData?.siteType || 'Standard',
+                                            is_auto_receipt: true
+                                        };
+
+                                        await emailjs.send('service_j445168', 'template_q865766', templateParams);
+                                        console.log("Email: Sent Successfully");
                                         console.log("Notification: Dispatched");
                                         submissionSuccess = true; // Mark success if email sent even if DB failed
                                     } else {
@@ -748,6 +782,8 @@
                                     }
                                 } catch (mailError) {
                                     console.error("Notification Error:", mailError);
+                                    // DEBUG: Show Email error to user
+                                    await systemAlert('EMAIL ERROR', 'Email Failed: ' + (mailError.text || mailError.message), 'alert-triangle');
                                 }
 
                                 // --- TASK C: REDIRECT OR FALLBACK ---
@@ -1174,6 +1210,585 @@
     <script src="assets/js/tracker/logo_data.js"></script>
     <script src="assets/js/tracker/taurus-tracker.js?v=V42"></script>
 
+
+    <!-- PROJECT CONFIGURATION MODAL -->
+    <div id="project-config-modal"
+        class="fixed inset-0 z-[100] hidden flex items-center justify-center p-4 bg-black/90 backdrop-blur-md opacity-0 transition-opacity duration-300">
+        <div class="bg-[#0a0a0a] border border-white/10 w-full max-w-2xl rounded-3xl overflow-hidden shadow-2xl transform scale-95 transition-transform duration-300"
+            id="config-modal-panel">
+
+            <!-- Header -->
+            <div class="p-6 border-b border-white/5 flex justify-between items-center bg-white/5">
+                <div>
+                    <span class="text-[10px] font-bold text-taurusGold uppercase tracking-widest mb-1 block">Step 2 of
+                        2</span>
+                    <h3 class="text-xl font-display font-bold text-white">Project Configuration</h3>
+                </div>
+                <button id="close-config-modal"
+                    class="w-8 h-8 flex items-center justify-center rounded-full bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white transition-colors">
+                    <i data-lucide="x" class="w-4 h-4"></i>
+                </button>
+            </div>
+
+            <!-- Scrollable Content -->
+            <div class="p-6 max-h-[60vh] overflow-y-auto space-y-6 custom-scrollbar">
+
+                <!-- 1. Project Scope -->
+                <div class="space-y-4">
+                    <label
+                        class="text-[10px] font-bold text-taurusGold uppercase tracking-widest border-b border-white/5 pb-2 block">1.
+                        Scope & Design</label>
+
+                    <!-- Site Type -->
+                    <div class="space-y-2">
+                        <label class="text-xs font-bold text-gray-400 uppercase tracking-widest">Site Type</label>
+                        <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
+                            <label class="cursor-pointer">
+                                <input type="radio" name="site_type" value="LANDING" class="peer hidden" checked>
+                                <div
+                                    class="p-3 rounded-xl bg-white/5 border border-white/5 peer-checked:border-taurusGold peer-checked:bg-taurusGold/10 transition-all hover:bg-white/10 text-center">
+                                    <span
+                                        class="block text-xs font-bold text-white peer-checked:text-taurusGold">Landing
+                                        Page</span>
+                                </div>
+                            </label>
+                            <label class="cursor-pointer">
+                                <input type="radio" name="site_type" value="CORPORATE" class="peer hidden">
+                                <div
+                                    class="p-3 rounded-xl bg-white/5 border border-white/5 peer-checked:border-taurusGold peer-checked:bg-taurusGold/10 transition-all hover:bg-white/10 text-center">
+                                    <span
+                                        class="block text-xs font-bold text-white peer-checked:text-taurusGold">Corporate</span>
+                                </div>
+                            </label>
+                            <label class="cursor-pointer">
+                                <input type="radio" name="site_type" value="ECOMMERCE" class="peer hidden">
+                                <div
+                                    class="p-3 rounded-xl bg-white/5 border border-white/5 peer-checked:border-taurusGold peer-checked:bg-taurusGold/10 transition-all hover:bg-white/10 text-center">
+                                    <span
+                                        class="block text-xs font-bold text-white peer-checked:text-taurusGold">E-Commerce</span>
+                                </div>
+                            </label>
+                            <label class="cursor-pointer">
+                                <input type="radio" name="site_type" value="PROMO" class="peer hidden">
+                                <div
+                                    class="p-3 rounded-xl bg-white/5 border border-white/5 peer-checked:border-taurusGold peer-checked:bg-taurusGold/10 transition-all hover:bg-white/10 text-center">
+                                    <span
+                                        class="block text-xs font-bold text-white peer-checked:text-taurusGold">Promotion</span>
+                                </div>
+                            </label>
+                            <label class="cursor-pointer">
+                                <input type="radio" name="site_type" value="PORTAL" class="peer hidden">
+                                <div
+                                    class="p-3 rounded-xl bg-white/5 border border-white/5 peer-checked:border-taurusGold peer-checked:bg-taurusGold/10 transition-all hover:bg-white/10 text-center">
+                                    <span class="block text-xs font-bold text-white peer-checked:text-taurusGold">Custom
+                                        Portal</span>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Design Type -->
+                    <div class="space-y-2">
+                        <label class="text-xs font-bold text-gray-400 uppercase tracking-widest">Design
+                            Preference</label>
+                        <div class="grid grid-cols-2 gap-3">
+                            <label class="cursor-pointer">
+                                <input type="radio" name="design_type" value="TEMPLATE" class="peer hidden" checked>
+                                <div
+                                    class="p-3 rounded-xl bg-white/5 border border-white/5 peer-checked:border-taurusGold peer-checked:bg-taurusGold/10 transition-all hover:bg-white/10 flex items-center justify-center gap-2">
+                                    <span
+                                        class="block text-xs font-bold text-white peer-checked:text-taurusGold">Template
+                                        Based</span>
+                                </div>
+                            </label>
+                            <label class="cursor-pointer">
+                                <input type="radio" name="design_type" value="CUSTOM" class="peer hidden">
+                                <div
+                                    class="p-3 rounded-xl bg-white/5 border border-white/5 peer-checked:border-taurusGold peer-checked:bg-taurusGold/10 transition-all hover:bg-white/10 flex items-center justify-center gap-2">
+                                    <span class="block text-xs font-bold text-white peer-checked:text-taurusGold">Custom
+                                        Design</span>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Page Count -->
+                    <div class="space-y-2">
+                        <div class="flex justify-between">
+                            <label class="text-xs font-bold text-gray-400 uppercase tracking-widest">Page Count</label>
+                            <span id="page-count-display" class="text-xs font-bold text-taurusGold">10 Pages</span>
+                        </div>
+                        <input type="range" id="page_count" min="1" max="50" value="10"
+                            class="w-full h-2 bg-gray-800 rounded-lg appearance-none cursor-pointer accent-taurusGold">
+                        <div class="flex justify-between text-[10px] text-gray-600 font-mono">
+                            <span>1</span>
+                            <span>25</span>
+                            <span>50+</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. Services & Features -->
+                <div class="space-y-4 pt-4 border-t border-white/5">
+                    <label
+                        class="text-[10px] font-bold text-taurusGold uppercase tracking-widest border-b border-white/5 pb-2 block">2.
+                        Features & Services</label>
+
+                    <style>
+                        /* Custom Checkbox Style */
+                        .taurus-checkbox {
+                            appearance: none;
+                            background-color: #000;
+                            border: 1px solid #3f3f46;
+                            border-radius: 0.25rem;
+                            display: grid;
+                            place-content: center;
+                            transition: all 0.2s;
+                        }
+
+                        .taurus-checkbox::before {
+                            content: "";
+                            width: 0.65em;
+                            height: 0.65em;
+                            transform: scale(0);
+                            transition: 120ms transform ease-in-out;
+                            box-shadow: inset 1em 1em black;
+                            background-color: black;
+                            transform-origin: center;
+                            clip-path: polygon(14% 44%, 0 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%);
+                        }
+
+                        .taurus-checkbox:checked {
+                            background-color: #FFD700;
+                            border-color: #FFD700;
+                        }
+
+                        .taurus-checkbox:checked::before {
+                            transform: scale(1);
+                        }
+
+
+                        /* Custom Scrollbar - HIDDEN as requested */
+                        .custom-scrollbar::-webkit-scrollbar {
+                            width: 0px;
+                            background: transparent;
+                        }
+
+                        .custom-scrollbar {
+                            -ms-overflow-style: none;
+                            /* IE and Edge */
+                            scrollbar-width: none;
+                            /* Firefox */
+                        }
+
+                        /* Custom Select Style Override */
+                        select {
+                            appearance: none;
+                            -webkit-appearance: none;
+                            -moz-appearance: none;
+                            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%23FFD700' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+                            background-position: right 0.75rem center;
+                            background-repeat: no-repeat;
+                            background-size: 1.25em 1.25em;
+                            padding-right: 2.5rem;
+                            /* Space for icon */
+                        }
+                    </style>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <label
+                            class="flex items-center space-x-3 p-3 rounded-lg bg-white/5 border border-white/5 cursor-pointer hover:bg-white/10 group transition-colors">
+                            <input type="checkbox" id="req_seo" class="taurus-checkbox w-5 h-5 cursor-pointer">
+                            <span class="text-xs text-gray-300 font-bold group-hover:text-white transition-colors">SEO
+                                Optimization</span>
+                        </label>
+                        <label
+                            class="flex items-center space-x-3 p-3 rounded-lg bg-white/5 border border-white/5 cursor-pointer hover:bg-white/10 group transition-colors">
+                            <input type="checkbox" id="req_multilang" class="taurus-checkbox w-5 h-5 cursor-pointer">
+                            <span
+                                class="text-xs text-gray-300 font-bold group-hover:text-white transition-colors">Multi-Language</span>
+                        </label>
+                        <label
+                            class="flex items-center space-x-3 p-3 rounded-lg bg-white/5 border border-white/5 cursor-pointer hover:bg-white/10 group transition-colors">
+                            <input type="checkbox" id="req_graphics" class="taurus-checkbox w-5 h-5 cursor-pointer">
+                            <span
+                                class="text-xs text-gray-300 font-bold group-hover:text-white transition-colors">Custom
+                                Graphics</span>
+                        </label>
+                        <label
+                            class="flex items-center space-x-3 p-3 rounded-lg bg-white/5 border border-white/5 cursor-pointer hover:bg-white/10 group transition-colors">
+                            <input type="checkbox" id="req_ux" class="taurus-checkbox w-5 h-5 cursor-pointer">
+                            <span
+                                class="text-xs text-gray-300 font-bold group-hover:text-white transition-colors">Advanced
+                                UX Design</span>
+                        </label>
+                        <label
+                            class="flex items-center space-x-3 p-3 rounded-lg bg-white/5 border border-white/5 cursor-pointer hover:bg-white/10 group transition-colors">
+                            <input type="checkbox" id="req_crm" class="taurus-checkbox w-5 h-5 cursor-pointer">
+                            <span class="text-xs text-gray-300 font-bold group-hover:text-white transition-colors">CRM
+                                Integration</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- 3. Add-ons -->
+                <div class="space-y-4 pt-4 border-t border-white/5">
+                    <label
+                        class="text-[10px] font-bold text-taurusGold uppercase tracking-widest border-b border-white/5 pb-2 block">3.
+                        Add-on Services</label>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <label
+                            class="flex items-center space-x-3 p-3 rounded-lg bg-white/5 border border-white/5 cursor-pointer hover:bg-white/10 group transition-colors">
+                            <input type="checkbox" id="addon_logo" class="taurus-checkbox w-5 h-5 cursor-pointer">
+                            <span class="text-xs text-gray-300 font-bold group-hover:text-white transition-colors">Logo
+                                Design</span>
+                        </label>
+                        <label
+                            class="flex items-center space-x-3 p-3 rounded-lg bg-white/5 border border-white/5 cursor-pointer hover:bg-white/10 group transition-colors">
+                            <input type="checkbox" id="addon_writing" class="taurus-checkbox w-5 h-5 cursor-pointer">
+                            <span
+                                class="text-xs text-gray-300 font-bold group-hover:text-white transition-colors">Content
+                                Writing</span>
+                        </label>
+                        <label
+                            class="flex items-center space-x-3 p-3 rounded-lg bg-white/5 border border-white/5 cursor-pointer hover:bg-white/10 group transition-colors">
+                            <input type="checkbox" id="addon_social" class="taurus-checkbox w-5 h-5 cursor-pointer">
+                            <span
+                                class="text-xs text-gray-300 font-bold group-hover:text-white transition-colors">Social
+                                Media Setup</span>
+                        </label>
+                        <label
+                            class="flex items-center space-x-3 p-3 rounded-lg bg-white/5 border border-white/5 cursor-pointer hover:bg-white/10 group transition-colors">
+                            <input type="checkbox" id="addon_maps" class="taurus-checkbox w-5 h-5 cursor-pointer">
+                            <span
+                                class="text-xs text-gray-300 font-bold group-hover:text-white transition-colors">Google
+                                Maps Registration</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- 4. Delivery & Maintenance -->
+                <div class="space-y-4 pt-4 border-t border-white/5">
+                    <label
+                        class="text-[10px] font-bold text-taurusGold uppercase tracking-widest border-b border-white/5 pb-2 block">4.
+                        Delivery & support</label>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Delivery Speed -->
+                        <div class="space-y-2">
+                            <label class="text-xs font-bold text-gray-400 uppercase tracking-widest">Timeline</label>
+                            <select id="delivery_speed"
+                                class="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-3 text-xs text-white focus:outline-none focus:border-taurusGold">
+                                <option value="STANDARD" class="bg-black">Standard Delivery</option>
+                                <option value="FAST" class="bg-black">Fast Track (1.5x)</option>
+                                <option value="URGENT" class="bg-black">Urgent (2.0x)</option>
+                            </select>
+                        </div>
+
+                        <!-- Maintenance -->
+                        <div class="space-y-2">
+                            <label class="text-xs font-bold text-gray-400 uppercase tracking-widest">Monthly
+                                Maintenance</label>
+                            <select id="maintenance_level"
+                                class="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-3 text-xs text-white focus:outline-none focus:border-taurusGold">
+                                <option value="NONE" class="bg-black">None</option>
+                                <option value="BASIC" class="bg-black">Basic Support</option>
+                                <option value="MID" class="bg-black">Pro Support</option>
+                                <option value="PREMIUM" class="bg-black">Enterprise Support</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="p-6 border-t border-white/5 bg-black/40 backdrop-blur-xl flex justify-between items-center">
+                <button id="cancel-config"
+                    class="text-xs font-bold text-gray-500 hover:text-white uppercase tracking-wider transition-colors">
+                    Back
+                </button>
+                <button id="confirm-request-btn"
+                    class="px-8 py-3 rounded-full bg-taurusGold text-black text-xs font-bold uppercase tracking-widest hover:bg-white hover:scale-105 transition-all shadow-lg shadow-taurusGold/20">
+                    Submit Final Request
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Script to handle Modal Logic -->
+    <!-- Helper: Generate Rich HTML Receipt (Cyberpunk/Terminal Style) -->
+    <script>
+        const generateReceiptHtml = (data, name) => {
+            const date = new Date().toLocaleString('en-GB', { timeZone: 'UTC' });
+
+            // Format Addons
+            const addonsList = data.selectedAddons && data.selectedAddons.length > 0
+                ? data.selectedAddons.map(a => a.replace('_', ' ').toUpperCase()).join(', ')
+                : 'NONE';
+
+            // Format Features
+            const features = [];
+            if (data.hasSeo) features.push('SEO OPTIMIZATION');
+            if (data.isMultiLang) features.push('MULTI-LANGUAGE');
+            if (data.hasGraphics) features.push('CUSTOM GRAPHICS');
+            if (data.hasUx) features.push('UX DESIGN');
+            if (data.hasCrm) features.push('CRM INTEGRATION');
+            const featuresList = features.length > 0 ? features.join(', ') : 'STANDARD BUILD';
+
+            return `
+    <!DOCTYPE html>
+    <html>
+
+    <head>
+        <style>
+            body {
+                font-family: 'Courier New', Courier, monospace;
+                background-color: #050505;
+                color: #e0e0e0;
+                margin: 0;
+                padding: 20px;
+            }
+
+            .terminal-container {
+                max-width: 600px;
+                margin: 0 auto;
+                border: 1px solid #333;
+                background-color: #0a0a0a;
+                border-radius: 4px;
+                overflow: hidden;
+                box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+            }
+
+            .header {
+                background-color: #0f0f0f;
+                border-bottom: 2px solid #FFD700;
+                padding: 20px;
+                text-align: center;
+            }
+
+            .header h2 {
+                color: #FFD700;
+                margin: 0;
+                font-size: 18px;
+                letter-spacing: 2px;
+                text-transform: uppercase;
+            }
+
+            .content {
+                padding: 30px;
+            }
+
+            .log-line {
+                color: #666;
+                font-size: 10px;
+                margin-bottom: 20px;
+                border-bottom: 1px dashed #333;
+                padding-bottom: 10px;
+            }
+
+            .data-table {
+                width: 100%;
+                border-collapse: collapse;
+                margin-bottom: 25px;
+            }
+
+            .data-table td {
+                padding: 12px 10px;
+                border-bottom: 1px solid #222;
+                font-size: 13px;
+            }
+
+            .label {
+                color: #888;
+                text-transform: uppercase;
+                width: 40%;
+            }
+
+            .value {
+                color: #fff;
+                font-weight: bold;
+                text-align: right;
+            }
+
+            .highlight {
+                color: #FFD700;
+            }
+
+            .status-box {
+                border: 1px solid #FFD700;
+                background: rgba(255, 215, 0, 0.05);
+                padding: 15px;
+                text-align: center;
+                margin-top: 20px;
+                border-radius: 4px;
+            }
+
+            .status-text {
+                color: #FFD700;
+                font-size: 12px;
+                letter-spacing: 1px;
+                font-weight: bold;
+            }
+
+            .footer {
+                text-align: center;
+                padding: 20px;
+                color: #444;
+                font-size: 10px;
+                border-top: 1px solid #222;
+            }
+        </style>
+    </head>
+
+    <body>
+        <div class="terminal-container">
+            <div class="header">
+                <h2>SYSTEM NOTIFICATION: REQUEST RECEIVED</h2>
+            </div>
+            <div class="content">
+                <div class="log-line">
+                    TIMESTAMP: ${date} // ID: #${Math.floor(Math.random() * 90000) + 10000} // USER: ${name.toUpperCase()}
+                </div>
+
+                <table class="data-table">
+                    <tr>
+                        <td class="label">Project Type</td>
+                        <td class="value highlight">${data.siteType}</td>
+                    </tr>
+                    <tr>
+                        <td class="label">Est. Pages</td>
+                        <td class="value">${data.pageCount}</td>
+                    </tr>
+                    <tr>
+                        <td class="label">Design Type</td>
+                        <td class="value">${data.designType}</td>
+                    </tr>
+                    <tr>
+                        <td class="label">Core Features</td>
+                        <td class="value">${featuresList}</td>
+                    </tr>
+                    <tr>
+                        <td class="label">Active Add-ons</td>
+                        <td class="value">${addonsList}</td>
+                    </tr>
+                    <tr>
+                        <td class="label">Delivery Mode</td>
+                        <td class="value highlight">${data.deliverySpeed}</td>
+                    </tr>
+                </table>
+
+                <div class="status-box">
+                    <div class="status-text">STATUS: PENDING REVIEW // SECURE CHANNEL ESTABLISHED</div>
+                </div>
+                <p style="font-size: 11px; color: #666; margin-top: 20px; text-align: center; line-height: 1.5;">
+                    This is an automated receipt, not a final quote. Our systems are analyzing your requirements.
+                    A detailed proposal will be transmitted shortly.
+                </p>
+            </div>
+            <div class="footer">
+                TAURUS AGENCY SYSTEMS // END OF TRANSMISSION
+            </div>
+        </div>
+    </body>
+
+    </html>
+    `;
+        };
+
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const initBtn = document.getElementById('init-project-btn');
+            const modal = document.getElementById('project-config-modal');
+            const panel = document.getElementById('config-modal-panel');
+            const closeBtn = document.getElementById('close-config-modal');
+            const cancelBtn = document.getElementById('cancel-config');
+            const confirmBtn = document.getElementById('confirm-request-btn');
+            const pageRange = document.getElementById('page_count');
+            const pageDisplay = document.getElementById('page-count-display');
+
+            // --- Slider Logic ---
+            if (pageRange) {
+                pageRange.addEventListener('input', (e) => {
+                    pageDisplay.innerText = e.target.value + " Pages";
+                });
+            }
+
+            // --- Open Modal ---
+            initBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                // Basic Validation first
+                const name = document.getElementById('name').value;
+                const email = document.getElementById('email').value;
+                if (!name || !email) {
+                    alert("Please enter your name and email first.");
+                    return;
+                }
+
+                modal.classList.remove('hidden');
+                // Small delay for fade in
+                setTimeout(() => {
+                    modal.classList.remove('opacity-0');
+                    panel.classList.remove('scale-95');
+                }, 10);
+            });
+
+            // --- Close Functions ---
+            const closeModal = () => {
+                modal.classList.add('opacity-0');
+                panel.classList.add('scale-95');
+                setTimeout(() => modal.classList.add('hidden'), 300);
+            };
+
+            closeBtn.addEventListener('click', closeModal);
+            cancelBtn.addEventListener('click', closeModal);
+
+            // --- Confirm & Submit ---
+            confirmBtn.addEventListener('click', () => {
+                // 1. Gather Selected Addons
+                const addons = [];
+                if (document.getElementById('addon_logo').checked) addons.push('logo_design');
+                if (document.getElementById('addon_writing').checked) addons.push('content_writing');
+                if (document.getElementById('addon_social').checked) addons.push('social_media');
+                if (document.getElementById('addon_maps').checked) addons.push('google_maps');
+
+                // 2. Gather Complete Data
+                window.projectConfigData = {
+                    // Core
+                    siteType: document.querySelector('input[name="site_type"]:checked').value,
+                    designType: document.querySelector('input[name="design_type"]:checked').value,
+                    pageCount: document.getElementById('page_count').value,
+
+                    // Features
+                    hasSeo: document.getElementById('req_seo').checked,
+                    isMultiLang: document.getElementById('req_multilang').checked,
+                    hasGraphics: document.getElementById('req_graphics').checked,
+                    hasUx: document.getElementById('req_ux').checked,
+                    hasCrm: document.getElementById('req_crm').checked,
+
+                    // Addons
+                    selectedAddons: addons,
+
+                    // Delivery & Maintenance
+                    deliverySpeed: document.getElementById('delivery_speed').value,
+                    maintenanceLevel: document.getElementById('maintenance_level').value,
+
+                    // Defaults
+                    country: 'MT', // Default as per request
+                    currency: 'EUR' // Default as per request
+                };
+
+                // 3. Store Generated HTML for EmailJS
+                // We attach it to the window or button to be accessed by the form submit handler
+                const nameVal = document.getElementById('name').value;
+                window.projectConfigHtml = generateReceiptHtml(window.projectConfigData, nameVal);
+
+                // 4. Trigger real submit
+                document.getElementById('submit-btn').click();
+                closeModal();
+            });
+        });
+    </script>
 </body>
 
 </html>

@@ -2628,7 +2628,36 @@
         }
 
         /**
-         * Create project directly from message (uses Phase 3 function)
+         * Helper: Create project document from message data
+         */
+        async function createProjectFromMessage(messageId) {
+            try {
+                const message = messagesMap[messageId];
+                if (!message) throw new Error("Message data not found in cache");
+
+                const projectData = {
+                    clientName: message.name || 'Unknown Client',
+                    clientEmail: message.email || '',
+                    projectName: `Project for ${message.name || 'Client'}`,
+                    status: 'active',
+                    done: '',
+                    todo: 'Initial setup pending...',
+                    requests: `Source Message (${new Date().toLocaleDateString()}):\n${message.message || ''}`,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                    sourceMessageId: messageId
+                };
+
+                const docRef = await db.collection('projects').add(projectData);
+                console.log("✅ Project created with ID:", docRef.id);
+                return docRef.id;
+            } catch (error) {
+                console.error("Error creating project from message:", error);
+                return null;
+            }
+        }
+
+        /**
+         * Create project directly from message (uses helper function)
          * @param {string} messageId - Message document ID
          */
         async function createProjectDirectly(messageId) {
@@ -2646,6 +2675,41 @@
             } else {
                 alert('❌ Failed to create project. Check console for details.');
             }
+        }
+
+        /**
+         * Calculate price for the current project in modal
+         * Takes the client name and email from the open project form and opens pricing tool
+         */
+        function calculatePriceForProject() {
+            const clientName = document.getElementById('p-client').value;
+            const clientEmail = document.getElementById('p-email').value;
+
+            if (!clientName) {
+                alert("Please enter a Client Identity first.");
+                return;
+            }
+
+            // Close modal
+            closeProjectModal();
+
+            // Switch to pricing
+            switchTab('pricing');
+
+            // Send data to iframe
+            setTimeout(() => {
+                const pricingIframe = document.querySelector('iframe[src*="pricing-tool"]');
+                if (pricingIframe && pricingIframe.contentWindow) {
+                    pricingIframe.contentWindow.postMessage({
+                        type: 'PRE_FILL_CLIENT',
+                        data: {
+                            clientName: clientName,
+                            clientEmail: clientEmail
+                        }
+                    }, '*');
+                    console.log('📋 Opened pricing tool for project:', clientName);
+                }
+            }, 500);
         }
 
         let editingProjectId = null;
@@ -2890,6 +2954,10 @@
                 <button id="p-delete-btn" onclick="deleteProject()"
                     class="hidden order-last md:order-first w-full md:w-auto px-8 py-4 rounded-xl border border-red-500/20 bg-red-500/5 text-red-500 font-black text-[10px] uppercase tracking-widest hover:bg-red-500 hover:text-white transition-all flex items-center justify-center gap-2">
                     <i data-lucide="trash-2" class="w-4 h-4"></i> Terminate Mission
+                </button>
+                <button onclick="calculatePriceForProject()"
+                    class="order-last md:order-first w-full md:w-auto px-8 py-4 rounded-xl border border-[#FFD700]/30 text-[#FFD700] font-black text-[10px] uppercase tracking-widest hover:bg-[#FFD700] hover:text-black transition-all flex items-center justify-center gap-2 mr-2">
+                    <i data-lucide="calculator" class="w-4 h-4"></i> Calculate Price
                 </button>
                 <div class="flex-1 hidden md:block"></div>
                 <button onclick="closeProjectModal()"

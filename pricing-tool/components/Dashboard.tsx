@@ -1,18 +1,19 @@
 import React, { useState } from 'react';
 import { PlusCircle, FileText, ArrowRight, ArrowUpRight, Save } from 'lucide-react';
-import { Language } from '../types';
+import { Language, QuoteRequest } from '../types';
 import { TRANSLATIONS } from '../translations';
 
 interface Props {
   onNavigate: (view: string) => void;
   language: Language;
+  onRequestUpdate: (val: any) => void; // Using any to avoid complex type check here, or better import QuoteRequest updater type
 }
 
-const Dashboard: React.FC<Props> = ({ onNavigate, language }) => {
+const Dashboard: React.FC<Props> = ({ onNavigate, language, onRequestUpdate }) => {
   const t = TRANSLATIONS[language].home;
   const locale = language === Language.TR ? 'tr-TR' : 'en-US';
 
-  // Client info for quote saving
+  // Client info for quote saving - Local state only for the input fields
   const [clientName, setClientName] = useState('');
   const [clientEmail, setClientEmail] = useState('');
 
@@ -46,6 +47,29 @@ const Dashboard: React.FC<Props> = ({ onNavigate, language }) => {
         : 'Note: This feature only works from admin panel');
     }
   };
+
+  // Listen for messages from parent (admin panel) to pre-fill client data
+  React.useEffect(() => {
+    const handleMessage = (event: MessageEvent) => {
+      if (event.data && event.data.type === 'PRE_FILL_CLIENT') {
+        const { clientName, clientEmail } = event.data.data;
+
+        // Update local state
+        if (clientName) setClientName(clientName);
+        if (clientEmail) setClientEmail(clientEmail);
+
+        // UPDATE GLOBAL STATE so it persists to calculator
+        onRequestUpdate((prev: QuoteRequest) => ({
+          ...prev,
+          customerName: clientName || prev.customerName,
+          // We don't have email in QuoteRequest type yet, but customerName is key
+        }));
+      }
+    };
+
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, []);
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-24 sm:px-6 lg:px-8">
