@@ -766,7 +766,29 @@
                                         const templateParams = {
                                             from_name: nameVal,
                                             reply_to: emailVal,
-                                            message: messageVal + "\n\n--- TECHNICAL DETAILS ---\n" + JSON.stringify(window.projectConfigData || {}, null, 2),
+                                            // Formatted Technical Details (Human Readable - ONLY SELECTED)
+                                            message: messageVal + "\n\n--- TECHNICAL CONFIGURATION ---\n" +
+                                                (window.projectConfigData ?
+                                                    // 1. Core Info (Always Show)
+                                                    `• Project Type: ${window.projectConfigData.siteType}\n` +
+                                                    `• Design Style: ${window.projectConfigData.designType}\n` +
+                                                    `• Page Count: ${window.projectConfigData.pageCount}\n` +
+                                                    `• Delivery: ${window.projectConfigData.deliverySpeed}\n` +
+                                                    `• Maintenance: ${window.projectConfigData.maintenanceLevel}\n` +
+
+                                                    // 2. Features (Show ONLY if True)
+                                                    (window.projectConfigData.hasSeo ? `• Feature: SEO Optimization\n` : '') +
+                                                    (window.projectConfigData.isMultiLang ? `• Feature: Multi-Language Support\n` : '') +
+                                                    (window.projectConfigData.hasGraphics ? `• Feature: Custom Graphics\n` : '') +
+                                                    (window.projectConfigData.hasUx ? `• Feature: UX Research\n` : '') +
+                                                    (window.projectConfigData.hasCrm ? `• Feature: CRM Integration\n` : '') +
+
+                                                    // 3. Add-ons (Show ONLY if Selected)
+                                                    (window.projectConfigData.selectedAddons && window.projectConfigData.selectedAddons.length > 0 ?
+                                                        '\n[ ADD-ONS ]\n' + window.projectConfigData.selectedAddons.map(a => `• ${a.replace('_', ' ').toUpperCase()}`).join('\n') :
+                                                        '')
+                                                    : "No configuration data available."),
+
                                             // Include the rich HTML receipt if available
                                             message_html: window.projectConfigHtml || '',
                                             project_type: window.projectConfigData?.siteType || 'Standard',
