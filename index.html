@@ -1780,15 +1780,9 @@
                     const result = await window.processFormSubmission(true);
 
                     if (result.success) {
-                        confirmBtn.innerText = "MESSAGE RECEIVED";
-                        confirmBtn.style.backgroundColor = "#4ade80"; // Green
-                        confirmBtn.style.color = "black";
-
-                        // Wait 1.5s then redirect
-                        setTimeout(() => {
-                            if (window.taurus_set_internal) window.taurus_set_internal();
-                            window.location.href = 'success.html';
-                        }, 1500);
+                        // Success: Immediate redirect
+                        if (window.taurus_set_internal) window.taurus_set_internal();
+                        window.location.href = 'success.html';
                     } else {
                         // Error State
                         confirmBtn.innerText = "ERROR - RETRY";
