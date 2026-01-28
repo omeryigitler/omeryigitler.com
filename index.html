@@ -697,11 +697,26 @@
 
                             // --- TASK A: SAVE TO FIRESTORE ---
                             try {
+                                // Prepare Message Content (Shared for DB and Email)
                                 const configData = window.projectConfigData || {};
+                                let fullMessage = messageVal;
+
+                                if (window.projectConfigData) {
+                                    fullMessage += "\n\n--- TECHNICAL CONFIGURATION ---\n";
+                                    fullMessage += `• Project Type: ${configData.siteType || 'N/A'}\n`;
+                                    fullMessage += `• Design Style: ${configData.designType || 'N/A'}\n`;
+                                    fullMessage += `• Page Count: ${configData.pageCount || 'N/A'}\n`;
+                                    if (configData.selectedAddons && configData.selectedAddons.length > 0) {
+                                        fullMessage += `• Addons: ${configData.selectedAddons.join(', ')}\n`;
+                                    }
+                                    fullMessage += `• Delivery: ${configData.deliverySpeed || 'Standard'}\n`;
+                                    fullMessage += `• Maintenance: ${configData.maintenanceLevel || 'None'}`;
+                                }
+
                                 await db.collection('messages').add({
                                     name: nameVal,
                                     email: emailVal,
-                                    message: messageVal,
+                                    message: fullMessage, // Saved with details
                                     projectType: configData.siteType || 'LANDING', // Backwards compat
                                     siteType: configData.siteType || 'LANDING',
                                     designType: configData.designType || 'TEMPLATE',
