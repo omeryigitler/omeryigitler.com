@@ -657,178 +657,138 @@
                         }, 500);
                         setTimeout(() => clearInterval(intv), 10000); // Fail-safe
 
-                        // 2. FORM SUBMISSION HANDLER WITH RATE LIMITING
+                        // 2. SHARED SUBMISSION LOGIC
+                        window.processFormSubmission = async (isModal = false) => {
+                            const submitBtn = document.getElementById('submit-btn');
+
+                            // SECURITY: Rate Limiting Check (3 submissions per hour)
+                            const RATE_LIMIT = 3;
+                            const TIME_WINDOW = 60 * 60 * 1000; // 1 hour
+                            const now = Date.now();
+
+                            let submissions = JSON.parse(localStorage.getItem('formSubmissions') || '[]');
+                            submissions = submissions.filter(timestamp => now - timestamp < TIME_WINDOW);
+
+                            if (submissions.length >= RATE_LIMIT) {
+                                const oldestSubmission = Math.min(...submissions);
+                                const waitTime = Math.ceil((TIME_WINDOW - (now - oldestSubmission)) / 1000 / 60);
+                                await systemAlert('SECURITY LIMIT', `Security Limit Reached: Please try again in ${waitTime} minute(s).`, 'shield-alert');
+                                return { success: false, error: 'Rate limit' };
+                            }
+
+                            // Collect Data
+                            const nameVal = document.getElementById('name').value;
+                            const emailVal = document.getElementById('email').value;
+                            const messageVal = document.getElementById('message').value;
+
+                            // 🍯 SECURITY: Honeypot
+                            const honeypotVal = document.getElementById('honeypot-trap').value;
+                            if (honeypotVal !== '') {
+                                console.log('🚫 Bot submission blocked');
+                                // Fake success
+                                setTimeout(async () => {
+                                    await systemAlert('SYSTEM ERROR', 'Error processing request.', 'alert-circle');
+                                    location.reload();
+                                }, 500);
+                                return { success: false, error: 'Bot detected' };
+                            }
+
+                            let submissionSuccess = false;
+
+                            // --- TASK A: SAVE TO FIRESTORE ---
+                            try {
+                                const configData = window.projectConfigData || {};
+                                await db.collection('messages').add({
+                                    name: nameVal,
+                                    email: emailVal,
+                                    message: messageVal,
+                                    projectType: configData.siteType || 'LANDING', // Backwards compat
+                                    siteType: configData.siteType || 'LANDING',
+                                    designType: configData.designType || 'TEMPLATE',
+                                    pageCount: configData.pageCount || '10',
+                                    hasSeo: configData.hasSeo || false,
+                                    isMultiLang: configData.isMultiLang || false,
+                                    hasGraphics: configData.hasGraphics || false,
+                                    hasUx: configData.hasUx || false,
+                                    hasCrm: configData.hasCrm || false,
+                                    selectedAddons: configData.selectedAddons || [],
+                                    deliverySpeed: configData.deliverySpeed || 'STANDARD',
+                                    maintenanceLevel: configData.maintenanceLevel || 'NONE',
+                                    country: configData.country || 'MT',
+                                    status: 'new',
+                                    timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                                    source: isModal ? 'modal_config_form' : 'website_contact_form'
+                                });
+                                console.log("Database: Entry Created");
+                                submissionSuccess = true;
+                            } catch (dbError) {
+                                console.error("Database Error:", dbError);
+                                await systemAlert('DATABASE ERROR', 'DB Failed: ' + dbError.message, 'alert-triangle');
+                            }
+
+                            // --- TASK B: EMAIL NOTIFICATION ---
+                            try {
+                                if (typeof emailjs !== 'undefined') {
+                                    const templateParams = {
+                                        from_name: nameVal,
+                                        reply_to: emailVal,
+                                        message: messageVal + "\n\n--- TECHNICAL CONFIGURATION ---\n" +
+                                            (window.projectConfigData ?
+                                                `• Project Type: ${window.projectConfigData.siteType}\n` +
+                                                `• Design Style: ${window.projectConfigData.designType}\n` +
+                                                `• Page Count: ${window.projectConfigData.pageCount}\n` +
+                                                `• Delivery: ${window.projectConfigData.deliverySpeed}\n` +
+                                                `• Maintenance: ${window.projectConfigData.maintenanceLevel}\n`
+                                                : "Standard Form Submission (No Config)"),
+                                        message_html: window.projectConfigHtml || '',
+                                        project_type: window.projectConfigData?.siteType || 'Standard',
+                                        to_email: emailVal,
+                                        from_email: emailVal,
+                                        email: emailVal,
+                                        is_auto_receipt: true
+                                    };
+
+                                    await emailjs.send('service_z24kvj8', 'template_frpxeef', templateParams);
+                                    console.log("Email: Sent Successfully");
+                                    submissionSuccess = true;
+                                }
+                            } catch (mailError) {
+                                console.error("Notification Error:", mailError);
+                                await systemAlert('EMAIL ERROR', 'Email Failed: ' + (mailError.text || mailError.message), 'alert-triangle');
+                            }
+
+                            if (submissionSuccess) {
+                                submissions.push(now);
+                                localStorage.setItem('formSubmissions', JSON.stringify(submissions));
+                                return { success: true };
+                            } else {
+                                return { success: false, error: 'All methods failed' };
+                            }
+                        };
+
+                        // 3. MAIN FORM EVENT LISTENER (Standard Submit)
                         if (contactForm) {
                             contactForm.addEventListener('submit', async (e) => {
                                 e.preventDefault();
                                 e.stopPropagation();
 
                                 const submitBtn = document.getElementById('submit-btn');
-                                const originalText = submitBtn.innerText;
-
-                                // SECURITY: Rate Limiting Check (3 submissions per hour)
-                                const RATE_LIMIT = 3;
-                                const TIME_WINDOW = 60 * 60 * 1000; // 1 hour in milliseconds
-                                const now = Date.now();
-
-                                // Get submission history from localStorage
-                                let submissions = JSON.parse(localStorage.getItem('formSubmissions') || '[]');
-
-                                // Remove submissions older than 1 hour
-                                submissions = submissions.filter(timestamp => now - timestamp < TIME_WINDOW);
-
-                                // Check if rate limit exceeded
-                                if (submissions.length >= RATE_LIMIT) {
-                                    const oldestSubmission = Math.min(...submissions);
-                                    const waitTime = Math.ceil((TIME_WINDOW - (now - oldestSubmission)) / 1000 / 60); // minutes
-
-                                    await systemAlert('SECURITY LIMIT', `Security Limit Reached: You can only submit ${RATE_LIMIT} messages per hour. Please try again in ${waitTime} minute(s).`, 'shield-alert');
-                                    return;
-                                }
-
-                                // UI Loading State
                                 submitBtn.innerText = 'PROCESSING...';
                                 submitBtn.disabled = true;
                                 submitBtn.style.opacity = '0.7';
 
-                                // Collect Data
-                                const nameVal = document.getElementById('name').value;
-                                const emailVal = document.getElementById('email').value;
-                                const messageVal = document.getElementById('message').value;
+                                const result = await window.processFormSubmission(false);
 
-                                // 🍯 SECURITY: Honeypot Bot Detection
-                                const honeypotVal = document.getElementById('honeypot-trap').value;
-                                if (honeypotVal !== '') {
-                                    // Bot detected! Silently reject submission
-                                    console.log('🚫 Bot submission blocked via honeypot');
-                                    submitBtn.innerText = 'ERROR - PLEASE TRY AGAIN';
-                                    submitBtn.disabled = false;
-                                    submitBtn.style.opacity = '1';
-
-                                    // Show generic error to not alert the bot
-                                    setTimeout(async () => {
-                                        await systemAlert('SYSTEM ERROR', 'There was an error processing your request. Please refresh and try again.', 'alert-circle');
-                                        location.reload();
-                                    }, 500);
-                                    return;
-                                }
-
-                                let submissionSuccess = false;
-
-                                // --- TASK A: SAVE TO FIRESTORE ---
-                                try {
-                                    // Merge basic form data with advanced config data
-                                    const configData = window.projectConfigData || {};
-
-                                    await db.collection('messages').add({
-                                        name: nameVal,
-                                        email: emailVal,
-                                        message: messageVal,
-                                        // New detailed fields
-                                        // Expanded Config Fields
-                                        // 'projectType' kept for backend compatibility
-                                        projectType: configData.siteType || 'LANDING',
-                                        siteType: configData.siteType || 'LANDING',
-                                        designType: configData.designType || 'TEMPLATE',
-                                        pageCount: configData.pageCount || '10',
-
-                                        // Features
-                                        hasSeo: configData.hasSeo || false,
-                                        isMultiLang: configData.isMultiLang || false,
-                                        hasGraphics: configData.hasGraphics || false,
-                                        hasUx: configData.hasUx || false,
-                                        hasCrm: configData.hasCrm || false,
-
-                                        // Addons & Settings
-                                        selectedAddons: configData.selectedAddons || [],
-                                        deliverySpeed: configData.deliverySpeed || 'STANDARD',
-                                        maintenanceLevel: configData.maintenanceLevel || 'NONE',
-
-                                        // Defaults
-                                        country: configData.country || 'MT',
-
-                                        status: 'new',
-                                        timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-                                        source: 'website_advanced_form'
-                                    });
-                                    console.log("Database: Entry Created with Advanced Config");
-                                    submissionSuccess = true;
-                                } catch (dbError) {
-                                    console.error("Database Error:", dbError);
-                                    // DEBUG: Show DB error to user
-                                    await systemAlert('DATABASE ERROR', 'DB Failed: ' + dbError.message, 'alert-triangle');
-                                }
-
-
-                                // --- TASK B: EMAIL NOTIFICATION (EmailJS) ---
-                                try {
-                                    if (typeof emailjs !== 'undefined') {
-                                        const templateParams = {
-                                            from_name: nameVal,
-                                            reply_to: emailVal,
-                                            // Formatted Technical Details (Human Readable - ONLY SELECTED)
-                                            message: messageVal + "\n\n--- TECHNICAL CONFIGURATION ---\n" +
-                                                (window.projectConfigData ?
-                                                    // 1. Core Info (Always Show)
-                                                    `• Project Type: ${window.projectConfigData.siteType}\n` +
-                                                    `• Design Style: ${window.projectConfigData.designType}\n` +
-                                                    `• Page Count: ${window.projectConfigData.pageCount}\n` +
-                                                    `• Delivery: ${window.projectConfigData.deliverySpeed}\n` +
-                                                    `• Maintenance: ${window.projectConfigData.maintenanceLevel}\n` +
-
-                                                    // 2. Features (Show ONLY if True)
-                                                    (window.projectConfigData.hasSeo ? `• Feature: SEO Optimization\n` : '') +
-                                                    (window.projectConfigData.isMultiLang ? `• Feature: Multi-Language Support\n` : '') +
-                                                    (window.projectConfigData.hasGraphics ? `• Feature: Custom Graphics\n` : '') +
-                                                    (window.projectConfigData.hasUx ? `• Feature: UX Research\n` : '') +
-                                                    (window.projectConfigData.hasCrm ? `• Feature: CRM Integration\n` : '') +
-
-                                                    // 3. Add-ons (Show ONLY if Selected)
-                                                    (window.projectConfigData.selectedAddons && window.projectConfigData.selectedAddons.length > 0 ?
-                                                        '\n[ ADD-ONS ]\n' + window.projectConfigData.selectedAddons.map(a => `• ${a.replace('_', ' ').toUpperCase()}`).join('\n') :
-                                                        '')
-                                                    : "No configuration data available."),
-
-                                            // Include the rich HTML receipt if available
-                                            message_html: window.projectConfigHtml || '',
-                                            project_type: window.projectConfigData?.siteType || 'Standard',
-                                            // Common fields for "To" address mapping
-                                            to_email: emailVal,
-                                            from_email: emailVal,
-                                            email: emailVal,
-                                            is_auto_receipt: true
-                                        };
-
-                                        await emailjs.send('service_z24kvj8', 'template_frpxeef', templateParams);
-                                        console.log("Email: Sent Successfully");
-                                        console.log("Notification: Dispatched");
-                                        submissionSuccess = true; // Mark success if email sent even if DB failed
-                                    } else {
-                                        console.warn("Notification: EmailJS SDK not found");
-                                    }
-                                } catch (mailError) {
-                                    console.error("Notification Error:", mailError);
-                                    // DEBUG: Show Email error to user
-                                    await systemAlert('EMAIL ERROR', 'Email Failed: ' + (mailError.text || mailError.message), 'alert-triangle');
-                                }
-
-                                // --- TASK C: REDIRECT OR FALLBACK ---
-                                if (submissionSuccess) {
-                                    // SECURITY: Record successful submission for rate limiting
-                                    submissions.push(now);
-                                    localStorage.setItem('formSubmissions', JSON.stringify(submissions));
-
+                                if (result.success) {
                                     if (window.taurus_set_internal) window.taurus_set_internal();
                                     window.location.href = 'success.html';
                                 } else {
-                                    // Extreme Fallback: Native reload if everything failed
-                                    console.error("System Crash: All submission methods failed.");
                                     submitBtn.innerText = "ERROR - RETRY";
                                     submitBtn.disabled = false;
                                     submitBtn.style.opacity = '1';
-                                    await systemAlert('SUBMISSION ERROR', "Submission error. Please try again or contact directly via email.", 'mail-warning');
-                                    // Wait, it had a double alert/reload logic. Let me simplify.
-                                    location.reload();
+                                    if (result.error !== 'Rate limit' && result.error !== 'Bot detected') {
+                                        await systemAlert('SUBMISSION ERROR', "Submission failed. Please contact directly.", 'mail-warning');
+                                    }
                                 }
                             });
                         }
@@ -1770,7 +1730,7 @@
             cancelBtn.addEventListener('click', closeModal);
 
             // --- Confirm & Submit ---
-            confirmBtn.addEventListener('click', () => {
+            confirmBtn.addEventListener('click', async () => {
                 // 1. Gather Selected Addons
                 const addons = [];
                 if (document.getElementById('addon_logo').checked) addons.push('logo_design');
@@ -1805,13 +1765,42 @@
                 };
 
                 // 3. Store Generated HTML for EmailJS
-                // We attach it to the window or button to be accessed by the form submit handler
                 const nameVal = document.getElementById('name').value;
                 window.projectConfigHtml = generateReceiptHtml(window.projectConfigData, nameVal);
 
-                // 4. Trigger real submit
-                document.getElementById('submit-btn').click();
-                closeModal();
+                // 4. CHANGE UI STATE: Processing
+                const originalText = confirmBtn.innerText;
+                confirmBtn.innerText = "PROCESSING...";
+                confirmBtn.disabled = true;
+                confirmBtn.style.opacity = "0.7";
+
+                // 5. TRIGGER ASYNC SUBMISSION
+                // We use processFormSubmission(true) to indicate it's from the modal
+                if (window.processFormSubmission) {
+                    const result = await window.processFormSubmission(true);
+
+                    if (result.success) {
+                        confirmBtn.innerText = "MESSAGE RECEIVED";
+                        confirmBtn.style.backgroundColor = "#4ade80"; // Green
+                        confirmBtn.style.color = "black";
+
+                        // Wait 1.5s then redirect
+                        setTimeout(() => {
+                            if (window.taurus_set_internal) window.taurus_set_internal();
+                            window.location.href = 'success.html';
+                        }, 1500);
+                    } else {
+                        // Error State
+                        confirmBtn.innerText = "ERROR - RETRY";
+                        confirmBtn.disabled = false;
+                        confirmBtn.style.opacity = "1";
+                        // Alert is already handled inside processFormSubmission
+                    }
+                } else {
+                    // Fallback if function not found (should not happen)
+                    console.error("Critical: processFormSubmission not found");
+                    document.getElementById('submit-btn').click();
+                }
             });
         });
     </script>
