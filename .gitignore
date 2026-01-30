@@ -55,3 +55,6 @@ temp/
 __pycache__/
 *.py[cod]
 *.pyc
+
+# Allow pricing-tool dist
+!pricing-tool/dist/
