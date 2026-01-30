@@ -56,7 +56,7 @@ export interface PricingRules {
   basePrices: Record<SiteType, number>; // Base prices are always FIXED
   pageRate: number; // Page rate is always FIXED
   maintenanceRates: Record<MaintenanceLevel, PricingFactor>; // Now supports % or Fixed
-  
+
   // Flexible Factors (Can be % or Fixed Amount)
   factors: {
     seo: PricingFactor;
@@ -93,6 +93,7 @@ export interface QuoteRequest {
   deliverySpeed: DeliverySpeed;
   maintenanceLevel: MaintenanceLevel;
   customerName: string;
+  customerEmail?: string; // Added field
   selectedAddons: string[];
   discountType: DiscountType;
   discountValue: number;

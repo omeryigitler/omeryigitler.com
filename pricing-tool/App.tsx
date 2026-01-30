@@ -54,8 +54,7 @@ const App: React.FC = () => {
         setQuoteRequest(prev => ({
           ...prev,
           customerName: clientName || prev.customerName,
-          // We don't have an email field in the state shown, but if we did:
-          // email: clientEmail || prev.email, 
+          customerEmail: clientEmail || prev.customerEmail,
 
           // Map Technical Specs
           siteType: (siteType as SiteType) || prev.siteType,
@@ -107,6 +106,7 @@ const App: React.FC = () => {
     deliverySpeed: DeliverySpeed.STANDARD,
     maintenanceLevel: MaintenanceLevel.NONE,
     customerName: '',
+    customerEmail: '',
     selectedAddons: [],
     discountType: DiscountType.FIXED, // Default
     discountValue: 0,
