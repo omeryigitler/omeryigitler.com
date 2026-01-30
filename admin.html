@@ -937,11 +937,43 @@
         });
 
         // POST MESSAGE LISTENER - Pricing Tool Integration
+        // POST MESSAGE LISTENER - Pricing Tool Integration
         window.addEventListener('message', async (event) => {
-            if (!event.data || event.data.type !== 'SAVE_QUOTE') return;
-            console.log('📨 Save Quote Request');
-            const id = await saveQuoteToFirestore(event.data.data, event.data.messageId);
-            if (id) event.source.postMessage({ type: 'QUOTE_SAVED', success: true, quoteId: id }, '*');
+            if (!event.data) return;
+
+            // Handle Full Quote Save (New Flow)
+            if (event.data.type === 'SAVE_QUOTE_FULL') {
+                console.log('📨 Full Save Quote Request', event.data.payload);
+                const payload = event.data.payload;
+                const request = payload.request;
+                const breakdown = payload.breakdown;
+
+                const quoteData = {
+                    clientName: request.customerName,
+                    clientEmail: request.customerEmail || '',
+                    country: request.country,
+                    siteType: request.siteType,
+                    pageCount: request.pageCount,
+                    totalPrice: breakdown.finalTotal,
+                    breakdown: breakdown,
+                    currency: request.country === 'MT' ? 'EUR' : 'TRY',
+                    notes: 'Design: ' + request.designType + ', Speed: ' + request.deliverySpeed + ', Maint: ' + request.maintenanceLevel
+                };
+
+                const id = await saveQuoteToFirestore(quoteData, null);
+
+                if (id) {
+                    event.source.postMessage({ type: 'QUOTE_SAVED', success: true, quoteId: id }, '*');
+                }
+                return;
+            }
+
+            // Legacy Handler
+            if (event.data.type === 'SAVE_QUOTE') {
+                console.log('📨 Save Quote Request (Legacy)');
+                const id = await saveQuoteToFirestore(event.data.data, event.data.messageId);
+                if (id) event.source.postMessage({ type: 'QUOTE_SAVED', success: true, quoteId: id }, '*');
+            }
         });
 
         // --- UI LOGIC ---
