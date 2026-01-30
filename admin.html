@@ -960,10 +960,17 @@
                     notes: 'Design: ' + request.designType + ', Speed: ' + request.deliverySpeed + ', Maint: ' + request.maintenanceLevel
                 };
 
+
                 const id = await saveQuoteToFirestore(quoteData, null);
 
                 if (id) {
+                    console.log('✅ Quote successfully saved with ID:', id);
                     event.source.postMessage({ type: 'QUOTE_SAVED', success: true, quoteId: id }, '*');
+
+                    // Refresh local view if needed
+                    if (currentMessageFilter) filterMessages(currentMessageFilter);
+                } else {
+                    console.error('❌ Failed to save quote. saveQuoteToFirestore returned null.');
                 }
                 return;
             }
@@ -1171,10 +1178,17 @@
             if (!db) return null;
 
             try {
-                // Normalize email
-                const normalizedEmail = email.toLowerCase().trim();
+                // Normalize email or generate placeholder
+                let normalizedEmail = email ? email.toLowerCase().trim() : '';
 
-                // Create deterministic document ID from email (prevents duplicates)
+                if (!normalizedEmail) {
+                    // Generate a placeholder email based on name + timestamp
+                    const nameSlug = (name || 'anonymous').toLowerCase().replace(/[^a-z0-9]/g, '');
+                    normalizedEmail = `no-email-${nameSlug}-${Date.now()}@system.local`;
+                    console.warn('⚠️ No email provided. Generated placeholder:', normalizedEmail);
+                }
+
+                // Create deterministic document ID from email
                 // Use base64 encoding for valid Firestore document ID
                 const clientDocId = btoa(normalizedEmail).replace(/[^a-zA-Z0-9]/g, '_');
 
