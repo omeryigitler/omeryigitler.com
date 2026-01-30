@@ -2617,7 +2617,14 @@
                         data: {
                             clientName: message.name || '',
                             clientEmail: message.email || '',
-                            messageId: messageId
+                            messageId: messageId,
+                            // Pass Technical Configuration
+                            siteType: message.projectType || message.siteType || '', // Handle legacy/compat
+                            designType: message.designType || '',
+                            pageCount: message.pageCount || '', // Ensure string or number consistency as needed by tool
+                            deliverySpeed: message.deliverySpeed || '',
+                            maintenanceLevel: message.maintenanceLevel || '',
+                            selectedAddons: message.selectedAddons || []
                         }
                     }, '*');
                     console.log('📋 Opened pricing tool with client data:', message.name);
@@ -2734,10 +2741,50 @@
                 document.getElementById('p-requests').value = d.requests || '';
                 document.getElementById('p-modal-title').innerText = "Mission Update";
                 document.getElementById('p-delete-btn').classList.remove('hidden');
+
+                // NEW: Populate Tech Specs
+                const specsDiv = document.getElementById('p-tech-specs');
+                specsDiv.classList.add('hidden'); // Hide by default
+
+                // Try to find specs in description if not in dedicated fields (backward compat)
+                // or use dedicated fields if we saved them (future proof)
+
+                // We'll try to extract from description if it contains the separator
+                const desc = d.description || '';
+                if (desc.includes('--- TECHNICAL CONFIGURATION ---') || d.siteType) {
+                    specsDiv.classList.remove('hidden');
+
+                    // Prefer direct fields, fall back to parsing
+                    document.getElementById('spec-site-type').innerText = d.siteType || extractVal(desc, 'Project Type');
+                    document.getElementById('spec-design-type').innerText = d.designType || extractVal(desc, 'Design Style');
+                    document.getElementById('spec-page-count').innerText = d.pageCount || extractVal(desc, 'Page Count');
+                    document.getElementById('spec-delivery').innerText = d.deliverySpeed || extractVal(desc, 'Delivery');
+
+                    // Addons
+                    const addonsContainer = document.getElementById('spec-addons');
+                    const addonsList = d.selectedAddons || extractVal(desc, 'Addons').split(',').filter(x => x.trim().length > 0);
+
+                    if (addonsList.length > 0 && addonsList[0] !== 'N/A') {
+                        addonsContainer.innerHTML = addonsList.map(addon =>
+                            `<span class="px-2 py-0.5 rounded bg-taurusGold/10 text-taurusGold text-[10px] font-bold border border-taurusGold/20">${addon.trim()}</span>`
+                        ).join('');
+                    } else {
+                        addonsContainer.innerHTML = '<span class="text-xs text-gray-500 italic">No add-ons selected</span>';
+                    }
+                }
+
             } else {
                 document.getElementById('p-modal-title').innerText = "New Deployment";
                 document.getElementById('p-delete-btn').classList.add('hidden');
+                document.getElementById('p-tech-specs').classList.add('hidden');
             }
+        }
+
+        // Helper to extract value from formatted text
+        function extractVal(text, key) {
+            const regex = new RegExp(`• ${key}: (.*)`);
+            const match = text.match(regex);
+            return match ? match[1].trim() : 'N/A';
         }
 
         // Helper function to open project modal with pre-filled data
@@ -2913,6 +2960,43 @@
                                 <option value="active">Operational: Active</option>
                                 <option value="completed">Operational: Archived</option>
                             </select>
+                        </div>
+                    </div>
+
+                    <!-- Section 2: Technical Configuration (NEW) -->
+                    <div id="p-tech-specs" class="hidden">
+                        <h4
+                            class="text-taurusGold text-[10px] font-black uppercase tracking-[0.2em] border-b border-white/5 pb-2 mb-4">
+                            Technical Configuration
+                        </h4>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            <!-- Site Type -->
+                            <div class="bg-white/5 p-3 rounded-xl border border-white/10">
+                                <span class="text-[9px] text-gray-500 uppercase font-bold block mb-1">Type</span>
+                                <span id="spec-site-type" class="text-xs text-white font-bold block">Corporate</span>
+                            </div>
+                            <!-- Design -->
+                            <div class="bg-white/5 p-3 rounded-xl border border-white/10">
+                                <span class="text-[9px] text-gray-500 uppercase font-bold block mb-1">Design</span>
+                                <span id="spec-design-type" class="text-xs text-white font-bold block">Standard</span>
+                            </div>
+                            <!-- Pages -->
+                            <div class="bg-white/5 p-3 rounded-xl border border-white/10">
+                                <span class="text-[9px] text-gray-500 uppercase font-bold block mb-1">Pages</span>
+                                <span id="spec-page-count" class="text-xs text-white font-bold block">10</span>
+                            </div>
+                            <!-- Delivery -->
+                            <div class="bg-white/5 p-3 rounded-xl border border-white/10">
+                                <span class="text-[9px] text-gray-500 uppercase font-bold block mb-1">Delivery</span>
+                                <span id="spec-delivery" class="text-xs text-taurusGold font-bold block">Standard</span>
+                            </div>
+                            <!-- Addons (Full Width) -->
+                            <div class="col-span-2 md:col-span-4 bg-white/5 p-3 rounded-xl border border-white/10">
+                                <span class="text-[9px] text-gray-500 uppercase font-bold block mb-1">Add-ons</span>
+                                <div id="spec-addons" class="flex flex-wrap gap-2 mt-1">
+                                    <span class="text-xs text-gray-500 italic">No add-ons selected</span>
+                                </div>
+                            </div>
                         </div>
                     </div>
 

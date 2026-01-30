@@ -33,6 +33,48 @@ const App: React.FC = () => {
     }
   }, []);
 
+  // -- NEW: Admin Panel Integration (Iframe Mode) --
+  useEffect(() => {
+    const handleMessage = (event: MessageEvent) => {
+      // Validate origin if needed, or check message structure
+      if (!event.data || !event.data.type) return;
+
+      if (event.data.type === 'PRE_FILL_CLIENT') {
+        const {
+          clientName,
+          clientEmail,
+          siteType,
+          designType,
+          pageCount,
+          deliverySpeed,
+          maintenanceLevel,
+          selectedAddons
+        } = event.data.data;
+
+        setQuoteRequest(prev => ({
+          ...prev,
+          customerName: clientName || prev.customerName,
+          // We don't have an email field in the state shown, but if we did:
+          // email: clientEmail || prev.email, 
+
+          // Map Technical Specs
+          siteType: (siteType as SiteType) || prev.siteType,
+          designType: (designType as DesignType) || prev.designType,
+          pageCount: pageCount ? Number(pageCount) : prev.pageCount,
+          deliverySpeed: (deliverySpeed as DeliverySpeed) || prev.deliverySpeed,
+          maintenanceLevel: (maintenanceLevel as MaintenanceLevel) || prev.maintenanceLevel,
+          selectedAddons: Array.isArray(selectedAddons) ? selectedAddons : prev.selectedAddons
+        }));
+
+        // Auto-switch to calculator if we have data
+        setCurrentView('calculator');
+      }
+    };
+
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, []);
+
   // Handlers for Admin Updates
   const updateConfig = (newConfig: Record<Country, PricingRules>) => {
     setPricingConfig(newConfig);
