@@ -23,11 +23,11 @@ const ContractView: React.FC<Props> = ({ config, request, onBack, language, brea
   // STRICT TDK FORMATTING HELPER
   const fmt = (val: number) => {
     if (request.country === Country.TR) {
-       // TR: 10.000 ₺
-       return `${Math.round(val).toLocaleString('tr-TR', { maximumFractionDigits: 0 })} ${rules.currencySymbol}`;
+      // TR: 10.000 ₺
+      return `${Math.round(val).toLocaleString('tr-TR', { maximumFractionDigits: 0 })} ${rules.currencySymbol}`;
     } else {
-       // MT: €1,000
-       return `${rules.currencySymbol}${Math.round(val).toLocaleString('en-GB', { maximumFractionDigits: 0 })}`;
+      // MT: €1,000
+      return `${rules.currencySymbol}${Math.round(val).toLocaleString('en-GB', { maximumFractionDigits: 0 })}`;
     }
   };
 
@@ -38,25 +38,25 @@ const ContractView: React.FC<Props> = ({ config, request, onBack, language, brea
 
   // Calculate percentage or fixed amount string for contract clause
   const getDiscountPhrase = () => {
-     // PERCENTAGE
-     if (request.discountType === DiscountType.PERCENTAGE) {
-        let percentVal = request.discountValue;
-        if (language === Language.TR) {
-           return `%${percentVal.toLocaleString('tr-TR', { maximumFractionDigits: 1 })} oranında`;
-        } else {
-           return `${percentVal.toLocaleString('en-GB', { maximumFractionDigits: 1 })}%`;
-        }
-     } 
-     // FIXED
-     else {
-         // Show the formatted fixed amount
-         const amount = fmt(request.discountValue);
-         if (language === Language.TR) {
-             return `${amount} tutarında`;
-         } else {
-             return `${amount}`;
-         }
-     }
+    // PERCENTAGE
+    if (request.discountType === DiscountType.PERCENTAGE) {
+      let percentVal = request.discountValue;
+      if (language === Language.TR) {
+        return `%${percentVal.toLocaleString('tr-TR', { maximumFractionDigits: 1 })} oranında`;
+      } else {
+        return `${percentVal.toLocaleString('en-GB', { maximumFractionDigits: 1 })}%`;
+      }
+    }
+    // FIXED
+    else {
+      // Show the formatted fixed amount
+      const amount = fmt(request.discountValue);
+      if (language === Language.TR) {
+        return `${amount} tutarında`;
+      } else {
+        return `${amount}`;
+      }
+    }
   };
 
   // Resolve localized labels for enums
@@ -68,7 +68,7 @@ const ContractView: React.FC<Props> = ({ config, request, onBack, language, brea
       <section>
         <h3 className="font-bold text-lg mb-2 font-poppins text-black">1. {t.parties}</h3>
         <p>
-          <strong>Hizmet Veren (Ajans):</strong> Ömer Yiğitler (Bundan sonra "Ajans" olarak anılacaktır).<br/>
+          <strong>Hizmet Veren (Ajans):</strong> Ömer Yiğitler (Bundan sonra "Ajans" olarak anılacaktır).<br />
           <strong>Hizmet Alan (Müşteri):</strong> {request.customerName || "................................................"} (Bundan sonra "Müşteri" olarak anılacaktır).
         </p>
       </section>
@@ -83,7 +83,7 @@ const ContractView: React.FC<Props> = ({ config, request, onBack, language, brea
       <section>
         <h3 className="font-bold text-lg mb-2 font-poppins text-black">3. {t.delivery}</h3>
         <p>
-          Proje teslim süresi, tüm materyallerin (logo, metin, görsel vb.) Müşteri tarafından Ajans'a teslim edilmesinden itibaren başlar. 
+          Proje teslim süresi, tüm materyallerin (logo, metin, görsel vb.) Müşteri tarafından Ajans'a teslim edilmesinden itibaren başlar.
           Öngörülen süre: <strong>{deliveryLabel}</strong> planına uygundur. Mücbir sebepler (doğal afet, yasal engeller vb.) saklıdır.
         </p>
       </section>
@@ -92,22 +92,22 @@ const ContractView: React.FC<Props> = ({ config, request, onBack, language, brea
         <h3 className="font-bold text-lg mb-2 font-poppins text-black">4. {t.price}</h3>
         <p>
           Toplam hizmet bedeli teklif formunda belirtilen tutardır. Ödemeler aksi kararlaştırılmadıkça:
-          <br/>- %50 İş başlangıcında avans.
-          <br/>- %50 Proje onaylanıp yayına alınmadan önce.
-          <br/>Ödemeler {rules.currency} cinsinden fatura karşılığı yapılacaktır. Ödeme gecikmelerinde T.C. Merkez Bankası ticari temerrüt faizi uygulanır.
+          <br />- %50 İş başlangıcında avans.
+          <br />- %50 Proje onaylanıp yayına alınmadan önce.
+          <br />Ödemeler {rules.currency} cinsinden fatura karşılığı yapılacaktır. Ödeme gecikmelerinde T.C. Merkez Bankası ticari temerrüt faizi uygulanır.
         </p>
 
         {/* SPECIAL DISCOUNT CLAUSE - TR */}
         {request.discountValue > 0 && breakdown && (
           <div className="mt-4 p-4 bg-zinc-100 border-l-4 border-black rounded-r-lg">
-             <h4 className="font-bold text-black mb-1">{t.discountClauseTitle}</h4>
-             <p className="text-zinc-700 italic">
-               {t.discountClauseText
-                 .replace('{ORIGINAL}', fmt(breakdown.totalOneTime))
-                 .replace('{NET}', fmt(breakdown.finalTotal))
-                 .replace('{DISCOUNT_PHRASE}', getDiscountPhrase())
-               }
-             </p>
+            <h4 className="font-bold text-black mb-1">{t.discountClauseTitle}</h4>
+            <p className="text-zinc-700 italic">
+              {t.discountClauseText
+                .replace('{ORIGINAL}', fmt(breakdown.totalOneTime))
+                .replace('{NET}', fmt(breakdown.finalTotal))
+                .replace('{DISCOUNT_PHRASE}', getDiscountPhrase())
+              }
+            </p>
           </div>
         )}
       </section>
@@ -158,10 +158,10 @@ const ContractView: React.FC<Props> = ({ config, request, onBack, language, brea
 
   const renderEnglishContract = () => (
     <div className="space-y-6">
-       <section>
+      <section>
         <h3 className="font-bold text-lg mb-2 font-poppins text-black">1. {t.parties}</h3>
         <p>
-          <strong>Service Provider:</strong> Ömer Yiğitler (hereinafter referred to as the "Agency").<br/>
+          <strong>Service Provider:</strong> Ömer Yiğitler (hereinafter referred to as the "Agency").<br />
           <strong>Client:</strong> {request.customerName || "................................................"} (hereinafter referred to as the "Client").
         </p>
       </section>
@@ -185,22 +185,22 @@ const ContractView: React.FC<Props> = ({ config, request, onBack, language, brea
         <h3 className="font-bold text-lg mb-2 font-poppins text-black">4. {t.price}</h3>
         <p>
           The total service fee is the amount specified in the proposal. Unless agreed otherwise:
-          <br/>- 50% Upfront deposit upon commencement.
-          <br/>- 50% Final payment before the project goes live.
-          <br/>Payments shall be made in {rules.currency}.
+          <br />- 50% Upfront deposit upon commencement.
+          <br />- 50% Final payment before the project goes live.
+          <br />Payments shall be made in {rules.currency}.
         </p>
 
         {/* SPECIAL DISCOUNT CLAUSE - EN */}
         {request.discountValue > 0 && breakdown && (
           <div className="mt-4 p-4 bg-zinc-100 border-l-4 border-black rounded-r-lg">
-             <h4 className="font-bold text-black mb-1">{t.discountClauseTitle}</h4>
-             <p className="text-zinc-700 italic">
-               {t.discountClauseText
-                 .replace('{ORIGINAL}', fmt(breakdown.totalOneTime))
-                 .replace('{NET}', fmt(breakdown.finalTotal))
-                 .replace('{DISCOUNT_PHRASE}', getDiscountPhrase())
-               }
-             </p>
+            <h4 className="font-bold text-black mb-1">{t.discountClauseTitle}</h4>
+            <p className="text-zinc-700 italic">
+              {t.discountClauseText
+                .replace('{ORIGINAL}', fmt(breakdown.totalOneTime))
+                .replace('{NET}', fmt(breakdown.finalTotal))
+                .replace('{DISCOUNT_PHRASE}', getDiscountPhrase())
+              }
+            </p>
           </div>
         )}
       </section>
@@ -248,7 +248,7 @@ const ContractView: React.FC<Props> = ({ config, request, onBack, language, brea
       </section>
     </div>
   );
-  
+
   return (
     <div className="max-w-4xl mx-auto py-8 px-4">
       <div className="mb-6 flex justify-between items-center no-print">
@@ -256,13 +256,38 @@ const ContractView: React.FC<Props> = ({ config, request, onBack, language, brea
           <ArrowLeft className="w-4 h-4 mr-2" />
           {common.back}
         </button>
-        <button 
-          onClick={() => window.print()} 
-          className="flex items-center bg-[#FFD700] text-black px-6 py-3 rounded-xl font-bold hover:bg-[#FFD700] transition-colors shadow-lg shadow-taurusGold/20"
-        >
-          <Printer className="w-4 h-4 mr-2" />
-          {common.print}
-        </button>
+        <div className="flex space-x-3">
+          <button
+            onClick={() => window.print()}
+            className="flex items-center bg-zinc-800 text-white border border-zinc-700 px-6 py-3 rounded-xl font-bold hover:bg-zinc-700 transition-colors"
+          >
+            <Printer className="w-4 h-4 mr-2" />
+            {common.print}
+          </button>
+
+          <button
+            onClick={() => {
+              // Send final payload to Admin Panel
+              if (breakdown) {
+                window.parent.postMessage({
+                  type: 'SAVE_QUOTE_FULL',
+                  payload: {
+                    request: request,
+                    breakdown: breakdown,
+                    total: breakdown.finalTotal,
+                    status: 'contract_generated'
+                  }
+                }, '*');
+
+                // Optional visual feedback
+                alert(language === Language.TR ? 'Proje başarıyla kaydedildi!' : 'Project saved successfully!');
+              }
+            }}
+            className="flex items-center bg-[#FFD700] text-black px-6 py-3 rounded-xl font-bold hover:bg-[#FFD700] transition-colors shadow-lg shadow-taurusGold/20"
+          >
+            {language === Language.TR ? 'Projeyi Kaydet & Bitir' : 'Save & Finalize Project'}
+          </button>
+        </div>
       </div>
 
       <div className="bg-white shadow-xl p-12 text-justify leading-relaxed text-zinc-800 text-sm sm:text-base print:shadow-none print:p-0">
@@ -280,6 +305,11 @@ const ContractView: React.FC<Props> = ({ config, request, onBack, language, brea
             <div className="h-0 border-b border-zinc-900 w-3/4"></div>
           </div>
         </div>
+      </div>
+      <div className="mt-8 text-center text-zinc-500 text-xs no-print">
+        {language === Language.TR
+          ? "* 'Projeyi Kaydet & Bitir' butonuna tıkladığınızda tüm müşteri ve fiyat bilgileri ana yönetim paneline aktarılacaktır."
+          : "* Clicking 'Save & Finalize Project' will transfer all client and pricing data to the main admin panel."}
       </div>
     </div>
   );
