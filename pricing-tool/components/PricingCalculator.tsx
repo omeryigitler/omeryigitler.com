@@ -100,7 +100,8 @@ const CustomSelect: React.FC<CustomSelectProps> = ({ label, value, options, onCh
 const PricingCalculator: React.FC<Props> = ({ config, addons, onRequestUpdate, onBreakdownUpdate, initialRequest, onNavigate, language }) => {
   const [request, setRequest] = useState<QuoteRequest>(initialRequest);
   const [breakdown, setBreakdown] = useState<CostBreakdown | null>(null);
-  const [step, setStep] = useState<number>(1); // 1: Info/Calc, 2: Documents/Finalize
+
+
 
   const t = TRANSLATIONS[language].calc;
   const t_addons = TRANSLATIONS[language].addons as any; // Dynamic access for addons
@@ -253,11 +254,12 @@ const PricingCalculator: React.FC<Props> = ({ config, addons, onRequestUpdate, o
       alert(t.alerts.enterCustomer);
       return;
     }
-    setStep(2);
+    // Navigate to Proposal View via App.tsx routing
+    onNavigate('proposal');
   };
 
   const handleBack = () => {
-    setStep(1);
+    onNavigate('dashboard');
   };
 
   const handleDownloadQuote = () => {
