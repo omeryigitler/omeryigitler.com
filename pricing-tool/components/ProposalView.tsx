@@ -11,15 +11,16 @@ interface Props {
   request: QuoteRequest;
   breakdown: CostBreakdown | null;
   onBack: () => void;
+  onNavigate: (view: string) => void;
   language: Language;
 }
 
-const ProposalView: React.FC<Props> = ({ config, addons, request, breakdown, onBack, language }) => {
+const ProposalView: React.FC<Props> = ({ config, addons, request, breakdown, onBack, onNavigate, language }) => {
   if (!breakdown) return null;
   const rules = config[request.country];
   // Format date based on locale
   const dateStr = new Date().toLocaleDateString(language === Language.TR ? 'tr-TR' : 'en-GB', { year: 'numeric', month: 'long', day: 'numeric' });
-  
+
   const t = TRANSLATIONS[language].proposal;
   const t_calc = TRANSLATIONS[language].calc;
   const common = TRANSLATIONS[language].common;
@@ -29,11 +30,11 @@ const ProposalView: React.FC<Props> = ({ config, addons, request, breakdown, onB
   // STRICT TDK FORMATTING
   const formatCurrency = (val: number) => {
     if (request.country === Country.TR) {
-       // TR: 10.000 ₺
-       return `${Math.round(val).toLocaleString('tr-TR', { maximumFractionDigits: 0 })} ${rules.currencySymbol}`;
+      // TR: 10.000 ₺
+      return `${Math.round(val).toLocaleString('tr-TR', { maximumFractionDigits: 0 })} ${rules.currencySymbol}`;
     } else {
-       // MT: €1,000
-       return `${rules.currencySymbol}${Math.round(val).toLocaleString('en-GB', { maximumFractionDigits: 0 })}`;
+      // MT: €1,000
+      return `${rules.currencySymbol}${Math.round(val).toLocaleString('en-GB', { maximumFractionDigits: 0 })}`;
     }
   };
 
@@ -51,23 +52,23 @@ const ProposalView: React.FC<Props> = ({ config, addons, request, breakdown, onB
     if (request.discountType === DiscountType.FIXED) return '';
 
     if (breakdown.discountAmount <= 0) return '';
-    
+
     // Default to percentage display if type is PERCENTAGE
     let percentVal = request.discountValue;
 
     // Format: %20 for TR, 20% for EN
     if (language === Language.TR) {
-       return `(%${percentVal.toLocaleString('tr-TR', { maximumFractionDigits: 1 })})`;
+      return `(%${percentVal.toLocaleString('tr-TR', { maximumFractionDigits: 1 })})`;
     } else {
-       return `(${percentVal.toLocaleString('en-GB', { maximumFractionDigits: 1 })}%)`;
+      return `(${percentVal.toLocaleString('en-GB', { maximumFractionDigits: 1 })}%)`;
     }
   };
 
   // Timeline Logic
   const getTimelineWeeks = () => {
-     if (request.deliverySpeed === 'URGENT') return 1;
-     if (request.deliverySpeed === 'FAST') return 3;
-     return 6;
+    if (request.deliverySpeed === 'URGENT') return 1;
+    if (request.deliverySpeed === 'FAST') return 3;
+    return 6;
   };
   const weeks = getTimelineWeeks();
   const phases = [
@@ -84,23 +85,35 @@ const ProposalView: React.FC<Props> = ({ config, addons, request, breakdown, onB
           <ArrowLeft className="w-4 h-4 mr-2" />
           {common.back}
         </button>
-        <button 
-          onClick={() => window.print()} 
-          className="flex items-center bg-[#FFD700] text-black px-6 py-3 rounded-xl font-bold hover:bg-[#FFD700] transition-colors shadow-lg shadow-taurusGold/20"
-        >
-          <Printer className="w-4 h-4 mr-2" />
-          {common.print}
-        </button>
+        <div className="flex space-x-2">
+          {/* Print / Download Button */}
+          <button
+            onClick={() => window.print()}
+            className="flex items-center text-white bg-zinc-900 border border-zinc-700 px-6 py-3 rounded-xl font-bold hover:bg-zinc-800 transition-colors"
+          >
+            <Printer className="w-4 h-4 mr-2" />
+            {common.print}
+          </button>
+
+          {/* Next Button */}
+          <button
+            onClick={() => onNavigate('contract')}
+            className="flex items-center bg-[#FFD700] text-black px-6 py-3 rounded-xl font-bold hover:bg-[#FFD700] transition-colors shadow-lg shadow-taurusGold/20"
+          >
+            <span>İlerle: Sözleşme</span>
+            <ArrowLeft className="w-4 h-4 ml-2 rotate-180" />
+          </button>
+        </div>
       </div>
 
       {/* Proposal Paper - Keeping White for Print Logic */}
       <div className="bg-white shadow-2xl rounded-none sm:rounded-md p-16 print:shadow-none print:p-0" id="proposal-content">
-        
+
         {/* Header */}
         <div className="flex justify-between items-start border-b-4 border-black pb-8 mb-12">
           <div>
             {/* Manually uppercased to avoid browser locale issues with 'i' vs 'I' */}
-            <h1 className="text-5xl font-extrabold text-black tracking-tighter font-poppins leading-none">ÖMER<br/>YİĞİTLER</h1>
+            <h1 className="text-5xl font-extrabold text-black tracking-tighter font-poppins leading-none">ÖMER<br />YİĞİTLER</h1>
             <p className="text-black mt-2 font-bold tracking-[0.2em] text-sm uppercase bg-[#FFD700] inline-block px-2 py-1">
               {t.agency}
             </p>
@@ -147,38 +160,38 @@ const ProposalView: React.FC<Props> = ({ config, addons, request, breakdown, onB
             </ul>
           </div>
           <div>
-             <h3 className="text-sm font-bold text-black uppercase tracking-widest mb-6 pb-2 border-b border-zinc-200">{t.extras}</h3>
-             <ul className="space-y-5">
-               <li className="flex items-center text-zinc-700">
-                  <CheckCircle className={`w-6 h-6 mr-4 ${request.isMultiLang ? 'text-[#FFD700]' : 'text-zinc-200'}`} />
-                  <span className={!request.isMultiLang ? 'text-zinc-300' : 'font-bold text-black'}>{t.langDiff}</span>
-               </li>
-               <li className="flex items-center text-zinc-700">
-                  <CheckCircle className={`w-6 h-6 mr-4 ${request.hasSeo ? 'text-[#FFD700]' : 'text-zinc-200'}`} />
-                  <span className={!request.hasSeo ? 'text-zinc-300' : 'font-bold text-black'}>{t.seoSetup}</span>
-               </li>
-               <li className="flex items-center text-zinc-700">
-                  <CheckCircle className={`w-6 h-6 mr-4 ${request.hasGraphics ? 'text-[#FFD700]' : 'text-zinc-200'}`} />
-                  <span className={!request.hasGraphics ? 'text-zinc-300' : 'font-bold text-black'}>{t.graphicsDiff}</span>
-               </li>
-               <li className="flex items-center text-zinc-700">
-                  <CheckCircle className={`w-6 h-6 mr-4 ${request.hasUx ? 'text-[#FFD700]' : 'text-zinc-200'}`} />
-                  <span className={!request.hasUx ? 'text-zinc-300' : 'font-bold text-black'}>{t.uxDiff}</span>
-               </li>
-               <li className="flex items-center text-zinc-700">
-                  <CheckCircle className={`w-6 h-6 mr-4 ${request.hasCrm ? 'text-[#FFD700]' : 'text-zinc-200'}`} />
-                  <span className={!request.hasCrm ? 'text-zinc-300' : 'font-bold text-black'}>{t.crmDiff}</span>
-               </li>
-               <li className="flex items-center text-zinc-700">
-                  <CheckCircle className={`w-6 h-6 mr-4 ${request.maintenanceLevel !== 'NONE' ? 'text-[#FFD700]' : 'text-zinc-200'}`} />
-                  <span className={request.maintenanceLevel === 'NONE' ? 'text-zinc-300' : 'font-bold text-black'}>
-                    {labels.maintenance[request.maintenanceLevel]}
-                  </span>
-               </li>
-             </ul>
+            <h3 className="text-sm font-bold text-black uppercase tracking-widest mb-6 pb-2 border-b border-zinc-200">{t.extras}</h3>
+            <ul className="space-y-5">
+              <li className="flex items-center text-zinc-700">
+                <CheckCircle className={`w-6 h-6 mr-4 ${request.isMultiLang ? 'text-[#FFD700]' : 'text-zinc-200'}`} />
+                <span className={!request.isMultiLang ? 'text-zinc-300' : 'font-bold text-black'}>{t.langDiff}</span>
+              </li>
+              <li className="flex items-center text-zinc-700">
+                <CheckCircle className={`w-6 h-6 mr-4 ${request.hasSeo ? 'text-[#FFD700]' : 'text-zinc-200'}`} />
+                <span className={!request.hasSeo ? 'text-zinc-300' : 'font-bold text-black'}>{t.seoSetup}</span>
+              </li>
+              <li className="flex items-center text-zinc-700">
+                <CheckCircle className={`w-6 h-6 mr-4 ${request.hasGraphics ? 'text-[#FFD700]' : 'text-zinc-200'}`} />
+                <span className={!request.hasGraphics ? 'text-zinc-300' : 'font-bold text-black'}>{t.graphicsDiff}</span>
+              </li>
+              <li className="flex items-center text-zinc-700">
+                <CheckCircle className={`w-6 h-6 mr-4 ${request.hasUx ? 'text-[#FFD700]' : 'text-zinc-200'}`} />
+                <span className={!request.hasUx ? 'text-zinc-300' : 'font-bold text-black'}>{t.uxDiff}</span>
+              </li>
+              <li className="flex items-center text-zinc-700">
+                <CheckCircle className={`w-6 h-6 mr-4 ${request.hasCrm ? 'text-[#FFD700]' : 'text-zinc-200'}`} />
+                <span className={!request.hasCrm ? 'text-zinc-300' : 'font-bold text-black'}>{t.crmDiff}</span>
+              </li>
+              <li className="flex items-center text-zinc-700">
+                <CheckCircle className={`w-6 h-6 mr-4 ${request.maintenanceLevel !== 'NONE' ? 'text-[#FFD700]' : 'text-zinc-200'}`} />
+                <span className={request.maintenanceLevel === 'NONE' ? 'text-zinc-300' : 'font-bold text-black'}>
+                  {labels.maintenance[request.maintenanceLevel]}
+                </span>
+              </li>
+            </ul>
           </div>
         </div>
-        
+
         {/* Timeline Visualization (New Feature) */}
         <div className="mb-16">
           <h3 className="text-sm font-bold text-black uppercase tracking-widest mb-6 flex items-center">
@@ -194,153 +207,153 @@ const ProposalView: React.FC<Props> = ({ config, addons, request, breakdown, onB
               ))}
             </div>
             <div className="flex justify-between mt-3 text-xs font-bold uppercase text-zinc-400 tracking-wider">
-               <span className="w-[30%] text-center">{t.phase1}</span>
-               <span className="w-[45%] text-center">{t.phase2}</span>
-               <span className="w-[25%] text-center">{t.phase3}</span>
+              <span className="w-[30%] text-center">{t.phase1}</span>
+              <span className="w-[45%] text-center">{t.phase2}</span>
+              <span className="w-[25%] text-center">{t.phase3}</span>
             </div>
           </div>
         </div>
 
         {/* Financial Breakdown Table */}
         <div className="mb-12">
-           <h3 className="text-sm font-bold text-black uppercase tracking-widest mb-6">{t.pricingDetail}</h3>
-           <table className="w-full text-left border-collapse">
-             <thead>
-               <tr className="border-b-2 border-zinc-100">
-                 <th className="py-4 text-xs font-bold text-zinc-400 uppercase tracking-wider">{t.serviceItem}</th>
-                 <th className="py-4 text-xs font-bold text-zinc-400 uppercase tracking-wider text-right">{t.amount}</th>
-               </tr>
-             </thead>
-             <tbody className="text-zinc-700">
-               <tr className="border-b border-zinc-50">
-                 <td className="py-4 font-medium">{t.basePrice}</td>
-                 <td className="py-4 text-right font-medium">{formatCurrency(breakdown.base)}</td>
-               </tr>
-               <tr className="border-b border-zinc-50">
-                 <td className="py-4 font-medium">{t.pagePrice} ({request.pageCount})</td>
-                 <td className="py-4 text-right font-medium">{formatCurrency(breakdown.pages)}</td>
-               </tr>
-               {request.designType === DesignType.CUSTOM && (
-                  <tr className="border-b border-zinc-50">
-                    <td className="py-4 font-medium">{t.designDiff} ({formatFactorDisplay(rules.factors.design)})</td>
-                    <td className="py-4 text-right font-medium">{formatCurrency(breakdown.design)}</td>
-                  </tr>
-               )}
-               {request.isMultiLang && (
-                  <tr className="border-b border-zinc-50">
-                    <td className="py-4 font-medium">{t.langDiff} ({formatFactorDisplay(rules.factors.multiLang)})</td>
-                    <td className="py-4 text-right font-medium">{formatCurrency(breakdown.multiLang)}</td>
-                  </tr>
-               )}
-               {request.hasSeo && (
-                  <tr className="border-b border-zinc-50">
-                    <td className="py-4 font-medium">{t.seoSetup}</td>
-                    <td className="py-4 text-right font-medium">{formatCurrency(breakdown.seo)}</td>
-                  </tr>
-               )}
-               {request.hasGraphics && (
-                  <tr className="border-b border-zinc-50">
-                    <td className="py-4 font-medium">{t.graphicsDiff} ({formatFactorDisplay(rules.factors.graphics)})</td>
-                    <td className="py-4 text-right font-medium">{formatCurrency(breakdown.graphics)}</td>
-                  </tr>
-               )}
-               {request.hasUx && (
-                  <tr className="border-b border-zinc-50">
-                    <td className="py-4 font-medium">{t.uxDiff} ({formatFactorDisplay(rules.factors.ux)})</td>
-                    <td className="py-4 text-right font-medium">{formatCurrency(breakdown.ux)}</td>
-                  </tr>
-               )}
-               {request.hasCrm && (
-                  <tr className="border-b border-zinc-50">
-                    <td className="py-4 font-medium">{t.crmDiff} ({formatFactorDisplay(rules.factors.crm)})</td>
-                    <td className="py-4 text-right font-medium">{formatCurrency(breakdown.crm)}</td>
-                  </tr>
-               )}
-               
-               {/* Add-ons List in Table */}
-               {request.selectedAddons && request.selectedAddons.length > 0 && (
-                 <>
+          <h3 className="text-sm font-bold text-black uppercase tracking-widest mb-6">{t.pricingDetail}</h3>
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="border-b-2 border-zinc-100">
+                <th className="py-4 text-xs font-bold text-zinc-400 uppercase tracking-wider">{t.serviceItem}</th>
+                <th className="py-4 text-xs font-bold text-zinc-400 uppercase tracking-wider text-right">{t.amount}</th>
+              </tr>
+            </thead>
+            <tbody className="text-zinc-700">
+              <tr className="border-b border-zinc-50">
+                <td className="py-4 font-medium">{t.basePrice}</td>
+                <td className="py-4 text-right font-medium">{formatCurrency(breakdown.base)}</td>
+              </tr>
+              <tr className="border-b border-zinc-50">
+                <td className="py-4 font-medium">{t.pagePrice} ({request.pageCount})</td>
+                <td className="py-4 text-right font-medium">{formatCurrency(breakdown.pages)}</td>
+              </tr>
+              {request.designType === DesignType.CUSTOM && (
+                <tr className="border-b border-zinc-50">
+                  <td className="py-4 font-medium">{t.designDiff} ({formatFactorDisplay(rules.factors.design)})</td>
+                  <td className="py-4 text-right font-medium">{formatCurrency(breakdown.design)}</td>
+                </tr>
+              )}
+              {request.isMultiLang && (
+                <tr className="border-b border-zinc-50">
+                  <td className="py-4 font-medium">{t.langDiff} ({formatFactorDisplay(rules.factors.multiLang)})</td>
+                  <td className="py-4 text-right font-medium">{formatCurrency(breakdown.multiLang)}</td>
+                </tr>
+              )}
+              {request.hasSeo && (
+                <tr className="border-b border-zinc-50">
+                  <td className="py-4 font-medium">{t.seoSetup}</td>
+                  <td className="py-4 text-right font-medium">{formatCurrency(breakdown.seo)}</td>
+                </tr>
+              )}
+              {request.hasGraphics && (
+                <tr className="border-b border-zinc-50">
+                  <td className="py-4 font-medium">{t.graphicsDiff} ({formatFactorDisplay(rules.factors.graphics)})</td>
+                  <td className="py-4 text-right font-medium">{formatCurrency(breakdown.graphics)}</td>
+                </tr>
+              )}
+              {request.hasUx && (
+                <tr className="border-b border-zinc-50">
+                  <td className="py-4 font-medium">{t.uxDiff} ({formatFactorDisplay(rules.factors.ux)})</td>
+                  <td className="py-4 text-right font-medium">{formatCurrency(breakdown.ux)}</td>
+                </tr>
+              )}
+              {request.hasCrm && (
+                <tr className="border-b border-zinc-50">
+                  <td className="py-4 font-medium">{t.crmDiff} ({formatFactorDisplay(rules.factors.crm)})</td>
+                  <td className="py-4 text-right font-medium">{formatCurrency(breakdown.crm)}</td>
+                </tr>
+              )}
+
+              {/* Add-ons List in Table */}
+              {request.selectedAddons && request.selectedAddons.length > 0 && (
+                <>
                   {request.selectedAddons.map(id => {
                     const addon = addons.find(a => a.id === id);
                     if (!addon) return null;
                     const priceFactor = request.country === Country.TR ? addon.priceTR : addon.priceMT;
                     // Standardized Lookup: Try Translation -> Fallback to Database Object
                     const displayLabel = t_addons && t_addons[addon.id] ? t_addons[addon.id].label : addon.label;
-                    
+
                     return (
-                       <tr key={id} className="border-b border-zinc-50 bg-indigo-50/50">
+                      <tr key={id} className="border-b border-zinc-50 bg-indigo-50/50">
                         <td className="py-4 pl-4 font-medium text-indigo-900 flex items-center">
                           <CheckCircle className="w-3 h-3 mr-2 text-indigo-500" />
-                          {displayLabel} 
+                          {displayLabel}
                           {priceFactor.type === PricingFactorType.PERCENTAGE && (
-                             <span className="text-xs text-indigo-600 ml-1 font-bold">({priceFactor.value}%)</span>
+                            <span className="text-xs text-indigo-600 ml-1 font-bold">({priceFactor.value}%)</span>
                           )}
                         </td>
                         <td className="py-4 pr-4 text-right font-medium text-indigo-900">
-                           {/* Addons Calculation: This component doesn't re-calculate, it uses passed down breakdown.addons. 
+                          {/* Addons Calculation: This component doesn't re-calculate, it uses passed down breakdown.addons. 
                                However, to show line-item detail, we ideally need line-item values. 
                                Since this view is static and just for proposal, we will rely on showing the factor type.
                                For exact amount per line item, Calculator needs to pass detail map. 
                                For now, we display the Factor Rate. */}
-                            {formatFactorDisplay(priceFactor)}
+                          {formatFactorDisplay(priceFactor)}
                         </td>
                       </tr>
                     )
                   })}
-                 </>
-               )}
+                </>
+              )}
 
-               {request.deliverySpeed !== 'STANDARD' && (
-                  <tr className="border-b border-zinc-50 bg-yellow-50">
-                    <td className="py-4 pl-4 text-black font-bold">{t.speedDiff} ({labels.speeds[request.deliverySpeed]})</td>
-                    <td className="py-4 pr-4 text-right text-black font-bold">{formatCurrency(breakdown.speed)}</td>
-                  </tr>
-               )}
+              {request.deliverySpeed !== 'STANDARD' && (
+                <tr className="border-b border-zinc-50 bg-yellow-50">
+                  <td className="py-4 pl-4 text-black font-bold">{t.speedDiff} ({labels.speeds[request.deliverySpeed]})</td>
+                  <td className="py-4 pr-4 text-right text-black font-bold">{formatCurrency(breakdown.speed)}</td>
+                </tr>
+              )}
 
-               {/* Discount Logic */}
-               {breakdown.discountAmount > 0 && (
-                 <tr className="border-b border-zinc-50">
-                   <td className="py-4 font-medium text-red-600">
-                      {t.discount} <span className="text-xs ml-1 font-bold">{getDiscountDisplay()}</span>
-                   </td>
-                   <td className="py-4 text-right font-medium text-red-600">-{formatCurrency(breakdown.discountAmount)}</td>
-                 </tr>
-               )}
-             </tbody>
-             <tfoot>
-               <tr className="border-t-4 border-black">
-                  {breakdown.discountAmount > 0 ? (
-                    <>
-                      <td className="py-6 text-xl font-bold text-black">{t.netTotal}</td>
-                      <td className="py-6 text-xl font-bold text-black text-right">{formatCurrency(breakdown.finalTotal)}</td>
-                    </>
-                  ) : (
-                    <>
-                      <td className="py-6 text-xl font-bold text-black">{t.total}</td>
-                      <td className="py-6 text-xl font-bold text-black text-right">{formatCurrency(breakdown.totalOneTime)}</td>
-                    </>
+              {/* Discount Logic */}
+              {breakdown.discountAmount > 0 && (
+                <tr className="border-b border-zinc-50">
+                  <td className="py-4 font-medium text-red-600">
+                    {t.discount} <span className="text-xs ml-1 font-bold">{getDiscountDisplay()}</span>
+                  </td>
+                  <td className="py-4 text-right font-medium text-red-600">-{formatCurrency(breakdown.discountAmount)}</td>
+                </tr>
+              )}
+            </tbody>
+            <tfoot>
+              <tr className="border-t-4 border-black">
+                {breakdown.discountAmount > 0 ? (
+                  <>
+                    <td className="py-6 text-xl font-bold text-black">{t.netTotal}</td>
+                    <td className="py-6 text-xl font-bold text-black text-right">{formatCurrency(breakdown.finalTotal)}</td>
+                  </>
+                ) : (
+                  <>
+                    <td className="py-6 text-xl font-bold text-black">{t.total}</td>
+                    <td className="py-6 text-xl font-bold text-black text-right">{formatCurrency(breakdown.totalOneTime)}</td>
+                  </>
+                )}
+              </tr>
+            </tfoot>
+          </table>
+
+          {/* Maintenance Separate Box */}
+          {request.maintenanceLevel !== 'NONE' && (
+            <div className="mt-8 flex justify-between items-center bg-zinc-900 border border-black p-6 rounded-xl text-white">
+              <div>
+                <h4 className="font-bold text-[#FFD700]">{t.monthlyService}</h4>
+                <p className="text-sm text-zinc-300">
+                  {labels.maintenance[request.maintenanceLevel]}
+                  {rules.maintenanceRates[request.maintenanceLevel].type === PricingFactorType.PERCENTAGE && (
+                    ` (%${rules.maintenanceRates[request.maintenanceLevel].value})`
                   )}
-               </tr>
-             </tfoot>
-           </table>
-           
-           {/* Maintenance Separate Box */}
-           {request.maintenanceLevel !== 'NONE' && (
-             <div className="mt-8 flex justify-between items-center bg-zinc-900 border border-black p-6 rounded-xl text-white">
-               <div>
-                  <h4 className="font-bold text-[#FFD700]">{t.monthlyService}</h4>
-                  <p className="text-sm text-zinc-300">
-                    {labels.maintenance[request.maintenanceLevel]} 
-                    {rules.maintenanceRates[request.maintenanceLevel].type === PricingFactorType.PERCENTAGE && (
-                        ` (%${rules.maintenanceRates[request.maintenanceLevel].value})`
-                    )}
-                  </p>
-               </div>
-               <div className="text-2xl font-bold text-white">
-                 {formatCurrency(breakdown.totalMonthly)} <span className="text-sm font-medium text-zinc-500">/mo</span>
-               </div>
-             </div>
-           )}
+                </p>
+              </div>
+              <div className="text-2xl font-bold text-white">
+                {formatCurrency(breakdown.totalMonthly)} <span className="text-sm font-medium text-zinc-500">/mo</span>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Terms Summary */}

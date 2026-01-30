@@ -161,6 +161,7 @@ const App: React.FC = () => {
             request={quoteRequest}
             breakdown={lastBreakdown}
             onBack={() => setCurrentView('calculator')}
+            onNavigate={setCurrentView}
             language={language}
           />
         );

@@ -709,7 +709,7 @@ const PricingCalculator: React.FC<Props> = ({ config, addons, onRequestUpdate, o
               </div>
 
               <div className="mt-10 relative z-10 space-y-3">
-                {step === 1 ? (
+                <div className="mt-10 relative z-10 space-y-3">
                   <button
                     onClick={handleStepNext}
                     className="w-full flex items-center justify-center space-x-2 bg-[#FFD700] hover:bg-[#FFD700] text-black py-4 rounded-xl font-bold transition-all shadow-[0_0_20px_rgba(255,215,0,0.2)] hover:shadow-[0_0_30px_rgba(255,215,0,0.4)] hover:-translate-y-1"
@@ -717,44 +717,7 @@ const PricingCalculator: React.FC<Props> = ({ config, addons, onRequestUpdate, o
                     <span>{t.createProposal} / {t.next || 'Next'}</span>
                     <ArrowRight className="w-5 h-5" />
                   </button>
-                ) : (
-                  <div className="space-y-3 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                    {/* Document Buttons */}
-                    <div className="grid grid-cols-2 gap-3">
-                      <button
-                        onClick={handleDownloadQuote}
-                        className="flex flex-col items-center justify-center bg-zinc-900 border border-zinc-700 hover:border-[#FFD700] text-white py-4 rounded-xl transition-all group"
-                      >
-                        <FileText className="w-6 h-6 mb-2 text-zinc-400 group-hover:text-[#FFD700]" />
-                        <span className="text-xs font-bold">Teklif İndir</span>
-                      </button>
-                      <button
-                        onClick={handleDownloadContract}
-                        className="flex flex-col items-center justify-center bg-zinc-900 border border-zinc-700 hover:border-[#FFD700] text-white py-4 rounded-xl transition-all group"
-                      >
-                        <Download className="w-6 h-6 mb-2 text-zinc-400 group-hover:text-[#FFD700]" />
-                        <span className="text-xs font-bold">Sözleşme İndir</span>
-                      </button>
-                    </div>
-
-                    {/* Finalize Button */}
-                    <button
-                      onClick={handleFinalize}
-                      className="w-full flex items-center justify-center space-x-2 bg-green-600 hover:bg-green-500 text-white py-4 rounded-xl font-bold transition-all shadow-lg hover:shadow-green-500/20"
-                    >
-                      <Send className="w-5 h-5" />
-                      <span>Projeye Gönder</span>
-                    </button>
-
-                    <button
-                      onClick={handleBack}
-                      className="w-full flex items-center justify-center space-x-2 text-zinc-500 hover:text-white py-2 text-sm transition-colors"
-                    >
-                      <ArrowLeft className="w-4 h-4" />
-                      <span>Geri Dön</span>
-                    </button>
-                  </div>
-                )}
+                </div>
               </div>
             </div>
 
