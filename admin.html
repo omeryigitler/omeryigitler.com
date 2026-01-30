@@ -2650,6 +2650,15 @@
                     done: '',
                     todo: 'Initial setup pending...',
                     requests: `Source Message (${new Date().toLocaleDateString()}):\n${message.message || ''}`,
+
+                    // Technical Specs Persistence
+                    siteType: message.projectType || message.siteType || 'Corporate',
+                    designType: message.designType || 'Template',
+                    pageCount: message.pageCount || '10',
+                    deliverySpeed: message.deliverySpeed || 'Standard',
+                    maintenanceLevel: message.maintenanceLevel || 'None',
+                    selectedAddons: message.selectedAddons || [],
+
                     timestamp: firebase.firestore.FieldValue.serverTimestamp(),
                     sourceMessageId: messageId
                 };
@@ -2703,20 +2712,31 @@
             // Switch to pricing
             switchTab('pricing');
 
-            // Send data to iframe
-            setTimeout(() => {
+            // Robust Sync: Send data multiple times to ensure iframe is ready
+            let attempts = 0;
+            const syncInterval = setInterval(() => {
+                attempts++;
                 const pricingIframe = document.querySelector('iframe[src*="pricing-tool"]');
+
                 if (pricingIframe && pricingIframe.contentWindow) {
                     pricingIframe.contentWindow.postMessage({
                         type: 'PRE_FILL_CLIENT',
                         data: {
                             clientName: clientName,
-                            clientEmail: clientEmail
+                            clientEmail: clientEmail,
+                            // If we have editingProjectId, we could try to fetch more data, 
+                            // but for now we sync the basics from the form or rely on what's available.
+                            // NOTE: If opened from a project, we sadly don't have the full specific tech specs 
+                            // in this function's scope unless we fetched the project again.
+                            // But for "Calculate Price" button in modal, it reads from inputs.
+                            // Ideally, we passed the full data object.
                         }
                     }, '*');
-                    console.log('📋 Opened pricing tool for project:', clientName);
+                    console.log(`📡 Sync Attempt ${attempts}: Data sent to pricing tool`);
                 }
-            }, 500);
+
+                if (attempts >= 3) clearInterval(syncInterval);
+            }, 800); // Try at 0.8s, 1.6s, 2.4s
         }
 
         let editingProjectId = null;
