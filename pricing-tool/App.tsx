@@ -10,6 +10,7 @@ import AdminSettings from './components/AdminSettings';
 import {
   Country, SiteType, DesignType, DeliverySpeed, MaintenanceLevel, QuoteRequest, CostBreakdown, PricingRules, Language, DiscountType, AddonService
 } from './types';
+import { generateQuotePDF, generateContractPDF } from './utils/pdfGenerator';
 import { DEFAULT_PRICING_CONFIG, DEFAULT_AVAILABLE_ADDONS } from './constants';
 import { TRANSLATIONS } from './translations';
 
@@ -68,11 +69,25 @@ const App: React.FC = () => {
         // Auto-switch to calculator if we have data
         setCurrentView('calculator');
       }
+
+      // NEW: Remote PDF Generation
+      if (event.data.type === 'GENERATE_QUOTE_PDF') {
+        console.log("📄 Generating Quote PDF via Remote Command");
+        const { request, breakdown } = event.data.payload;
+        // Use current config and addons state
+        generateQuotePDF(request, breakdown, pricingConfig, availableAddons, language);
+      }
+
+      if (event.data.type === 'GENERATE_CONTRACT_PDF') {
+        console.log("📜 Generating Contract PDF via Remote Command");
+        const { request, breakdown } = event.data.payload;
+        generateContractPDF(request, breakdown, pricingConfig, language);
+      }
     };
 
     window.addEventListener('message', handleMessage);
     return () => window.removeEventListener('message', handleMessage);
-  }, []);
+  }, [pricingConfig, availableAddons, language]);
 
   // Handlers for Admin Updates
   const updateConfig = (newConfig: Record<Country, PricingRules>) => {

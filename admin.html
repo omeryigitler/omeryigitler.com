@@ -211,6 +211,35 @@
             color: rgba(255, 255, 255, 0.6);
             line-height: 1.8;
         }
+
+        /* Custom Scrollbar for Modal Content */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 4px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        /* Hide Scrollbar for Tab Navigation */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
     </style>
 </head>
 
@@ -2786,90 +2815,282 @@
         }
 
         let editingProjectId = null;
+        // --- ADVANCED PROJECT MODAL LOGIC ---
+        let currentProjectData = null; // Store for PDF generation
+        let currentTab = 'overview';
+
         async function openProjectModal(id = null) {
             editingProjectId = id;
             const modal = document.getElementById('project-modal');
             modal.classList.remove('hidden');
-            document.body.style.overflow = 'hidden'; // Lock background
+            document.body.style.overflow = 'hidden';
 
-            const form = document.getElementById('project-form');
-            form.reset();
+            // Reset UI
+            document.getElementById('project-form').reset();
+            switchProjectTab('overview');
+            document.getElementById('finance-breakdown-list').innerHTML = '<div class="text-center text-gray-500 py-10 italic">No financial data available.</div>';
+            document.getElementById('finance-total-display').innerText = '---';
 
             if (id) {
-                const doc = await db.collection('projects').doc(id).get();
-                const d = doc.data();
-                document.getElementById('p-client').value = d.clientName || '';
-                document.getElementById('p-email').value = d.clientEmail || '';
-                document.getElementById('p-name').value = d.projectName || '';
-                document.getElementById('p-status').value = d.status || 'active';
-                document.getElementById('p-done').value = d.done || '';
-                document.getElementById('p-todo').value = d.todo || '';
-                document.getElementById('p-requests').value = d.requests || '';
-                document.getElementById('p-modal-title').innerText = "Mission Update";
-                document.getElementById('p-delete-btn').classList.remove('hidden');
+                try {
+                    const doc = await db.collection('projects').doc(id).get();
+                    if (!doc.exists) return; // Should handle error
+                    const d = doc.data();
+                    currentProjectData = d; // Store Globally
 
-                // NEW: Populate Tech Specs
-                const specsDiv = document.getElementById('p-tech-specs');
-                specsDiv.classList.add('hidden'); // Hide by default
+                    // --- POPULATE HEADER ---
+                    document.getElementById('p-header-id').innerText = '#' + (d.projectNumber || 'UNK');
+                    document.getElementById('p-header-date').innerText = d.createdAt?.toDate().toISOString().split('T')[0] || new Date().toISOString().split('T')[0];
+                    document.getElementById('p-modal-title').innerText = (d.projectName || 'MISSION UPDATE').toUpperCase();
 
-                // Try to find specs in description if not in dedicated fields (backward compat)
-                // or use dedicated fields if we saved them (future proof)
+                    // --- POPULATE OVERVIEW TAB ---
+                    document.getElementById('p-client').value = d.clientName || '';
+                    document.getElementById('p-email').value = d.clientEmail || '';
+                    document.getElementById('p-name').value = d.projectName || '';
+                    document.getElementById('p-status').value = d.status || 'active';
+                    document.getElementById('p-requests').value = d.description || d.requests || d.notes || ''; // Fallback chain
+                    document.getElementById('p-delete-btn').classList.remove('hidden');
 
-                // We'll try to extract from description if it contains the separator
-                const desc = d.description || '';
-                if (desc.includes('--- TECHNICAL CONFIGURATION ---') || d.siteType) {
-                    specsDiv.classList.remove('hidden');
+                    // TECH SPECS (From Breakdown or Description)
+                    const specsDiv = document.getElementById('p-tech-specs');
+                    if (d.siteType || (d.description && d.description.includes('--- TECHNICAL CONFIGURATION ---'))) {
+                        specsDiv.classList.remove('hidden');
+                        // Extract from structured fields (preferred) or parse description
+                        document.getElementById('spec-site-type').innerText = d.siteType || extractVal(d.description, 'Project Type');
+                        document.getElementById('spec-design-type').innerText = d.designType || extractVal(d.description, 'Design Style');
+                        document.getElementById('spec-page-count').innerText = d.pageCount || extractVal(d.description, 'Page Count');
+                        document.getElementById('spec-delivery').innerText = d.deliverySpeed || extractVal(d.description, 'Delivery');
 
-                    // Prefer direct fields, fall back to parsing
-                    document.getElementById('spec-site-type').innerText = d.siteType || extractVal(desc, 'Project Type');
-                    document.getElementById('spec-design-type').innerText = d.designType || extractVal(desc, 'Design Style');
-                    document.getElementById('spec-page-count').innerText = d.pageCount || extractVal(desc, 'Page Count');
-                    document.getElementById('spec-delivery').innerText = d.deliverySpeed || extractVal(desc, 'Delivery');
+                        // Addons
+                        const addonsContainer = document.getElementById('spec-addons');
+                        const addonsList = d.selectedAddons || extractVal(d.description || '', 'Addons').split(',').filter(x => x.trim().length > 0 && x !== 'N/A');
 
-                    // Addons
-                    const addonsContainer = document.getElementById('spec-addons');
-                    const addonsList = d.selectedAddons || extractVal(desc, 'Addons').split(',').filter(x => x.trim().length > 0);
-
-                    if (addonsList.length > 0 && addonsList[0] !== 'N/A') {
-                        addonsContainer.innerHTML = addonsList.map(addon =>
-                            `<span class="px-2 py-0.5 rounded bg-taurusGold/10 text-taurusGold text-[10px] font-bold border border-taurusGold/20">${addon.trim()}</span>`
-                        ).join('');
+                        if (addonsList.length > 0) {
+                            addonsContainer.innerHTML = addonsList.map(addon =>
+                                `<span class="px-2 py-0.5 rounded bg-taurusGold/10 text-taurusGold text-[10px] font-bold border border-taurusGold/20">${typeof addon === 'string' ? addon.trim() : addon}</span>`
+                            ).join('');
+                        } else {
+                            addonsContainer.innerHTML = '<span class="text-xs text-gray-500 italic">No add-ons selected</span>';
+                        }
                     } else {
-                        addonsContainer.innerHTML = '<span class="text-xs text-gray-500 italic">No add-ons selected</span>';
+                        specsDiv.classList.add('hidden');
                     }
-                }
 
+                    // --- POPULATE FINANCIALS TAB ---
+                    renderFinancials(d.breakdown, d.currency);
+
+                    // --- POPULATE ROADMAP TAB ---
+                    renderRoadmap(d.roadmap, d.status);
+
+                } catch (e) {
+                    console.error("Error opening project modal:", e);
+                }
             } else {
-                document.getElementById('p-modal-title').innerText = "New Deployment";
+                // New Project Mode
+                currentProjectData = {};
+                document.getElementById('p-modal-title').innerText = "NEW DEPLOYMENT";
+                document.getElementById('p-header-id').innerText = "#NEW";
                 document.getElementById('p-delete-btn').classList.add('hidden');
                 document.getElementById('p-tech-specs').classList.add('hidden');
+            }
+            lucide.createIcons();
+        }
+
+        function switchProjectTab(tabId) {
+            currentTab = tabId;
+
+            // Hide all content
+            document.querySelectorAll('.project-tab-content').forEach(el => el.classList.add('hidden'));
+            document.getElementById('tab-' + tabId).classList.remove('hidden');
+
+            // Update buttons
+            document.querySelectorAll('.project-tab-btn').forEach(btn => {
+                btn.classList.remove('text-taurusGold', 'border-taurusGold', 'bg-white/5');
+                btn.classList.add('text-gray-500', 'border-transparent');
+            });
+            const activeBtn = document.getElementById('tab-btn-' + tabId);
+            activeBtn.classList.add('text-taurusGold', 'border-taurusGold', 'bg-white/5');
+            activeBtn.classList.remove('text-gray-500', 'border-transparent');
+        }
+
+        function renderFinancials(breakdown, currency = 'TRY') {
+            const container = document.getElementById('finance-breakdown-list');
+            const totalDisplay = document.getElementById('finance-total-display');
+            const currencyDisplay = document.getElementById('finance-currency');
+            currencyDisplay.innerText = currency;
+
+            if (!breakdown) {
+                container.innerHTML = '<div class="text-center text-gray-500 py-10 italic">No financial data available (Manual Entry).</div>';
+                totalDisplay.innerText = '---';
+                return;
+            }
+
+            const symbol = currency === 'EUR' ? '€' : '₺';
+
+            let html = `
+                <div class="flex justify-between py-2 border-b border-white/5">
+                    <span class="text-gray-400">Base Price</span>
+                    <span class="text-white font-mono">${symbol}${breakdown.base?.toLocaleString() || 0}</span>
+                </div>
+                <div class="flex justify-between py-2 border-b border-white/5">
+                    <span class="text-gray-400">Page Cost</span>
+                    <span class="text-white font-mono">${symbol}${breakdown.pages?.toLocaleString() || 0}</span>
+                </div>
+            `;
+
+            // Specific Fields
+            const fields = [
+                { k: 'design', l: 'Design Premium' },
+                { k: 'seo', l: 'SEO Module' },
+                { k: 'multiLang', l: 'Multi-Language' },
+                { k: 'graphics', l: 'Graphic Suite' },
+                { k: 'ux', l: 'UX Optimization' },
+                { k: 'crm', l: 'CRM Integration' },
+                { k: 'addons', l: 'Extra Add-ons' },
+                { k: 'speed', l: 'Urgency Fee' }
+            ];
+
+            fields.forEach(f => {
+                if (breakdown[f.k] > 0) {
+                    html += `
+                        <div class="flex justify-between py-2 border-b border-white/5">
+                            <span class="text-gray-400">${f.l}</span>
+                            <span class="text-white font-mono">${symbol}${breakdown[f.k]?.toLocaleString()}</span>
+                        </div>
+                    `;
+                }
+            });
+
+            // Discount
+            if (breakdown.discountAmount > 0) {
+                html += `
+                    <div class="flex justify-between py-2 border-b border-white/5 bg-red-500/5 px-2 -mx-2 rounded">
+                        <span class="text-red-400 font-bold">Discount Applied</span>
+                        <span class="text-red-400 font-mono">-${symbol}${breakdown.discountAmount?.toLocaleString()}</span>
+                    </div>
+                `;
+            }
+
+            container.innerHTML = html;
+            totalDisplay.innerText = symbol + (breakdown.finalTotal?.toLocaleString() || 0);
+        }
+
+        function renderRoadmap(roadmapData, projectStatus) {
+            const container = document.getElementById('roadmap-container');
+
+            // Default Timeline
+            const phases = [
+                { id: 'p_init', label: 'Initiation Protocol', sub: 'Quote Signed, Deposit Cleared', icon: 'flag' },
+                { id: 'p_design', label: 'Design & Architecture', sub: 'Wireframes, UI Approval', icon: 'pen-tool' },
+                { id: 'p_dev', label: 'Core Development', sub: 'Frontend, Backend, Database', icon: 'code' },
+                { id: 'p_qa', label: 'Quality Assurance', sub: 'Testing, Bug Fixes, Security', icon: 'shield-check' },
+                { id: 'p_deploy', label: 'Live Deployment', sub: 'DNS, SSL, Final Handover', icon: 'rocket' }
+            ];
+
+            // If no data, assume first phase active
+            const currentData = roadmapData || { p_init: { done: projectStatus !== 'pending', date: null } };
+
+            let html = '';
+            phases.forEach((phase, idx) => {
+                const state = currentData[phase.id] || { done: false, date: null };
+                const isLast = idx === phases.length - 1;
+                const isDone = state.done;
+
+                html += `
+                    <div class="relative pl-12 group transition-all duration-300">
+                        <!-- Line Connector -->
+                        ${!isLast ? `<div class="absolute left-6 top-10 bottom-[-32px] w-0.5 ${isDone ? 'bg-taurusGold' : 'bg-white/10'} group-hover:bg-taurusGold/50 transition-colors"></div>` : ''}
+                        
+                        <!-- Status Dot -->
+                        <div onclick="togglePhase('${phase.id}')" class="absolute left-0 top-0 w-12 h-12 rounded-full border-2 ${isDone ? 'bg-taurusGold border-taurusGold text-black' : 'bg-black border-white/20 text-gray-500 hover:border-taurusGold hover:text-white'} flex items-center justify-center cursor-pointer transition-all z-10 shadow-lg">
+                            <i data-lucide="${isDone ? 'check' : phase.icon}" class="w-5 h-5"></i>
+                        </div>
+
+                        <!-- Content -->
+                        <div onclick="togglePhase('${phase.id}')" class="bg-white/5 border ${isDone ? 'border-taurusGold/30 bg-taurusGold/5' : 'border-white/5'} rounded-xl p-5 cursor-pointer hover:border-taurusGold/30 transition-all">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <h4 class="text-sm font-bold ${isDone ? 'text-white' : 'text-gray-400'} uppercase tracking-wider">${phase.label}</h4>
+                                    <p class="text-xs text-gray-500 mt-1">${phase.sub}</p>
+                                </div>
+                                ${isDone ? `<span class="text-[9px] font-mono text-taurusGold bg-taurusGold/10 px-2 py-1 rounded border border-taurusGold/20">${state.date ? new Date(state.date).toLocaleDateString() : 'COMPLETED'}</span>` : ''}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        }
+
+        async function togglePhase(phaseId) {
+            if (!editingProjectId || !currentProjectData) return;
+
+            const currentRoadmap = currentProjectData.roadmap || {};
+            const currentState = currentRoadmap[phaseId]?.done || false;
+
+            // Toggle
+            currentRoadmap[phaseId] = {
+                done: !currentState,
+                date: !currentState ? new Date().toISOString() : null
+            };
+
+            // Optimistic Update
+            currentProjectData.roadmap = currentRoadmap;
+            renderRoadmap(currentRoadmap, currentProjectData.status);
+
+            // Save to DB
+            try {
+                await db.collection('projects').doc(editingProjectId).update({
+                    roadmap: currentRoadmap
+                });
+                lucide.createIcons();
+            } catch (e) { console.error("Roadmap save failed", e); }
+        }
+
+        function generateProjectPDF(type) {
+            // Trigger Pricing Tool via Iframe or direct Logic if ported
+            // For now, rely on Pricing Tool being present or hidden Iframe
+            // Ideally send message to pricing tool iframe
+
+            const iframe = document.getElementById('pricing-frame'); // Assuming there's one
+
+            if (currentProjectData && currentProjectData.breakdown && iframe) {
+                iframe.contentWindow.postMessage({
+                    type: type == 'quote' ? 'GENERATE_QUOTE_PDF' : 'GENERATE_CONTRACT_PDF',
+                    payload: {
+                        request: {
+                            ...currentProjectData, // Contains customerName, etc.
+                            // Map generic fields back to Pricing Tool specific fields if needed
+                            customerName: currentProjectData.clientName,
+                            customerEmail: currentProjectData.clientEmail,
+                            // Add missing/defaults if needed
+                        },
+                        breakdown: currentProjectData.breakdown,
+                        config: null // Let tool use its own config or pass if we have it
+                    }
+                }, '*');
+
+                // Alert user
+                systemAlert('DOC GENERATION', `Generating ${type.toUpperCase()}... Please wait.`, 'loader-2');
+            } else {
+                systemAlert('ERROR', 'Missing financial data or pricing tool connection.', 'x-circle');
             }
         }
 
         // Helper to extract value from formatted text
         function extractVal(text, key) {
+            if (!text) return 'N/A';
             const regex = new RegExp(`• ${key}: (.*)`);
             const match = text.match(regex);
             return match ? match[1].trim() : 'N/A';
         }
 
-        // Helper function to open project modal with pre-filled data
+        // Helper function to open project modal with pre-filled data (legacy wrapper)
         function openProjectModalWithData(data) {
-            editingProjectId = null;
-            const modal = document.getElementById('project-modal');
-            modal.classList.remove('hidden');
-            document.body.style.overflow = 'hidden';
-
-            const form = document.getElementById('project-form');
-            form.reset();
-
-            // Fill fields AFTER reset
-            if (data.client) document.getElementById('p-client').value = data.client;
-            if (data.email) document.getElementById('p-email').value = data.email;
-            if (data.requests) document.getElementById('p-requests').value = data.requests;
-
-            document.getElementById('p-modal-title').innerText = "New Deployment";
-            document.getElementById('p-delete-btn').classList.add('hidden');
+            openProjectModal(null); // Open new
+            document.getElementById('p-client').value = data.client || '';
+            document.getElementById('p-email').value = data.email || '';
+            document.getElementById('p-requests').value = data.requests || '';
         }
 
         function closeProjectModal() {
