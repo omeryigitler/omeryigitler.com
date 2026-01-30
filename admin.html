@@ -994,6 +994,34 @@
 
                 if (id) {
                     console.log('✅ Quote successfully saved with ID:', id);
+
+                    // NEW: Update active project if we are in "Project Mode"
+                    if (editingProjectId) {
+                        try {
+                            await db.collection('projects').doc(editingProjectId).update({
+                                quoteId: id,
+                                budget: breakdown.finalTotal,
+                                currency: request.country === 'MT' ? 'EUR' : 'TRY',
+                                breakdown: breakdown, // Save full breakdown for Financials Tab
+                                siteType: request.siteType, // Sync specs
+                                designType: request.designType,
+                                pageCount: request.pageCount,
+                                deliverySpeed: request.deliverySpeed,
+                                selectedAddons: request.selectedAddons || [],
+                                status: 'active', // Ensure it's active
+                                lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+                            });
+                            console.log('✅ Project synced with new quote data:', editingProjectId);
+
+                            // Return to project view
+                            switchTab('projects');
+                            openProjectModal(editingProjectId); // Re-open to show new data
+
+                        } catch (err) {
+                            console.error('❌ Failed to sync project with quote:', err);
+                        }
+                    }
+
                     event.source.postMessage({ type: 'QUOTE_SAVED', success: true, quoteId: id }, '*');
 
                     // Refresh local view if needed
