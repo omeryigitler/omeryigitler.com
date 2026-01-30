@@ -53,6 +53,11 @@ service cloud.firestore {
       // Reading requires auth
       allow read: if request.auth != null;
     }
+
+    match /visitors_v1/{visitorId} {
+      allow write: if true;
+      allow read: if request.auth != null;
+    }
     
     // Contact Messages (keep existing rules)
     match /contact-messages/{messageId} {
