@@ -3210,132 +3210,211 @@
     <div id="project-modal"
         class="fixed inset-0 z-[110] hidden flex items-center justify-center lg:p-4 bg-black/90 lg:bg-black/80 backdrop-blur-md transition-opacity duration-300">
         <div
-            class="glass-card w-full h-full lg:h-[90vh] lg:max-w-4xl lg:rounded-3xl border-y lg:border border-glassBorder bg-[#0a0a0a] shadow-2xl overflow-hidden animate-fade-in-up flex flex-col">
+            class="glass-card w-full h-full lg:h-[90vh] lg:max-w-5xl lg:rounded-3xl border-y lg:border border-glassBorder bg-[#0a0a0a] shadow-2xl overflow-hidden animate-fade-in-up flex flex-col">
+
             <!-- Header -->
-            <div class="p-6 border-b border-white/5 flex justify-between items-center bg-white/5 flex-shrink-0">
-                <h3 id="p-modal-title" class="text-xl font-display font-bold text-white flex items-center gap-2">
-                    New Deployment
-                </h3>
+            <div class="p-6 border-b border-white/5 flex justify-between items-start bg-white/5 flex-shrink-0">
+                <div>
+                    <h3 id="p-modal-title" class="text-xl font-display font-bold text-white flex items-center gap-2">
+                        MISSION UPDATE
+                    </h3>
+                    <div class="flex gap-3 mt-1">
+                        <span id="p-header-id"
+                            class="text-[10px] font-mono text-taurusGold bg-taurusGold/10 px-2 py-0.5 rounded">#PR-000</span>
+                        <span id="p-header-date" class="text-[10px] font-mono text-gray-500">2024-00-00</span>
+                    </div>
+                </div>
                 <button onclick="closeProjectModal()"
                     class="w-10 h-10 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-gray-400 hover:text-white transition-colors">
                     <i data-lucide="x" class="w-5 h-5"></i>
                 </button>
             </div>
 
-            <!-- Scrollable Content -->
-            <div class="p-6 md:p-10 overflow-y-auto flex-1">
-                <form id="project-form" class="space-y-10">
-                    <!-- Section 1: Basics -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                        <div class="space-y-4">
-                            <h4
-                                class="text-taurusGold text-[10px] font-black uppercase tracking-[0.2em] border-b border-white/5 pb-2">
-                                Client Intelligence</h4>
-                            <input id="p-client" type="text" placeholder="Identity / Organization"
-                                class="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-sm text-white focus:outline-none focus:border-taurusGold transition-colors placeholder:text-gray-600">
-                            <input id="p-email" type="email" placeholder="Communication Channel"
-                                class="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-sm text-white focus:outline-none focus:border-taurusGold transition-colors placeholder:text-gray-600">
-                        </div>
-                        <div class="space-y-4">
-                            <h4
-                                class="text-taurusGold text-[10px] font-black uppercase tracking-[0.2em] border-b border-white/5 pb-2">
-                                Operation Blueprint</h4>
-                            <input id="p-name" type="text" placeholder="Mission Name"
-                                class="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-sm text-white focus:outline-none focus:border-taurusGold transition-colors placeholder:text-gray-600">
-                            <select id="p-status"
-                                class="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-sm text-white focus:outline-none focus:border-taurusGold transition-colors appearance-none cursor-pointer">
-                                <option value="active">Operational: Active</option>
-                                <option value="completed">Operational: Archived</option>
-                            </select>
-                        </div>
-                    </div>
+            <!-- TAB NAVIGATION -->
+            <div class="flex items-center gap-6 px-6 border-b border-white/5 overflow-x-auto no-scrollbar bg-black/20">
+                <button id="tab-btn-overview" onclick="switchProjectTab('overview')"
+                    class="project-tab-btn py-4 text-[10px] font-bold uppercase tracking-widest border-b-2 border-taurusGold text-taurusGold  transition-all whitespace-nowrap">
+                    Overview
+                </button>
+                <button id="tab-btn-financials" onclick="switchProjectTab('financials')"
+                    class="project-tab-btn py-4 text-[10px] font-bold uppercase tracking-widest border-b-2 border-transparent text-gray-500 hover:text-white transition-all whitespace-nowrap">
+                    Financials
+                </button>
+                <button id="tab-btn-roadmap" onclick="switchProjectTab('roadmap')"
+                    class="project-tab-btn py-4 text-[10px] font-bold uppercase tracking-widest border-b-2 border-transparent text-gray-500 hover:text-white transition-all whitespace-nowrap">
+                    Roadmap
+                </button>
+                <button id="tab-btn-documents" onclick="switchProjectTab('documents')"
+                    class="project-tab-btn py-4 text-[10px] font-bold uppercase tracking-widest border-b-2 border-transparent text-gray-500 hover:text-white transition-all whitespace-nowrap">
+                    Documents
+                </button>
+            </div>
 
-                    <!-- Section 2: Technical Configuration (NEW) -->
-                    <div id="p-tech-specs" class="hidden">
-                        <h4
-                            class="text-taurusGold text-[10px] font-black uppercase tracking-[0.2em] border-b border-white/5 pb-2 mb-4">
-                            Technical Configuration
-                        </h4>
-                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                            <!-- Site Type -->
-                            <div class="bg-white/5 p-3 rounded-xl border border-white/10">
-                                <span class="text-[9px] text-gray-500 uppercase font-bold block mb-1">Type</span>
-                                <span id="spec-site-type" class="text-xs text-white font-bold block">Corporate</span>
+            <!-- Scrollable Content -->
+            <div class="p-6 md:p-8 overflow-y-auto flex-1 custom-scrollbar relative">
+
+                <!-- TAB 1: OVERVIEW -->
+                <div id="tab-overview" class="project-tab-content space-y-8 animate-fade-in">
+                    <form id="project-form" class="space-y-8">
+                        <!-- Section 1: Basics -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <div class="space-y-4">
+                                <h4
+                                    class="text-taurusGold text-[10px] font-black uppercase tracking-[0.2em] border-b border-white/5 pb-2">
+                                    Client Intelligence</h4>
+                                <input id="p-client" type="text" placeholder="Identity / Organization"
+                                    class="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-sm text-white focus:outline-none focus:border-taurusGold transition-colors placeholder:text-gray-600">
+                                <input id="p-email" type="email" placeholder="Communication Channel"
+                                    class="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-sm text-white focus:outline-none focus:border-taurusGold transition-colors placeholder:text-gray-600">
                             </div>
-                            <!-- Design -->
-                            <div class="bg-white/5 p-3 rounded-xl border border-white/10">
-                                <span class="text-[9px] text-gray-500 uppercase font-bold block mb-1">Design</span>
-                                <span id="spec-design-type" class="text-xs text-white font-bold block">Standard</span>
+                            <div class="space-y-4">
+                                <h4
+                                    class="text-taurusGold text-[10px] font-black uppercase tracking-[0.2em] border-b border-white/5 pb-2">
+                                    Operation Blueprint</h4>
+                                <input id="p-name" type="text" placeholder="Mission Name"
+                                    class="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-sm text-white focus:outline-none focus:border-taurusGold transition-colors placeholder:text-gray-600">
+                                <select id="p-status"
+                                    class="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-sm text-white focus:outline-none focus:border-taurusGold transition-colors appearance-none cursor-pointer">
+                                    <option value="active">Operational: Active</option>
+                                    <option value="completed">Operational: Archived</option>
+                                    <option value="pending">Operational: Pending</option>
+                                </select>
                             </div>
-                            <!-- Pages -->
-                            <div class="bg-white/5 p-3 rounded-xl border border-white/10">
-                                <span class="text-[9px] text-gray-500 uppercase font-bold block mb-1">Pages</span>
-                                <span id="spec-page-count" class="text-xs text-white font-bold block">10</span>
-                            </div>
-                            <!-- Delivery -->
-                            <div class="bg-white/5 p-3 rounded-xl border border-white/10">
-                                <span class="text-[9px] text-gray-500 uppercase font-bold block mb-1">Delivery</span>
-                                <span id="spec-delivery" class="text-xs text-taurusGold font-bold block">Standard</span>
-                            </div>
-                            <!-- Addons (Full Width) -->
-                            <div class="col-span-2 md:col-span-4 bg-white/5 p-3 rounded-xl border border-white/10">
-                                <span class="text-[9px] text-gray-500 uppercase font-bold block mb-1">Add-ons</span>
-                                <div id="spec-addons" class="flex flex-wrap gap-2 mt-1">
-                                    <span class="text-xs text-gray-500 italic">No add-ons selected</span>
+                        </div>
+
+                        <!-- Technical Specs -->
+                        <div id="p-tech-specs" class="hidden">
+                            <h4
+                                class="text-blue-400 text-[10px] font-black uppercase tracking-[0.2em] border-b border-white/5 pb-2 mb-4">
+                                Technical Specs</h4>
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                <div class="bg-white/5 p-3 rounded-xl border border-white/10"><span
+                                        class="text-[9px] text-gray-500 uppercase font-bold block mb-1">Type</span><span
+                                        id="spec-site-type" class="text-xs text-white font-bold block">--</span></div>
+                                <div class="bg-white/5 p-3 rounded-xl border border-white/10"><span
+                                        class="text-[9px] text-gray-500 uppercase font-bold block mb-1">Design</span><span
+                                        id="spec-design-type" class="text-xs text-white font-bold block">--</span></div>
+                                <div class="bg-white/5 p-3 rounded-xl border border-white/10"><span
+                                        class="text-[9px] text-gray-500 uppercase font-bold block mb-1">Pages</span><span
+                                        id="spec-page-count" class="text-xs text-white font-bold block">--</span></div>
+                                <div class="bg-white/5 p-3 rounded-xl border border-white/10"><span
+                                        class="text-[9px] text-gray-500 uppercase font-bold block mb-1">Delivery</span><span
+                                        id="spec-delivery" class="text-xs text-taurusGold font-bold block">--</span>
+                                </div>
+                                <div class="col-span-2 md:col-span-4 bg-white/5 p-3 rounded-xl border border-white/10">
+                                    <span class="text-[9px] text-gray-500 uppercase font-bold block mb-1">Add-ons</span>
+                                    <div id="spec-addons" class="flex flex-wrap gap-2 mt-1"></div>
                                 </div>
                             </div>
                         </div>
-                    </div>
 
-                    <!-- Section 2: Work Log -->
-                    <div class="grid grid-cols-1 gap-6 md:grid-cols-3">
-                        <div class="flex flex-col gap-3">
-                            <label
-                                class="text-green-500 text-[10px] font-black uppercase tracking-widest flex items-center gap-2"><i
-                                    data-lucide="check-circle" class="w-3 h-3"></i> Executed</label>
-                            <textarea id="p-done"
-                                class="w-full min-h-[180px] bg-white/5 border border-white/10 rounded-xl p-4 text-sm text-gray-300 focus:outline-none focus:border-green-500 transition-colors resize-none"
-                                placeholder="Alpha phase complete..."></textarea>
-                        </div>
-
-                        <div class="flex flex-col gap-3">
-                            <label
-                                class="text-blue-500 text-[10px] font-black uppercase tracking-widest flex items-center gap-2"><i
-                                    data-lucide="zap" class="w-3 h-3"></i> Roadmap</label>
-                            <textarea id="p-todo"
-                                class="w-full min-h-[180px] bg-white/5 border border-white/10 rounded-xl p-4 text-sm text-gray-300 focus:outline-none focus:border-blue-500 transition-colors resize-none"
-                                placeholder="Initializing beta..."></textarea>
-                        </div>
-
-                        <div class="flex flex-col gap-3">
-                            <label
-                                class="text-taurusGold text-[10px] font-black uppercase tracking-widest flex items-center gap-2"><i
-                                    data-lucide="message-square" class="w-3 h-3"></i> Feedback</label>
+                        <!-- Notes -->
+                        <div class="space-y-4">
+                            <h4
+                                class="text-gray-500 text-[10px] font-black uppercase tracking-[0.2em] border-b border-white/5 pb-2">
+                                Mission Notes / Requests</h4>
                             <textarea id="p-requests"
-                                class="w-full min-h-[180px] bg-white/5 border border-white/10 rounded-xl p-4 text-sm text-gray-300 focus:outline-none focus:border-taurusGold transition-colors resize-none"
-                                placeholder="Client signal detected..."></textarea>
+                                class="w-full min-h-[120px] bg-white/5 border border-white/10 rounded-xl p-4 text-sm text-gray-300 focus:outline-none focus:border-white/30 transition-colors resize-none"
+                                placeholder="Enter mission details..."></textarea>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- TAB 2: FINANCIALS -->
+                <div id="tab-financials" class="project-tab-content hidden animate-fade-in">
+                    <div class="max-w-2xl mx-auto">
+                        <div class="bg-white/5 rounded-2xl border border-white/10 overflow-hidden">
+                            <div class="p-6 border-b border-white/10 bg-white/5 flex justify-between items-center">
+                                <h4 class="text-lg font-bold text-white">Cost Breakdown</h4>
+                                <span
+                                    class="text-[10px] bg-green-500/20 text-green-400 px-2 py-1 rounded border border-green-500/30 uppercase font-bold"
+                                    id="finance-currency">TRY</span>
+                            </div>
+                            <div class="p-6 space-y-1" id="finance-breakdown-list">
+                                <!-- Populated by JS -->
+                            </div>
+                            <div
+                                class="p-6 bg-[#FFD700]/10 border-t border-[#FFD700]/20 flex justify-between items-center">
+                                <span class="text-[#FFD700] uppercase text-xs font-black tracking-widest">Total
+                                    Estimated Budget</span>
+                                <span id="finance-total-display" class="text-2xl font-black text-[#FFD700]">$0.00</span>
+                            </div>
+                        </div>
+                        <p class="text-center text-[10px] text-gray-600 mt-4 uppercase tracking-widest">Data
+                            synchronized from Pricing Tool</p>
+                    </div>
+                </div>
+
+                <!-- TAB 3: ROADMAP -->
+                <div id="tab-roadmap" class="project-tab-content hidden animate-fade-in">
+                    <div class="max-w-2xl mx-auto pl-4">
+                        <div id="roadmap-container" class="border-l-2 border-white/10 space-y-10 py-4">
+                            <!-- Populated by JS -->
                         </div>
                     </div>
-                </form>
+                </div>
+
+                <!-- TAB 4: DOCUMENTS -->
+                <div id="tab-documents" class="project-tab-content hidden animate-fade-in">
+                    <h4 class="text-white font-bold mb-6 flex items-center gap-2"><i data-lucide="files"
+                            class="w-4 h-4 text-taurusGold"></i> Generated Assets</h4>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Quote Card -->
+                        <div
+                            class="bg-white/5 border border-white/10 rounded-2xl p-6 hover:bg-white/10 transition-all group">
+                            <div
+                                class="w-12 h-12 rounded-xl bg-blue-500/20 text-blue-400 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                                <i data-lucide="file-text" class="w-6 h-6"></i>
+                            </div>
+                            <h5 class="text-lg font-bold text-white mb-2">Formal Quotation</h5>
+                            <p class="text-sm text-gray-500 mb-6">Generate a professional PDF quote including breakdown,
+                                technical specs, and terms.</p>
+                            <button onclick="generateProjectPDF('quote')"
+                                class="w-full py-3 rounded-lg bg-blue-500/10 text-blue-400 border border-blue-500/20 hover:bg-blue-500 hover:text-white font-bold text-xs uppercase tracking-widest transition-all">
+                                Generate PDF
+                            </button>
+                        </div>
+
+                        <!-- Contract Card -->
+                        <div
+                            class="bg-white/5 border border-white/10 rounded-2xl p-6 hover:bg-white/10 transition-all group">
+                            <div
+                                class="w-12 h-12 rounded-xl bg-purple-500/20 text-purple-400 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                                <i data-lucide="scroll" class="w-6 h-6"></i>
+                            </div>
+                            <h5 class="text-lg font-bold text-white mb-2">Service Contract</h5>
+                            <p class="text-sm text-gray-500 mb-6">Draft a standard service agreement populated with
+                                project details and legal terms.</p>
+                            <button onclick="generateProjectPDF('contract')"
+                                class="w-full py-3 rounded-lg bg-purple-500/10 text-purple-400 border border-purple-500/20 hover:bg-purple-500 hover:text-white font-bold text-xs uppercase tracking-widest transition-all">
+                                Generate PDF
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
             </div>
 
             <!-- Footer -->
             <div
                 class="p-6 border-t border-white/5 bg-black/40 backdrop-blur-xl flex flex-col md:flex-row justify-end gap-3 flex-shrink-0">
+
                 <button id="p-delete-btn" onclick="deleteProject()"
-                    class="hidden order-last md:order-first w-full md:w-auto px-8 py-4 rounded-xl border border-red-500/20 bg-red-500/5 text-red-500 font-black text-[10px] uppercase tracking-widest hover:bg-red-500 hover:text-white transition-all flex items-center justify-center gap-2">
-                    <i data-lucide="trash-2" class="w-4 h-4"></i> Terminate Mission
+                    class="hidden order-last md:order-first px-6 py-4 rounded-xl border border-red-500/20 bg-red-500/5 text-red-500 font-black text-[10px] uppercase tracking-widest hover:bg-red-500 hover:text-white transition-all flex items-center justify-center gap-2">
+                    <i data-lucide="trash-2" class="w-4 h-4"></i> Delete
                 </button>
-                <button onclick="calculatePriceForProject()"
-                    class="order-last md:order-first w-full md:w-auto px-8 py-4 rounded-xl border border-[#FFD700]/30 text-[#FFD700] font-black text-[10px] uppercase tracking-widest hover:bg-[#FFD700] hover:text-black transition-all flex items-center justify-center gap-2 mr-2">
-                    <i data-lucide="calculator" class="w-4 h-4"></i> Calculate Price
-                </button>
-                <div class="flex-1 hidden md:block"></div>
+
+                <div class="flex-1"></div>
+
                 <button onclick="closeProjectModal()"
-                    class="w-full md:w-auto px-8 py-4 rounded-xl border border-white/10 text-gray-500 font-black text-[10px] uppercase tracking-widest hover:bg-white/5 transition-all">Cancel</button>
+                    class="w-full md:w-auto px-8 py-4 rounded-xl border border-white/10 text-gray-500 font-black text-[10px] uppercase tracking-widest hover:bg-white/5 transition-all">
+                    Cancel
+                </button>
                 <button onclick="saveProject()"
-                    class="w-full md:w-auto px-10 py-4 rounded-xl bg-taurusGold text-black font-black text-[10px] uppercase tracking-widest hover:bg-white hover:scale-[1.02] transition-all">Synchronize
-                    Data</button>
+                    class="w-full md:w-auto px-10 py-4 rounded-xl bg-taurusGold text-black font-black text-[10px] uppercase tracking-widest hover:bg-white hover:scale-[1.02] transition-all shadow-[0_0_20px_rgba(212,175,55,0.3)]">
+                    Save Changes
+                </button>
             </div>
         </div>
     </div>
