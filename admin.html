@@ -2797,6 +2797,7 @@
          * @param {string} messageId - Message document ID
          */
         async function createQuoteFromMessage(messageId) {
+            editingProjectId = null; // Clean state
             const message = messagesMap[messageId];
             if (!message) {
                 console.error('Message not found');
@@ -3243,6 +3244,7 @@
         }
 
         function closeProjectModal() {
+            editingProjectId = null; // Reset to avoid stale state
             document.getElementById('project-modal').classList.add('hidden');
             document.body.style.overflow = '';
         }
