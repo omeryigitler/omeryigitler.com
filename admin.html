@@ -1564,7 +1564,10 @@
 
                 // Actual Upload Promise
                 const uploadTask = async () => {
-                    const blob = await (await fetch(dataUrl)).blob();
+                    const res = await fetch(dataUrl);
+                    const blob = await res.blob();
+                    console.log(`📤 Starting Upload. Size: ${(blob.size / 1024).toFixed(2)} KB`);
+
                     const storageRef = firebase.storage().ref();
                     const fileRef = storageRef.child(path);
                     await fileRef.put(blob);
