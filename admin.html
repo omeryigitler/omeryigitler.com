@@ -975,24 +975,6 @@
             // Handle Direct PDF Generation (From Admin "Generate" button)
             // Handle Direct PDF Generation (From Admin "Generate" button)
             if (event.data.type === 'PDF_GENERATED') {
-
-                // --- CLEANUP RENDER FIX ---
-                if (isGeneratingBackgroundPDF) {
-                    const pricingView = document.getElementById('view-pricing');
-                    if (pricingView) {
-                        pricingView.classList.add('hidden');
-                        pricingView.style.position = '';
-                        pricingView.style.left = '';
-                        pricingView.style.top = '';
-                        pricingView.style.width = '';
-                        pricingView.style.height = '';
-                        pricingView.style.zIndex = '';
-                        pricingView.style.opacity = '';
-                        console.log('🙈 Pricing view hidden after PDF generation');
-                    }
-                    isGeneratingBackgroundPDF = false;
-                }
-
                 console.log('📄 PDF Generated via Remote Command', event.data.payload);
                 if (event.data.payload) {
                     const { quotePdf, contractPdf, fileName } = event.data.payload;
@@ -3314,25 +3296,8 @@
         function generateProjectPDF(type) {
             // Trigger Pricing Tool via Iframe
             const iframe = document.getElementById('pricing-iframe');
-            const pricingView = document.getElementById('view-pricing');
 
-            // --- RENDER FIX: Make iframe visible off-screen for html2canvas ---
-            if (pricingView && pricingView.classList.contains('hidden')) {
-                isGeneratingBackgroundPDF = true;
-                pricingView.classList.remove('hidden');
-                pricingView.style.position = 'fixed';
-                pricingView.style.left = '-10000px';
-                pricingView.style.top = '0';
-                pricingView.style.width = '1400px'; // Fixed optimal width for A4 ratio
-                pricingView.style.height = '5000px'; // Large height to prevent scrolling/cropping
-                pricingView.style.zIndex = '-9999';
-                pricingView.style.opacity = '0'; // Hide from user but keep renderable logic active
-                // Opacity 0 might be skipped by some optimizations, but opacity 1 is safer.
-                // Since it is -10000px left, user won't see it anyway.
-                // Let's use opacity 1 to be absolutely sure html2canvas sees it.
-                pricingView.style.opacity = '1';
-                console.log('👁️ Pricing view activated off-screen (extended height) for PDF generation');
-            }
+            // Native PDF Generation does not require visible iframe
 
             if (currentProjectData && currentProjectData.breakdown && iframe) {
                 iframe.contentWindow.postMessage({

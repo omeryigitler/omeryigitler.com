@@ -4,7 +4,7 @@ import {
   Country, SiteType, DesignType, DeliverySpeed, MaintenanceLevel, QuoteRequest, CostBreakdown, PricingRules, Language, DiscountType, PricingFactor, PricingFactorType, AddonService
 } from '../types';
 import { TRANSLATIONS } from '../translations';
-import { generateQuotePDF, generateContractPDF } from '../utils/pdfGenerator';
+// removed unused imports
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import { ArrowRight, Save, Zap, ChevronDown, User, Globe, Layout, Layers, Check, Plus, PenTool, MousePointer, Database, Percent, DollarSign, Tag, FileText, Download, Send, ArrowLeft } from 'lucide-react';
 
@@ -262,15 +262,35 @@ const PricingCalculator: React.FC<Props> = ({ config, addons, onRequestUpdate, o
     onNavigate('dashboard');
   };
 
-  const handleDownloadQuote = () => {
+  const handleDownloadQuote = async () => {
     if (breakdown) {
-      generateQuotePDF(request, breakdown, config, addons, language);
+      try {
+        const { generateNativePDF } = await import('../utils/pdfGenerator');
+        const blob = await generateNativePDF(request, breakdown, 'quote');
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = 'Quote.pdf';
+        link.click();
+      } catch (e) {
+        console.error(e);
+      }
     }
   };
 
-  const handleDownloadContract = () => {
+  const handleDownloadContract = async () => {
     if (breakdown) {
-      generateContractPDF(request, breakdown, config, language);
+      try {
+        const { generateNativePDF } = await import('../utils/pdfGenerator');
+        const blob = await generateNativePDF(request, breakdown, 'contract');
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = 'Contract.pdf';
+        link.click();
+      } catch (e) {
+        console.error(e);
+      }
     }
   };
 

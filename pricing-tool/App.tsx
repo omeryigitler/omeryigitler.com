@@ -10,7 +10,7 @@ import AdminSettings from './components/AdminSettings';
 import {
   Country, SiteType, DesignType, DeliverySpeed, MaintenanceLevel, QuoteRequest, CostBreakdown, PricingRules, Language, DiscountType, AddonService
 } from './types';
-import { generateQuotePDF, generateContractPDF } from './utils/pdfGenerator';
+// removed unused imports
 import { DEFAULT_PRICING_CONFIG, DEFAULT_AVAILABLE_ADDONS } from './constants';
 import { TRANSLATIONS } from './translations';
 
@@ -83,44 +83,39 @@ const App: React.FC = () => {
           customerEmail: request.customerEmail || request.clientEmail
         }));
         setLastBreakdown(breakdown);
-
-        // Switch to proposal view
         setCurrentView('proposal');
 
-        // Wait for render and capture
-        setTimeout(async () => {
+        // Generate NATIVE PDF (No Screenshot)
+        (async () => {
           try {
-            const { captureToPDF } = await import('./utils/pdfGenerator');
-            const blob = await captureToPDF('proposal-content', 'Quote.pdf');
+            const { generateNativePDF } = await import('./utils/pdfGenerator');
+            const blob = await generateNativePDF(
+              { ...quoteRequest, ...request },
+              breakdown,
+              'quote'
+            );
 
             if (blob) {
-              // Convert to base64
               const reader = new FileReader();
               reader.onloadend = () => {
                 window.parent.postMessage({
                   type: 'PDF_GENERATED',
-                  payload: {
-                    quotePdf: reader.result as string,
-                    fileName: 'Quote.pdf'
-                  }
+                  payload: { quotePdf: reader.result as string, fileName: 'Quote.pdf' }
                 }, '*');
               };
               reader.readAsDataURL(blob);
-            } else {
-              window.parent.postMessage({ type: 'PDF_GENERATED', payload: null }, '*');
             }
           } catch (error) {
             console.error("PDF Generation Error:", error);
             window.parent.postMessage({ type: 'PDF_GENERATED', payload: null }, '*');
           }
-        }, 1500); // Wait for images/fonts to load
+        })();
       }
 
       if (event.data.type === 'GENERATE_CONTRACT_PDF') {
         console.log("📜 Generating Contract PDF via Remote Command");
         const { request, breakdown } = event.data.payload;
 
-        // Update state with provided data
         setQuoteRequest(prev => ({
           ...prev,
           ...request,
@@ -128,37 +123,33 @@ const App: React.FC = () => {
           customerEmail: request.customerEmail || request.clientEmail
         }));
         setLastBreakdown(breakdown);
-
-        // Switch to contract view
         setCurrentView('contract');
 
-        // Wait for render and capture
-        setTimeout(async () => {
+        // Generate NATIVE PDF (No Screenshot)
+        (async () => {
           try {
-            const { captureToPDF } = await import('./utils/pdfGenerator');
-            const blob = await captureToPDF('contract-content', 'Contract.pdf');
+            const { generateNativePDF } = await import('./utils/pdfGenerator');
+            const blob = await generateNativePDF(
+              { ...quoteRequest, ...request },
+              breakdown,
+              'contract'
+            );
 
             if (blob) {
-              // Convert to base64
               const reader = new FileReader();
               reader.onloadend = () => {
                 window.parent.postMessage({
                   type: 'PDF_GENERATED',
-                  payload: {
-                    contractPdf: reader.result as string,
-                    fileName: 'Contract.pdf'
-                  }
+                  payload: { contractPdf: reader.result as string, fileName: 'Contract.pdf' }
                 }, '*');
               };
               reader.readAsDataURL(blob);
-            } else {
-              window.parent.postMessage({ type: 'PDF_GENERATED', payload: null }, '*');
             }
           } catch (error) {
             console.error("PDF Generation Error:", error);
             window.parent.postMessage({ type: 'PDF_GENERATED', payload: null }, '*');
           }
-        }, 1500); // Wait for images/fonts to load
+        })();
       }
     };
 
