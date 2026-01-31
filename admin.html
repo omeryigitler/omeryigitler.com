@@ -1151,6 +1151,24 @@
                     }
 
                     if (projectId) {
+                        // --- LOCAL STORAGE PERSISTENCE (Client-Side) ---
+                        // Save PDFs to localStorage so they persist across reloads
+                        const freshDocuments = {};
+
+                        if (payload.quotePdf) {
+                            const key = `project_pdf_quote_${projectId}`;
+                            localStorage.setItem(key, payload.quotePdf);
+                            freshDocuments.quoteUrl = payload.quotePdf; // Pass Data URI directly
+                            console.log(`✅ Quote PDF saved to localStorage: ${key}`);
+                        }
+
+                        if (payload.contractPdf) {
+                            const key = `project_pdf_contract_${projectId}`;
+                            localStorage.setItem(key, payload.contractPdf);
+                            freshDocuments.contractUrl = payload.contractPdf; // Pass Data URI directly
+                            console.log(`✅ Contract PDF saved to localStorage: ${key}`);
+                        }
+
                         event.source.postMessage({ type: 'QUOTE_SAVED', success: true, quoteId: id }, '*');
 
                         // Close the pricing tool modal
@@ -1158,9 +1176,11 @@
 
                         // Switch to projects tab and show the new project
                         switchTab('projects');
+
+                        // Open modal with fresh documents immediately available
                         openProjectModal(projectId, freshDocuments);
 
-                        systemAlert('SUCCESS', 'Project Saved Successfully', 'check-circle');
+                        systemAlert('SUCCESS', 'Project Saved Successfully (Local)', 'check-circle');
                     }
 
                     // Refresh local view if needed
@@ -3113,11 +3133,21 @@
                     renderRoadmap(d.roadmap, d.status);
 
                     // --- POPULATE DOCUMENTS TAB ---
+                    // --- POPULATE DOCUMENTS TAB ---
                     const quoteBtn = document.getElementById('btn-doc-quote');
-                    if (d.documents && d.documents.quoteUrl) {
+                    const localQuotePdf = localStorage.getItem('project_pdf_quote_' + id);
+                    // Determine which source to use: Cloud URL > Local Storage
+                    const activeQuoteUrl = (d.documents && d.documents.quoteUrl) ? d.documents.quoteUrl : localQuotePdf;
+
+                    if (activeQuoteUrl) {
                         quoteBtn.innerHTML = '<i data-lucide="download" class="w-4 h-4 mr-2 inline"></i> Download PDF';
                         quoteBtn.className = 'w-full py-3 rounded-lg bg-green-500/10 text-green-400 border border-green-500/20 hover:bg-green-500 hover:text-white font-bold text-xs uppercase tracking-widest transition-all';
-                        quoteBtn.onclick = () => window.open(d.documents.quoteUrl, '_blank');
+
+                        if (activeQuoteUrl.startsWith('data:')) {
+                            quoteBtn.onclick = () => downloadBase64File(activeQuoteUrl, `Quote_${d.projectNumber || id}.pdf`);
+                        } else {
+                            quoteBtn.onclick = () => window.open(activeQuoteUrl, '_blank');
+                        }
                     } else {
                         quoteBtn.innerText = 'Generate PDF';
                         quoteBtn.className = 'w-full py-3 rounded-lg bg-blue-500/10 text-blue-400 border border-blue-500/20 hover:bg-blue-500 hover:text-white font-bold text-xs uppercase tracking-widest transition-all';
@@ -3125,10 +3155,18 @@
                     }
 
                     const contractBtn = document.getElementById('btn-doc-contract');
-                    if (d.documents && d.documents.contractUrl) {
+                    const localContractPdf = localStorage.getItem('project_pdf_contract_' + id);
+                    const activeContractUrl = (d.documents && d.documents.contractUrl) ? d.documents.contractUrl : localContractPdf;
+
+                    if (activeContractUrl) {
                         contractBtn.innerHTML = '<i data-lucide="download" class="w-4 h-4 mr-2 inline"></i> Download PDF';
                         contractBtn.className = 'w-full py-3 rounded-lg bg-green-500/10 text-green-400 border border-green-500/20 hover:bg-green-500 hover:text-white font-bold text-xs uppercase tracking-widest transition-all';
-                        contractBtn.onclick = () => window.open(d.documents.contractUrl, '_blank');
+
+                        if (activeContractUrl.startsWith('data:')) {
+                            contractBtn.onclick = () => downloadBase64File(activeContractUrl, `Contract_${d.projectNumber || id}.pdf`);
+                        } else {
+                            contractBtn.onclick = () => window.open(activeContractUrl, '_blank');
+                        }
                     } else {
                         contractBtn.innerText = 'Generate PDF';
                         contractBtn.className = 'w-full py-3 rounded-lg bg-purple-500/10 text-purple-400 border border-purple-500/20 hover:bg-purple-500 hover:text-white font-bold text-xs uppercase tracking-widest transition-all';
