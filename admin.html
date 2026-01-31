@@ -2771,7 +2771,7 @@
             document.getElementById('modal-name').innerText = data.name || 'Unknown Entity';
             document.getElementById('modal-email').innerText = data.email || 'No address';
             document.getElementById('modal-date').innerText = data.timestamp ? new Date(data.timestamp.seconds * 1000).toLocaleString() : 'N/A';
-            document.getElementById('modal-message').innerText = data.message || 'Transmission empty.';
+            document.getElementById('message-detail-content').innerText = data.message || 'Transmission empty.';
             document.getElementById('message-modal').classList.remove('hidden');
         }
 
@@ -3322,7 +3322,8 @@
                 <div class="bg-white/5 rounded-2xl p-6 border border-white/5">
                     <p class="text-[10px] text-gray-500 uppercase tracking-[0.2em] mb-4 font-black">Transmission Payload
                     </p>
-                    <p id="modal-message" class="text-gray-300 text-sm leading-relaxed whitespace-pre-wrap font-sans">
+                    <p id="message-detail-content"
+                        class="text-gray-300 text-sm leading-relaxed whitespace-pre-wrap font-sans">
                         ...
                     </p>
                 </div>
