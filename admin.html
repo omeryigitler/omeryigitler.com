@@ -971,6 +971,18 @@
         window.addEventListener('message', async (event) => {
             if (!event.data) return;
 
+            // Handle Direct PDF Generation (From Admin "Generate" button)
+            if (event.data.type === 'PDF_GENERATED') {
+                console.log('📄 PDF Generated via Remote Command', event.data.payload);
+                if (event.data.payload) {
+                    const { quotePdf, contractPdf, fileName } = event.data.payload;
+                    if (quotePdf) downloadBase64File(quotePdf, fileName || 'Quote.pdf');
+                    if (contractPdf) downloadBase64File(contractPdf, fileName || 'Contract.pdf');
+                    systemAlert('✅ PDF Downloaded Successfully');
+                }
+                return;
+            }
+
             // Handle Full Quote Save (New Flow)
             if (event.data.type === 'SAVE_QUOTE_FULL') {
                 console.log('📨 Full Save Quote Request', event.data.payload);
@@ -1080,6 +1092,10 @@
                                 }
                             }, 20000);
 
+                            // ---------------------------------------------------------
+                            // CLOUD UPLOAD DISABLED (Client-side Only)
+                            // ---------------------------------------------------------
+                            /*
                             const docUpdates = {};
 
                             if (payload.quotePdf) {
@@ -1105,9 +1121,11 @@
                             } else {
                                 console.warn("⚠️ Upload ran but no URLs returned. Proceeding without linking docs.");
                             }
+                            */
 
                             // Auto-Download for immediate access
                             if (payload.quotePdf) downloadBase64File(payload.quotePdf, `Quote_${id}.pdf`);
+
                             if (payload.contractPdf) downloadBase64File(payload.contractPdf, `Contract_${id}.pdf`);
 
                             // ALWAYS transition to success, even if PDFs failed (Project is still saved)

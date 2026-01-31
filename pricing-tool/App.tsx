@@ -70,20 +70,95 @@ const App: React.FC = () => {
         setCurrentView('calculator');
       }
 
-      // NEW: Remote PDF Generation
+      // NEW: Remote PDF Generation (Client-side only, no cloud)
       if (event.data.type === 'GENERATE_QUOTE_PDF') {
         console.log("📄 Generating Quote PDF via Remote Command");
         const { request, breakdown } = event.data.payload;
-        // Use current config and addons state
-        generateQuotePDF(request, breakdown, pricingConfig, availableAddons, language);
-        window.parent.postMessage({ type: 'PDF_GENERATED', success: true }, '*');
+
+        // Update state with provided data
+        setQuoteRequest(prev => ({
+          ...prev,
+          ...request,
+          customerName: request.customerName || request.clientName,
+          customerEmail: request.customerEmail || request.clientEmail
+        }));
+        setLastBreakdown(breakdown);
+
+        // Switch to proposal view
+        setCurrentView('proposal');
+
+        // Wait for render and capture
+        setTimeout(async () => {
+          try {
+            const { captureToPDF } = await import('./utils/pdfGenerator');
+            const blob = await captureToPDF('proposal-content', 'Quote.pdf');
+
+            if (blob) {
+              // Convert to base64
+              const reader = new FileReader();
+              reader.onloadend = () => {
+                window.parent.postMessage({
+                  type: 'PDF_GENERATED',
+                  payload: {
+                    quotePdf: reader.result as string,
+                    fileName: 'Quote.pdf'
+                  }
+                }, '*');
+              };
+              reader.readAsDataURL(blob);
+            } else {
+              window.parent.postMessage({ type: 'PDF_GENERATED', payload: null }, '*');
+            }
+          } catch (error) {
+            console.error("PDF Generation Error:", error);
+            window.parent.postMessage({ type: 'PDF_GENERATED', payload: null }, '*');
+          }
+        }, 1500); // Wait for images/fonts to load
       }
 
       if (event.data.type === 'GENERATE_CONTRACT_PDF') {
         console.log("📜 Generating Contract PDF via Remote Command");
         const { request, breakdown } = event.data.payload;
-        generateContractPDF(request, breakdown, pricingConfig, language);
-        window.parent.postMessage({ type: 'PDF_GENERATED', success: true }, '*');
+
+        // Update state with provided data
+        setQuoteRequest(prev => ({
+          ...prev,
+          ...request,
+          customerName: request.customerName || request.clientName,
+          customerEmail: request.customerEmail || request.clientEmail
+        }));
+        setLastBreakdown(breakdown);
+
+        // Switch to contract view
+        setCurrentView('contract');
+
+        // Wait for render and capture
+        setTimeout(async () => {
+          try {
+            const { captureToPDF } = await import('./utils/pdfGenerator');
+            const blob = await captureToPDF('contract-content', 'Contract.pdf');
+
+            if (blob) {
+              // Convert to base64
+              const reader = new FileReader();
+              reader.onloadend = () => {
+                window.parent.postMessage({
+                  type: 'PDF_GENERATED',
+                  payload: {
+                    contractPdf: reader.result as string,
+                    fileName: 'Contract.pdf'
+                  }
+                }, '*');
+              };
+              reader.readAsDataURL(blob);
+            } else {
+              window.parent.postMessage({ type: 'PDF_GENERATED', payload: null }, '*');
+            }
+          } catch (error) {
+            console.error("PDF Generation Error:", error);
+            window.parent.postMessage({ type: 'PDF_GENERATED', payload: null }, '*');
+          }
+        }, 1500); // Wait for images/fonts to load
       }
     };
 
