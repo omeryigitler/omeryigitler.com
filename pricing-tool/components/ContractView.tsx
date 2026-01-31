@@ -1,20 +1,23 @@
 
 
-import React from 'react';
-import { QuoteRequest, PricingRules, Country, Language, DiscountType, PricingFactorType, PricingFactor, CostBreakdown, DesignType } from '../types';
+import React, { useRef, useState } from 'react';
+import { QuoteRequest, PricingRules, Country, Language, DiscountType, PricingFactorType, PricingFactor, CostBreakdown, DesignType, AddonService } from '../types';
 import { TRANSLATIONS } from '../translations';
-import { ArrowLeft, Printer } from 'lucide-react';
-import { generateContractPDF, generateQuotePDF } from '../utils/pdfGenerator';
+import { ArrowLeft, Printer, Loader } from 'lucide-react';
+import { captureToPDF } from '../utils/pdfGenerator';
+import ProposalView from './ProposalView';
 
 interface Props {
   config: Record<Country, PricingRules>;
+  addons: AddonService[]; // Add addons prop
   request: QuoteRequest;
   onBack: () => void;
   language: Language;
   breakdown: CostBreakdown | null;
 }
 
-const ContractView: React.FC<Props> = ({ config, request, onBack, language, breakdown }) => {
+const ContractView: React.FC<Props> = ({ config, addons, request, onBack, language, breakdown }) => {
+  const [isGenerating, setIsGenerating] = useState(false);
   const rules = config[request.country];
   const t = TRANSLATIONS[language].contract;
   const common = TRANSLATIONS[language].common;
@@ -251,16 +254,36 @@ const ContractView: React.FC<Props> = ({ config, request, onBack, language, brea
   );
 
   return (
-    <div className="max-w-4xl mx-auto py-8 px-4">
+    <div className="max-w-4xl mx-auto py-8 px-4 relative">
+      {/* 
+        HIDDEN PROPOSAL VIEW FOR PDF GENERATION 
+        We mount it off-screen so we can capture it with html2canvas.
+        Using fixed width to ensure predictable PDF sizing.
+      */}
+      <div style={{ position: 'absolute', top: -9999, left: -9999, width: '1000px', pointerEvents: 'none' }}>
+        <ProposalView
+          config={config}
+          addons={addons}
+          request={request}
+          breakdown={breakdown}
+          onBack={() => { }} // No-op
+          onNavigate={() => { }} // No-op
+          language={language}
+        // We can't easily pass 'hidden mode' props without modifying ProposalView, 
+        // but html2canvas will capture #proposal-content which excludes buttons. Phew!
+        />
+      </div>
+
       <div className="mb-6 flex justify-between items-center no-print">
-        <button onClick={onBack} className="flex items-center text-zinc-400 hover:text-white font-medium transition-colors">
+        <button onClick={onBack} disabled={isGenerating} className="flex items-center text-zinc-400 hover:text-white font-medium transition-colors disabled:opacity-50">
           <ArrowLeft className="w-4 h-4 mr-2" />
           {common.back}
         </button>
         <div className="flex space-x-3">
           <button
             onClick={() => window.print()}
-            className="flex items-center bg-zinc-800 text-white border border-zinc-700 px-6 py-3 rounded-xl font-bold hover:bg-zinc-700 transition-colors"
+            disabled={isGenerating}
+            className="flex items-center bg-zinc-800 text-white border border-zinc-700 px-6 py-3 rounded-xl font-bold hover:bg-zinc-700 transition-colors disabled:opacity-50"
           >
             <Printer className="w-4 h-4 mr-2" />
             {common.print}
@@ -268,13 +291,24 @@ const ContractView: React.FC<Props> = ({ config, request, onBack, language, brea
 
           <button
             onClick={async () => {
-              // Send final payload to Admin Panel
-              if (breakdown) {
-                // Generate PDFs as Blobs
-                const quoteBlob = generateQuotePDF(request, breakdown, config, [], language, false) as Blob;
-                const contractBlob = generateContractPDF(request, breakdown, config, language, false) as Blob;
+              if (isGenerating || !breakdown) return;
+              setIsGenerating(true);
 
-                // Async helper to read blob
+              try {
+                // CAPTURE "PROPOSAL" (which is mounted off-screen)
+                // Note: The hidden div renders Wrapper > ProposalView. ProposalView has div#proposal-content inside.
+                // We target that inner div.
+                const quoteBlob = await captureToPDF('proposal-content', `Quote.pdf`);
+
+                // CAPTURE "CONTRACT" (which is this view)
+                // We targeted "contract-content" but we haven't added that ID yet. Let's add it below.
+                const contractBlob = await captureToPDF('contract-content', `Contract.pdf`);
+
+                if (!quoteBlob || !contractBlob) {
+                  throw new Error("Failed to capture PDF content.");
+                }
+
+                // Helper to convert blob to base64
                 const blobToBase64 = (blob: Blob): Promise<string> => {
                   return new Promise((resolve, reject) => {
                     const reader = new FileReader();
@@ -284,40 +318,48 @@ const ContractView: React.FC<Props> = ({ config, request, onBack, language, brea
                   });
                 };
 
-                try {
-                  const [quoteBase64, contractBase64] = await Promise.all([
-                    blobToBase64(quoteBlob),
-                    blobToBase64(contractBlob)
-                  ]);
+                const [quoteBase64, contractBase64] = await Promise.all([
+                  blobToBase64(quoteBlob),
+                  blobToBase64(contractBlob)
+                ]);
 
-                  window.parent.postMessage({
-                    type: 'SAVE_QUOTE_FULL',
-                    payload: {
-                      request: request,
-                      breakdown: breakdown,
-                      total: breakdown.finalTotal,
-                      status: 'contract_generated',
-                      quotePdf: quoteBase64,
-                      contractPdf: contractBase64
-                    }
-                  }, '*');
+                // Send to Parent
+                window.parent.postMessage({
+                  type: 'SAVE_QUOTE_FULL',
+                  payload: {
+                    request: request,
+                    breakdown: breakdown,
+                    total: breakdown.finalTotal,
+                    status: 'contract_generated',
+                    quotePdf: quoteBase64,
+                    contractPdf: contractBase64
+                  }
+                }, '*');
 
-                  // Optional visual feedback - REMOVED to prevent blocking Admin Panel logic
-                  // alert(language === Language.TR ? 'Proje kaydedildi ve PDF dosyaları oluşturuldu!' : 'Project saved and PDFs generated!');
-                } catch (e) {
-                  console.error("PDF Generation Error", e);
-                  // alert("Error generating PDF files");
-                }
+              } catch (e) {
+                console.error("PDF Capture Error", e);
+                alert("Hata: PDF oluşturulamadı. (Error generating PDF)");
+              } finally {
+                setIsGenerating(false);
               }
             }}
-            className="flex items-center bg-[#FFD700] text-black px-6 py-3 rounded-xl font-bold hover:bg-[#FFD700] transition-colors shadow-lg shadow-taurusGold/20"
+            disabled={isGenerating}
+            className="flex items-center bg-[#FFD700] text-black px-6 py-3 rounded-xl font-bold hover:bg-[#FFD700] transition-colors shadow-lg shadow-taurusGold/20 disabled:cursor-not-allowed disabled:opacity-75"
           >
-            {language === Language.TR ? 'Projeyi Kaydet & Bitir' : 'Save & Finalize Project'}
+            {isGenerating ? (
+              <>
+                <Loader className="w-4 h-4 mr-2 animate-spin" />
+                Processing...
+              </>
+            ) : (
+              language === Language.TR ? 'Projeyi Kaydet & Bitir' : 'Save & Finalize Project'
+            )}
           </button>
         </div>
       </div>
 
-      <div className="bg-white shadow-xl p-12 text-justify leading-relaxed text-zinc-800 text-sm sm:text-base print:shadow-none print:p-0">
+      {/* Main Contract Content Wrapper - ID ADDED HERE */}
+      <div id="contract-content" className="bg-white shadow-xl p-12 text-justify leading-relaxed text-zinc-800 text-sm sm:text-base print:shadow-none print:p-0">
         <h1 className="text-2xl font-bold text-center mb-8 uppercase font-poppins text-black">{t.title}</h1>
 
         {language === Language.TR ? renderTurkishContract() : renderEnglishContract()}

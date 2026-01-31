@@ -1094,15 +1094,21 @@
                                 if (contractUrl) docUpdates.contractUrl = contractUrl;
                             }
 
-                            if (Object.keys(docUpdates).length > 0) {
-                                await db.collection('projects').doc(projectId).update({
-                                    documents: docUpdates
-                                });
+                            const finalUpdate = {};
+                            if (docUpdates.quoteUrl) finalUpdate['documents.quoteUrl'] = docUpdates.quoteUrl;
+                            if (docUpdates.contractUrl) finalUpdate['documents.contractUrl'] = docUpdates.contractUrl;
+
+                            if (Object.keys(finalUpdate).length > 0) {
+                                await db.collection('projects').doc(projectId).update(finalUpdate);
                                 console.log('✅ Documents attached to project.');
                                 freshDocuments = docUpdates; // Capture for UI update
                             } else {
                                 console.warn("⚠️ Upload ran but no URLs returned. Proceeding without linking docs.");
                             }
+
+                            // Auto-Download for immediate access
+                            if (payload.quotePdf) downloadBase64File(payload.quotePdf, `Quote_${id}.pdf`);
+                            if (payload.contractPdf) downloadBase64File(payload.contractPdf, `Contract_${id}.pdf`);
 
                             // ALWAYS transition to success, even if PDFs failed (Project is still saved)
                             systemAlert('SUCCESS', 'Project finalized' + (Object.keys(docUpdates).length > 0 ? ' and Documents uploaded.' : '.'), 'check-circle');
@@ -1582,6 +1588,19 @@
                 // alert("Storage Error: " + e.message + "\nCheck console for details.");
                 return null;
             }
+        }
+
+
+        /**
+         * Helper to trigger download of base64 file
+         */
+        function downloadBase64File(base64Data, fileName) {
+            const link = document.createElement('a');
+            link.href = base64Data;
+            link.download = fileName;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
         }
 
         /**
