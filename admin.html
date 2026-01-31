@@ -1537,14 +1537,23 @@
          */
         async function uploadDataUrl(dataUrl, path) {
             try {
-                const blob = await (await fetch(dataUrl)).blob();
-                // Explicitly use storage instance
-                const storageRef = firebase.storage().ref();
-                const fileRef = storageRef.child(path);
+                // Timeout Promise
+                const timeout = new Promise((_, reject) =>
+                    setTimeout(() => reject(new Error("Upload timed out after 15s")), 15000)
+                );
 
-                await fileRef.put(blob);
-                const url = await fileRef.getDownloadURL();
-                return url;
+                // Actual Upload Promise
+                const uploadTask = async () => {
+                    const blob = await (await fetch(dataUrl)).blob();
+                    const storageRef = firebase.storage().ref();
+                    const fileRef = storageRef.child(path);
+                    await fileRef.put(blob);
+                    return await fileRef.getDownloadURL();
+                };
+
+                // Race
+                return await Promise.race([uploadTask(), timeout]);
+
             } catch (e) {
                 console.error("Upload failed details:", e);
                 // alert("Storage Error: " + e.message + "\nCheck console for details.");
