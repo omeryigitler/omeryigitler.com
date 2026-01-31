@@ -1087,16 +1087,25 @@
                                     documents: docUpdates
                                 });
                                 console.log('✅ Documents attached to project.');
-                                systemAlert('SUCCESS', 'Project finalized and Documents uploaded.', 'check-circle');
                                 freshDocuments = docUpdates; // Capture for UI update
                             } else {
-                                console.warn("Upload ran but no URLs returned?");
+                                console.warn("⚠️ Upload ran but no URLs returned. Proceeding without linking docs.");
                             }
+
+                            // ALWAYS transition to success, even if PDFs failed (Project is still saved)
+                            systemAlert('SUCCESS', 'Project finalized' + (Object.keys(docUpdates).length > 0 ? ' and Documents uploaded.' : '.'), 'check-circle');
 
                         } catch (e) {
                             console.error("Failed to upload PDFs:", e);
+                            // Even on error, we should probably close the sync modal or show the error
                             systemAlert('UPLOAD ERROR', "Failed to upload to Cloud Storage: " + e.message, 'x-circle');
                         }
+                    } else {
+                        // Project Saved but no PDF payload requested?
+                        // We should probably show Success if we didn't enter the PDF block
+                        // But usually SAVE_QUOTE_FULL implies PDFs.
+                        // For now, let's assume if we didn't enter PDF block, we don't need to close SYNC because we never opened it?
+                        // Wait, SYNC is opened inside the PDF block. Correct.
                     }
 
                     if (projectId) {
