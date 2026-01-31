@@ -36,46 +36,42 @@ const App: React.FC = () => {
     // --- NEW: Handle Redirection from Admin Panel ---
     const params = new URLSearchParams(window.location.search);
     const requestedView = params.get('view');
-    
-    if (requestedView === 'proposal' || requestedView === 'contract') {
-      const storedData = localStorage.getItem('pricing_tool_data');
-      if (storedData) {
-        try {
-          const data = JSON.parse(storedData);
-          console.log("📥 Loaded Pricing Data from Storage:", data);
-          
-          setQuoteRequest(prev => ({
-            ...prev,
-            customerName: data.customerName || '',
-            customerEmail: data.customerEmail || '',
-            country: (data.country as Country) || Country.TR,
-            siteType: (data.siteType as SiteType) || SiteType.CORPORATE,
-            pageCount: data.pageCount || 10,
-            designType: (data.designType as DesignType) || DesignType.TEMPLATE,
-            deliverySpeed: (data.deliverySpeed as DeliverySpeed) || DeliverySpeed.STANDARD,
-            maintenanceLevel: (data.maintenanceLevel as MaintenanceLevel) || MaintenanceLevel.NONE,
-            selectedAddons: data.selectedAddons || [],
-            // Ensure discount info is passed if available in breakdown
-            discountType: DiscountType.FIXED,
-            discountValue: data.breakdown?.discountAmount || 0, 
-          }));
+    const payload = params.get('payload');
 
-          if (data.breakdown) {
-            setLastBreakdown(data.breakdown);
-          }
+    if ((requestedView === 'proposal' || requestedView === 'contract') && payload) {
+      try {
+        const jsonString = decodeURIComponent(atob(payload));
+        const data = JSON.parse(jsonString);
+        console.log("📥 Loaded Pricing Data from URL:", data);
 
-          // Force Language to Turkish if Country is TR
-          if (data.country === 'TR') {
-            setLanguage(Language.TR);
-          }
+        setQuoteRequest(prev => ({
+          ...prev,
+          customerName: data.customerName || '',
+          customerEmail: data.customerEmail || '',
+          country: (data.country as Country) || Country.TR,
+          siteType: (data.siteType as SiteType) || SiteType.CORPORATE,
+          pageCount: data.pageCount || 10,
+          designType: (data.designType as DesignType) || DesignType.TEMPLATE,
+          deliverySpeed: (data.deliverySpeed as DeliverySpeed) || DeliverySpeed.STANDARD,
+          maintenanceLevel: (data.maintenanceLevel as MaintenanceLevel) || MaintenanceLevel.NONE,
+          selectedAddons: data.selectedAddons || [],
+          discountType: DiscountType.FIXED,
+          discountValue: data.breakdown?.discountAmount || 0,
+        }));
 
-          setCurrentView(requestedView);
-          
-          // Clean up storage to avoid stuck state? Optional. 
-          // localStorage.removeItem('pricing_tool_data'); 
-        } catch (e) {
-          console.error("Failed to parse pricing data:", e);
+        if (data.breakdown) {
+          setLastBreakdown(data.breakdown);
         }
+
+        // Force Language to Turkish if Country is TR
+        if (data.country === 'TR') {
+          setLanguage(Language.TR);
+        }
+
+        setCurrentView(requestedView);
+
+      } catch (e) {
+        console.error("Failed to parse pricing payload:", e);
       }
     }
   }, []);
