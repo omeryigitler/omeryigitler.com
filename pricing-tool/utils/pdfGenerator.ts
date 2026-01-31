@@ -14,8 +14,9 @@ export const generateQuotePDF = (
     breakdown: CostBreakdown,
     config: Record<Country, PricingRules>,
     addons: AddonService[],
-    language: Language
-) => {
+    language: Language,
+    download: boolean = true
+): Blob | void => {
     const doc = new jsPDF();
     const rules = config[request.country];
     const currencySymbol = rules.currencySymbol;
@@ -80,6 +81,7 @@ export const generateQuotePDF = (
     tableRows.push([{ content: 'TOTAL PROJECT COST', styles: { fillColor: [255, 215, 0], textColor: [0, 0, 0], fontStyle: 'bold', fontSize: 12 } }, { content: formatPrice(breakdown.finalTotal, currencySymbol, language), styles: { fillColor: [255, 215, 0], textColor: [0, 0, 0], fontStyle: 'bold', fontSize: 12 } }]);
 
     // -- RENDER TABLE --
+    // @ts-ignore
     autoTable(doc, {
         startY: 50,
         head: [['Description', 'Amount']],
@@ -99,6 +101,7 @@ export const generateQuotePDF = (
     doc.setTextColor(0, 0, 0);
     doc.text('Recurring Costs', 14, finalY);
 
+    // @ts-ignore
     autoTable(doc, {
         startY: finalY + 5,
         body: [
@@ -112,9 +115,13 @@ export const generateQuotePDF = (
         }
     });
 
-    // Save
-    const fileName = `Quote_${request.customerName.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`;
-    doc.save(fileName);
+    // Output
+    if (download) {
+        const fileName = `Quote_${request.customerName.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`;
+        doc.save(fileName);
+    } else {
+        return doc.output('blob');
+    }
 };
 
 
@@ -122,8 +129,9 @@ export const generateContractPDF = (
     request: QuoteRequest,
     breakdown: CostBreakdown,
     config: Record<Country, PricingRules>,
-    language: Language
-) => {
+    language: Language,
+    download: boolean = true
+): Blob | void => {
     const doc = new jsPDF();
     const rules = config[request.country];
     const currencySymbol = rules.currencySymbol;
@@ -173,6 +181,7 @@ export const generateContractPDF = (
     doc.setFont('helvetica', 'bold');
     doc.text('AGREED PRICING', 14, 130);
 
+    // @ts-ignore
     autoTable(doc, {
         startY: 135,
         head: [['Item', 'Amount']],
@@ -194,7 +203,11 @@ export const generateContractPDF = (
     doc.text('Agency Representative', 14, finalY + 5);
     doc.text('Client Representative', 120, finalY + 5);
 
-    // Save
-    const fileName = `Contract_${request.customerName.replace(/\s+/g, '_')}.pdf`;
-    doc.save(fileName);
+    // Output
+    if (download) {
+        const fileName = `Contract_${request.customerName.replace(/\s+/g, '_')}.pdf`;
+        doc.save(fileName);
+    } else {
+        return doc.output('blob');
+    }
 };

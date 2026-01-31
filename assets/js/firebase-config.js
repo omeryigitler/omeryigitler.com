@@ -22,7 +22,8 @@ if (typeof firebase !== 'undefined') {
     // Global DB Access
     window.db = firebase.firestore();
     window.auth = firebase.auth();
-    console.log("✅ Window.DB Exposed");
+    window.storage = firebase.storage();
+    console.log("✅ Window.DB & Storage Exposed");
 } else {
     console.error("❌ Firebase SDK not found!");
 }

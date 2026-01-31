@@ -4,6 +4,7 @@ import React from 'react';
 import { QuoteRequest, PricingRules, Country, Language, DiscountType, PricingFactorType, PricingFactor, CostBreakdown, DesignType } from '../types';
 import { TRANSLATIONS } from '../translations';
 import { ArrowLeft, Printer } from 'lucide-react';
+import { generateContractPDF, generateQuotePDF } from '../utils/pdfGenerator';
 
 interface Props {
   config: Record<Country, PricingRules>;
@@ -266,21 +267,47 @@ const ContractView: React.FC<Props> = ({ config, request, onBack, language, brea
           </button>
 
           <button
-            onClick={() => {
+            onClick={async () => {
               // Send final payload to Admin Panel
               if (breakdown) {
-                window.parent.postMessage({
-                  type: 'SAVE_QUOTE_FULL',
-                  payload: {
-                    request: request,
-                    breakdown: breakdown,
-                    total: breakdown.finalTotal,
-                    status: 'contract_generated'
-                  }
-                }, '*');
+                // Generate PDFs as Blobs
+                const quoteBlob = generateQuotePDF(request, breakdown, config, [], language, false) as Blob;
+                const contractBlob = generateContractPDF(request, breakdown, config, language, false) as Blob;
 
-                // Optional visual feedback
-                alert(language === Language.TR ? 'Proje başarıyla kaydedildi!' : 'Project saved successfully!');
+                // Async helper to read blob
+                const blobToBase64 = (blob: Blob): Promise<string> => {
+                  return new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onloadend = () => resolve(reader.result as string);
+                    reader.onerror = reject;
+                    reader.readAsDataURL(blob);
+                  });
+                };
+
+                try {
+                  const [quoteBase64, contractBase64] = await Promise.all([
+                    blobToBase64(quoteBlob),
+                    blobToBase64(contractBlob)
+                  ]);
+
+                  window.parent.postMessage({
+                    type: 'SAVE_QUOTE_FULL',
+                    payload: {
+                      request: request,
+                      breakdown: breakdown,
+                      total: breakdown.finalTotal,
+                      status: 'contract_generated',
+                      quotePdf: quoteBase64,
+                      contractPdf: contractBase64
+                    }
+                  }, '*');
+
+                  // Optional visual feedback
+                  alert(language === Language.TR ? 'Proje kaydedildi ve PDF dosyaları oluşturuldu!' : 'Project saved and PDFs generated!');
+                } catch (e) {
+                  console.error("PDF Generation Error", e);
+                  alert("Error generating PDF files");
+                }
               }
             }}
             className="flex items-center bg-[#FFD700] text-black px-6 py-3 rounded-xl font-bold hover:bg-[#FFD700] transition-colors shadow-lg shadow-taurusGold/20"

@@ -893,6 +893,7 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
     <script src="assets/js/firebase-config.js"></script>
     <script src="assets/js/tracker/logo_data.js"></script>
     <script src="assets/js/tracker/taurus-tracker.js?v=V42"></script>
@@ -1010,17 +1011,19 @@
                         lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
                     };
 
+                    let projectId = editingProjectId;
+
                     // CASE 1: Updating Existing Project
-                    if (editingProjectId) {
+                    if (projectId) {
                         try {
-                            await db.collection('projects').doc(editingProjectId).update(projectUpdates);
-                            console.log('✅ Project synced with new quote data:', editingProjectId);
+                            await db.collection('projects').doc(projectId).update(projectUpdates);
+                            console.log('✅ Project synced with new quote data:', projectId);
 
                             event.source.postMessage({ type: 'QUOTE_SAVED', success: true, quoteId: id }, '*'); // Close iframe loader?
 
                             // Return to project view
                             switchTab('projects');
-                            openProjectModal(editingProjectId); // Re-open to show new data
+                            openProjectModal(projectId); // Re-open to show new data
                             alert('Project Updated Successfully!');
 
                         } catch (err) {
@@ -1043,23 +1046,56 @@
                                 description: `Generated from Quote #${id}. Sites: ${request.siteType}, Pages: ${request.pageCount}`
                             };
 
-                            const newProjectId = await saveProjectToFirestore(newProjectData);
+                            const createdId = await saveProjectToFirestore(newProjectData);
+                            projectId = createdId; // Capture for PDF logic
 
-                            if (newProjectId) {
+                            if (projectId) {
                                 // Apply the detailed updates that saveProjectToFirestore missed
-                                await db.collection('projects').doc(newProjectId).update(projectUpdates);
+                                await db.collection('projects').doc(projectId).update(projectUpdates);
 
-                                console.log('✅ New Project Created:', newProjectId);
-                                event.source.postMessage({ type: 'QUOTE_SAVED', success: true, quoteId: id }, '*');
-
-                                switchTab('projects');
-                                openProjectModal(newProjectId);
+                                console.log('✅ New Project Created:', projectId);
                                 alert('New Project Created & Linked to Quote!');
                             }
                         } catch (err) {
                             console.error('❌ Failed to create project from quote:', err);
                             alert('Error creating project: ' + err.message);
                         }
+                    }
+
+                    // --- PDF UPLOAD LOGIC ---
+                    if (projectId && (payload.quotePdf || payload.contractPdf)) {
+                        console.log('📂 Uploading generated PDFs to Storage for Project:', projectId);
+                        try {
+                            const docUpdates = {};
+
+                            if (payload.quotePdf) {
+                                const quoteUrl = await uploadDataUrl(payload.quotePdf, `projects/${projectId}/Quote_${id}.pdf`);
+                                if (quoteUrl) docUpdates.quoteUrl = quoteUrl;
+                            }
+
+                            if (payload.contractPdf) {
+                                const contractUrl = await uploadDataUrl(payload.contractPdf, `projects/${projectId}/Contract_${id}.pdf`);
+                                if (contractUrl) docUpdates.contractUrl = contractUrl;
+                            }
+
+                            if (Object.keys(docUpdates).length > 0) {
+                                await db.collection('projects').doc(projectId).update({
+                                    documents: docUpdates // Overwrites or merges? Firestore merge is default for update()
+                                });
+                                console.log('✅ Documents attached to project.');
+                                alert('Project saved, PDFs uploaded successfully!');
+                            }
+
+                        } catch (e) {
+                            console.error("Failed to upload PDFs:", e);
+                            alert("Project saved, but PDF upload failed.");
+                        }
+                    }
+
+                    if (projectId) {
+                        event.source.postMessage({ type: 'QUOTE_SAVED', success: true, quoteId: id }, '*');
+                        switchTab('projects');
+                        openProjectModal(projectId);
                     }
 
                     // Refresh local view if needed
@@ -1481,7 +1517,26 @@
         }
 
         /**
-         * Save quote to Firestore from Pricing Tool
+         * Upload Data URL to Firebase Storage
+         * @param {string} dataUrl - Base64 Data URL
+         * @param {string} path - Storage path
+         * @returns {Promise<string>} Download URL
+         */
+        async function uploadDataUrl(dataUrl, path) {
+            try {
+                const blob = await (await fetch(dataUrl)).blob();
+                const ref = storage.ref().child(path);
+                await ref.put(blob);
+                const url = await ref.getDownloadURL();
+                return url;
+            } catch (e) {
+                console.error("Upload failed:", e);
+                return null;
+            }
+        }
+
+        /**
+         * Save quote to Firestore
          * @param {Object} quoteData - Quote data from pricing tool
          * @param {string} messageId - Optional related message ID
          * @returns {Promise<string>} Quote document ID
@@ -2949,6 +3004,29 @@
                     // --- POPULATE ROADMAP TAB ---
                     renderRoadmap(d.roadmap, d.status);
 
+                    // --- POPULATE DOCUMENTS TAB ---
+                    const quoteBtn = document.getElementById('btn-doc-quote');
+                    if (d.documents && d.documents.quoteUrl) {
+                        quoteBtn.innerHTML = '<i data-lucide="download" class="w-4 h-4 mr-2 inline"></i> Download PDF';
+                        quoteBtn.className = 'w-full py-3 rounded-lg bg-green-500/10 text-green-400 border border-green-500/20 hover:bg-green-500 hover:text-white font-bold text-xs uppercase tracking-widest transition-all';
+                        quoteBtn.onclick = () => window.open(d.documents.quoteUrl, '_blank');
+                    } else {
+                        quoteBtn.innerText = 'Generate PDF';
+                        quoteBtn.className = 'w-full py-3 rounded-lg bg-blue-500/10 text-blue-400 border border-blue-500/20 hover:bg-blue-500 hover:text-white font-bold text-xs uppercase tracking-widest transition-all';
+                        quoteBtn.onclick = () => generateProjectPDF('quote');
+                    }
+
+                    const contractBtn = document.getElementById('btn-doc-contract');
+                    if (d.documents && d.documents.contractUrl) {
+                        contractBtn.innerHTML = '<i data-lucide="download" class="w-4 h-4 mr-2 inline"></i> Download PDF';
+                        contractBtn.className = 'w-full py-3 rounded-lg bg-green-500/10 text-green-400 border border-green-500/20 hover:bg-green-500 hover:text-white font-bold text-xs uppercase tracking-widest transition-all';
+                        contractBtn.onclick = () => window.open(d.documents.contractUrl, '_blank');
+                    } else {
+                        contractBtn.innerText = 'Generate PDF';
+                        contractBtn.className = 'w-full py-3 rounded-lg bg-purple-500/10 text-purple-400 border border-purple-500/20 hover:bg-purple-500 hover:text-white font-bold text-xs uppercase tracking-widest transition-all';
+                        contractBtn.onclick = () => generateProjectPDF('contract');
+                    }
+
                 } catch (e) {
                     console.error("Error opening project modal:", e);
                 }
@@ -3437,7 +3515,7 @@
                             <h5 class="text-lg font-bold text-white mb-2">Formal Quotation</h5>
                             <p class="text-sm text-gray-500 mb-6">Generate a professional PDF quote including breakdown,
                                 technical specs, and terms.</p>
-                            <button onclick="generateProjectPDF('quote')"
+                            <button id="btn-doc-quote" onclick="generateProjectPDF('quote')"
                                 class="w-full py-3 rounded-lg bg-blue-500/10 text-blue-400 border border-blue-500/20 hover:bg-blue-500 hover:text-white font-bold text-xs uppercase tracking-widest transition-all">
                                 Generate PDF
                             </button>
@@ -3453,7 +3531,7 @@
                             <h5 class="text-lg font-bold text-white mb-2">Service Contract</h5>
                             <p class="text-sm text-gray-500 mb-6">Draft a standard service agreement populated with
                                 project details and legal terms.</p>
-                            <button onclick="generateProjectPDF('contract')"
+                            <button id="btn-doc-contract" onclick="generateProjectPDF('contract')"
                                 class="w-full py-3 rounded-lg bg-purple-500/10 text-purple-400 border border-purple-500/20 hover:bg-purple-500 hover:text-white font-bold text-xs uppercase tracking-widest transition-all">
                                 Generate PDF
                             </button>
