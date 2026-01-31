@@ -3323,11 +3323,15 @@
                 pricingView.style.position = 'fixed';
                 pricingView.style.left = '-10000px';
                 pricingView.style.top = '0';
-                pricingView.style.width = '100vw'; // Full viewport to ensure layout
-                pricingView.style.height = '100vh';
+                pricingView.style.width = '1400px'; // Fixed optimal width for A4 ratio
+                pricingView.style.height = '5000px'; // Large height to prevent scrolling/cropping
                 pricingView.style.zIndex = '-9999';
-                pricingView.style.opacity = '1'; // Must be 1 for capture, but it's off-screen
-                console.log('👁️ Pricing view activated off-screen for PDF generation');
+                pricingView.style.opacity = '0'; // Hide from user but keep renderable logic active
+                // Opacity 0 might be skipped by some optimizations, but opacity 1 is safer.
+                // Since it is -10000px left, user won't see it anyway.
+                // Let's use opacity 1 to be absolutely sure html2canvas sees it.
+                pricingView.style.opacity = '1';
+                console.log('👁️ Pricing view activated off-screen (extended height) for PDF generation');
             }
 
             if (currentProjectData && currentProjectData.breakdown && iframe) {
