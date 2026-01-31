@@ -76,12 +76,14 @@ const App: React.FC = () => {
         const { request, breakdown } = event.data.payload;
         // Use current config and addons state
         generateQuotePDF(request, breakdown, pricingConfig, availableAddons, language);
+        window.parent.postMessage({ type: 'PDF_GENERATED', success: true }, '*');
       }
 
       if (event.data.type === 'GENERATE_CONTRACT_PDF') {
         console.log("📜 Generating Contract PDF via Remote Command");
         const { request, breakdown } = event.data.payload;
         generateContractPDF(request, breakdown, pricingConfig, language);
+        window.parent.postMessage({ type: 'PDF_GENERATED', success: true }, '*');
       }
     };
 

@@ -1113,6 +1113,12 @@
                 const id = await saveQuoteToFirestore(event.data.data, event.data.messageId);
                 if (id) event.source.postMessage({ type: 'QUOTE_SAVED', success: true, quoteId: id }, '*');
             }
+
+            // PDF Generation Success Handler
+            if (event.data.type === 'PDF_GENERATED') {
+                // Replace spinner with success
+                systemAlert('SUCCESS', 'Document downloaded successfully.', 'check-circle');
+            }
         });
 
         // --- UI LOGIC ---
