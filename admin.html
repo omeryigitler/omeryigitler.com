@@ -1024,7 +1024,7 @@
                             // Return to project view
                             switchTab('projects');
                             openProjectModal(projectId); // Re-open to show new data
-                            alert('Project Updated Successfully!');
+                            // alert('Project Updated Successfully!');
 
                         } catch (err) {
                             console.error('❌ Failed to sync project with quote:', err);
@@ -1054,7 +1054,7 @@
                                 await db.collection('projects').doc(projectId).update(projectUpdates);
 
                                 console.log('✅ New Project Created:', projectId);
-                                alert('New Project Created & Linked to Quote!');
+                                // alert('New Project Created & Linked to Quote!');
                             }
                         } catch (err) {
                             console.error('❌ Failed to create project from quote:', err);
