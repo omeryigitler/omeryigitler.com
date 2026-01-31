@@ -18,7 +18,9 @@ export const generateQuotePDF = (
     download: boolean = true
 ): Blob | void => {
     const doc = new jsPDF();
-    const rules = config[request.country];
+    // Safety check for country
+    const countryCode = (request.country && config[request.country]) ? request.country : Country.TR;
+    const rules = config[countryCode] || config[Country.TR];
     const currencySymbol = rules.currencySymbol;
 
     // -- HEADER --
@@ -133,7 +135,9 @@ export const generateContractPDF = (
     download: boolean = true
 ): Blob | void => {
     const doc = new jsPDF();
-    const rules = config[request.country];
+    // Safety check for country
+    const countryCode = (request.country && config[request.country]) ? request.country : Country.TR;
+    const rules = config[countryCode] || config[Country.TR];
     const currencySymbol = rules.currencySymbol;
 
     // -- TITLE --
