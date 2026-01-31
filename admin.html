@@ -1123,13 +1123,16 @@
                             }
                             */
 
+                            // Cloud upload disabled - no documents uploaded
+                            const docUpdates = {}; // Empty since we're not uploading
+
                             // Auto-Download for immediate access
                             if (payload.quotePdf) downloadBase64File(payload.quotePdf, `Quote_${id}.pdf`);
 
                             if (payload.contractPdf) downloadBase64File(payload.contractPdf, `Contract_${id}.pdf`);
 
                             // ALWAYS transition to success, even if PDFs failed (Project is still saved)
-                            systemAlert('SUCCESS', 'Project finalized' + (Object.keys(docUpdates).length > 0 ? ' and Documents uploaded.' : '.'), 'check-circle');
+                            systemAlert('SUCCESS', 'Project finalized and PDFs downloaded.', 'check-circle');
 
                         } catch (e) {
                             console.error("Failed to upload PDFs:", e);
