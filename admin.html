@@ -906,6 +906,7 @@
         let messagesMap = {};
         let intelDataMap = {}; // Global store for visitor data
         let currentOpenedMessageId = null;
+        let isGeneratingBackgroundPDF = false; // Track background generation
 
         // Helper: Format Referrer Source
         function getReferrerInfo(ref) {
@@ -972,13 +973,34 @@
             if (!event.data) return;
 
             // Handle Direct PDF Generation (From Admin "Generate" button)
+            // Handle Direct PDF Generation (From Admin "Generate" button)
             if (event.data.type === 'PDF_GENERATED') {
+
+                // --- CLEANUP RENDER FIX ---
+                if (isGeneratingBackgroundPDF) {
+                    const pricingView = document.getElementById('view-pricing');
+                    if (pricingView) {
+                        pricingView.classList.add('hidden');
+                        pricingView.style.position = '';
+                        pricingView.style.left = '';
+                        pricingView.style.top = '';
+                        pricingView.style.width = '';
+                        pricingView.style.height = '';
+                        pricingView.style.zIndex = '';
+                        pricingView.style.opacity = '';
+                        console.log('🙈 Pricing view hidden after PDF generation');
+                    }
+                    isGeneratingBackgroundPDF = false;
+                }
+
                 console.log('📄 PDF Generated via Remote Command', event.data.payload);
                 if (event.data.payload) {
                     const { quotePdf, contractPdf, fileName } = event.data.payload;
                     if (quotePdf) downloadBase64File(quotePdf, fileName || 'Quote.pdf');
                     if (contractPdf) downloadBase64File(contractPdf, fileName || 'Contract.pdf');
-                    systemAlert('✅ PDF Downloaded Successfully');
+                    systemAlert('SUCCESS', 'PDF Downloaded Successfully', 'check-circle');
+                } else {
+                    systemAlert('ERROR', 'PDF Generation Failed', 'x-circle');
                 }
                 return;
             }
@@ -3290,11 +3312,23 @@
         }
 
         function generateProjectPDF(type) {
-            // Trigger Pricing Tool via Iframe or direct Logic if ported
-            // For now, rely on Pricing Tool being present or hidden Iframe
-            // Ideally send message to pricing tool iframe
+            // Trigger Pricing Tool via Iframe
+            const iframe = document.getElementById('pricing-iframe');
+            const pricingView = document.getElementById('view-pricing');
 
-            const iframe = document.getElementById('pricing-iframe'); // Correct ID checking
+            // --- RENDER FIX: Make iframe visible off-screen for html2canvas ---
+            if (pricingView && pricingView.classList.contains('hidden')) {
+                isGeneratingBackgroundPDF = true;
+                pricingView.classList.remove('hidden');
+                pricingView.style.position = 'fixed';
+                pricingView.style.left = '-10000px';
+                pricingView.style.top = '0';
+                pricingView.style.width = '100vw'; // Full viewport to ensure layout
+                pricingView.style.height = '100vh';
+                pricingView.style.zIndex = '-9999';
+                pricingView.style.opacity = '1'; // Must be 1 for capture, but it's off-screen
+                console.log('👁️ Pricing view activated off-screen for PDF generation');
+            }
 
             if (currentProjectData && currentProjectData.breakdown && iframe) {
                 iframe.contentWindow.postMessage({
