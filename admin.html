@@ -1152,8 +1152,15 @@
 
                     if (projectId) {
                         event.source.postMessage({ type: 'QUOTE_SAVED', success: true, quoteId: id }, '*');
+
+                        // Close the pricing tool modal
+                        closePricingModal();
+
+                        // Switch to projects tab and show the new project
                         switchTab('projects');
                         openProjectModal(projectId, freshDocuments);
+
+                        systemAlert('SUCCESS', 'Project Saved Successfully', 'check-circle');
                     }
 
                     // Refresh local view if needed
