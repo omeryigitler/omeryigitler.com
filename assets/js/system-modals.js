@@ -25,6 +25,15 @@ window.systemAlert = (title, message, icon = 'info') => {
         const iconEl = document.getElementById('modal-icon');
         iconEl.setAttribute('data-lucide', icon);
 
+        // Dynamic Styling for Loaders
+        if (icon.includes('loader') || icon.includes('upload') || icon.includes('refresh')) {
+            iconEl.classList.add('animate-spin');
+            document.getElementById('modal-confirm-btn').classList.add('hidden'); // Hide OK button for loaders
+        } else {
+            iconEl.classList.remove('animate-spin');
+            document.getElementById('modal-confirm-btn').classList.remove('hidden');
+        }
+
         document.getElementById('modal-cancel-btn').classList.add('hidden');
         document.getElementById('modal-confirm-btn').innerText = 'OK';
 
