@@ -1525,12 +1525,16 @@
         async function uploadDataUrl(dataUrl, path) {
             try {
                 const blob = await (await fetch(dataUrl)).blob();
-                const ref = storage.ref().child(path);
-                await ref.put(blob);
-                const url = await ref.getDownloadURL();
+                // Explicitly use storage instance
+                const storageRef = firebase.storage().ref();
+                const fileRef = storageRef.child(path);
+
+                await fileRef.put(blob);
+                const url = await fileRef.getDownloadURL();
                 return url;
             } catch (e) {
-                console.error("Upload failed:", e);
+                console.error("Upload failed details:", e);
+                alert("Storage Error: " + e.message + "\nCheck console for details.");
                 return null;
             }
         }
