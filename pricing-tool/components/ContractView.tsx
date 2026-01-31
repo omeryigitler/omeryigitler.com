@@ -4,7 +4,7 @@ import React, { useRef, useState } from 'react';
 import { QuoteRequest, PricingRules, Country, Language, DiscountType, PricingFactorType, PricingFactor, CostBreakdown, DesignType, AddonService } from '../types';
 import { TRANSLATIONS } from '../translations';
 import { ArrowLeft, Printer, Loader } from 'lucide-react';
-import { captureToPDF } from '../utils/pdfGenerator';
+// removed unused import
 import ProposalView from './ProposalView';
 
 interface Props {
@@ -295,50 +295,25 @@ const ContractView: React.FC<Props> = ({ config, addons, request, onBack, langua
               setIsGenerating(true);
 
               try {
-                // CAPTURE "PROPOSAL" (which is mounted off-screen)
-                // Note: The hidden div renders Wrapper > ProposalView. ProposalView has div#proposal-content inside.
-                // We target that inner div.
-                const quoteBlob = await captureToPDF('proposal-content', `Quote.pdf`);
+                // Modified: Cloud upload is disabled, so we don't need to generate/upload blobs here.
+                // The Admin Panel will handle saving the project data directly.
+                // PDFs can be generated on-demand from the Admin Panel using "Generate PDF".
 
-                // CAPTURE "CONTRACT" (which is this view)
-                // We targeted "contract-content" but we haven't added that ID yet. Let's add it below.
-                const contractBlob = await captureToPDF('contract-content', `Contract.pdf`);
-
-                if (!quoteBlob || !contractBlob) {
-                  throw new Error("Failed to capture PDF content.");
-                }
-
-                // Helper to convert blob to base64
-                const blobToBase64 = (blob: Blob): Promise<string> => {
-                  return new Promise((resolve, reject) => {
-                    const reader = new FileReader();
-                    reader.onloadend = () => resolve(reader.result as string);
-                    reader.onerror = reject;
-                    reader.readAsDataURL(blob);
-                  });
-                };
-
-                const [quoteBase64, contractBase64] = await Promise.all([
-                  blobToBase64(quoteBlob),
-                  blobToBase64(contractBlob)
-                ]);
-
-                // Send to Parent
                 window.parent.postMessage({
                   type: 'SAVE_QUOTE_FULL',
                   payload: {
                     request: request,
                     breakdown: breakdown,
                     total: breakdown.finalTotal,
-                    status: 'contract_generated',
-                    quotePdf: quoteBase64,
-                    contractPdf: contractBase64
+                    status: 'contract_signed',
+                    quotePdf: null,
+                    contractPdf: null
                   }
                 }, '*');
 
               } catch (e) {
-                console.error("PDF Capture Error", e);
-                alert("Hata: PDF oluşturulamadı. (Error generating PDF)");
+                console.error("Save Error", e);
+                alert("Hata: Proje kaydedilemedi. (Error saving project)");
               } finally {
                 setIsGenerating(false);
               }
