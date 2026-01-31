@@ -995,39 +995,78 @@
                 if (id) {
                     console.log('✅ Quote successfully saved with ID:', id);
 
-                    // NEW: Update active project if we are in "Project Mode"
+                    const projectUpdates = {
+                        quoteId: id,
+                        budget: breakdown.finalTotal,
+                        currency: request.country === 'MT' ? 'EUR' : 'TRY',
+                        breakdown: breakdown, // Save full breakdown for Financials Tab
+                        siteType: request.siteType, // Sync specs
+                        designType: request.designType,
+                        pageCount: request.pageCount,
+                        deliverySpeed: request.deliverySpeed,
+                        selectedAddons: request.selectedAddons || [],
+                        status: 'active', // Ensure it's active
+                        startData: firebase.firestore.FieldValue.serverTimestamp(),
+                        lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+                    };
+
+                    // CASE 1: Updating Existing Project
                     if (editingProjectId) {
                         try {
-                            await db.collection('projects').doc(editingProjectId).update({
-                                quoteId: id,
-                                budget: breakdown.finalTotal,
-                                currency: request.country === 'MT' ? 'EUR' : 'TRY',
-                                breakdown: breakdown, // Save full breakdown for Financials Tab
-                                siteType: request.siteType, // Sync specs
-                                designType: request.designType,
-                                pageCount: request.pageCount,
-                                deliverySpeed: request.deliverySpeed,
-                                selectedAddons: request.selectedAddons || [],
-                                status: 'active', // Ensure it's active
-                                lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
-                            });
+                            await db.collection('projects').doc(editingProjectId).update(projectUpdates);
                             console.log('✅ Project synced with new quote data:', editingProjectId);
+
+                            event.source.postMessage({ type: 'QUOTE_SAVED', success: true, quoteId: id }, '*'); // Close iframe loader?
 
                             // Return to project view
                             switchTab('projects');
                             openProjectModal(editingProjectId); // Re-open to show new data
+                            alert('Project Updated Successfully!');
 
                         } catch (err) {
                             console.error('❌ Failed to sync project with quote:', err);
+                            alert('Error updating project: ' + err.message);
                         }
                     }
+                    // CASE 2: Creating NEW Project from Quote
+                    else {
+                        try {
+                            console.log('✨ Creating NEW Project from Quote...');
+                            const newProjectData = {
+                                clientName: request.customerName,
+                                clientEmail: request.customerEmail,
+                                name: `Project for ${request.customerName}`,
+                                status: 'active',
+                                budget: breakdown.finalTotal,
+                                currency: request.country === 'MT' ? 'EUR' : 'TRY',
+                                quoteId: id,
+                                description: `Generated from Quote #${id}. Sites: ${request.siteType}, Pages: ${request.pageCount}`
+                            };
 
-                    event.source.postMessage({ type: 'QUOTE_SAVED', success: true, quoteId: id }, '*');
+                            const newProjectId = await saveProjectToFirestore(newProjectData);
+
+                            if (newProjectId) {
+                                // Apply the detailed updates that saveProjectToFirestore missed
+                                await db.collection('projects').doc(newProjectId).update(projectUpdates);
+
+                                console.log('✅ New Project Created:', newProjectId);
+                                event.source.postMessage({ type: 'QUOTE_SAVED', success: true, quoteId: id }, '*');
+
+                                switchTab('projects');
+                                openProjectModal(newProjectId);
+                                alert('New Project Created & Linked to Quote!');
+                            }
+                        } catch (err) {
+                            console.error('❌ Failed to create project from quote:', err);
+                            alert('Error creating project: ' + err.message);
+                        }
+                    }
 
                     // Refresh local view if needed
                     if (currentMessageFilter) filterMessages(currentMessageFilter);
                 } else {
                     console.error('❌ Failed to save quote. saveQuoteToFirestore returned null.');
+                    alert('Failed to save quote database record.');
                 }
                 return;
             }
