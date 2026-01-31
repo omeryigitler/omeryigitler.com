@@ -1065,6 +1065,8 @@
                     // --- PDF UPLOAD LOGIC ---
                     if (projectId && (payload.quotePdf || payload.contractPdf)) {
                         console.log('📂 Uploading generated PDFs to Storage for Project:', projectId);
+                        systemAlert('SYNC', 'Saving Project & Uploading PDFs...', 'cloud-upload');
+
                         try {
                             const docUpdates = {};
 
@@ -1080,15 +1082,17 @@
 
                             if (Object.keys(docUpdates).length > 0) {
                                 await db.collection('projects').doc(projectId).update({
-                                    documents: docUpdates // Overwrites or merges? Firestore merge is default for update()
+                                    documents: docUpdates
                                 });
                                 console.log('✅ Documents attached to project.');
-                                alert('Project saved, PDFs uploaded successfully!');
+                                systemAlert('SUCCESS', 'Project finalized and Documents uploaded.', 'check-circle');
+                            } else {
+                                console.warn("Upload ran but no URLs returned?");
                             }
 
                         } catch (e) {
                             console.error("Failed to upload PDFs:", e);
-                            alert("Project saved, but PDF upload failed.");
+                            systemAlert('UPLOAD ERROR', "Failed to upload to Cloud Storage: " + e.message, 'x-circle');
                         }
                     }
 
