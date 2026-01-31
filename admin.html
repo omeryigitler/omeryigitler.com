@@ -1063,6 +1063,8 @@
                     }
 
                     // --- PDF UPLOAD LOGIC ---
+                    let freshDocuments = null;
+
                     if (projectId && (payload.quotePdf || payload.contractPdf)) {
                         console.log('📂 Uploading generated PDFs to Storage for Project:', projectId);
                         systemAlert('SYNC', 'Saving Project & Uploading PDFs...', 'cloud-upload');
@@ -1086,6 +1088,7 @@
                                 });
                                 console.log('✅ Documents attached to project.');
                                 systemAlert('SUCCESS', 'Project finalized and Documents uploaded.', 'check-circle');
+                                freshDocuments = docUpdates; // Capture for UI update
                             } else {
                                 console.warn("Upload ran but no URLs returned?");
                             }
@@ -1099,7 +1102,7 @@
                     if (projectId) {
                         event.source.postMessage({ type: 'QUOTE_SAVED', success: true, quoteId: id }, '*');
                         switchTab('projects');
-                        openProjectModal(projectId);
+                        openProjectModal(projectId, freshDocuments);
                     }
 
                     // Refresh local view if needed
@@ -2956,7 +2959,7 @@
         let currentProjectData = null; // Store for PDF generation
         let currentTab = 'overview';
 
-        async function openProjectModal(id = null) {
+        async function openProjectModal(id = null, providedDocs = null) {
             editingProjectId = id;
             const modal = document.getElementById('project-modal');
             modal.classList.remove('hidden');
@@ -2973,6 +2976,13 @@
                     const doc = await db.collection('projects').doc(id).get();
                     if (!doc.exists) return; // Should handle error
                     const d = doc.data();
+
+                    // --- RACE CONDITION FIX ---
+                    // If we just uploaded docs, Firestore reads might be stale. Use providedDocs override.
+                    if (providedDocs) {
+                        d.documents = { ...(d.documents || {}), ...providedDocs };
+                    }
+
                     currentProjectData = d; // Store Globally
 
                     // --- POPULATE HEADER ---
