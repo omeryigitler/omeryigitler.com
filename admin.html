@@ -1070,14 +1070,26 @@
                         systemAlert('SYNC', 'Saving Project & Uploading PDFs...', 'cloud-upload');
 
                         try {
+                            // FAILSAFE: Force close modal after 20 seconds regardless of what happens
+                            setTimeout(() => {
+                                const modal = document.getElementById('system-modal');
+                                const title = document.getElementById('modal-title').innerText;
+                                if (!modal.classList.contains('hidden') && title === 'SYNC') {
+                                    console.warn("⚠️ Failsafe triggered: Upload took too long.");
+                                    systemAlert('UPLOAD ERROR', "Operation timed out completely.", 'clock');
+                                }
+                            }, 20000);
+
                             const docUpdates = {};
 
                             if (payload.quotePdf) {
+                                console.log('...Uploading Quote...');
                                 const quoteUrl = await uploadDataUrl(payload.quotePdf, `projects/${projectId}/Quote_${id}.pdf`);
                                 if (quoteUrl) docUpdates.quoteUrl = quoteUrl;
                             }
 
                             if (payload.contractPdf) {
+                                console.log('...Uploading Contract...');
                                 const contractUrl = await uploadDataUrl(payload.contractPdf, `projects/${projectId}/Contract_${id}.pdf`);
                                 if (contractUrl) docUpdates.contractUrl = contractUrl;
                             }
@@ -1097,7 +1109,6 @@
 
                         } catch (e) {
                             console.error("Failed to upload PDFs:", e);
-                            // Even on error, we should probably close the sync modal or show the error
                             systemAlert('UPLOAD ERROR', "Failed to upload to Cloud Storage: " + e.message, 'x-circle');
                         }
                     } else {
