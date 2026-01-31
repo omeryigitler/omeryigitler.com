@@ -1,5 +1,6 @@
 import jsPDF from 'jspdf';
-import { QuoteRequest, CostBreakdown, Country } from '../types';
+import { QuoteRequest, CostBreakdown, Country, DesignType, Language } from '../types';
+import { TRANSLATIONS } from '../translations';
 
 /**
  * Generates a native, data-driven PDF document (not a screenshot).
@@ -11,6 +12,9 @@ export const generateNativePDF = async (request: QuoteRequest, breakdown: CostBr
     const currency = request.country === Country.TR ? '₺' : '€';
     const pageWidth = doc.internal.pageSize.getWidth(); // 210mm
     const margin = 20;
+
+    // Determine language from country
+    const lang = request.country === Country.TR ? Language.TR : Language.EN;
 
     // 2. Header
     doc.setFont("helvetica", "bold");
@@ -122,52 +126,179 @@ export const generateNativePDF = async (request: QuoteRequest, breakdown: CostBr
         doc.text(`* Monthly Maintenance & Hosting: ${currency}${breakdown.totalMonthly.toLocaleString()}/mo`, pageWidth - margin, y, { align: 'right' });
     }
 
-    // 6. Contract Terms (Only for Contracts)
+    // Helper for formatted currency
+    const fmt = (value: number) => {
+        return `${currency}${value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    };
+
+    // --- CONTRACT GENERATION ---
     if (type === 'contract') {
-        doc.addPage();
+        doc.addPage(); // Start contract on a new page
 
-        doc.setFont("helvetica", "bold");
-        doc.setFontSize(16);
-        doc.text("SERVICE AGREEMENT TERMS", pageWidth / 2, 25, { align: 'center' });
+        const t = TRANSLATIONS[lang].contract;
+        const common = TRANSLATIONS[lang].common;
+        const labels = TRANSLATIONS[lang].labels;
 
-        doc.setFont("helvetica", "normal");
-        doc.setFontSize(10);
+        let yPos = 40;
+        const lineHeight = 7;
 
-        const terms = `
-1. AUTHORIZATION
-The Client ensures that they have the right to use all materials (text, images, media) provided for the project.
+        // Helper to add section
+        const addSection = (title: string, content: string) => {
+            if (yPos > 250) { // Check if content will overflow page
+                doc.addPage();
+                yPos = 30;
+            }
+            doc.setFont("helvetica", "bold");
+            doc.setFontSize(12);
+            doc.text(title, margin, yPos);
+            yPos += lineHeight;
 
-2. PROJECT SCOPE
-The services provided are strictly limited to the items listed in the "Financial Breakdown". Any additional work will require a separate quotation.
+            doc.setFont("helvetica", "normal");
+            doc.setFontSize(10);
 
-3. PAYMENT AND TERMS
-A 50% non-refundable deposit is required to commence work. The remaining balance is due upon project completion, prior to final deployment.
+            const splitContent = doc.splitTextToSize(content, pageWidth - (margin * 2));
+            doc.text(splitContent, margin, yPos);
+            yPos += (splitContent.length * 5) + 5; // 5 is approx line height for 10pt font
+        };
 
-4. INTELLECTUAL PROPERTY
-Upon full payment, the Client gets full ownership of the developed website code and design. Third-party licenses (fonts, plugins) remain under their respective licenses.
+        // Resolve Localized Variables
+        const deliveryLabel = labels.speeds[request.deliverySpeed] || request.deliverySpeed;
+        const designLabel = request.designType === DesignType.CUSTOM ?
+            (lang === Language.TR ? 'Özel Tasarım' : 'Custom Design') :
+            (lang === Language.TR ? 'Hazır Tema' : 'Template Theme');
 
-5. REVIEW AND TESTING
-There will be a review phase where the Client can request minor revisions. Major structural changes after approval may incur additional costs.
+        const customerText = request.customerName || "................................................";
 
-6. CONFIDENTIALITY
-Both parties agree to keep all proprietary information confidential and not to disclose it to third parties without prior consent.
+        // --- TURKISH CONTRACT CONTENT ---
+        if (lang === Language.TR) {
+            addSection(`1. ${t.parties}`,
+                `Hizmet Veren (Ajans): Ömer Yiğitler (Bundan sonra "Ajans" olarak anılacaktır).\n` +
+                `Hizmet Alan (Müşteri): ${customerText} (Bundan sonra "Müşteri" olarak anılacaktır).`
+            );
 
-7. WARRANTY
-We provide a 30-day warranty period after deployment to fix any bugs or issues related to the scope of work.
-        `;
+            addSection(`2. ${t.serviceDef}`,
+                `İşbu sözleşme, Ajans'ın Müşteri'ye ait web sitesinin tasarlanması, kodlanması, yayınlanması ve ilgili bakım hizmetlerini kapsar. ` +
+                `Proje kapsamı, Müşteri tarafından onaylanan teklif formunda belirtilen detaylarla (Sayfa sayısı: ${request.pageCount}, Tasarım Tipi: ${designLabel}) sınırlıdır.`
+            );
 
-        const splitTerms = doc.splitTextToSize(terms, pageWidth - (margin * 2));
-        doc.text(splitTerms, margin, 45);
+            addSection(`3. ${t.delivery}`,
+                `Proje teslim süresi, tüm materyallerin (logo, metin, görsel vb.) Müşteri tarafından Ajans'a teslim edilmesinden itibaren başlar. ` +
+                `Öngörülen süre: ${deliveryLabel} planına uygundur. Mücbir sebepler (doğal afet, yasal engeller vb.) saklıdır.`
+            );
+
+            addSection(`4. ${t.price}`,
+                `Toplam hizmet bedeli teklif formunda belirtilen tutardır. Ödemeler aksi kararlaştırılmadıkça:\n` +
+                `- %50 İş başlangıcında avans.\n` +
+                `- %50 Proje onaylanıp yayına alınmadan önce.\n` +
+                `Ödemeler ${request.country === 'TR' ? 'TL' : 'EUR'} cinsinden fatura karşılığı yapılacaktır. Ödeme gecikmelerinde T.C. Merkez Bankası ticari temerrüt faizi uygulanır.`
+            );
+
+            if (request.discountValue > 0) {
+                addSection(`${t.discountClauseTitle}`,
+                    `Taraflar, bu proje için toplam sözleşme bedelinin ${fmt(breakdown.totalOneTime)} olduğu ve indirim uygulanarak net fiyatın ${fmt(breakdown.finalTotal)} olarak belirlendiğini kabul eder.`
+                );
+            }
+
+            addSection(`5. ${t.revision}`,
+                `Müşteri, ana tasarım şablonu üzerinde onay verdikten sonra, içerik yerleşimi konusunda pakete dahil olarak 2 (iki) tur revizyon hakkına sahiptir. ` +
+                `Tasarımın tamamen değiştirilmesi veya kodlama yapısı değişikliği gerektiren talepler ek ücretlendirilir.`
+            );
+
+            addSection(`6. ${t.ip}`,
+                `5846 sayılı Fikir ve Sanat Eserleri Kanunu uyarınca; proje bedelinin tamamı ödendiğinde, web sitesinin tasarımı ve varsa özel yazılımın kullanım hakları Müşteri'ye devredilir. ` +
+                `Ajans, projeyi kendi portfolyosunda referans olarak kullanma hakkını saklı tutar.`
+            );
+
+            addSection(`7. ${t.confidentiality}`,
+                `Taraflar, proje sürecinde edindikleri birbirlerine ait ticari sırları, müşteri bilgilerini ve teknik verileri (KVKK kapsamındaki kişisel veriler dahil) yasal zorunluluklar dışında üçüncü şahıslarla paylaşmamayı taahhüt eder.`
+            );
+
+            addSection(`8. ${t.cancellation}`,
+                `Müşteri projeyi tek taraflı iptal ederse, o ana kadar yapılan çalışmaların bedeli hesaplanır. Başlangıç avansı iade edilmez. ` +
+                `Ajans taahhütlerini yerine getirmezse (mücbir sebepler hariç), avansı iade etmekle yükümlüdür.`
+            );
+
+            addSection(`9. ${t.warranty}`,
+                `Teslimattan sonra 30 gün boyunca yazılımdan kaynaklı hatalar (bug) Ajans tarafından ücretsiz düzeltilir. ` +
+                `Bu süre sonrasındaki bakım ve güncellemeler, seçilen Bakım Paketi (${request.maintenanceLevel}) kapsamında yürütülür.`
+            );
+
+            addSection(`10. ${t.dispute}`,
+                `İşbu sözleşmeden doğacak ihtilaflarda İstanbul Mahkemeleri ve İcra Daireleri yetkilidir. Sözleşme Türk Hukuku'na tabidir.`
+            );
+        }
+
+        // --- ENGLISH CONTRACT CONTENT ---
+        else {
+            addSection(`1. ${t.parties}`,
+                `Service Provider: Ömer Yiğitler (hereinafter referred to as the "Agency").\n` +
+                `Client: ${customerText} (hereinafter referred to as the "Client").`
+            );
+
+            addSection(`2. ${t.serviceDef}`,
+                `This Agreement covers the design, development, deployment, and related maintenance services of the Client's website by the Agency. ` +
+                `The scope is strictly limited to the details specified in the proposal form approved by the Client (Page Count: ${request.pageCount}, Design Type: ${designLabel}).`
+            );
+
+            addSection(`3. ${t.delivery}`,
+                `The project delivery timeline commences once all necessary materials (logo, text, images, etc.) are provided by the Client to the Agency. ` +
+                `The estimated duration aligns with the ${deliveryLabel} plan. Force Majeure events are excluded.`
+            );
+
+            addSection(`4. ${t.price}`,
+                `The total service fee is the amount specified in the proposal. Unless agreed otherwise:\n` +
+                `- 50% Upfront deposit upon commencement.\n` +
+                `- 50% Final payment before the project goes live.\n` +
+                `Payments shall be made in ${request.country === 'TR' ? 'TL' : 'EUR'}.`
+            );
+
+            if (request.discountValue > 0) {
+                addSection(`${t.discountClauseTitle}`,
+                    `The parties agree that the total contract amount is ${fmt(breakdown.totalOneTime)}, and a special discount has been applied resulting in a net price of ${fmt(breakdown.finalTotal)}.`
+                );
+            }
+
+            addSection(`5. ${t.revision}`,
+                `Upon approval of the main design template, the Client is entitled to 2 (two) rounds of revisions regarding content placement included in the package. ` +
+                `Requests requiring a complete design overhaul or structural coding changes will incur additional fees.`
+            );
+
+            addSection(`6. ${t.ip}`,
+                `Upon full payment of the project fees, the intellectual property rights for the website design and any custom code are transferred to the Client. ` +
+                `The Agency retains the right to use the project as a reference in its portfolio. This transfer is subject to the provisions of the Copyright Act (Chapter 415 of the Laws of Malta).`
+            );
+
+            addSection(`7. ${t.confidentiality} & GDPR`,
+                `Both parties agree to keep all commercial secrets, client data, and technical information confidential. ` +
+                `The Agency agrees to process any personal data in accordance with the General Data Protection Regulation (GDPR) and the Data Protection Act of Malta.`
+            );
+
+            addSection(`8. ${t.cancellation}`,
+                `If the Client cancels the project unilaterally, the fee for work completed up to that point shall be calculated. The initial deposit is non-refundable. ` +
+                `If the Agency fails to fulfill its obligations (excluding Force Majeure), the deposit shall be refunded.`
+            );
+
+            addSection(`9. ${t.warranty}`,
+                `Any software bugs identified within 30 days after delivery will be fixed by the Agency free of charge. ` +
+                `Maintenance and updates after this period are subject to the selected Maintenance Package (${request.maintenanceLevel}).`
+            );
+
+            addSection(`10. ${t.dispute}`,
+                `This Agreement shall be governed by and construed in accordance with the Laws of Malta. ` +
+                `Any disputes arising out of or in connection with this Agreement shall be subject to the exclusive jurisdiction of the Courts of Malta.`
+            );
+        }
 
         // Signatures
-        const signY = 240;
-        doc.line(margin, signY, margin + 70, signY);
-        doc.text("Authorized Signature", margin, signY + 5);
-        doc.text(new Date().toLocaleDateString(), margin, signY + 10);
+        doc.addPage();
+        yPos = 40;
 
-        doc.line(pageWidth - margin - 70, signY, pageWidth - margin, signY);
-        doc.text("Client Signature", pageWidth - margin - 70, signY + 5);
-        doc.text(request.customerName || '', pageWidth - margin - 70, signY + 10);
+        doc.setFont("helvetica", "bold");
+        doc.text(common.agencySign, margin, yPos);
+        doc.text(common.clientSign, pageWidth - margin - 50, yPos, { align: 'right' });
+
+        doc.line(margin, yPos + 15, margin + 60, yPos + 15);
+        doc.line(pageWidth - margin - 60, yPos + 15, pageWidth - margin, yPos + 15);
     }
 
     return doc.output('blob');
