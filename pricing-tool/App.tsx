@@ -263,6 +263,7 @@ const App: React.FC = () => {
         return (
           <ContractView
             config={pricingConfig}
+            addons={availableAddons}
             request={quoteRequest}
             breakdown={lastBreakdown}
             onBack={() => setCurrentView('calculator')}
