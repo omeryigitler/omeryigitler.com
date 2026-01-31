@@ -302,11 +302,11 @@ const ContractView: React.FC<Props> = ({ config, request, onBack, language, brea
                     }
                   }, '*');
 
-                  // Optional visual feedback
-                  alert(language === Language.TR ? 'Proje kaydedildi ve PDF dosyaları oluşturuldu!' : 'Project saved and PDFs generated!');
+                  // Optional visual feedback - REMOVED to prevent blocking Admin Panel logic
+                  // alert(language === Language.TR ? 'Proje kaydedildi ve PDF dosyaları oluşturuldu!' : 'Project saved and PDFs generated!');
                 } catch (e) {
                   console.error("PDF Generation Error", e);
-                  alert("Error generating PDF files");
+                  // alert("Error generating PDF files");
                 }
               }
             }}
