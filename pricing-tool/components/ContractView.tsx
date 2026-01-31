@@ -1,7 +1,7 @@
 
 
 import React from 'react';
-import { QuoteRequest, PricingRules, Country, Language, DiscountType, PricingFactorType, PricingFactor, CostBreakdown, DesignType } from '../types';
+import { QuoteRequest, PricingRules, Country, Language, DiscountType, PricingFactorType, PricingFactor, CostBreakdown, DesignType, AddonService } from '../types';
 import { TRANSLATIONS } from '../translations';
 import { ArrowLeft, Printer } from 'lucide-react';
 import { generateContractPDF, generateQuotePDF } from '../utils/pdfGenerator';
@@ -12,9 +12,10 @@ interface Props {
   onBack: () => void;
   language: Language;
   breakdown: CostBreakdown | null;
+  addons: AddonService[];
 }
 
-const ContractView: React.FC<Props> = ({ config, request, onBack, language, breakdown }) => {
+const ContractView: React.FC<Props> = ({ config, request, onBack, language, breakdown, addons }) => {
   const rules = config[request.country];
   const t = TRANSLATIONS[language].contract;
   const common = TRANSLATIONS[language].common;
@@ -271,7 +272,7 @@ const ContractView: React.FC<Props> = ({ config, request, onBack, language, brea
               // Send final payload to Admin Panel
               if (breakdown) {
                 // Generate PDFs as Blobs
-                const quoteBlob = generateQuotePDF(request, breakdown, config, [], language, false) as Blob;
+                const quoteBlob = generateQuotePDF(request, breakdown, config, addons, language, false) as Blob;
                 const contractBlob = generateContractPDF(request, breakdown, config, language, false) as Blob;
 
                 // Async helper to read blob

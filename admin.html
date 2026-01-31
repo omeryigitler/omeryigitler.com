@@ -3202,7 +3202,7 @@
             // For now, rely on Pricing Tool being present or hidden Iframe
             // Ideally send message to pricing tool iframe
 
-            const iframe = document.getElementById('pricing-frame'); // Assuming there's one
+            const iframe = document.getElementById('pricing-iframe'); // Correct ID checking
 
             if (currentProjectData && currentProjectData.breakdown && iframe) {
                 iframe.contentWindow.postMessage({
