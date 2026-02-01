@@ -143,6 +143,7 @@ const App: React.FC = () => {
         const {
           clientName,
           clientEmail,
+          country,
           siteType,
           designType,
           pageCount,
@@ -155,6 +156,7 @@ const App: React.FC = () => {
           ...prev,
           customerName: clientName || prev.customerName,
           customerEmail: clientEmail || prev.customerEmail,
+          country: (country as Country) || prev.country,
 
           // Map Technical Specs
           siteType: (siteType as SiteType) || prev.siteType,
@@ -164,6 +166,12 @@ const App: React.FC = () => {
           maintenanceLevel: (maintenanceLevel as MaintenanceLevel) || prev.maintenanceLevel,
           selectedAddons: Array.isArray(selectedAddons) ? selectedAddons : prev.selectedAddons
         }));
+
+        if (country === 'TR') {
+          setLanguage(Language.TR);
+        } else if (country === 'MT') {
+          setLanguage(Language.EN);
+        }
 
         // Auto-switch to calculator if we have data
         setCurrentView('calculator');
