@@ -38,10 +38,11 @@ module.exports = async (req, res) => {
   }
 
   const view = type === 'contract' ? 'contract' : 'proposal';
-  const payload = Buffer.from(encodeURIComponent(JSON.stringify({
+  const requestData = {
     ...request,
     breakdown
-  }))).toString('base64');
+  };
+  const payload = Buffer.from(encodeURIComponent(JSON.stringify(requestData))).toString('base64');
 
   const baseUrl = process.env.PDF_BASE_URL || getBaseUrl(req);
   const targetUrl = `${baseUrl}/pricing-tool/dist/index.html?view=${view}&payload=${payload}&pdf=1`;
@@ -58,16 +59,17 @@ module.exports = async (req, res) => {
     const page = await browser.newPage();
     await page.goto(targetUrl, { waitUntil: 'networkidle0', timeout: PDF_TIMEOUT_MS });
 
-    const selector = view === 'proposal' ? '#proposal-content' : '#contract-content';
-    await page.waitForSelector(selector, { timeout: PDF_TIMEOUT_MS });
+    await page.waitForFunction(() => !!window.__TAURUS_PDF_GENERATOR__, { timeout: PDF_TIMEOUT_MS });
 
-    const pdfBuffer = await page.pdf({
-      format: 'A4',
-      printBackground: true,
-      margin: { top: '12mm', bottom: '12mm', left: '12mm', right: '12mm' }
-    });
+    const pdfBytes = await page.evaluate(async (data, kind) => {
+      const generator = window.__TAURUS_PDF_GENERATOR__;
+      if (!generator) throw new Error('PDF generator not ready');
+      const blob = await generator(data, data.breakdown, kind === 'contract' ? 'contract' : 'quote');
+      const arrayBuffer = await blob.arrayBuffer();
+      return Array.from(new Uint8Array(arrayBuffer));
+    }, requestData, type);
 
-    const outputBuffer = Buffer.isBuffer(pdfBuffer) ? pdfBuffer : Buffer.from(pdfBuffer);
+    const outputBuffer = Buffer.from(pdfBytes);
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `attachment; filename=${view === 'proposal' ? 'Quote' : 'Contract'}.pdf`);
     res.setHeader('Content-Length', outputBuffer.length);

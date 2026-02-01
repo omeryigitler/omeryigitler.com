@@ -18,6 +18,18 @@ const App: React.FC = () => {
   const [currentView, setCurrentView] = useState('dashboard');
   const [language, setLanguage] = useState<Language>(Language.EN);
 
+  // Expose native PDF generator for server-side rendering (Vercel)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('pdf') === '1') {
+      import('./utils/pdfGenerator').then(({ generateNativePDF }) => {
+        (window as any).__TAURUS_PDF_GENERATOR__ = generateNativePDF;
+      }).catch((e) => {
+        console.error('Failed to expose PDF generator', e);
+      });
+    }
+  }, []);
+
   // -- Dynamic Configuration State --
   const [pricingConfig, setPricingConfig] = useState<Record<Country, PricingRules>>(DEFAULT_PRICING_CONFIG);
   const [availableAddons, setAvailableAddons] = useState<AddonService[]>(DEFAULT_AVAILABLE_ADDONS);
