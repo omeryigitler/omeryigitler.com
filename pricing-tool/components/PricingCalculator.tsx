@@ -730,7 +730,7 @@ const PricingCalculator: React.FC<Props> = ({ config, addons, onRequestUpdate, o
 
                   {breakdown && breakdown.discountAmount > 0 && (
                     <div className="mt-2 text-right text-xs font-bold text-red-400">
-                      -{formatPrice(breakdown.discountAmount)} İndirim
+                      -{formatPrice(breakdown.discountAmount)} {t.discount}
                     </div>
                   )}
                 </div>
@@ -747,7 +747,7 @@ const PricingCalculator: React.FC<Props> = ({ config, addons, onRequestUpdate, o
                 <div className="mt-10 relative z-10 space-y-3">
                   <button
                     onClick={handleStepNext}
-                    className="w-full flex items-center justify-center space-x-2 bg-[#FFD700] hover:bg-[#FFD700] text-black py-4 rounded-xl font-bold transition-all shadow-[0_0_20px_rgba(255,215,0,0.2)] hover:shadow-[0_0_30px_rgba(255,215,0,0.4)] hover:-translate-y-1"
+                    className="w-full flex items-center justify-center space-x-2 bg-[#FFD700] hover:bg-[#FFD700] text-black py-4 rounded-xl font-bold transition-all border border-[#FFD700] ring-1 ring-blue-500/50 shadow-[0_0_20px_rgba(255,215,0,0.2)] hover:shadow-[0_0_30px_rgba(255,215,0,0.4)] hover:-translate-y-1"
                   >
                     <span>{t.createProposal} / {t.next || 'Next'}</span>
                     <ArrowRight className="w-5 h-5" />

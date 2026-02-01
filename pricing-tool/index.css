@@ -17,6 +17,10 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
+html {
+  scrollbar-gutter: stable;
+}
+
 a {
   font-weight: 500;
   color: #646cff;
@@ -32,6 +36,13 @@ body {
   display: flex;
   place-items: center;
   min-width: 320px;
+  min-height: 100vh;
+  width: 100%;
+  scrollbar-gutter: stable;
+}
+
+#root {
+  width: 100%;
   min-height: 100vh;
 }
 

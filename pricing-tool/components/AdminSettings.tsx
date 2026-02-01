@@ -1,8 +1,9 @@
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Country, PricingRules, SiteType, MaintenanceLevel, DeliverySpeed, Language, PricingFactor, PricingFactorType, AddonService } from '../types';
 import { Save, RotateCcw, Settings, Globe, Plus, Trash2, Percent, Zap, Package } from 'lucide-react';
 import { TRANSLATIONS } from '../translations';
+import { DEFAULT_AVAILABLE_ADDONS } from '../constants';
 
 interface Props {
   config: Record<Country, PricingRules>;
@@ -28,6 +29,40 @@ const AdminSettings: React.FC<Props> = ({ config, addons, onUpdateConfig, onUpda
       alert(message);
     }
   };
+
+  useEffect(() => {
+    const trDefaults = DEFAULT_AVAILABLE_ADDONS.reduce<Record<string, { label: string; desc: string }>>((acc, addon) => {
+      acc[addon.id] = { label: addon.label, desc: addon.description };
+      return acc;
+    }, {});
+
+    const enDefaults = Object.entries(TRANSLATIONS[Language.EN].addons as Record<string, { label: string; desc: string }>)
+      .reduce<Record<string, { label: string; desc: string }>>((acc, [id, val]) => {
+        acc[id] = { label: val.label, desc: val.desc };
+        return acc;
+      }, {});
+
+    const targetDefaults = language === Language.EN ? enDefaults : trDefaults;
+    const sourceDefaults = language === Language.EN ? trDefaults : enDefaults;
+
+    setLocalAddons((prev) =>
+      prev.map((addon) => {
+        const target = targetDefaults[addon.id];
+        const source = sourceDefaults[addon.id];
+        if (!target || !source) return addon;
+
+        const shouldLabelSwap = addon.label === source.label;
+        const shouldDescSwap = addon.description === source.desc;
+        if (!shouldLabelSwap && !shouldDescSwap) return addon;
+
+        return {
+          ...addon,
+          label: shouldLabelSwap ? target.label : addon.label,
+          description: shouldDescSwap ? target.desc : addon.description,
+        };
+      })
+    );
+  }, [language]);
 
   const handleSave = () => {
     onUpdateConfig(localConfig);

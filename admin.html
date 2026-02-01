@@ -112,6 +112,48 @@
             box-shadow: 0 0 20px rgba(255, 215, 0, 0.05);
         }
 
+        /* Admin checkbox styling (avoid white boxes) */
+        input[type="checkbox"] {
+            -webkit-appearance: none !important;
+            appearance: none !important;
+            width: 14px;
+            height: 14px;
+            border-radius: 4px;
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            background: rgba(255, 255, 255, 0.05);
+            display: inline-grid;
+            place-items: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            outline: none;
+            box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.2);
+        }
+
+        input[type="checkbox"]::after {
+            content: '';
+            width: 6px;
+            height: 10px;
+            border-right: 2px solid #0b0b0b;
+            border-bottom: 2px solid #0b0b0b;
+            transform: rotate(45deg) scale(0);
+            transition: transform 0.12s ease;
+        }
+
+        input[type="checkbox"]:checked {
+            background: #FFD700;
+            border-color: #FFD700;
+            box-shadow: 0 0 10px rgba(255, 215, 0, 0.35);
+        }
+
+        input[type="checkbox"]:checked::after {
+            transform: rotate(45deg) scale(1);
+        }
+
+        /* Prevent header shift across tabs */
+        .main-scroll {
+            scrollbar-gutter: stable;
+        }
+
         /* --- BULLETPROOF INBOX TABLE --- */
         .inbox-table-fixed {
             table-layout: fixed !important;
@@ -376,7 +418,7 @@
         </header>
 
         <!-- Content Area -->
-        <div class="flex-1 overflow-y-auto p-4 md:p-10 scroll-smooth">
+        <div class="flex-1 overflow-y-auto p-4 md:p-10 scroll-smooth main-scroll">
 
             <!-- DASHBOARD VIEW -->
             <div id="view-dashboard" class="space-y-8 fade-in">
@@ -570,14 +612,13 @@
 
             <!-- PROJECTS VIEW -->
             <!-- QUOTES VIEW (NEW) -->
-            <div id="view-quotes" class="hidden fade-in flex flex-col h-full overflow-auto">
-                <div class="p-8">
-                    <!-- Header -->
-                    <div class="flex justify-between items-center mb-8">
-                        <div>
-                            <h1 class="text-3xl font-display font-black text-white uppercase tracking-wider mb-2">
-                                PROPOSALS
-                            </h1>
+            <div id="view-quotes" class="hidden fade-in flex flex-col h-full overflow-auto space-y-8">
+                <!-- Header -->
+                <div class="flex justify-between items-center">
+                    <div>
+                        <h1 class="text-3xl font-display font-black text-white uppercase tracking-wider mb-2">
+                            PROPOSALS
+                        </h1>
                             <p class="text-gray-500 text-sm uppercase tracking-widest">
                                 Proposal Records
                             </p>
@@ -607,11 +648,11 @@
                         </div>
                     </div>
 
-                    <!-- Bulk Actions -->
-                    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
-                        <div class="flex items-center gap-3 text-[10px] uppercase tracking-widest text-gray-500">
-                            <label
-                                class="flex items-center gap-2 px-3 py-2 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 transition-all">
+                <!-- Bulk Actions -->
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div class="flex items-center gap-3 text-[10px] uppercase tracking-widest text-gray-500">
+                        <label
+                            class="flex items-center gap-2 px-3 py-2 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 transition-all">
                                 <input id="quotes-select-all" type="checkbox" class="accent-[#FFD700]"
                                     onchange="toggleSelectAllQuotes(this.checked)">
                                 Select All
@@ -626,12 +667,11 @@
                         </button>
                     </div>
 
-                    <!-- Quotes Grid -->
-                    <div id="quotes-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        <!-- Quotes will be loaded here -->
-                        <div class="col-span-full py-20 text-center text-gray-500 uppercase tracking-widest text-xs">
-                            Loading quotes...
-                        </div>
+                <!-- Quotes Grid -->
+                <div id="quotes-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <!-- Quotes will be loaded here -->
+                    <div class="col-span-full py-20 text-center text-gray-500 uppercase tracking-widest text-xs">
+                        Loading quotes...
                     </div>
                 </div>
             </div>
