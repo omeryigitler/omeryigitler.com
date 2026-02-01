@@ -38,6 +38,7 @@ module.exports = async (req, res) => {
   }
 
   const view = type === 'contract' ? 'contract' : 'proposal';
+  const renderMode = process.env.PDF_RENDER_MODE || 'html';
   const requestData = {
     ...request,
     breakdown
@@ -59,17 +60,36 @@ module.exports = async (req, res) => {
     const page = await browser.newPage();
     await page.goto(targetUrl, { waitUntil: 'networkidle0', timeout: PDF_TIMEOUT_MS });
 
-    await page.waitForFunction(() => !!window.__TAURUS_PDF_GENERATOR__, { timeout: PDF_TIMEOUT_MS });
+    let outputBuffer;
 
-    const pdfBytes = await page.evaluate(async (data, kind) => {
-      const generator = window.__TAURUS_PDF_GENERATOR__;
-      if (!generator) throw new Error('PDF generator not ready');
-      const blob = await generator(data, data.breakdown, kind === 'contract' ? 'contract' : 'quote');
-      const arrayBuffer = await blob.arrayBuffer();
-      return Array.from(new Uint8Array(arrayBuffer));
-    }, requestData, type);
+    if (renderMode === 'native') {
+      await page.waitForFunction(() => !!window.__TAURUS_PDF_GENERATOR__, { timeout: PDF_TIMEOUT_MS });
+      const pdfBytes = await page.evaluate(async (data, kind) => {
+        const generator = window.__TAURUS_PDF_GENERATOR__;
+        if (!generator) throw new Error('PDF generator not ready');
+        const blob = await generator(data, data.breakdown, kind === 'contract' ? 'contract' : 'quote');
+        const arrayBuffer = await blob.arrayBuffer();
+        return Array.from(new Uint8Array(arrayBuffer));
+      }, requestData, type);
+      outputBuffer = Buffer.from(pdfBytes);
+    } else {
+      const selector = view === 'proposal' ? '#proposal-content' : '#contract-content';
+      await page.emulateMediaType('print');
+      await page.waitForSelector(selector, { timeout: PDF_TIMEOUT_MS });
+      try {
+        await page.evaluateHandle('document.fonts.ready');
+      } catch (e) {
+        // ignore font readiness errors
+      }
+      const pdfBuffer = await page.pdf({
+        format: 'A4',
+        printBackground: true,
+        preferCSSPageSize: true,
+        margin: { top: '12mm', bottom: '12mm', left: '12mm', right: '12mm' }
+      });
+      outputBuffer = Buffer.isBuffer(pdfBuffer) ? pdfBuffer : Buffer.from(pdfBuffer);
+    }
 
-    const outputBuffer = Buffer.from(pdfBytes);
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `attachment; filename=${view === 'proposal' ? 'Quote' : 'Contract'}.pdf`);
     res.setHeader('Content-Length', outputBuffer.length);
