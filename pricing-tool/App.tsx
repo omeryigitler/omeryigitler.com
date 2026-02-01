@@ -382,13 +382,7 @@ const App: React.FC = () => {
       <main className="flex-grow">
         {renderView()}
       </main>
-      {currentView !== 'seo' && (
-        <footer className="border-t border-zinc-800 py-8 mt-auto no-print">
-          <div className="max-w-7xl mx-auto px-4 text-center text-zinc-500 text-sm font-medium">
-            &copy; {new Date().getFullYear()} Ömer Yiğitler. {TRANSLATIONS[language].common.footerText}
-          </div>
-        </footer>
-      )}
+      {/* Footer removed for admin-embedded usage */}
 
       {toast && (
         <div className="fixed bottom-6 right-6 z-[60]">

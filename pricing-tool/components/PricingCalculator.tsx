@@ -55,7 +55,7 @@ const CustomSelect: React.FC<CustomSelectProps> = ({ label, value, options, onCh
 
       <div
         onClick={() => setIsOpen(!isOpen)}
-        className={`w-full relative flex items-center justify-between bg-black border px-5 py-4 rounded-xl cursor-pointer transition-all duration-300 select-none ${isOpen
+        className={`w-full relative flex items-center justify-between bg-zinc-900/80 border px-5 py-4 rounded-xl cursor-pointer transition-all duration-300 select-none ${isOpen
           ? 'border-[#FFD700] ring-1 ring-taurusGold shadow-[0_0_15px_rgba(255,215,0,0.1)]'
           : 'border-zinc-800 hover:border-zinc-600'
           }`}
@@ -72,7 +72,7 @@ const CustomSelect: React.FC<CustomSelectProps> = ({ label, value, options, onCh
 
       {/* Dropdown Menu */}
       {isOpen && (
-        <div className="absolute z-[60] w-full mt-2 bg-black border border-zinc-800 rounded-xl shadow-2xl shadow-black/80 overflow-hidden animate-in fade-in zoom-in-95 duration-150 origin-top">
+        <div className="absolute z-[60] w-full mt-2 bg-zinc-900/95 border border-zinc-800 rounded-xl shadow-2xl shadow-black/80 overflow-hidden animate-in fade-in zoom-in-95 duration-150 origin-top">
           <ul className="max-h-64 overflow-auto py-1 no-scrollbar">
             {options.map((option) => (
               <li
@@ -341,7 +341,7 @@ const PricingCalculator: React.FC<Props> = ({ config, addons, onRequestUpdate, o
   // Removed 'uppercase' class from here, handled in JSX with upper()
   const labelClass = "block text-xs font-bold text-zinc-500 tracking-wider mb-2 ml-1";
   const inputContainerClass = "relative group";
-  const inputClass = "w-full appearance-none rounded-xl bg-black border border-zinc-800 px-5 py-4 text-white placeholder-zinc-600 focus:border-[#FFD700] focus:ring-1 focus:ring-taurusGold focus:outline-none transition-all duration-300 font-medium";
+  const inputClass = "w-full appearance-none rounded-xl bg-zinc-900 border border-zinc-800 px-5 py-4 text-white placeholder-zinc-600 focus:border-[#FFD700] focus:ring-1 focus:ring-taurusGold focus:outline-none transition-all duration-300 font-medium";
   const iconClass = "absolute right-5 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-600 group-hover:text-[#FFD700] group-focus-within:text-[#FFD700] transition-colors pointer-events-none";
 
   const isTr = request.country === Country.TR;
@@ -360,7 +360,7 @@ const PricingCalculator: React.FC<Props> = ({ config, addons, onRequestUpdate, o
         <div className="lg:col-span-2 space-y-8">
 
           {/* Section 1: Project Details */}
-          <div className="bg-zinc-950/70 rounded-3xl border border-zinc-800 p-8 sm:p-10 shadow-[0_0_60px_rgba(255,215,0,0.18)] relative overflow-hidden">
+          <div className="bg-zinc-900/70 rounded-3xl border border-zinc-800 p-8 sm:p-10 shadow-[0_0_60px_rgba(255,215,0,0.12)] relative overflow-hidden">
             <div className="absolute -top-24 -right-24 w-56 h-56 bg-[#FFD700]/10 rounded-full blur-3xl pointer-events-none"></div>
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8 relative z-10">
               <div className="flex items-center">
@@ -371,15 +371,15 @@ const PricingCalculator: React.FC<Props> = ({ config, addons, onRequestUpdate, o
                 </div>
               </div>
               <div className="flex items-center gap-2 text-[10px] uppercase tracking-widest text-zinc-500">
-                <span className="px-3 py-2 rounded-full bg-black/40 border border-zinc-800">{upper(t.targetMarket)}</span>
-                <span className="px-3 py-2 rounded-full bg-black/40 border border-zinc-800">{upper(t.pageCount)}</span>
+                <span className="px-3 py-2 rounded-full bg-zinc-900/60 border border-zinc-800">{upper(t.targetMarket)}</span>
+                <span className="px-3 py-2 rounded-full bg-zinc-900/60 border border-zinc-800">{upper(t.pageCount)}</span>
               </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 relative z-10">
 
               {/* Customer Name */}
-              <div className="space-y-4 border border-zinc-800 p-6 rounded-2xl bg-black/50 backdrop-blur-sm relative overflow-hidden">
+              <div className="space-y-4 border border-zinc-800 p-6 rounded-2xl bg-zinc-900/60 backdrop-blur-sm relative overflow-hidden">
                 <div className="flex items-center gap-3 mb-2">
                   <div className="p-2 bg-[#FFD700]/15 rounded-lg">
                     <User className="w-5 h-5 text-[#FFD700]" />
@@ -398,7 +398,7 @@ const PricingCalculator: React.FC<Props> = ({ config, addons, onRequestUpdate, o
                       value={request.customerName}
                       onChange={(e) => setRequest({ ...request, customerName: e.target.value })}
                       placeholder={t.customerPlaceholder}
-                      className="w-full bg-black/60 border border-zinc-800 rounded-xl px-4 py-3 text-white placeholder-zinc-600 focus:outline-none focus:border-[#FFD700] transition-all"
+                      className="w-full bg-zinc-900/70 border border-zinc-800 rounded-xl px-4 py-3 text-white placeholder-zinc-600 focus:outline-none focus:border-[#FFD700] transition-all"
                     />
                   </div>
                   <div>
@@ -408,14 +408,14 @@ const PricingCalculator: React.FC<Props> = ({ config, addons, onRequestUpdate, o
                       value={request.customerEmail || ''}
                       onChange={(e) => setRequest({ ...request, customerEmail: e.target.value })}
                       placeholder={t.customerEmailPlaceholder}
-                      className="w-full bg-black/60 border border-zinc-800 rounded-xl px-4 py-3 text-white placeholder-zinc-600 focus:outline-none focus:border-[#FFD700] transition-all"
+                      className="w-full bg-zinc-900/70 border border-zinc-800 rounded-xl px-4 py-3 text-white placeholder-zinc-600 focus:outline-none focus:border-[#FFD700] transition-all"
                     />
                   </div>
                 </div>
               </div>
 
               {/* Country Select */}
-              <div className="rounded-2xl border border-zinc-800 bg-black/50 p-4">
+              <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-4">
                 <CustomSelect
                   label={upper(t.targetMarket)}
                   value={request.country}
@@ -426,7 +426,7 @@ const PricingCalculator: React.FC<Props> = ({ config, addons, onRequestUpdate, o
               </div>
 
               {/* Site Type Select */}
-              <div className="rounded-2xl border border-zinc-800 bg-black/50 p-4">
+              <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-4">
                 <CustomSelect
                   label={upper(t.projectType)}
                   value={request.siteType}
@@ -437,7 +437,7 @@ const PricingCalculator: React.FC<Props> = ({ config, addons, onRequestUpdate, o
               </div>
 
               {/* Page Count Slider */}
-              <div className="rounded-2xl border border-zinc-800 bg-black/50 p-4">
+              <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-4">
                 <label className={labelClass}>
                   {upper(t.pageCount)}: <span className="text-[#FFD700] ml-1 text-sm">{request.pageCount}</span>
                 </label>
@@ -459,10 +459,10 @@ const PricingCalculator: React.FC<Props> = ({ config, addons, onRequestUpdate, o
               </div>
 
               {/* Design Preference Radio */}
-              <div className="md:col-span-2 mt-4 rounded-2xl border border-zinc-800 bg-black/50 p-6">
+              <div className="md:col-span-2 mt-4 rounded-2xl border border-zinc-800 bg-zinc-900/60 p-6">
                 <label className={labelClass}>{upper(t.designPref)}</label>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <label className={`relative group cursor-pointer border rounded-2xl p-5 transition-all duration-300 flex items-start space-x-4 ${request.designType === DesignType.TEMPLATE ? 'border-[#FFD700] bg-zinc-900 shadow-[0_0_15px_rgba(255,215,0,0.15)]' : 'border-zinc-800 bg-black hover:border-zinc-600'}`}>
+                  <label className={`relative group cursor-pointer border rounded-2xl p-5 transition-all duration-300 flex items-start space-x-4 ${request.designType === DesignType.TEMPLATE ? 'border-[#FFD700] bg-zinc-900 shadow-[0_0_15px_rgba(255,215,0,0.15)]' : 'border-zinc-800 bg-zinc-900/60 hover:border-zinc-600'}`}>
                     <input
                       type="radio"
                       name="design"
@@ -479,7 +479,7 @@ const PricingCalculator: React.FC<Props> = ({ config, addons, onRequestUpdate, o
                     </div>
                   </label>
 
-                  <label className={`relative group cursor-pointer border rounded-2xl p-5 transition-all duration-300 flex items-start space-x-4 ${request.designType === DesignType.CUSTOM ? 'border-[#FFD700] bg-zinc-900 shadow-[0_0_15px_rgba(255,215,0,0.15)]' : 'border-zinc-800 bg-black hover:border-zinc-600'}`}>
+                  <label className={`relative group cursor-pointer border rounded-2xl p-5 transition-all duration-300 flex items-start space-x-4 ${request.designType === DesignType.CUSTOM ? 'border-[#FFD700] bg-zinc-900 shadow-[0_0_15px_rgba(255,215,0,0.15)]' : 'border-zinc-800 bg-zinc-900/60 hover:border-zinc-600'}`}>
                     <input
                       type="radio"
                       name="design"
@@ -499,12 +499,12 @@ const PricingCalculator: React.FC<Props> = ({ config, addons, onRequestUpdate, o
               </div>
 
               {/* Technical & Creative Extras */}
-              <div className="space-y-4 md:col-span-2 mt-4 rounded-2xl border border-zinc-800 bg-black/50 p-6">
+              <div className="space-y-4 md:col-span-2 mt-4 rounded-2xl border border-zinc-800 bg-zinc-900/60 p-6">
                 <label className={labelClass}>{upper(t.technicalTitle)}</label>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {/* SEO */}
-                  <label className={`flex items-center space-x-4 p-4 border rounded-xl cursor-pointer transition-all duration-300 group ${request.hasSeo ? 'border-[#FFD700] bg-zinc-900' : 'border-zinc-800 bg-black hover:border-zinc-700'}`}>
+                  <label className={`flex items-center space-x-4 p-4 border rounded-xl cursor-pointer transition-all duration-300 group ${request.hasSeo ? 'border-[#FFD700] bg-zinc-900' : 'border-zinc-800 bg-zinc-900/60 hover:border-zinc-700'}`}>
                     <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${request.hasSeo ? 'bg-[#FFD700] border-[#FFD700]' : 'border-zinc-600 group-hover:border-zinc-500'}`}>
                       {request.hasSeo && <Zap className="w-3.5 h-3.5 text-black" fill="currentColor" />}
                     </div>
@@ -517,7 +517,7 @@ const PricingCalculator: React.FC<Props> = ({ config, addons, onRequestUpdate, o
                   </label>
 
                   {/* Multi-Lang */}
-                  <label className={`flex items-center space-x-4 p-4 border rounded-xl cursor-pointer transition-all duration-300 group ${request.isMultiLang ? 'border-[#FFD700] bg-zinc-900' : 'border-zinc-800 bg-black hover:border-zinc-700'}`}>
+                  <label className={`flex items-center space-x-4 p-4 border rounded-xl cursor-pointer transition-all duration-300 group ${request.isMultiLang ? 'border-[#FFD700] bg-zinc-900' : 'border-zinc-800 bg-zinc-900/60 hover:border-zinc-700'}`}>
                     <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${request.isMultiLang ? 'bg-[#FFD700] border-[#FFD700]' : 'border-zinc-600 group-hover:border-zinc-500'}`}>
                       {request.isMultiLang && <Globe className="w-3.5 h-3.5 text-black" />}
                     </div>
@@ -530,7 +530,7 @@ const PricingCalculator: React.FC<Props> = ({ config, addons, onRequestUpdate, o
                   </label>
 
                   {/* Graphics */}
-                  <label className={`flex items-center space-x-4 p-4 border rounded-xl cursor-pointer transition-all duration-300 group ${request.hasGraphics ? 'border-[#FFD700] bg-zinc-900' : 'border-zinc-800 bg-black hover:border-zinc-700'}`}>
+                  <label className={`flex items-center space-x-4 p-4 border rounded-xl cursor-pointer transition-all duration-300 group ${request.hasGraphics ? 'border-[#FFD700] bg-zinc-900' : 'border-zinc-800 bg-zinc-900/60 hover:border-zinc-700'}`}>
                     <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${request.hasGraphics ? 'bg-[#FFD700] border-[#FFD700]' : 'border-zinc-600 group-hover:border-zinc-500'}`}>
                       {request.hasGraphics && <PenTool className="w-3.5 h-3.5 text-black" />}
                     </div>
@@ -543,7 +543,7 @@ const PricingCalculator: React.FC<Props> = ({ config, addons, onRequestUpdate, o
                   </label>
 
                   {/* UX */}
-                  <label className={`flex items-center space-x-4 p-4 border rounded-xl cursor-pointer transition-all duration-300 group ${request.hasUx ? 'border-[#FFD700] bg-zinc-900' : 'border-zinc-800 bg-black hover:border-zinc-700'}`}>
+                  <label className={`flex items-center space-x-4 p-4 border rounded-xl cursor-pointer transition-all duration-300 group ${request.hasUx ? 'border-[#FFD700] bg-zinc-900' : 'border-zinc-800 bg-zinc-900/60 hover:border-zinc-700'}`}>
                     <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${request.hasUx ? 'bg-[#FFD700] border-[#FFD700]' : 'border-zinc-600 group-hover:border-zinc-500'}`}>
                       {request.hasUx && <MousePointer className="w-3.5 h-3.5 text-black" />}
                     </div>
@@ -556,7 +556,7 @@ const PricingCalculator: React.FC<Props> = ({ config, addons, onRequestUpdate, o
                   </label>
 
                   {/* CRM */}
-                  <label className={`flex items-center space-x-4 p-4 border rounded-xl cursor-pointer transition-all duration-300 group ${request.hasCrm ? 'border-[#FFD700] bg-zinc-900' : 'border-zinc-800 bg-black hover:border-zinc-700'}`}>
+                  <label className={`flex items-center space-x-4 p-4 border rounded-xl cursor-pointer transition-all duration-300 group ${request.hasCrm ? 'border-[#FFD700] bg-zinc-900' : 'border-zinc-800 bg-zinc-900/60 hover:border-zinc-700'}`}>
                     <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${request.hasCrm ? 'bg-[#FFD700] border-[#FFD700]' : 'border-zinc-600 group-hover:border-zinc-500'}`}>
                       {request.hasCrm && <Database className="w-3.5 h-3.5 text-black" />}
                     </div>
@@ -573,9 +573,9 @@ const PricingCalculator: React.FC<Props> = ({ config, addons, onRequestUpdate, o
           </div>
 
           {/* Section 2: Delivery & Maintenance (Middle - RED Theme) */}
-          <div className="bg-zinc-900 rounded-3xl border border-zinc-800 p-8 sm:p-10 shadow-[0_0_60px_rgba(220,38,38,0.25)] relative">
+          <div className="bg-zinc-900/70 rounded-3xl border border-zinc-800 p-8 sm:p-10 shadow-[0_0_60px_rgba(255,215,0,0.08)] relative">
             <h2 className="text-2xl font-bold text-white mb-8 flex items-center font-poppins">
-              <span className="bg-zinc-800 text-red-500 w-10 h-10 flex items-center justify-center rounded-xl mr-4 text-sm font-bold border border-zinc-700">02</span>
+              <span className="bg-zinc-800 text-[#FFD700] w-10 h-10 flex items-center justify-center rounded-xl mr-4 text-sm font-bold border border-zinc-700">02</span>
               {t.title2}
             </h2>
 
@@ -613,9 +613,9 @@ const PricingCalculator: React.FC<Props> = ({ config, addons, onRequestUpdate, o
           </div>
 
           {/* Section 3: Add-ons (Indigo) */}
-          <div className="bg-zinc-900 rounded-3xl border border-zinc-800 p-8 sm:p-10 shadow-[0_0_60px_rgba(99,102,241,0.25)] relative">
+          <div className="bg-zinc-900/70 rounded-3xl border border-zinc-800 p-8 sm:p-10 shadow-[0_0_60px_rgba(255,215,0,0.08)] relative">
             <h2 className="text-2xl font-bold text-white mb-8 flex items-center font-poppins">
-              <span className="bg-zinc-800 text-indigo-400 w-10 h-10 flex items-center justify-center rounded-xl mr-4 text-sm font-bold border border-zinc-700">03</span>
+              <span className="bg-zinc-800 text-[#FFD700] w-10 h-10 flex items-center justify-center rounded-xl mr-4 text-sm font-bold border border-zinc-700">03</span>
               {t.title3}
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -629,12 +629,12 @@ const PricingCalculator: React.FC<Props> = ({ config, addons, onRequestUpdate, o
                   <div
                     key={addon.id}
                     onClick={() => toggleAddon(addon.id)}
-                    className={`relative cursor-pointer p-5 rounded-xl border transition-all duration-300 ${isSelected ? 'bg-indigo-900/20 border-indigo-500' : 'bg-black border-zinc-800 hover:border-zinc-600'}`}
+                    className={`relative cursor-pointer p-5 rounded-xl border transition-all duration-300 ${isSelected ? 'bg-[#FFD700]/10 border-[#FFD700]' : 'bg-zinc-900/60 border-zinc-800 hover:border-zinc-600'}`}
                   >
                     <div className="flex justify-between items-start mb-2">
-                      <span className={`font-bold ${isSelected ? 'text-indigo-400' : 'text-zinc-300'}`}>{displayLabel}</span>
-                      <div className={`w-5 h-5 rounded flex items-center justify-center border ${isSelected ? 'bg-indigo-500 border-indigo-500' : 'border-zinc-600'}`}>
-                        {isSelected && <Check className="w-3.5 h-3.5 text-white" />}
+                      <span className={`font-bold ${isSelected ? 'text-[#FFD700]' : 'text-zinc-300'}`}>{displayLabel}</span>
+                      <div className={`w-5 h-5 rounded flex items-center justify-center border ${isSelected ? 'bg-[#FFD700] border-[#FFD700]' : 'border-zinc-600'}`}>
+                        {isSelected && <Check className="w-3.5 h-3.5 text-black" />}
                       </div>
                     </div>
                     <p className="text-xs text-zinc-500 mb-3 min-h-[32px]">{displayDesc}</p>
@@ -651,7 +651,7 @@ const PricingCalculator: React.FC<Props> = ({ config, addons, onRequestUpdate, o
         {/* Live Summary Sidebar */}
         <div className="lg:col-span-1">
           <div className="sticky top-24 space-y-6">
-            <div className="bg-black rounded-3xl shadow-2xl p-8 overflow-hidden relative border border-zinc-800 group hover:border-[#FFD700]/50 transition-colors duration-500">
+            <div className="bg-zinc-900/80 rounded-3xl shadow-2xl p-8 overflow-hidden relative border border-zinc-800 group hover:border-[#FFD700]/50 transition-colors duration-500">
               <div className="absolute -top-32 -right-32 w-64 h-64 bg-[#FFD700]/10 rounded-full blur-3xl pointer-events-none group-hover:bg-[#FFD700]/20 transition-all duration-500"></div>
 
               <h3 className="text-[10px] font-bold tracking-[0.2em] text-zinc-500 mb-8 relative z-10 border-b border-zinc-900 pb-4">
@@ -687,7 +687,7 @@ const PricingCalculator: React.FC<Props> = ({ config, addons, onRequestUpdate, o
                   <div className="flex flex-col gap-2 mb-3">
                     <button
                       onClick={() => setRequest({ ...request, discountType: DiscountType.FIXED })}
-                      className={`w-full flex items-center justify-between px-4 py-3 rounded-xl border transition-all ${request.discountType === DiscountType.FIXED ? 'bg-zinc-900 border-[#FFD700] text-white' : 'bg-black border-zinc-800 text-zinc-500 hover:border-zinc-700'}`}
+                      className={`w-full flex items-center justify-between px-4 py-3 rounded-xl border transition-all ${request.discountType === DiscountType.FIXED ? 'bg-zinc-900 border-[#FFD700] text-white' : 'bg-zinc-900/60 border-zinc-800 text-zinc-500 hover:border-zinc-700'}`}
                     >
                       <span className="text-sm font-bold">{labels.discountTypes[DiscountType.FIXED]}</span>
                       <span className={`text-lg leading-none font-bold ${request.discountType === DiscountType.FIXED ? 'text-[#FFD700]' : 'text-zinc-600'}`}>
@@ -697,7 +697,7 @@ const PricingCalculator: React.FC<Props> = ({ config, addons, onRequestUpdate, o
 
                     <button
                       onClick={() => setRequest({ ...request, discountType: DiscountType.PERCENTAGE })}
-                      className={`w-full flex items-center justify-between px-4 py-3 rounded-xl border transition-all ${request.discountType === DiscountType.PERCENTAGE ? 'bg-zinc-900 border-[#FFD700] text-white' : 'bg-black border-zinc-800 text-zinc-500 hover:border-zinc-700'}`}
+                      className={`w-full flex items-center justify-between px-4 py-3 rounded-xl border transition-all ${request.discountType === DiscountType.PERCENTAGE ? 'bg-zinc-900 border-[#FFD700] text-white' : 'bg-zinc-900/60 border-zinc-800 text-zinc-500 hover:border-zinc-700'}`}
                     >
                       <span className="text-sm font-bold">{labels.discountTypes[DiscountType.PERCENTAGE]}</span>
                       <Percent className={`w-4 h-4 ${request.discountType === DiscountType.PERCENTAGE ? 'text-[#FFD700]' : 'text-zinc-600'}`} />
@@ -747,7 +747,7 @@ const PricingCalculator: React.FC<Props> = ({ config, addons, onRequestUpdate, o
                 <div className="mt-10 relative z-10 space-y-3">
                   <button
                     onClick={handleStepNext}
-                    className="w-full flex items-center justify-center space-x-2 bg-[#FFD700] hover:bg-[#FFD700] text-black py-4 rounded-xl font-bold transition-all border border-[#FFD700] ring-1 ring-blue-500/50 shadow-[0_0_20px_rgba(255,215,0,0.2)] hover:shadow-[0_0_30px_rgba(255,215,0,0.4)] hover:-translate-y-1"
+                    className="w-full flex items-center justify-center space-x-2 bg-[#FFD700] hover:bg-[#FFD700] text-black py-4 rounded-xl font-bold transition-all border border-[#FFD700] shadow-[0_0_20px_rgba(255,215,0,0.2)] hover:shadow-[0_0_30px_rgba(255,215,0,0.4)] hover:-translate-y-1"
                   >
                     <span>{t.createProposal} / {t.next || 'Next'}</span>
                     <ArrowRight className="w-5 h-5" />
@@ -757,7 +757,7 @@ const PricingCalculator: React.FC<Props> = ({ config, addons, onRequestUpdate, o
             </div>
 
             {/* Cost Visualization */}
-            <div className="bg-black rounded-3xl border border-zinc-800 p-8">
+            <div className="bg-zinc-900/80 rounded-3xl border border-zinc-800 p-8">
               <h4 className="text-[10px] font-bold uppercase text-zinc-500 mb-6 tracking-[0.2em]">{upper(t.chartTitle)}</h4>
               <div className="h-40 w-full">
                 <ResponsiveContainer width="100%" height="100%">

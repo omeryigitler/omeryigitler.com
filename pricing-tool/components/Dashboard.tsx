@@ -85,7 +85,7 @@ const Dashboard: React.FC<Props> = ({ onNavigate, language, onRequestUpdate }) =
         {/* Removed 'uppercase' class and used toLocaleUpperCase(locale) for correct i/I handling */}
         <h1 className="text-5xl font-extrabold text-white sm:text-6xl sm:tracking-tight lg:text-7xl font-poppins mb-6 leading-[1.05]">
           <span className="inline-block">{t.heroTitlePrefix.toLocaleUpperCase(locale)}</span>{' '}
-          <span className="inline-flex items-center bg-[#FFD700] text-black px-3 py-1 rounded-xl shadow-[18px_0_40px_rgba(255,215,0,0.35)] ring-1 ring-[#FFD700]/40">
+          <span className="inline-block text-[#FFD700] drop-shadow-[0_0_24px_rgba(255,215,0,0.45)]">
             {t.heroTitleHighlight.toLocaleUpperCase(locale)}
           </span>
         </h1>
