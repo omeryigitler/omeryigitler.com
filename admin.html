@@ -2250,10 +2250,50 @@
                 const errText = await response.text().catch(() => '');
                 throw new Error(errText || `Server PDF failed (${response.status})`);
             }
-            const blob = await response.blob();
+            const buffer = await response.arrayBuffer();
+            const bytes = new Uint8Array(buffer);
+            let pdfBlob = null;
+
+            const isPdf = bytes.length > 4 &&
+                bytes[0] === 0x25 && // %
+                bytes[1] === 0x50 && // P
+                bytes[2] === 0x44 && // D
+                bytes[3] === 0x46;   // F
+
+            if (isPdf) {
+                pdfBlob = new Blob([bytes], { type: 'application/pdf' });
+            } else {
+                // Fallback: server returned JSON-encoded bytes
+                let jsonText = '';
+                try {
+                    jsonText = new TextDecoder().decode(bytes);
+                    const data = JSON.parse(jsonText);
+                    let byteArray = null;
+                    if (data && Array.isArray(data.data)) {
+                        byteArray = data.data;
+                    } else if (Array.isArray(data)) {
+                        byteArray = data;
+                    } else if (data && typeof data === 'object') {
+                        const keys = Object.keys(data)
+                            .filter(k => !Number.isNaN(Number(k)))
+                            .sort((a, b) => Number(a) - Number(b));
+                        byteArray = keys.map(k => data[k]);
+                    }
+                    if (byteArray && byteArray.length) {
+                        pdfBlob = new Blob([new Uint8Array(byteArray)], { type: 'application/pdf' });
+                    }
+                } catch (e) {
+                    console.warn('PDF fallback parse failed', e);
+                }
+            }
+
+            if (!pdfBlob) {
+                throw new Error('PDF response invalid.');
+            }
+
             await storeGeneratedPdfForProject(job.docType, null, job.projectId);
             if (job.download) {
-                downloadBlobFile(blob, job.fileName || `${job.docType.toUpperCase()}.pdf`);
+                downloadBlobFile(pdfBlob, job.fileName || `${job.docType.toUpperCase()}.pdf`);
             }
         }
 
