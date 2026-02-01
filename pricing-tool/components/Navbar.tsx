@@ -17,8 +17,8 @@ const Navbar: React.FC<NavbarProps> = ({ currentView, setView, language, setLang
     { id: 'dashboard', label: t.dashboard, icon: LayoutDashboard },
     { id: 'calculator', label: t.calculator, icon: Calculator },
     { id: 'proposal', label: t.proposal, icon: FileText },
-    { id: 'seo', label: t.seo, icon: ListTodo },
     { id: 'contract', label: t.contract, icon: ShieldCheck },
+    { id: 'seo', label: t.seo, icon: ListTodo },
     { id: 'admin', label: t.admin, icon: Settings },
   ];
 

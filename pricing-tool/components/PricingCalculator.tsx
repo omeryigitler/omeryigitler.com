@@ -106,6 +106,13 @@ const PricingCalculator: React.FC<Props> = ({ config, addons, onRequestUpdate, o
   const t = TRANSLATIONS[language].calc;
   const t_addons = TRANSLATIONS[language].addons as any; // Dynamic access for addons
   const labels = TRANSLATIONS[language].labels;
+  const notify = (type: 'success' | 'error' | 'info', message: string) => {
+    if (window.__TAURUS_TOAST__) {
+      window.__TAURUS_TOAST__(type, message);
+    } else {
+      alert(message);
+    }
+  };
 
   // STRICT LOCALE HANDLING FOR UPPERCASE
   const locale = language === Language.TR ? 'tr-TR' : 'en-US';
@@ -251,7 +258,7 @@ const PricingCalculator: React.FC<Props> = ({ config, addons, onRequestUpdate, o
 
   const handleStepNext = () => {
     if (!request.customerName) {
-      alert(t.alerts.enterCustomer);
+      notify('error', t.alerts.enterCustomer);
       return;
     }
     // Navigate to Proposal View via App.tsx routing
@@ -373,22 +380,22 @@ const PricingCalculator: React.FC<Props> = ({ config, addons, onRequestUpdate, o
 
                 <div className="space-y-3">
                   <div>
-                    <label className="text-xs text-zinc-500 mb-1 block">Full Name / Company Name</label>
+                    <label className="text-xs text-zinc-500 mb-1 block">{t.customerName}</label>
                     <input
                       type="text"
                       value={request.customerName}
                       onChange={(e) => setRequest({ ...request, customerName: e.target.value })}
-                      placeholder={t.placeholders?.name || "Enter Customer Name"}
+                      placeholder={t.customerPlaceholder}
                       className="w-full bg-black/50 border border-zinc-800 rounded-lg px-4 py-3 text-white placeholder-zinc-600 focus:outline-none focus:border-[#FFD700] transition-all hover:border-zinc-700"
                     />
                   </div>
                   <div>
-                    <label className="text-xs text-zinc-500 mb-1 block">Email Contact (Optional)</label>
+                    <label className="text-xs text-zinc-500 mb-1 block">{t.customerEmail}</label>
                     <input
                       type="email"
                       value={request.customerEmail || ''}
                       onChange={(e) => setRequest({ ...request, customerEmail: e.target.value })}
-                      placeholder="client@example.com"
+                      placeholder={t.customerEmailPlaceholder}
                       className="w-full bg-black/50 border border-zinc-800 rounded-lg px-4 py-3 text-white placeholder-zinc-600 focus:outline-none focus:border-[#FFD700] transition-all hover:border-zinc-700"
                     />
                   </div>
@@ -693,7 +700,7 @@ const PricingCalculator: React.FC<Props> = ({ config, addons, onRequestUpdate, o
                       placeholder="0"
                       value={request.discountValue || ''}
                       onChange={(e) => setRequest({ ...request, discountValue: parseFloat(e.target.value) || 0 })}
-                      className="w-full bg-zinc-900 border border-zinc-800 rounded-xl py-4 text-white font-bold text-lg focus:border-[#FFD700] focus:outline-none appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                      className="w-full bg-zinc-900 border border-zinc-800 rounded-xl py-4 text-white font-bold text-lg text-left tabular-nums focus:border-[#FFD700] focus:outline-none appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                       style={{
                         // Add padding to the side where the symbol is located to prevent overlap
                         paddingLeft: showSymbolLeft ? '3rem' : '1.25rem',

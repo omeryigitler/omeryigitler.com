@@ -100,7 +100,7 @@ const ProposalView: React.FC<Props> = ({ config, addons, request, breakdown, onB
             onClick={() => onNavigate('contract')}
             className="flex items-center bg-[#FFD700] text-black px-6 py-3 rounded-xl font-bold hover:bg-[#FFD700] transition-colors shadow-lg shadow-taurusGold/20"
           >
-            <span>İlerle: Sözleşme</span>
+            <span>{t.nextContract}</span>
             <ArrowLeft className="w-4 h-4 ml-2 rotate-180" />
           </button>
         </div>

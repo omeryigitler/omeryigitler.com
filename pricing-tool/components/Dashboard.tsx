@@ -18,8 +18,16 @@ const Dashboard: React.FC<Props> = ({ onNavigate, language, onRequestUpdate }) =
   const [clientEmail, setClientEmail] = useState('');
 
   const handleSaveQuote = () => {
+    const notify = (type: 'success' | 'error' | 'info', message: string) => {
+      if (window.__TAURUS_TOAST__) {
+        window.__TAURUS_TOAST__(type, message);
+      } else {
+        alert(message);
+      }
+    };
+
     if (!clientName.trim() || !clientEmail.trim()) {
-      alert(language === Language.TR ? 'Lütfen müşteri bilgilerini girin' : 'Please enter client information');
+      notify('error', language === Language.TR ? 'Lütfen müşteri bilgilerini girin' : 'Please enter client information');
       return;
     }
 
@@ -38,11 +46,11 @@ const Dashboard: React.FC<Props> = ({ onNavigate, language, onRequestUpdate }) =
         }
       }, '*');
 
-      alert(language === Language.TR ? '✅ Teklif kaydedildi!' : '✅ Quote saved!');
+      notify('info', language === Language.TR ? 'Teklif kaydediliyor...' : 'Saving proposal...');
       setClientName('');
       setClientEmail('');
     } else {
-      alert(language === Language.TR
+      notify('error', language === Language.TR
         ? 'Not: Bu özellik sadece admin panelden çalışır'
         : 'Note: This feature only works from admin panel');
     }
@@ -114,7 +122,7 @@ const Dashboard: React.FC<Props> = ({ onNavigate, language, onRequestUpdate }) =
             className="px-8 py-4 bg-zinc-900 hover:bg-zinc-800 text-[#FFD700] font-bold rounded-full transition-all border border-[#FFD700]/30 flex items-center"
           >
             <Save className="mr-2 w-5 h-5" />
-            {language === Language.TR ? 'Teklifi Kaydet' : 'Save Quote'}
+            {language === Language.TR ? 'Teklifi Kaydet' : 'Save Proposal'}
           </button>
         </div>
       </div>
@@ -135,9 +143,9 @@ const Dashboard: React.FC<Props> = ({ onNavigate, language, onRequestUpdate }) =
             </span>
           </div>
           <div className="relative z-10">
-            <h3 className="text-2xl font-bold text-white mb-4 uppercase">{t.calculatePriceTitle}</h3>
+            <h3 className="text-2xl font-bold text-white mb-4 uppercase">{t.card1Title}</h3>
             <p className="text-zinc-400 leading-relaxed">
-              {t.calculatePriceDesc}
+              {t.card1Desc}
             </p>
           </div>
         </div>
@@ -157,9 +165,9 @@ const Dashboard: React.FC<Props> = ({ onNavigate, language, onRequestUpdate }) =
             </span>
           </div>
           <div className="relative z-10">
-            <h3 className="text-2xl font-bold text-white mb-4 uppercase">{t.proposalTitle}</h3>
+            <h3 className="text-2xl font-bold text-white mb-4 uppercase">{t.card2Title}</h3>
             <p className="text-zinc-400 leading-relaxed">
-              {t.proposalDesc}
+              {t.card2Desc}
             </p>
           </div>
         </div>

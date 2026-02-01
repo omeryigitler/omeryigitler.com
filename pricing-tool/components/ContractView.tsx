@@ -66,6 +66,13 @@ const ContractView: React.FC<Props> = ({ config, addons, request, onBack, langua
   // Resolve localized labels for enums
   const designLabel = request.designType === DesignType.CUSTOM ? t_calc.custom : t_calc.template;
   const deliveryLabel = labels.speeds[request.deliverySpeed];
+  const notify = (type: 'success' | 'error' | 'info', message: string) => {
+    if (window.__TAURUS_TOAST__) {
+      window.__TAURUS_TOAST__(type, message);
+    } else {
+      alert(message);
+    }
+  };
 
   const renderTurkishContract = () => (
     <div className="space-y-6">
@@ -313,7 +320,12 @@ const ContractView: React.FC<Props> = ({ config, addons, request, onBack, langua
 
               } catch (e) {
                 console.error("Save Error", e);
-                alert("Hata: Proje kaydedilemedi. (Error saving project)");
+                notify(
+                  'error',
+                  language === Language.TR
+                    ? 'Hata: Proje kaydedilemedi.'
+                    : 'Error: Project could not be saved.'
+                );
               } finally {
                 setIsGenerating(false);
               }

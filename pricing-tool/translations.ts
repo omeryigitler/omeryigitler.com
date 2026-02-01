@@ -60,6 +60,8 @@ export const TRANSLATIONS = {
       title3: 'Ek Hizmetler',
       customerName: 'Müşteri / Firma Adı',
       customerPlaceholder: 'Örn: Global Tech A.Ş.',
+      customerEmail: 'E-posta (Opsiyonel)',
+      customerEmailPlaceholder: 'ornek@firma.com',
       targetMarket: 'Hedef Pazar',
       countryTR: 'Türkiye (₺)',
       countryMT: 'Malta (€)',
@@ -164,7 +166,8 @@ export const TRANSLATIONS = {
       agency: 'DİJİTAL TASARIM STÜDYOSU',
       signAgency: 'İmza / Kaşe',
       signClient: 'İmza / Tarih',
-      approval: 'Müşteri Onayı'
+      approval: 'Müşteri Onayı',
+      nextContract: 'İlerle: Sözleşme'
     },
     contract: {
       title: 'Web Tasarım Hizmet Sözleşmesi',
@@ -335,6 +338,8 @@ export const TRANSLATIONS = {
       title3: 'Additional Services',
       customerName: 'Client / Company Name',
       customerPlaceholder: 'Ex: Global Tech Ltd.',
+      customerEmail: 'Email (Optional)',
+      customerEmailPlaceholder: 'client@example.com',
       targetMarket: 'Target Market',
       countryTR: 'Turkey (₺)',
       countryMT: 'Malta (€)',
@@ -439,7 +444,8 @@ export const TRANSLATIONS = {
       agency: 'DIGITAL DESIGN STUDIO',
       signAgency: 'Signature / Stamp',
       signClient: 'Sign / Date',
-      approval: 'Customer Approval'
+      approval: 'Customer Approval',
+      nextContract: 'Next: Contract'
     },
     contract: {
       title: 'Web Design Service Agreement',

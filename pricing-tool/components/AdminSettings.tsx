@@ -21,11 +21,18 @@ const AdminSettings: React.FC<Props> = ({ config, addons, onUpdateConfig, onUpda
 
   const t = TRANSLATIONS[language].admin;
   const labels = TRANSLATIONS[language].labels;
+  const notify = (type: 'success' | 'error' | 'info', message: string) => {
+    if (window.__TAURUS_TOAST__) {
+      window.__TAURUS_TOAST__(type, message);
+    } else {
+      alert(message);
+    }
+  };
 
   const handleSave = () => {
     onUpdateConfig(localConfig);
     onUpdateAddons(localAddons);
-    alert(t.saveSuccess);
+    notify('success', t.saveSuccess);
   };
 
   const handleReset = () => {

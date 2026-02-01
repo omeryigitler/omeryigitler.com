@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import Navbar from './components/Navbar';
 import Dashboard from './components/Dashboard';
 import PricingCalculator from './components/PricingCalculator';
@@ -14,9 +14,33 @@ import {
 import { DEFAULT_PRICING_CONFIG, DEFAULT_AVAILABLE_ADDONS } from './constants';
 import { TRANSLATIONS } from './translations';
 
+type ToastType = 'success' | 'error' | 'info';
+
+declare global {
+  interface Window {
+    __TAURUS_TOAST__?: (type: ToastType, message: string) => void;
+    __TAURUS_PDF_GENERATOR__?: (...args: any[]) => Promise<Blob>;
+  }
+}
+
 const App: React.FC = () => {
   const [currentView, setCurrentView] = useState('dashboard');
   const [language, setLanguage] = useState<Language>(Language.EN);
+  const [toast, setToast] = useState<{ type: ToastType; message: string } | null>(null);
+  const toastTimerRef = useRef<number | null>(null);
+
+  const showToast = useCallback((type: ToastType, message: string) => {
+    setToast({ type, message });
+    if (toastTimerRef.current) window.clearTimeout(toastTimerRef.current);
+    toastTimerRef.current = window.setTimeout(() => setToast(null), 2500);
+  }, []);
+
+  useEffect(() => {
+    window.__TAURUS_TOAST__ = showToast;
+    return () => {
+      if (window.__TAURUS_TOAST__ === showToast) delete window.__TAURUS_TOAST__;
+    };
+  }, [showToast]);
 
   // Expose native PDF generator for server-side rendering (Vercel)
   useEffect(() => {
@@ -100,6 +124,15 @@ const App: React.FC = () => {
     const handleMessage = (event: MessageEvent) => {
       // Validate origin if needed, or check message structure
       if (!event.data || !event.data.type) return;
+
+      if (event.data.type === 'QUOTE_SAVED') {
+        if (event.data.success) {
+          showToast('success', language === Language.TR ? 'Teklif kaydedildi.' : 'Proposal saved.');
+        } else {
+          showToast('error', language === Language.TR ? 'Kayıt başarısız.' : 'Save failed.');
+        }
+        return;
+      }
 
       if (event.data.type === 'PING_PRICING_TOOL') {
         window.parent.postMessage({ type: 'PRICING_TOOL_PONG' }, '*');
@@ -221,7 +254,7 @@ const App: React.FC = () => {
 
     window.addEventListener('message', handleMessage);
     return () => window.removeEventListener('message', handleMessage);
-  }, [pricingConfig, availableAddons, language]);
+  }, [pricingConfig, availableAddons, language, showToast]);
 
   // Handlers for Admin Updates
   const updateConfig = (newConfig: Record<Country, PricingRules>) => {
@@ -355,6 +388,22 @@ const App: React.FC = () => {
             &copy; {new Date().getFullYear()} Ömer Yiğitler. {TRANSLATIONS[language].common.footerText}
           </div>
         </footer>
+      )}
+
+      {toast && (
+        <div className="fixed bottom-6 right-6 z-[60]">
+          <div
+            className={`px-4 py-3 rounded-xl border text-sm font-bold shadow-2xl backdrop-blur-md ${
+              toast.type === 'success'
+                ? 'bg-[#FFD700] text-black border-[#FFD700]/50'
+                : toast.type === 'error'
+                ? 'bg-red-500/90 text-white border-red-500/50'
+                : 'bg-white/10 text-white border-white/20'
+            }`}
+          >
+            {toast.message}
+          </div>
+        </div>
       )}
     </div>
   );
