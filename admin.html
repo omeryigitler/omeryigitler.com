@@ -908,6 +908,241 @@
         let currentOpenedMessageId = null;
         let isGeneratingBackgroundPDF = false; // Track background generation
 
+        // --- AUTO PIPELINE CONFIG ---
+        const AUTO_PIPELINE_ENABLED = true; // Full auto; only final approval is manual
+        const autoPipelineLocks = new Set();
+
+        // --- WORKFLOW STAGES ---
+        const WORKFLOW_STAGES = [
+            'lead',
+            'proposal',
+            'active',
+            'review',
+            'approved'
+        ];
+
+        // --- PRICING DEFAULTS (Fallback if localStorage is empty) ---
+        const DEFAULT_PRICING_CONFIG = {
+            TR: {
+                currency: 'TRY',
+                currencySymbol: '₺',
+                basePrices: {
+                    LANDING: 8000,
+                    PROMO: 8000,
+                    CORPORATE: 15000,
+                    ECOMMERCE: 40000,
+                    PORTAL: 50000
+                },
+                pageRate: 1000,
+                maintenanceRates: {
+                    NONE: { value: 0, type: 'FIXED' },
+                    BASIC: { value: 2000, type: 'FIXED' },
+                    MID: { value: 5000, type: 'FIXED' },
+                    PREMIUM: { value: 10000, type: 'FIXED' }
+                },
+                factors: {
+                    seo: { value: 5000, type: 'FIXED' },
+                    design: { value: 30, type: 'PERCENTAGE' },
+                    multiLang: { value: 20, type: 'PERCENTAGE' },
+                    graphics: { value: 10, type: 'PERCENTAGE' },
+                    ux: { value: 10, type: 'PERCENTAGE' },
+                    crm: { value: 20, type: 'PERCENTAGE' }
+                },
+                speedMultipliers: {
+                    STANDARD: 1,
+                    FAST: 1.5,
+                    URGENT: 2.0
+                }
+            },
+            MT: {
+                currency: 'EUR',
+                currencySymbol: '€',
+                basePrices: {
+                    LANDING: 800,
+                    PROMO: 800,
+                    CORPORATE: 1500,
+                    ECOMMERCE: 4000,
+                    PORTAL: 5000
+                },
+                pageRate: 100,
+                maintenanceRates: {
+                    NONE: { value: 0, type: 'FIXED' },
+                    BASIC: { value: 200, type: 'FIXED' },
+                    MID: { value: 500, type: 'FIXED' },
+                    PREMIUM: { value: 1000, type: 'FIXED' }
+                },
+                factors: {
+                    seo: { value: 500, type: 'FIXED' },
+                    design: { value: 30, type: 'PERCENTAGE' },
+                    multiLang: { value: 20, type: 'PERCENTAGE' },
+                    graphics: { value: 10, type: 'PERCENTAGE' },
+                    ux: { value: 10, type: 'PERCENTAGE' },
+                    crm: { value: 20, type: 'PERCENTAGE' }
+                },
+                speedMultipliers: {
+                    STANDARD: 1,
+                    FAST: 1.5,
+                    URGENT: 2.0
+                }
+            }
+        };
+
+        const DEFAULT_AVAILABLE_ADDONS = [
+            {
+                id: 'logo_design',
+                label: 'Logo Tasarımı',
+                description: '3 farklı konsept',
+                priceTR: { value: 5000, type: 'FIXED' },
+                priceMT: { value: 500, type: 'FIXED' }
+            },
+            {
+                id: 'content_writing',
+                label: 'İçerik Yazarlığı',
+                description: 'SEO uyumlu metinler',
+                priceTR: { value: 7500, type: 'FIXED' },
+                priceMT: { value: 750, type: 'FIXED' }
+            },
+            {
+                id: 'social_media',
+                label: 'Sosyal Medya',
+                description: 'Hesap kurulumu',
+                priceTR: { value: 3000, type: 'FIXED' },
+                priceMT: { value: 300, type: 'FIXED' }
+            },
+            {
+                id: 'google_maps',
+                label: 'Google Harita',
+                description: 'Harita kaydı',
+                priceTR: { value: 1500, type: 'FIXED' },
+                priceMT: { value: 150, type: 'FIXED' }
+            }
+        ];
+
+        function getPricingConfig() {
+            try {
+                const stored = localStorage.getItem('pricing_config');
+                if (stored) return JSON.parse(stored);
+            } catch (e) { }
+            return DEFAULT_PRICING_CONFIG;
+        }
+
+        function getAddonConfig() {
+            try {
+                const stored = localStorage.getItem('addon_config');
+                if (stored) return JSON.parse(stored);
+            } catch (e) { }
+            return DEFAULT_AVAILABLE_ADDONS;
+        }
+
+        function calculateFactorCost(baseAmount, factor) {
+            if (!factor) return 0;
+            if (factor.type === 'PERCENTAGE') return baseAmount * (factor.value / 100);
+            return factor.value || 0;
+        }
+
+        function calculateBreakdownFromRequest(request, pricingConfig, addons) {
+            const rules = pricingConfig[request.country] || pricingConfig.TR;
+            const base = (rules.basePrices && rules.basePrices[request.siteType]) || 0;
+            const pagesCost = (Number(request.pageCount) || 0) * (rules.pageRate || 0);
+            let scopeValue = base + pagesCost;
+
+            const seoCost = request.hasSeo ? calculateFactorCost(scopeValue, rules.factors.seo) : 0;
+            let runningTotal = scopeValue + seoCost;
+
+            let designCost = 0;
+            if (request.designType === 'CUSTOM') {
+                designCost = calculateFactorCost(scopeValue, rules.factors.design);
+            }
+
+            let multiLangCost = 0;
+            if (request.isMultiLang) {
+                multiLangCost = calculateFactorCost(scopeValue, rules.factors.multiLang);
+            }
+
+            let graphicsCost = 0;
+            if (request.hasGraphics) {
+                graphicsCost = calculateFactorCost(scopeValue, rules.factors.graphics);
+            }
+
+            let uxCost = 0;
+            if (request.hasUx) {
+                uxCost = calculateFactorCost(scopeValue, rules.factors.ux);
+            }
+
+            let crmCost = 0;
+            if (request.hasCrm) {
+                crmCost = calculateFactorCost(scopeValue, rules.factors.crm);
+            }
+
+            runningTotal = runningTotal + designCost + multiLangCost + graphicsCost + uxCost + crmCost;
+
+            let addonsCost = 0;
+            if (Array.isArray(request.selectedAddons)) {
+                request.selectedAddons.forEach(addonId => {
+                    const addon = (addons || []).find(a => a.id === addonId);
+                    if (addon) {
+                        const priceFactor = request.country === 'TR' ? addon.priceTR : addon.priceMT;
+                        addonsCost += calculateFactorCost(runningTotal, priceFactor);
+                    }
+                });
+            }
+            runningTotal += addonsCost;
+
+            const speedMultiplier = (rules.speedMultipliers && rules.speedMultipliers[request.deliverySpeed]) || 1;
+            const finalProjectTotal = runningTotal * speedMultiplier;
+            const speedCost = finalProjectTotal - runningTotal;
+
+            let discountAmount = 0;
+            if (request.discountValue > 0) {
+                if (request.discountType === 'PERCENTAGE') discountAmount = finalProjectTotal * (request.discountValue / 100);
+                else discountAmount = request.discountValue;
+            }
+            discountAmount = Math.min(discountAmount, finalProjectTotal);
+            const finalTotal = finalProjectTotal - discountAmount;
+
+            const maintenanceFactor = rules.maintenanceRates[request.maintenanceLevel] || { value: 0, type: 'FIXED' };
+            const monthlyCost = calculateFactorCost(finalProjectTotal, maintenanceFactor);
+
+            return {
+                base,
+                pages: pagesCost,
+                design: designCost,
+                seo: seoCost,
+                multiLang: multiLangCost,
+                graphics: graphicsCost,
+                ux: uxCost,
+                crm: crmCost,
+                addons: addonsCost,
+                speed: speedCost,
+                subtotal: runningTotal,
+                totalOneTime: finalProjectTotal,
+                discountAmount,
+                finalTotal,
+                totalMonthly: monthlyCost
+            };
+        }
+
+        function buildQuoteRequestFromMessage(message) {
+            return {
+                customerName: message.name || 'Unknown',
+                customerEmail: message.email || '',
+                country: message.country || 'TR',
+                siteType: message.siteType || message.projectType || 'CORPORATE',
+                pageCount: Number(message.pageCount || 10),
+                designType: message.designType || 'TEMPLATE',
+                isMultiLang: !!message.isMultiLang,
+                hasSeo: !!message.hasSeo,
+                hasGraphics: !!message.hasGraphics,
+                hasUx: !!message.hasUx,
+                hasCrm: !!message.hasCrm,
+                deliverySpeed: message.deliverySpeed || 'STANDARD',
+                maintenanceLevel: message.maintenanceLevel || 'NONE',
+                selectedAddons: Array.isArray(message.selectedAddons) ? message.selectedAddons : [],
+                discountType: 'FIXED',
+                discountValue: 0
+            };
+        }
+
         // Helper: Format Referrer Source
         function getReferrerInfo(ref) {
             if (!ref || ref === 'Direct') return { label: 'Direct Entry', icon: 'zap' };
@@ -976,6 +1211,35 @@
             // Handle Direct PDF Generation (From Admin "Generate" button)
             if (event.data.type === 'PDF_GENERATED') {
                 console.log('📄 PDF Generated via Remote Command', event.data.payload);
+
+                // Auto-pipeline PDF capture (queue-aware)
+                if (pdfJobActive && event.data.payload) {
+                    const payload = event.data.payload;
+                    const docType = pdfJobActive.docType;
+                    const dataUri = docType === 'quote' ? payload.quotePdf : payload.contractPdf;
+
+                    if (dataUri) {
+                        const key = `project_pdf_${docType}_${pdfJobActive.projectId}`;
+                        localStorage.setItem(key, dataUri);
+                        try {
+                            await db.collection('projects').doc(pdfJobActive.projectId).update({
+                                [`documents.${docType}LocalKey`]: key,
+                                [`documents.${docType}GeneratedAt`]: firebase.firestore.FieldValue.serverTimestamp(),
+                                lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+                            });
+                            if (docType === 'contract') {
+                                await updateWorkflow(pdfJobActive.projectId, 'review', { source: 'auto' });
+                            }
+                        } catch (e) {
+                            console.warn("PDF local key save failed:", e.message);
+                        }
+                    }
+
+                    pdfJobActive = null;
+                    processNextPdfJob();
+                    return;
+                }
+
                 if (event.data.payload) {
                     const { quotePdf, contractPdf, fileName } = event.data.payload;
                     if (quotePdf) downloadBase64File(quotePdf, fileName || 'Quote.pdf');
@@ -1023,6 +1287,7 @@
                         deliverySpeed: request.deliverySpeed,
                         selectedAddons: request.selectedAddons || [],
                         status: 'active', // Ensure it's active
+                        workflowStage: 'active',
                         startData: firebase.firestore.FieldValue.serverTimestamp(),
                         lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
                     };
@@ -1034,6 +1299,8 @@
                         try {
                             await db.collection('projects').doc(projectId).update(projectUpdates);
                             console.log('✅ Project synced with new quote data:', projectId);
+                            await updateWorkflow(projectId, 'proposal', { source: 'pricing', quoteId: id });
+                            await updateWorkflow(projectId, 'active', { source: 'pricing' });
 
                             event.source.postMessage({ type: 'QUOTE_SAVED', success: true, quoteId: id }, '*'); // Close iframe loader?
 
@@ -1070,6 +1337,8 @@
                                 await db.collection('projects').doc(projectId).update(projectUpdates);
 
                                 console.log('✅ New Project Created:', projectId);
+                                await updateWorkflow(projectId, 'proposal', { source: 'pricing', quoteId: id });
+                                await updateWorkflow(projectId, 'active', { source: 'pricing' });
                                 // alert('New Project Created & Linked to Quote!');
                             }
                         } catch (err) {
@@ -1205,6 +1474,43 @@
                 systemAlert('SUCCESS', 'Document downloaded successfully.', 'check-circle');
             }
         });
+
+        // --- PDF JOB QUEUE (Auto Docs) ---
+        const pdfJobQueue = [];
+        let pdfJobActive = null;
+
+        function enqueuePdfJob(job) {
+            pdfJobQueue.push(job);
+            if (!pdfJobActive) processNextPdfJob();
+        }
+
+        function processNextPdfJob() {
+            if (pdfJobActive || pdfJobQueue.length === 0) return;
+            const iframe = document.getElementById('pricing-iframe');
+            if (!iframe || !iframe.contentWindow) {
+                // Retry later if iframe not ready
+                setTimeout(processNextPdfJob, 1000);
+                return;
+            }
+
+            pdfJobActive = pdfJobQueue.shift();
+            iframe.contentWindow.postMessage({
+                type: pdfJobActive.docType === 'quote' ? 'GENERATE_QUOTE_PDF' : 'GENERATE_CONTRACT_PDF',
+                payload: {
+                    request: pdfJobActive.request,
+                    breakdown: pdfJobActive.breakdown
+                }
+            }, '*');
+
+            // Fail-safe timeout
+            const activeId = pdfJobActive.id;
+            setTimeout(() => {
+                if (pdfJobActive && pdfJobActive.id === activeId) {
+                    pdfJobActive = null;
+                    processNextPdfJob();
+                }
+            }, 20000);
+        }
 
         // --- UI LOGIC ---
         function toggleSidebar() {
@@ -1342,6 +1648,178 @@
 
             securitySettingsInitialized = true;
             console.log('✅ Security settings initialized');
+        }
+
+        // --- WORKFLOW HELPERS ---
+        function normalizeStage(stage) {
+            return WORKFLOW_STAGES.includes(stage) ? stage : 'lead';
+        }
+
+        async function updateWorkflow(projectId, stage, meta = {}) {
+            if (!db || !projectId) return;
+            const normalized = normalizeStage(stage);
+            const entry = {
+                stage: normalized,
+                source: meta.source || 'system',
+                at: new Date().toISOString(),
+                ...meta
+            };
+            try {
+                await db.collection('projects').doc(projectId).update({
+                    workflowStage: normalized,
+                    workflowHistory: firebase.firestore.FieldValue.arrayUnion(entry),
+                    lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+                });
+            } catch (e) {
+                console.warn('Workflow update failed:', e.message);
+            }
+        }
+
+        function setWorkflowUI(stage, approved) {
+            const stageEl = document.getElementById('workflow-stage');
+            const approveBtn = document.getElementById('workflow-approve-btn');
+            if (stageEl) stageEl.innerText = (stage || 'lead').toUpperCase();
+            if (approveBtn) {
+                approveBtn.disabled = !!approved;
+                approveBtn.innerText = approved ? 'FINAL APPROVED' : 'FINAL APPROVAL';
+                approveBtn.className = approved
+                    ? 'px-5 py-2 rounded-lg bg-green-500/20 text-green-400 border border-green-500/30 text-[10px] font-black uppercase tracking-widest cursor-default'
+                    : 'px-5 py-2 rounded-lg bg-taurusGold text-black text-[10px] font-black uppercase tracking-widest hover:bg-white transition-all';
+            }
+        }
+
+        async function finalApproveProject() {
+            if (!editingProjectId) return;
+            const confirmed = await systemConfirm('FINAL APPROVAL', 'Confirm final approval and close the workflow?', 'check-circle');
+            if (!confirmed) return;
+
+            try {
+                await db.collection('projects').doc(editingProjectId).update({
+                    finalApproved: true,
+                    approvedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    status: 'completed'
+                });
+                await updateWorkflow(editingProjectId, 'approved', { source: 'admin' });
+                setWorkflowUI('approved', true);
+                systemAlert('SUCCESS', 'Project finalized.', 'check-circle');
+            } catch (e) {
+                console.error('Final approval failed', e);
+                systemAlert('ERROR', 'Final approval failed: ' + e.message, 'x-circle');
+            }
+        }
+
+        // --- AUTO PIPELINE: Message -> Dossier -> Quote -> Project -> Docs ---
+        async function autoCreateDossierFromMessage(messageId, message) {
+            if (!AUTO_PIPELINE_ENABLED || !db || !messageId || !message) return;
+            if (message.type === 'report' || message.email === 'tracker@taurus.sys') return;
+            if (message.dossierCreated || message.projectId) return;
+            if (autoPipelineLocks.has(messageId)) return;
+
+            autoPipelineLocks.add(messageId);
+            try {
+                const projectData = {
+                    name: `Project for ${message.name || 'Client'}`,
+                    projectName: `Project for ${message.name || 'Client'}`,
+                    clientName: message.name || 'Unknown Client',
+                    clientEmail: message.email || '',
+                    status: 'active',
+                    progress: 0,
+                    messageId: messageId,
+                    description: message.message || '',
+                    siteType: message.siteType || message.projectType || 'CORPORATE',
+                    designType: message.designType || 'TEMPLATE',
+                    pageCount: message.pageCount || '10',
+                    deliverySpeed: message.deliverySpeed || 'STANDARD',
+                    maintenanceLevel: message.maintenanceLevel || 'NONE',
+                    selectedAddons: message.selectedAddons || [],
+                    country: message.country || 'TR',
+                    workflowStage: 'lead',
+                    autoPipeline: true,
+                    studio: {
+                        brief: message.message || '',
+                        goals: '',
+                        audience: '',
+                        tone: '',
+                        keywords: '',
+                        references: '',
+                        sitemap: '',
+                        content: '',
+                        notes: '',
+                        assets: {
+                            logo: false,
+                            brandbook: false,
+                            copy: false,
+                            images: false,
+                            video: false
+                        }
+                    }
+                };
+
+                const projectId = await saveProjectToFirestore(projectData);
+                if (!projectId) return;
+
+                await db.collection('messages').doc(messageId).update({
+                    projectId: projectId,
+                    dossierCreated: true
+                });
+
+                // Auto quote generation
+                await autoGenerateQuoteFromMessage(messageId, message, projectId);
+            } catch (e) {
+                console.error('Auto dossier failed:', e);
+            } finally {
+                autoPipelineLocks.delete(messageId);
+            }
+        }
+
+        async function autoGenerateQuoteFromMessage(messageId, message, projectId) {
+            try {
+                if (message.quoteId) return;
+                const pricingConfig = getPricingConfig();
+                const addons = getAddonConfig();
+                const request = buildQuoteRequestFromMessage(message);
+                const breakdown = calculateBreakdownFromRequest(request, pricingConfig, addons);
+
+                const quoteData = {
+                    clientName: request.customerName,
+                    clientEmail: request.customerEmail || '',
+                    country: request.country,
+                    siteType: request.siteType,
+                    pageCount: request.pageCount,
+                    totalPrice: breakdown.finalTotal,
+                    breakdown: breakdown,
+                    currency: request.country === 'MT' ? 'EUR' : 'TRY',
+                    notes: 'AUTO: Generated from form input'
+                };
+
+                const quoteId = await saveQuoteToFirestore(quoteData, messageId);
+                if (!quoteId || !projectId) return;
+
+                await db.collection('projects').doc(projectId).update({
+                    quoteId: quoteId,
+                    budget: breakdown.finalTotal,
+                    currency: quoteData.currency,
+                    breakdown: breakdown,
+                    siteType: request.siteType,
+                    designType: request.designType,
+                    pageCount: request.pageCount,
+                    deliverySpeed: request.deliverySpeed,
+                    maintenanceLevel: request.maintenanceLevel,
+                    selectedAddons: request.selectedAddons || [],
+                    country: request.country,
+                    lastUpdated: firebase.firestore.FieldValue.serverTimestamp(),
+                    workflowStage: 'active'
+                });
+
+                await updateWorkflow(projectId, 'proposal', { source: 'auto', quoteId });
+                await updateWorkflow(projectId, 'active', { source: 'auto' });
+
+                // Auto-generate docs (queue)
+                enqueuePdfJob({ id: `${projectId}-quote`, projectId, docType: 'quote', request, breakdown });
+                enqueuePdfJob({ id: `${projectId}-contract`, projectId, docType: 'contract', request, breakdown });
+            } catch (e) {
+                console.error('Auto quote failed:', e);
+            }
         }
 
         // --- DATA LOADERS ---
@@ -1806,10 +2284,13 @@
                 // Generate project number
                 const projectNumber = await getNextProjectNumber();
 
+                const initialStage = normalizeStage(projectData.workflowStage || 'lead');
+
                 // Prepare project document
                 const project = {
                     projectNumber: projectNumber,
-                    name: projectData.name || 'Untitled Project',
+                    name: projectData.name || projectData.projectName || 'Untitled Project',
+                    projectName: projectData.projectName || projectData.name || 'Untitled Project',
 
                     // Client info
                     clientId: client.id,
@@ -1819,6 +2300,18 @@
                     // Status
                     status: projectData.status || 'active',
                     progress: projectData.progress || 0,
+
+                    // Workflow
+                    workflowStage: initialStage,
+                    workflowHistory: [
+                        {
+                            stage: initialStage,
+                            source: projectData.autoPipeline ? 'auto' : 'manual',
+                            at: new Date().toISOString()
+                        }
+                    ],
+                    finalApproved: !!projectData.finalApproved,
+                    autoPipeline: !!projectData.autoPipeline,
 
                     // Dates
                     createdAt: firebase.firestore.FieldValue.serverTimestamp(),
@@ -1833,10 +2326,23 @@
                     // Relationships
                     quoteId: projectData.quoteId || null,
                     messageId: projectData.messageId || null,
+                    sourceMessageId: projectData.messageId || null,
 
                     // Details
                     description: projectData.description || '',
                     notes: projectData.notes || '',
+
+                    // Specs
+                    siteType: projectData.siteType || null,
+                    designType: projectData.designType || null,
+                    pageCount: projectData.pageCount || null,
+                    deliverySpeed: projectData.deliverySpeed || null,
+                    maintenanceLevel: projectData.maintenanceLevel || null,
+                    selectedAddons: projectData.selectedAddons || [],
+                    country: projectData.country || null,
+
+                    // Studio Workspace
+                    studio: projectData.studio || {},
 
                     // Metadata
                     lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
@@ -2028,6 +2534,11 @@
                                 updateClientStats(client.id, 'message', id);
                             }
                         }).catch(err => console.error('Error linking client:', err));
+                    }
+
+                    // AUTO PIPELINE: Create dossier + auto quote
+                    if (AUTO_PIPELINE_ENABLED) {
+                        autoCreateDossierFromMessage(id, data);
                     }
 
                     const isNew = data.status === 'new';
@@ -2408,10 +2919,12 @@
                     const data = doc.data();
 
                     // Global Search Filter
-                    const searchSource = `${data.projectName || ''} ${data.clientName || ''} ${data.clientEmail || ''}`.toLowerCase();
+                    const projectTitle = data.projectName || data.name || 'Untitled';
+                    const searchSource = `${projectTitle} ${data.clientName || ''} ${data.clientEmail || ''}`.toLowerCase();
                     if (searchQuery && !searchSource.includes(searchQuery)) return;
 
                     const status = data.status || 'active';
+                    const stage = data.workflowStage || 'lead';
                     if (currentProjectFilter !== 'all' && status !== currentProjectFilter) return;
 
                     html += `
@@ -2421,10 +2934,11 @@
                                 <span class="px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest ${status === 'active' ? 'bg-taurusGold text-black' : 'bg-green-500/20 text-green-400 border border-green-500/30'}">
                                     ${status}
                                 </span>
+                                <div class="mt-2 text-[9px] font-black uppercase tracking-widest text-gray-400">${stage}</div>
                             </div>
 
                             <div class="flex flex-col h-full pt-4">
-                                <h3 class="text-lg font-display font-bold text-white group-hover:text-taurusGold transition-colors mb-2">${highlightMatch(data.projectName || 'Untitled', searchQuery)}</h3>
+                                <h3 class="text-lg font-display font-bold text-white group-hover:text-taurusGold transition-colors mb-2">${highlightMatch(projectTitle, searchQuery)}</h3>
                                 <div class="flex items-center gap-2 mb-6">
                                     <div class="w-2 h-2 rounded-full bg-taurusGold opacity-50"></div>
                                     <span class="text-[10px] text-gray-500 uppercase tracking-widest font-bold">${highlightMatch(data.clientName || 'Private Client', searchQuery)}</span>
@@ -2961,29 +3475,49 @@
                 if (!message) throw new Error("Message data not found in cache");
 
                 const projectData = {
+                    name: `Project for ${message.name || 'Client'}`,
+                    projectName: `Project for ${message.name || 'Client'}`,
                     clientName: message.name || 'Unknown Client',
                     clientEmail: message.email || '',
-                    projectName: `Project for ${message.name || 'Client'}`,
                     status: 'active',
-                    done: '',
-                    todo: 'Initial setup pending...',
-                    requests: `Source Message (${new Date().toLocaleDateString()}):\n${message.message || ''}`,
+                    progress: 0,
+                    messageId: messageId,
+                    description: `Source Message (${new Date().toLocaleDateString()}):\n${message.message || ''}`,
 
-                    // Technical Specs Persistence
-                    siteType: message.projectType || message.siteType || 'Corporate',
-                    designType: message.designType || 'Template',
+                    // Technical Specs
+                    siteType: message.siteType || message.projectType || 'CORPORATE',
+                    designType: message.designType || 'TEMPLATE',
                     pageCount: message.pageCount || '10',
-                    deliverySpeed: message.deliverySpeed || 'Standard',
-                    maintenanceLevel: message.maintenanceLevel || 'None',
+                    deliverySpeed: message.deliverySpeed || 'STANDARD',
+                    maintenanceLevel: message.maintenanceLevel || 'NONE',
                     selectedAddons: message.selectedAddons || [],
+                    country: message.country || 'TR',
 
-                    timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-                    sourceMessageId: messageId
+                    workflowStage: 'lead',
+                    autoPipeline: true,
+                    studio: {
+                        brief: message.message || '',
+                        goals: '',
+                        audience: '',
+                        tone: '',
+                        keywords: '',
+                        references: '',
+                        sitemap: '',
+                        content: '',
+                        notes: '',
+                        assets: {
+                            logo: false,
+                            brandbook: false,
+                            copy: false,
+                            images: false,
+                            video: false
+                        }
+                    }
                 };
 
-                const docRef = await db.collection('projects').add(projectData);
-                console.log("✅ Project created with ID:", docRef.id);
-                return docRef.id;
+                const projectId = await saveProjectToFirestore(projectData);
+                console.log("✅ Project created with ID:", projectId);
+                return projectId;
             } catch (error) {
                 console.error("Error creating project from message:", error);
                 return null;
@@ -3091,12 +3625,12 @@
                     // --- POPULATE HEADER ---
                     document.getElementById('p-header-id').innerText = '#' + (d.projectNumber || 'UNK');
                     document.getElementById('p-header-date').innerText = d.createdAt?.toDate().toISOString().split('T')[0] || new Date().toISOString().split('T')[0];
-                    document.getElementById('p-modal-title').innerText = (d.projectName || 'MISSION UPDATE').toUpperCase();
+                    document.getElementById('p-modal-title').innerText = (d.projectName || d.name || 'MISSION UPDATE').toUpperCase();
 
                     // --- POPULATE OVERVIEW TAB ---
                     document.getElementById('p-client').value = d.clientName || '';
                     document.getElementById('p-email').value = d.clientEmail || '';
-                    document.getElementById('p-name').value = d.projectName || '';
+                    document.getElementById('p-name').value = d.projectName || d.name || '';
                     document.getElementById('p-status').value = d.status || 'active';
                     document.getElementById('p-requests').value = d.description || d.requests || d.notes || ''; // Fallback chain
                     document.getElementById('p-delete-btn').classList.remove('hidden');
@@ -3132,48 +3666,75 @@
                     // --- POPULATE ROADMAP TAB ---
                     renderRoadmap(d.roadmap, d.status);
 
-                    // --- POPULATE DOCUMENTS TAB ---
+                    // --- POPULATE WORKFLOW UI ---
+                    setWorkflowUI(d.workflowStage || 'lead', !!d.finalApproved);
+
+                    // --- POPULATE STUDIO TAB ---
+                    const studio = d.studio || {};
+                    const assets = studio.assets || {};
+                    const setVal = (id, val) => {
+                        const el = document.getElementById(id);
+                        if (el) el.value = val || '';
+                    };
+                    const setCheck = (id, val) => {
+                        const el = document.getElementById(id);
+                        if (el) el.checked = !!val;
+                    };
+                    setVal('studio-brief', studio.brief);
+                    setVal('studio-goals', studio.goals);
+                    setVal('studio-audience', studio.audience);
+                    setVal('studio-tone', studio.tone);
+                    setVal('studio-keywords', studio.keywords);
+                    setVal('studio-references', studio.references);
+                    setVal('studio-sitemap', studio.sitemap);
+                    setVal('studio-content', studio.content);
+                    setVal('studio-notes', studio.notes);
+                    setCheck('studio-asset-logo', assets.logo);
+                    setCheck('studio-asset-brand', assets.brandbook);
+                    setCheck('studio-asset-copy', assets.copy);
+                    setCheck('studio-asset-images', assets.images);
+                    setCheck('studio-asset-video', assets.video);
+
                     // --- POPULATE DOCUMENTS TAB ---
                     const quoteBtn = document.getElementById('btn-doc-quote');
-                    quoteBtn.innerHTML = '<i data-lucide="external-link" class="w-4 h-4 mr-2 inline"></i> View Proposal';
-                    quoteBtn.className = 'w-full py-3 rounded-lg bg-taurusGold/10 text-taurusGold border border-taurusGold/20 hover:bg-taurusGold hover:text-black font-bold text-xs uppercase tracking-widest transition-all';
-
-                    quoteBtn.onclick = () => {
-                        const pricingData = {
-                            customerName: d.clientName,
-                            customerEmail: d.clientEmail,
-                            country: 'TR', // Default to TR
-                            siteType: d.siteType,
-                            pageCount: d.pageCount,
-                            designType: d.designType,
-                            deliverySpeed: d.deliverySpeed,
-                            maintenanceLevel: d.selectedAddons?.includes('Maintenance') ? 'Basic' : 'None',
-                            selectedAddons: d.selectedAddons || [],
-                            breakdown: d.breakdown || {}
-                        };
-                        localStorage.setItem('pricing_tool_data', JSON.stringify(pricingData));
-                        window.open('pricing-tool/dist/index.html?view=proposal', '_blank');
-                    };
-
                     const contractBtn = document.getElementById('btn-doc-contract');
-                    contractBtn.innerHTML = '<i data-lucide="external-link" class="w-4 h-4 mr-2 inline"></i> View Contract';
-                    contractBtn.className = 'w-full py-3 rounded-lg bg-taurusGold/10 text-taurusGold border border-taurusGold/20 hover:bg-taurusGold hover:text-black font-bold text-xs uppercase tracking-widest transition-all';
-
-                    contractBtn.onclick = () => {
-                        const pricingData = {
-                            customerName: d.clientName,
-                            customerEmail: d.clientEmail,
-                            country: 'TR',
-                            siteType: d.siteType,
-                            pageCount: d.pageCount,
-                            designType: d.designType,
-                            deliverySpeed: d.deliverySpeed,
-                            selectedAddons: d.selectedAddons || [],
-                            breakdown: d.breakdown || {}
-                        };
-                        localStorage.setItem('pricing_tool_data', JSON.stringify(pricingData));
-                        window.open('pricing-tool/dist/index.html?view=contract', '_blank');
+                    const pricingData = {
+                        customerName: d.clientName,
+                        customerEmail: d.clientEmail,
+                        country: d.country || 'TR',
+                        siteType: d.siteType,
+                        pageCount: d.pageCount,
+                        designType: d.designType,
+                        deliverySpeed: d.deliverySpeed,
+                        maintenanceLevel: d.maintenanceLevel || 'NONE',
+                        selectedAddons: d.selectedAddons || [],
+                        breakdown: d.breakdown || {}
                     };
+                    const payload = btoa(encodeURIComponent(JSON.stringify(pricingData)));
+
+                    const quoteLocalKey = d.documents?.quoteLocalKey;
+                    const localQuote = quoteLocalKey ? localStorage.getItem(quoteLocalKey) : null;
+                    if (localQuote) {
+                        quoteBtn.innerHTML = '<i data-lucide="download" class="w-4 h-4 mr-2 inline"></i> Download Proposal';
+                        quoteBtn.className = 'w-full py-3 rounded-lg bg-taurusGold text-black border border-taurusGold/40 hover:bg-white font-bold text-xs uppercase tracking-widest transition-all';
+                        quoteBtn.onclick = () => downloadBase64File(localQuote, `Quote_${d.projectNumber || 'Project'}.pdf`);
+                    } else {
+                        quoteBtn.innerHTML = '<i data-lucide="external-link" class="w-4 h-4 mr-2 inline"></i> View Proposal';
+                        quoteBtn.className = 'w-full py-3 rounded-lg bg-taurusGold/10 text-taurusGold border border-taurusGold/20 hover:bg-taurusGold hover:text-black font-bold text-xs uppercase tracking-widest transition-all';
+                        quoteBtn.onclick = () => window.open(`pricing-tool/dist/index.html?view=proposal&payload=${payload}`, '_blank');
+                    }
+
+                    const contractLocalKey = d.documents?.contractLocalKey;
+                    const localContract = contractLocalKey ? localStorage.getItem(contractLocalKey) : null;
+                    if (localContract) {
+                        contractBtn.innerHTML = '<i data-lucide="download" class="w-4 h-4 mr-2 inline"></i> Download Contract';
+                        contractBtn.className = 'w-full py-3 rounded-lg bg-taurusGold text-black border border-taurusGold/40 hover:bg-white font-bold text-xs uppercase tracking-widest transition-all';
+                        contractBtn.onclick = () => downloadBase64File(localContract, `Contract_${d.projectNumber || 'Project'}.pdf`);
+                    } else {
+                        contractBtn.innerHTML = '<i data-lucide="external-link" class="w-4 h-4 mr-2 inline"></i> View Contract';
+                        contractBtn.className = 'w-full py-3 rounded-lg bg-taurusGold/10 text-taurusGold border border-taurusGold/20 hover:bg-taurusGold hover:text-black font-bold text-xs uppercase tracking-widest transition-all';
+                        contractBtn.onclick = () => window.open(`pricing-tool/dist/index.html?view=contract&payload=${payload}`, '_blank');
+                    }
 
                 } catch (e) {
                     console.error("Error opening project modal:", e);
@@ -3185,6 +3746,27 @@
                 document.getElementById('p-header-id').innerText = "#NEW";
                 document.getElementById('p-delete-btn').classList.add('hidden');
                 document.getElementById('p-tech-specs').classList.add('hidden');
+                setWorkflowUI('lead', false);
+                const resetIds = [
+                    'studio-brief',
+                    'studio-goals',
+                    'studio-audience',
+                    'studio-tone',
+                    'studio-keywords',
+                    'studio-references',
+                    'studio-sitemap',
+                    'studio-content',
+                    'studio-notes'
+                ];
+                resetIds.forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) el.value = '';
+                });
+                ['studio-asset-logo', 'studio-asset-brand', 'studio-asset-copy', 'studio-asset-images', 'studio-asset-video']
+                    .forEach(id => {
+                        const el = document.getElementById(id);
+                        if (el) el.checked = false;
+                    });
             }
             lucide.createIcons();
         }
@@ -3392,18 +3974,41 @@
         }
 
         async function saveProject() {
+            const studio = {
+                brief: document.getElementById('studio-brief')?.value || '',
+                goals: document.getElementById('studio-goals')?.value || '',
+                audience: document.getElementById('studio-audience')?.value || '',
+                tone: document.getElementById('studio-tone')?.value || '',
+                keywords: document.getElementById('studio-keywords')?.value || '',
+                references: document.getElementById('studio-references')?.value || '',
+                sitemap: document.getElementById('studio-sitemap')?.value || '',
+                content: document.getElementById('studio-content')?.value || '',
+                notes: document.getElementById('studio-notes')?.value || '',
+                assets: {
+                    logo: document.getElementById('studio-asset-logo')?.checked || false,
+                    brandbook: document.getElementById('studio-asset-brand')?.checked || false,
+                    copy: document.getElementById('studio-asset-copy')?.checked || false,
+                    images: document.getElementById('studio-asset-images')?.checked || false,
+                    video: document.getElementById('studio-asset-video')?.checked || false
+                }
+            };
+
             const data = {
                 clientName: document.getElementById('p-client').value,
                 clientEmail: document.getElementById('p-email').value,
                 projectName: document.getElementById('p-name').value,
+                name: document.getElementById('p-name').value,
                 status: document.getElementById('p-status').value,
-                done: document.getElementById('p-done').value,
-                todo: document.getElementById('p-todo').value,
+                done: document.getElementById('p-done')?.value || '',
+                todo: document.getElementById('p-todo')?.value || '',
                 requests: document.getElementById('p-requests').value,
+                description: document.getElementById('p-requests').value,
+                studio: studio,
+                lastUpdated: firebase.firestore.FieldValue.serverTimestamp(),
                 timestamp: firebase.firestore.FieldValue.serverTimestamp()
             };
             if (editingProjectId) await db.collection('projects').doc(editingProjectId).update(data);
-            else await db.collection('projects').add(data);
+            else await saveProjectToFirestore(data);
             closeProjectModal();
         }
 
@@ -3530,6 +4135,10 @@
                     class="project-tab-btn py-4 text-[10px] font-bold uppercase tracking-widest border-b-2 border-taurusGold text-taurusGold  transition-all whitespace-nowrap">
                     Overview
                 </button>
+                <button id="tab-btn-studio" onclick="switchProjectTab('studio')"
+                    class="project-tab-btn py-4 text-[10px] font-bold uppercase tracking-widest border-b-2 border-transparent text-gray-500 hover:text-white transition-all whitespace-nowrap">
+                    Studio
+                </button>
                 <button id="tab-btn-financials" onclick="switchProjectTab('financials')"
                     class="project-tab-btn py-4 text-[10px] font-bold uppercase tracking-widest border-b-2 border-transparent text-gray-500 hover:text-white transition-all whitespace-nowrap">
                     Financials
@@ -3605,6 +4214,24 @@
                         <!-- Notes -->
                         <div class="space-y-4">
                             <h4
+                                class="text-green-400 text-[10px] font-black uppercase tracking-[0.2em] border-b border-white/5 pb-2">
+                                Workflow Status</h4>
+                            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 bg-white/5 border border-white/10 rounded-xl p-4">
+                                <div class="flex items-center gap-3">
+                                    <span class="text-[9px] text-gray-500 uppercase tracking-widest font-bold">Stage</span>
+                                    <span id="workflow-stage" class="text-xs font-black text-taurusGold">LEAD</span>
+                                </div>
+                                <button id="workflow-approve-btn" onclick="finalApproveProject()"
+                                    class="px-5 py-2 rounded-lg bg-taurusGold text-black text-[10px] font-black uppercase tracking-widest hover:bg-white transition-all">
+                                    FINAL APPROVAL
+                                </button>
+                            </div>
+                            <p class="text-[10px] text-gray-500 uppercase tracking-widest">Pipeline is fully automatic. Final approval is manual.</p>
+                        </div>
+
+                        <!-- Notes -->
+                        <div class="space-y-4">
+                            <h4
                                 class="text-gray-500 text-[10px] font-black uppercase tracking-[0.2em] border-b border-white/5 pb-2">
                                 Mission Notes / Requests</h4>
                             <textarea id="p-requests"
@@ -3612,6 +4239,73 @@
                                 placeholder="Enter mission details..."></textarea>
                         </div>
                     </form>
+                </div>
+
+                <!-- TAB 1.5: STUDIO -->
+                <div id="tab-studio" class="project-tab-content hidden animate-fade-in">
+                    <div class="space-y-8">
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                            <div class="space-y-4">
+                                <h4 class="text-blue-400 text-[10px] font-black uppercase tracking-[0.2em] border-b border-white/5 pb-2">Brief & Goals</h4>
+                                <textarea id="studio-brief" class="w-full min-h-[140px] bg-white/5 border border-white/10 rounded-xl p-4 text-sm text-gray-200 focus:outline-none focus:border-taurusGold transition-colors resize-none" placeholder="Project brief, scope, constraints..."></textarea>
+                                <textarea id="studio-goals" class="w-full min-h-[100px] bg-white/5 border border-white/10 rounded-xl p-4 text-sm text-gray-200 focus:outline-none focus:border-taurusGold transition-colors resize-none" placeholder="Business goals, KPIs, success criteria..."></textarea>
+                            </div>
+                            <div class="space-y-4">
+                                <h4 class="text-blue-400 text-[10px] font-black uppercase tracking-[0.2em] border-b border-white/5 pb-2">Audience & Tone</h4>
+                                <textarea id="studio-audience" class="w-full min-h-[100px] bg-white/5 border border-white/10 rounded-xl p-4 text-sm text-gray-200 focus:outline-none focus:border-taurusGold transition-colors resize-none" placeholder="Target audience, personas, geography..."></textarea>
+                                <input id="studio-tone" type="text" class="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-sm text-gray-200 focus:outline-none focus:border-taurusGold transition-colors" placeholder="Brand tone (e.g., premium, minimal, bold)">
+                                <input id="studio-keywords" type="text" class="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-sm text-gray-200 focus:outline-none focus:border-taurusGold transition-colors" placeholder="Keywords / style cues (comma separated)">
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                            <div class="space-y-4">
+                                <h4 class="text-purple-400 text-[10px] font-black uppercase tracking-[0.2em] border-b border-white/5 pb-2">References</h4>
+                                <textarea id="studio-references" class="w-full min-h-[140px] bg-white/5 border border-white/10 rounded-xl p-4 text-sm text-gray-200 focus:outline-none focus:border-taurusGold transition-colors resize-none" placeholder="Reference URLs, competitor sites, inspiration..."></textarea>
+                            </div>
+                            <div class="space-y-4">
+                                <h4 class="text-purple-400 text-[10px] font-black uppercase tracking-[0.2em] border-b border-white/5 pb-2">Sitemap / Structure</h4>
+                                <textarea id="studio-sitemap" class="w-full min-h-[140px] bg-white/5 border border-white/10 rounded-xl p-4 text-sm text-gray-200 focus:outline-none focus:border-taurusGold transition-colors resize-none" placeholder="Home, About, Services, Contact..."></textarea>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                            <div class="space-y-4">
+                                <h4 class="text-taurusGold text-[10px] font-black uppercase tracking-[0.2em] border-b border-white/5 pb-2">Content Notes</h4>
+                                <textarea id="studio-content" class="w-full min-h-[140px] bg-white/5 border border-white/10 rounded-xl p-4 text-sm text-gray-200 focus:outline-none focus:border-taurusGold transition-colors resize-none" placeholder="Content status, copy needs, SEO notes..."></textarea>
+                            </div>
+                            <div class="space-y-4">
+                                <h4 class="text-taurusGold text-[10px] font-black uppercase tracking-[0.2em] border-b border-white/5 pb-2">Design Notes</h4>
+                                <textarea id="studio-notes" class="w-full min-h-[140px] bg-white/5 border border-white/10 rounded-xl p-4 text-sm text-gray-200 focus:outline-none focus:border-taurusGold transition-colors resize-none" placeholder="Design decisions, UI patterns, components..."></textarea>
+                            </div>
+                        </div>
+
+                        <div class="space-y-4">
+                            <h4 class="text-green-400 text-[10px] font-black uppercase tracking-[0.2em] border-b border-white/5 pb-2">Assets Checklist</h4>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+                                <label class="flex items-center gap-3 bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-xs text-gray-300">
+                                    <input id="studio-asset-logo" type="checkbox" class="accent-[#FFD700]">
+                                    Logo
+                                </label>
+                                <label class="flex items-center gap-3 bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-xs text-gray-300">
+                                    <input id="studio-asset-brand" type="checkbox" class="accent-[#FFD700]">
+                                    Brand Guide
+                                </label>
+                                <label class="flex items-center gap-3 bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-xs text-gray-300">
+                                    <input id="studio-asset-copy" type="checkbox" class="accent-[#FFD700]">
+                                    Copy / Text
+                                </label>
+                                <label class="flex items-center gap-3 bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-xs text-gray-300">
+                                    <input id="studio-asset-images" type="checkbox" class="accent-[#FFD700]">
+                                    Images
+                                </label>
+                                <label class="flex items-center gap-3 bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-xs text-gray-300">
+                                    <input id="studio-asset-video" type="checkbox" class="accent-[#FFD700]">
+                                    Video
+                                </label>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- TAB 2: FINANCIALS -->
