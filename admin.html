@@ -983,6 +983,7 @@
         let pricingToolLastPing = 0;
         let pricingToolPingTimer = null;
         let pricingContextProjectId = null;
+        let pricingContextMessageId = null;
         let pendingPdfTimeout = null;
         const selectedQuotes = new Set();
         const selectedClients = new Set();
@@ -1376,10 +1377,14 @@
                 const payload = event.data.payload;
                 const request = payload.request;
                 const breakdown = payload.breakdown;
-                const pricingProjectId = payload.projectId || pricingContextProjectId || editingProjectId || null;
+                const pricingMessageId = request?.messageId || payload.messageId || pricingContextMessageId || null;
+                let pricingProjectId = payload.projectId || pricingContextProjectId || editingProjectId || null;
+                if (!pricingProjectId && pricingMessageId) {
+                    pricingProjectId = await getOrCreateProjectFromMessage(pricingMessageId, null, false);
+                }
 
-                let linkedMessageId = null;
-                if (pricingProjectId) {
+                let linkedMessageId = pricingMessageId || null;
+                if (!linkedMessageId && pricingProjectId) {
                     try {
                         const projDoc = await db.collection('projects').doc(pricingProjectId).get();
                         if (projDoc.exists) {
@@ -1448,6 +1453,7 @@
                             alert('Error updating project: ' + err.message);
                         }
                         pricingContextProjectId = null;
+                        pricingContextMessageId = null;
                     }
                     // CASE 2: Creating NEW Project from Quote
                     else {
@@ -1579,6 +1585,7 @@
                     }
 
                     pricingContextProjectId = null;
+                    pricingContextMessageId = null;
 
                     // Refresh local view if needed
                     if (currentMessageFilter) filterMessages(currentMessageFilter);
@@ -2523,6 +2530,12 @@
                         if (!existingSnap.empty) {
                             existingQuoteId = existingSnap.docs[0].id;
                         }
+                    }
+                }
+                if (!existingQuoteId && quoteData.projectId) {
+                    const byProject = await db.collection('quotes').where('projectId', '==', quoteData.projectId).limit(1).get();
+                    if (!byProject.empty) {
+                        existingQuoteId = byProject.docs[0].id;
                     }
                 }
 
@@ -4083,6 +4096,7 @@
             if (projectId) {
                 pricingContextProjectId = projectId;
             }
+            pricingContextMessageId = messageId;
 
             // Close message modal
             closeMessageModal();
@@ -4169,6 +4183,7 @@
             const clientName = formClientName || data.clientName || '';
             const clientEmail = formClientEmail || data.clientEmail || '';
             const existingProjectId = editingProjectId || data.id || pricingContextProjectId || null;
+            const messageId = data.messageId || data.sourceMessageId || pricingContextMessageId || null;
 
             if (!clientName) {
                 alert("Please enter a Client Identity first.");
@@ -4207,6 +4222,7 @@
 
             const payload = {
                 projectId: projectId,
+                messageId: messageId,
                 clientName: clientName,
                 clientEmail: clientEmail,
                 country: data.country || (data.currency === 'EUR' ? 'MT' : 'TR'),
@@ -4277,6 +4293,7 @@
                     }
 
                     currentProjectData = { id, ...d }; // Store Globally
+                    pricingContextMessageId = d.messageId || d.sourceMessageId || null;
 
                     // --- POPULATE HEADER ---
                     document.getElementById('p-header-id').innerText = '#' + (d.projectNumber || 'UNK');
@@ -4439,6 +4456,7 @@
                 // New Project Mode
                 currentProjectData = {};
                 pricingContextProjectId = null;
+                pricingContextMessageId = null;
                 document.getElementById('p-modal-title').innerText = "NEW DEPLOYMENT";
                 document.getElementById('p-header-id').innerText = "#NEW";
                 document.getElementById('p-delete-btn').classList.add('hidden');

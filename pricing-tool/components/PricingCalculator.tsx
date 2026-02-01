@@ -310,7 +310,8 @@ const PricingCalculator: React.FC<Props> = ({ config, addons, onRequestUpdate, o
           request: request,
           breakdown: breakdown,
           total: breakdown.finalTotal,
-          projectId: request.projectId
+          projectId: request.projectId,
+          messageId: request.messageId
         }
       }, '*');
 
