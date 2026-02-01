@@ -1378,6 +1378,19 @@
                 const breakdown = payload.breakdown;
                 const pricingProjectId = payload.projectId || pricingContextProjectId || editingProjectId || null;
 
+                let linkedMessageId = null;
+                if (pricingProjectId) {
+                    try {
+                        const projDoc = await db.collection('projects').doc(pricingProjectId).get();
+                        if (projDoc.exists) {
+                            const pdata = projDoc.data();
+                            linkedMessageId = pdata?.messageId || pdata?.sourceMessageId || null;
+                        }
+                    } catch (e) {
+                        console.warn('Failed to resolve messageId for project:', e);
+                    }
+                }
+
                 const quoteData = {
                     clientName: request.customerName,
                     clientEmail: request.customerEmail || '',
@@ -1387,11 +1400,12 @@
                     totalPrice: breakdown.finalTotal,
                     breakdown: breakdown,
                     currency: request.country === 'MT' ? 'EUR' : 'TRY',
+                    projectId: pricingProjectId || null,
                     notes: 'Design: ' + request.designType + ', Speed: ' + request.deliverySpeed + ', Maint: ' + request.maintenanceLevel
                 };
 
 
-                const id = await saveQuoteToFirestore(quoteData, null);
+                const id = await saveQuoteToFirestore(quoteData, linkedMessageId);
 
                 if (id) {
                     console.log('✅ Quote successfully saved with ID:', id);
@@ -1847,6 +1861,111 @@
             }
         }
 
+        async function getExistingProjectIdForMessage(messageId) {
+            if (!db || !messageId) return null;
+            try {
+                const msgDoc = await db.collection('messages').doc(messageId).get();
+                const msgData = msgDoc.exists ? msgDoc.data() : null;
+                if (msgData?.projectId) return msgData.projectId;
+
+                let projectId = null;
+                const projSnap = await db.collection('projects').where('messageId', '==', messageId).limit(1).get();
+                if (!projSnap.empty) projectId = projSnap.docs[0].id;
+                if (!projectId) {
+                    const projSnap2 = await db.collection('projects').where('sourceMessageId', '==', messageId).limit(1).get();
+                    if (!projSnap2.empty) projectId = projSnap2.docs[0].id;
+                }
+
+                if (projectId && msgDoc.exists) {
+                    await db.collection('messages').doc(messageId).update({
+                        projectId: projectId,
+                        dossierCreated: true
+                    });
+                }
+                return projectId;
+            } catch (e) {
+                console.warn('Project lookup failed:', e);
+                return null;
+            }
+        }
+
+        async function getExistingQuoteIdForMessage(messageId) {
+            if (!db || !messageId) return null;
+            try {
+                const msgDoc = await db.collection('messages').doc(messageId).get();
+                const msgData = msgDoc.exists ? msgDoc.data() : null;
+                if (msgData?.quoteId) return msgData.quoteId;
+
+                const quoteSnap = await db.collection('quotes').where('messageId', '==', messageId).limit(1).get();
+                if (!quoteSnap.empty) return quoteSnap.docs[0].id;
+                return null;
+            } catch (e) {
+                console.warn('Quote lookup failed:', e);
+                return null;
+            }
+        }
+
+        async function getOrCreateProjectFromMessage(messageId, messageOverride = null, autoPipeline = false) {
+            if (!db || !messageId) return null;
+            const existingId = await getExistingProjectIdForMessage(messageId);
+            if (existingId) return existingId;
+
+            let message = messageOverride;
+            if (!message) {
+                const messageDoc = await db.collection('messages').doc(messageId).get();
+                if (!messageDoc.exists) return null;
+                message = messageDoc.data();
+            }
+            if (!message) return null;
+
+            const projectData = {
+                name: `Project for ${message.name || 'Client'}`,
+                projectName: `Project for ${message.name || 'Client'}`,
+                clientName: message.name || 'Unknown Client',
+                clientEmail: message.email || '',
+                status: 'active',
+                progress: 0,
+                messageId: messageId,
+                description: message.message || '',
+                siteType: message.siteType || message.projectType || 'CORPORATE',
+                designType: message.designType || 'TEMPLATE',
+                pageCount: message.pageCount || '10',
+                deliverySpeed: message.deliverySpeed || 'STANDARD',
+                maintenanceLevel: message.maintenanceLevel || 'NONE',
+                selectedAddons: message.selectedAddons || [],
+                country: message.country || 'TR',
+                workflowStage: 'lead',
+                autoPipeline: !!autoPipeline,
+                studio: {
+                    brief: message.message || '',
+                    goals: '',
+                    audience: '',
+                    tone: '',
+                    keywords: '',
+                    references: '',
+                    sitemap: '',
+                    content: '',
+                    notes: '',
+                    assets: {
+                        logo: false,
+                        brandbook: false,
+                        copy: false,
+                        images: false,
+                        video: false
+                    }
+                }
+            };
+
+            const projectId = await saveProjectToFirestore(projectData);
+            if (projectId) {
+                await db.collection('messages').doc(messageId).update({
+                    projectId: projectId,
+                    dossierCreated: true
+                });
+            }
+            return projectId;
+        }
+
         // --- AUTO PIPELINE: Message -> Dossier -> Quote -> Project -> Docs ---
         async function autoCreateDossierFromMessage(messageId, message) {
             if (!AUTO_PIPELINE_ENABLED || !db || !messageId || !message) return;
@@ -1856,53 +1975,8 @@
 
             autoPipelineLocks.add(messageId);
             try {
-                const projectData = {
-                    name: `Project for ${message.name || 'Client'}`,
-                    projectName: `Project for ${message.name || 'Client'}`,
-                    clientName: message.name || 'Unknown Client',
-                    clientEmail: message.email || '',
-                    status: 'active',
-                    progress: 0,
-                    messageId: messageId,
-                    description: message.message || '',
-                    siteType: message.siteType || message.projectType || 'CORPORATE',
-                    designType: message.designType || 'TEMPLATE',
-                    pageCount: message.pageCount || '10',
-                    deliverySpeed: message.deliverySpeed || 'STANDARD',
-                    maintenanceLevel: message.maintenanceLevel || 'NONE',
-                    selectedAddons: message.selectedAddons || [],
-                    country: message.country || 'TR',
-                    workflowStage: 'lead',
-                    autoPipeline: true,
-                    studio: {
-                        brief: message.message || '',
-                        goals: '',
-                        audience: '',
-                        tone: '',
-                        keywords: '',
-                        references: '',
-                        sitemap: '',
-                        content: '',
-                        notes: '',
-                        assets: {
-                            logo: false,
-                            brandbook: false,
-                            copy: false,
-                            images: false,
-                            video: false
-                        }
-                    }
-                };
-
-                const projectId = await saveProjectToFirestore(projectData);
+                const projectId = await getOrCreateProjectFromMessage(messageId, message, true);
                 if (!projectId) return;
-
-                await db.collection('messages').doc(messageId).update({
-                    projectId: projectId,
-                    dossierCreated: true
-                });
-
-                // Auto quote generation
                 await autoGenerateQuoteFromMessage(messageId, message, projectId);
             } catch (e) {
                 console.error('Auto dossier failed:', e);
@@ -1913,7 +1987,8 @@
 
         async function autoGenerateQuoteFromMessage(messageId, message, projectId) {
             try {
-                if (message.quoteId) return;
+                const existingQuoteId = await getExistingQuoteIdForMessage(messageId);
+                if (existingQuoteId) return;
                 const pricingConfig = getPricingConfig();
                 const addons = getAddonConfig();
                 const request = buildQuoteRequestFromMessage(message);
@@ -1928,6 +2003,7 @@
                     totalPrice: breakdown.finalTotal,
                     breakdown: breakdown,
                     currency: request.country === 'MT' ? 'EUR' : 'TRY',
+                    projectId: projectId || null,
                     notes: 'AUTO: Generated from form input'
                 };
 
@@ -2432,6 +2508,52 @@
                     return null;
                 }
 
+                let existingQuoteId = null;
+                if (messageId) {
+                    try {
+                        const msgDoc = await db.collection('messages').doc(messageId).get();
+                        if (msgDoc.exists && msgDoc.data()?.quoteId) {
+                            existingQuoteId = msgDoc.data().quoteId;
+                        }
+                    } catch (e) {
+                        console.warn('Quote lookup (message) failed:', e);
+                    }
+                    if (!existingQuoteId) {
+                        const existingSnap = await db.collection('quotes').where('messageId', '==', messageId).limit(1).get();
+                        if (!existingSnap.empty) {
+                            existingQuoteId = existingSnap.docs[0].id;
+                        }
+                    }
+                }
+
+                if (existingQuoteId) {
+                    const updates = {
+                        clientId: client.id,
+                        clientName: quoteData.clientName || 'Anonymous',
+                        clientEmail: quoteData.clientEmail,
+                        country: quoteData.country || 'TR',
+                        siteType: quoteData.siteType || 'Unknown',
+                        pageCount: quoteData.pageCount || 0,
+                        totalPrice: quoteData.totalPrice || 0,
+                        currency: quoteData.country === 'MT' ? 'EUR' : 'TRY',
+                        breakdown: quoteData.breakdown || {},
+                        status: 'draft',
+                        projectId: quoteData.projectId || null,
+                        notes: quoteData.notes || '',
+                        lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+                    };
+                    await db.collection('quotes').doc(existingQuoteId).update(updates);
+
+                    if (messageId) {
+                        await db.collection('messages').doc(messageId).update({
+                            quoteId: existingQuoteId,
+                            status: 'quoted'
+                        });
+                    }
+
+                    return existingQuoteId;
+                }
+
                 // Generate quote number
                 const quoteNumber = await getNextQuoteNumber();
 
@@ -2461,7 +2583,7 @@
 
                     // Relationships
                     messageId: messageId,
-                    projectId: null,
+                    projectId: quoteData.projectId || null,
 
                     // Optional
                     pdfUrl: null,
@@ -2702,29 +2824,8 @@
          * @returns {Promise<string>} Project document ID
          */
         async function createProjectFromMessage(messageId) {
-            if (!db || !messageId) return null;
-
             try {
-                const messageDoc = await db.collection('messages').doc(messageId).get();
-                if (!messageDoc.exists) {
-                    console.error('Message not found');
-                    return null;
-                }
-
-                const message = messageDoc.data();
-
-                const projectData = {
-                    name: `Project for ${message.name}`,
-                    clientName: message.name,
-                    clientEmail: message.email,
-                    messageId: messageId,
-                    status: 'active',
-                    description: message.message || '',
-                    budget: 0
-                };
-
-                return await saveProjectToFirestore(projectData);
-
+                return await getOrCreateProjectFromMessage(messageId, null, false);
             } catch (error) {
                 console.error('❌ Error creating project from message:', error);
                 return null;
@@ -3978,6 +4079,10 @@
                 console.error('Message not found');
                 return;
             }
+            const projectId = await getOrCreateProjectFromMessage(messageId, message, false);
+            if (projectId) {
+                pricingContextProjectId = projectId;
+            }
 
             // Close message modal
             closeMessageModal();
@@ -3995,6 +4100,8 @@
                             clientName: message.name || '',
                             clientEmail: message.email || '',
                             messageId: messageId,
+                            projectId: projectId,
+                            country: message.country || 'TR',
                             // Pass Technical Configuration
                             siteType: message.projectType || message.siteType || '', // Handle legacy/compat
                             designType: message.designType || '',
@@ -4016,52 +4123,11 @@
          */
         async function createProjectFromMessage(messageId) {
             try {
-                const message = messagesMap[messageId];
-                if (!message) throw new Error("Message data not found in cache");
-
-                const projectData = {
-                    name: `Project for ${message.name || 'Client'}`,
-                    projectName: `Project for ${message.name || 'Client'}`,
-                    clientName: message.name || 'Unknown Client',
-                    clientEmail: message.email || '',
-                    status: 'active',
-                    progress: 0,
-                    messageId: messageId,
-                    description: `Source Message (${new Date().toLocaleDateString()}):\n${message.message || ''}`,
-
-                    // Technical Specs
-                    siteType: message.siteType || message.projectType || 'CORPORATE',
-                    designType: message.designType || 'TEMPLATE',
-                    pageCount: message.pageCount || '10',
-                    deliverySpeed: message.deliverySpeed || 'STANDARD',
-                    maintenanceLevel: message.maintenanceLevel || 'NONE',
-                    selectedAddons: message.selectedAddons || [],
-                    country: message.country || 'TR',
-
-                    workflowStage: 'lead',
-                    autoPipeline: true,
-                    studio: {
-                        brief: message.message || '',
-                        goals: '',
-                        audience: '',
-                        tone: '',
-                        keywords: '',
-                        references: '',
-                        sitemap: '',
-                        content: '',
-                        notes: '',
-                        assets: {
-                            logo: false,
-                            brandbook: false,
-                            copy: false,
-                            images: false,
-                            video: false
-                        }
-                    }
-                };
-
-                const projectId = await saveProjectToFirestore(projectData);
-                console.log("✅ Project created with ID:", projectId);
+                const message = messagesMap[messageId] || null;
+                const projectId = await getOrCreateProjectFromMessage(messageId, message, false);
+                if (projectId) {
+                    console.log("✅ Project ready with ID:", projectId);
+                }
                 return projectId;
             } catch (error) {
                 console.error("Error creating project from message:", error);
