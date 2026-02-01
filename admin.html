@@ -878,10 +878,19 @@
         let autoPipelineUnsubscribe = null;
         let messagesListenerInitialized = false;
         const seenMessageIds = new Set();
+        let pricingToolReady = false;
+        let pricingToolLastPing = 0;
+        let pricingToolPingTimer = null;
+        let pendingPdfTimeout = null;
 
         // --- AUTO PIPELINE CONFIG ---
         const AUTO_PIPELINE_ENABLED = true; // Full auto; only final approval is manual
         const autoPipelineLocks = new Set();
+
+        // --- PDF CONFIG ---
+        const USE_SERVER_PDF = true; // Vercel PDF generation (recommended)
+        const PDF_SERVER_ENDPOINT = '/api/pdf';
+        const PDF_TIMEOUT_MS = 25000;
 
         // --- WORKFLOW STAGES ---
         const WORKFLOW_STAGES = [
@@ -1197,10 +1206,16 @@
         window.addEventListener('message', async (event) => {
             if (!event.data) return;
 
+            if (event.data.type === 'PRICING_TOOL_READY' || event.data.type === 'PRICING_TOOL_PONG') {
+                markPricingToolReady();
+                return;
+            }
+
             // Handle Direct PDF Generation (From Admin "Generate" button)
             // Handle Direct PDF Generation (From Admin "Generate" button)
             if (event.data.type === 'PDF_GENERATED') {
                 console.log('📄 PDF Generated via Remote Command', event.data.payload);
+                clearPdfTimeout();
 
                 // Auto-pipeline PDF capture (queue-aware)
                 if (pdfJobActive && event.data.payload) {
@@ -1462,11 +1477,6 @@
                 if (id) event.source.postMessage({ type: 'QUOTE_SAVED', success: true, quoteId: id }, '*');
             }
 
-            // PDF Generation Success Handler
-            if (event.data.type === 'PDF_GENERATED') {
-                // Replace spinner with success
-                systemAlert('SUCCESS', 'Document downloaded successfully.', 'check-circle');
-            }
         });
 
         // --- PDF JOB QUEUE (Auto Docs) ---
@@ -1478,32 +1488,56 @@
             if (!pdfJobActive) processNextPdfJob();
         }
 
-        function processNextPdfJob() {
+        async function processNextPdfJob() {
             if (pdfJobActive || pdfJobQueue.length === 0) return;
+            const job = pdfJobQueue.shift();
+            pdfJobActive = job;
+
+            if (USE_SERVER_PDF) {
+                startPdfTimeout(job.docType);
+                try {
+                    await generatePdfOnServer(job);
+                    if (job.download) {
+                        systemAlert('SUCCESS', 'PDF ready.', 'check-circle');
+                    }
+                } catch (e) {
+                    console.error('Server PDF failed:', e);
+                    if (job.download) {
+                        systemAlert('ERROR', `PDF generation failed: ${e.message}`, 'x-circle');
+                    }
+                } finally {
+                    clearPdfTimeout();
+                    pdfJobActive = null;
+                    processNextPdfJob();
+                }
+                return;
+            }
+
             const iframe = document.getElementById('pricing-iframe');
             if (!iframe || !iframe.contentWindow) {
-                // Retry later if iframe not ready
+                pdfJobActive = null;
+                pdfJobQueue.unshift(job);
                 setTimeout(processNextPdfJob, 1000);
                 return;
             }
 
-            pdfJobActive = pdfJobQueue.shift();
+            startPdfTimeout(job.docType);
             iframe.contentWindow.postMessage({
-                type: pdfJobActive.docType === 'quote' ? 'GENERATE_QUOTE_PDF' : 'GENERATE_CONTRACT_PDF',
+                type: job.docType === 'quote' ? 'GENERATE_QUOTE_PDF' : 'GENERATE_CONTRACT_PDF',
                 payload: {
-                    request: pdfJobActive.request,
-                    breakdown: pdfJobActive.breakdown
+                    request: job.request,
+                    breakdown: job.breakdown
                 }
             }, '*');
 
             // Fail-safe timeout
-            const activeId = pdfJobActive.id;
+            const activeId = job.id;
             setTimeout(() => {
                 if (pdfJobActive && pdfJobActive.id === activeId) {
                     pdfJobActive = null;
                     processNextPdfJob();
                 }
-            }, 20000);
+            }, PDF_TIMEOUT_MS);
         }
 
         // --- UI LOGIC ---
@@ -1809,8 +1843,8 @@
                 await updateWorkflow(projectId, 'active', { source: 'auto' });
 
                 // Auto-generate docs (queue)
-                enqueuePdfJob({ id: `${projectId}-quote`, projectId, docType: 'quote', request, breakdown });
-                enqueuePdfJob({ id: `${projectId}-contract`, projectId, docType: 'contract', request, breakdown });
+                enqueuePdfJob({ id: `${projectId}-quote`, projectId, docType: 'quote', request, breakdown, download: false });
+                enqueuePdfJob({ id: `${projectId}-contract`, projectId, docType: 'contract', request, breakdown, download: false });
             } catch (e) {
                 console.error('Auto quote failed:', e);
             }
@@ -2118,13 +2152,117 @@
         /**
          * Helper to trigger download of base64 file
          */
+        function dataUrlToBlob(dataUrl) {
+            if (!dataUrl || typeof dataUrl !== 'string') return null;
+            const parts = dataUrl.split(',');
+            if (parts.length < 2) return null;
+            const meta = parts[0];
+            const base64 = parts[1];
+            const match = meta.match(/data:(.*);base64/);
+            const mime = match ? match[1] : 'application/octet-stream';
+            const binary = atob(base64);
+            const len = binary.length;
+            const bytes = new Uint8Array(len);
+            for (let i = 0; i < len; i++) bytes[i] = binary.charCodeAt(i);
+            return new Blob([bytes], { type: mime });
+        }
+
+        function downloadBlobFile(blob, fileName) {
+            if (!blob) return;
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = fileName;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            setTimeout(() => URL.revokeObjectURL(url), 5000);
+        }
+
         function downloadBase64File(base64Data, fileName) {
+            const blob = dataUrlToBlob(base64Data);
+            if (blob) {
+                downloadBlobFile(blob, fileName);
+                return;
+            }
             const link = document.createElement('a');
             link.href = base64Data;
             link.download = fileName;
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
+        }
+
+        function blobToDataUrl(blob) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onloadend = () => resolve(reader.result);
+                reader.onerror = () => reject(new Error('Failed to read PDF blob'));
+                reader.readAsDataURL(blob);
+            });
+        }
+
+        function startPdfTimeout(docType) {
+            clearPdfTimeout();
+            pendingPdfTimeout = setTimeout(() => {
+                systemAlert('ERROR', `${docType.toUpperCase()} PDF generation timed out.`, 'clock');
+            }, PDF_TIMEOUT_MS);
+        }
+
+        function clearPdfTimeout() {
+            if (pendingPdfTimeout) {
+                clearTimeout(pendingPdfTimeout);
+                pendingPdfTimeout = null;
+            }
+        }
+
+        function markPricingToolReady() {
+            pricingToolReady = true;
+            pricingToolLastPing = Date.now();
+            if (pricingToolPingTimer) {
+                clearTimeout(pricingToolPingTimer);
+                pricingToolPingTimer = null;
+            }
+        }
+
+        function sendPricingToolPing() {
+            const iframe = document.getElementById('pricing-iframe');
+            if (!iframe || !iframe.contentWindow) return;
+            iframe.contentWindow.postMessage({ type: 'PING_PRICING_TOOL' }, '*');
+        }
+
+        function initPricingToolBridge() {
+            const iframe = document.getElementById('pricing-iframe');
+            if (!iframe) return;
+            iframe.addEventListener('load', () => {
+                pricingToolReady = false;
+                sendPricingToolPing();
+            });
+            sendPricingToolPing();
+        }
+
+        window.addEventListener('load', initPricingToolBridge);
+
+        async function generatePdfOnServer(job) {
+            const response = await fetch(PDF_SERVER_ENDPOINT, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    type: job.docType,
+                    request: job.request,
+                    breakdown: job.breakdown
+                })
+            });
+            if (!response.ok) {
+                const errText = await response.text().catch(() => '');
+                throw new Error(errText || `Server PDF failed (${response.status})`);
+            }
+            const blob = await response.blob();
+            const dataUrl = await blobToDataUrl(blob);
+            await storeGeneratedPdfForProject(job.docType, dataUrl, job.projectId);
+            if (job.download) {
+                downloadBlobFile(blob, job.fileName || `${job.docType.toUpperCase()}.pdf`);
+            }
         }
 
         /**
@@ -3758,7 +3896,15 @@
                                 systemAlert('ERROR', 'Missing financial breakdown. Open pricing tool and save quote first.', 'x-circle');
                                 return;
                             }
-                            enqueuePdfJob({ id: `${editingProjectId}-quote-manual`, projectId: editingProjectId, docType: 'quote', request: pricingData, breakdown: pricingData.breakdown });
+                            enqueuePdfJob({
+                                id: `${editingProjectId}-quote-manual`,
+                                projectId: editingProjectId,
+                                docType: 'quote',
+                                request: pricingData,
+                                breakdown: pricingData.breakdown,
+                                download: true,
+                                fileName: `Quote_${d.projectNumber || 'Project'}.pdf`
+                            });
                             systemAlert('DOC GENERATION', 'Generating proposal PDF...', 'loader-2');
                         };
                     }
@@ -3777,7 +3923,15 @@
                                 systemAlert('ERROR', 'Missing financial breakdown. Open pricing tool and save quote first.', 'x-circle');
                                 return;
                             }
-                            enqueuePdfJob({ id: `${editingProjectId}-contract-manual`, projectId: editingProjectId, docType: 'contract', request: pricingData, breakdown: pricingData.breakdown });
+                            enqueuePdfJob({
+                                id: `${editingProjectId}-contract-manual`,
+                                projectId: editingProjectId,
+                                docType: 'contract',
+                                request: pricingData,
+                                breakdown: pricingData.breakdown,
+                                download: true,
+                                fileName: `Contract_${d.projectNumber || 'Project'}.pdf`
+                            });
                             systemAlert('DOC GENERATION', 'Generating contract PDF...', 'loader-2');
                         };
                     }
@@ -3969,32 +4123,36 @@
         }
 
         function generateProjectPDF(type) {
-            // Trigger Pricing Tool via Iframe
-            const iframe = document.getElementById('pricing-iframe');
-
-            // Native PDF Generation does not require visible iframe
-
-            if (currentProjectData && currentProjectData.breakdown && iframe) {
-                iframe.contentWindow.postMessage({
-                    type: type == 'quote' ? 'GENERATE_QUOTE_PDF' : 'GENERATE_CONTRACT_PDF',
-                    payload: {
-                        request: {
-                            ...currentProjectData, // Contains customerName, etc.
-                            // Map generic fields back to Pricing Tool specific fields if needed
-                            customerName: currentProjectData.clientName,
-                            customerEmail: currentProjectData.clientEmail,
-                            // Add missing/defaults if needed
-                        },
-                        breakdown: currentProjectData.breakdown,
-                        config: null // Let tool use its own config or pass if we have it
-                    }
-                }, '*');
-
-                // Alert user
-                systemAlert('DOC GENERATION', `Generating ${type.toUpperCase()}... Please wait.`, 'loader-2');
-            } else {
-                systemAlert('ERROR', 'Missing financial data or pricing tool connection.', 'x-circle');
+            if (!editingProjectId || !currentProjectData) {
+                systemAlert('ERROR', 'No project selected.', 'x-circle');
+                return;
             }
+
+            if (!currentProjectData.breakdown || !currentProjectData.breakdown.finalTotal) {
+                systemAlert('ERROR', 'Missing financial breakdown. Open pricing tool and save quote first.', 'x-circle');
+                return;
+            }
+
+            const request = {
+                ...currentProjectData,
+                customerName: currentProjectData.clientName,
+                customerEmail: currentProjectData.clientEmail
+            };
+
+            const fileBase = type === 'quote' ? 'Quote' : 'Contract';
+            const fileName = `${fileBase}_${currentProjectData.projectNumber || 'Project'}.pdf`;
+
+            enqueuePdfJob({
+                id: `${editingProjectId}-${type}-panel`,
+                projectId: editingProjectId,
+                docType: type,
+                request,
+                breakdown: currentProjectData.breakdown,
+                download: true,
+                fileName
+            });
+
+            systemAlert('DOC GENERATION', `Generating ${type.toUpperCase()}... Please wait.`, 'loader-2');
         }
 
         // Helper to extract value from formatted text

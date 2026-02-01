@@ -76,11 +76,23 @@ const App: React.FC = () => {
     }
   }, []);
 
+  // Notify parent when pricing tool is ready (iframe handshake)
+  useEffect(() => {
+    if (window.parent && window.parent !== window) {
+      window.parent.postMessage({ type: 'PRICING_TOOL_READY' }, '*');
+    }
+  }, []);
+
   // -- NEW: Admin Panel Integration (Iframe Mode) --
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
       // Validate origin if needed, or check message structure
       if (!event.data || !event.data.type) return;
+
+      if (event.data.type === 'PING_PRICING_TOOL') {
+        window.parent.postMessage({ type: 'PRICING_TOOL_PONG' }, '*');
+        return;
+      }
 
       if (event.data.type === 'PRE_FILL_CLIENT') {
         const {
