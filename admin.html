@@ -908,6 +908,8 @@
         let currentOpenedMessageId = null;
         let isGeneratingBackgroundPDF = false; // Track background generation
         let autoPipelineUnsubscribe = null;
+        let messagesListenerInitialized = false;
+        const seenMessageIds = new Set();
 
         // --- AUTO PIPELINE CONFIG ---
         const AUTO_PIPELINE_ENABLED = true; // Full auto; only final approval is manual
@@ -1206,6 +1208,24 @@
 
         // POST MESSAGE LISTENER - Pricing Tool Integration
         // POST MESSAGE LISTENER - Pricing Tool Integration
+        async function storeGeneratedPdfForProject(docType, dataUri, projectId) {
+            if (!docType || !dataUri || !projectId) return;
+            const key = `project_pdf_${docType}_${projectId}`;
+            localStorage.setItem(key, dataUri);
+            try {
+                await db.collection('projects').doc(projectId).update({
+                    [`documents.${docType}LocalKey`]: key,
+                    [`documents.${docType}GeneratedAt`]: firebase.firestore.FieldValue.serverTimestamp(),
+                    lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                if (docType === 'contract') {
+                    await updateWorkflow(projectId, 'review', { source: 'manual' });
+                }
+            } catch (e) {
+                console.warn("PDF local key save failed:", e.message);
+            }
+        }
+
         window.addEventListener('message', async (event) => {
             if (!event.data) return;
 
@@ -1244,6 +1264,10 @@
 
                 if (event.data.payload) {
                     const { quotePdf, contractPdf, fileName } = event.data.payload;
+                    if (!pdfJobActive && editingProjectId) {
+                        if (quotePdf) await storeGeneratedPdfForProject('quote', quotePdf, editingProjectId);
+                        if (contractPdf) await storeGeneratedPdfForProject('contract', contractPdf, editingProjectId);
+                    }
                     if (quotePdf) downloadBase64File(quotePdf, fileName || 'Quote.pdf');
                     if (contractPdf) downloadBase64File(contractPdf, fileName || 'Contract.pdf');
                     systemAlert('SUCCESS', 'PDF Downloaded Successfully', 'check-circle');
@@ -3357,6 +3381,29 @@
                 const statMsg = document.getElementById('stat-total-messages');
                 if (statMsg) statMsg.innerText = unreadCount;
 
+                // NEW MESSAGE NOTIFICATION (when not in Inbox)
+                let newIncoming = [];
+                snapshot.docChanges().forEach(change => {
+                    if (change.type === 'added') {
+                        const id = change.doc.id;
+                        const data = change.doc.data();
+                        if (!seenMessageIds.has(id)) {
+                            seenMessageIds.add(id);
+                            if (messagesListenerInitialized && data.status === 'new') {
+                                newIncoming.push(data);
+                            }
+                        }
+                    }
+                });
+
+                if (!messagesListenerInitialized) messagesListenerInitialized = true;
+
+                if (newIncoming.length > 0 && activeTab !== 'messages') {
+                    const latest = newIncoming[0];
+                    const name = latest.name || 'New Lead';
+                    systemAlert('NEW MESSAGE', `${name} sent a request (${newIncoming.length} new)`, 'mail');
+                }
+
                 loadViewStats();
             }, error => {
                 console.error("❌ Stats Listener Error:", error);
@@ -3736,9 +3783,16 @@
                         quoteBtn.className = 'w-full py-3 rounded-lg bg-taurusGold text-black border border-taurusGold/40 hover:bg-white font-bold text-xs uppercase tracking-widest transition-all';
                         quoteBtn.onclick = () => downloadBase64File(localQuote, `Quote_${d.projectNumber || 'Project'}.pdf`);
                     } else {
-                        quoteBtn.innerHTML = '<i data-lucide="external-link" class="w-4 h-4 mr-2 inline"></i> View Proposal';
+                        quoteBtn.innerHTML = '<i data-lucide="file-text" class="w-4 h-4 mr-2 inline"></i> Generate Proposal PDF';
                         quoteBtn.className = 'w-full py-3 rounded-lg bg-taurusGold/10 text-taurusGold border border-taurusGold/20 hover:bg-taurusGold hover:text-black font-bold text-xs uppercase tracking-widest transition-all';
-                        quoteBtn.onclick = () => window.open(`pricing-tool/dist/index.html?view=proposal&payload=${payload}`, '_blank');
+                        quoteBtn.onclick = () => {
+                            if (!pricingData.breakdown || !pricingData.breakdown.finalTotal) {
+                                systemAlert('ERROR', 'Missing financial breakdown. Open pricing tool and save quote first.', 'x-circle');
+                                return;
+                            }
+                            enqueuePdfJob({ id: `${editingProjectId}-quote-manual`, projectId: editingProjectId, docType: 'quote', request: pricingData, breakdown: pricingData.breakdown });
+                            systemAlert('DOC GENERATION', 'Generating proposal PDF...', 'loader-2');
+                        };
                     }
 
                     const contractLocalKey = d.documents?.contractLocalKey;
@@ -3748,9 +3802,16 @@
                         contractBtn.className = 'w-full py-3 rounded-lg bg-taurusGold text-black border border-taurusGold/40 hover:bg-white font-bold text-xs uppercase tracking-widest transition-all';
                         contractBtn.onclick = () => downloadBase64File(localContract, `Contract_${d.projectNumber || 'Project'}.pdf`);
                     } else {
-                        contractBtn.innerHTML = '<i data-lucide="external-link" class="w-4 h-4 mr-2 inline"></i> View Contract';
+                        contractBtn.innerHTML = '<i data-lucide="scroll" class="w-4 h-4 mr-2 inline"></i> Generate Contract PDF';
                         contractBtn.className = 'w-full py-3 rounded-lg bg-taurusGold/10 text-taurusGold border border-taurusGold/20 hover:bg-taurusGold hover:text-black font-bold text-xs uppercase tracking-widest transition-all';
-                        contractBtn.onclick = () => window.open(`pricing-tool/dist/index.html?view=contract&payload=${payload}`, '_blank');
+                        contractBtn.onclick = () => {
+                            if (!pricingData.breakdown || !pricingData.breakdown.finalTotal) {
+                                systemAlert('ERROR', 'Missing financial breakdown. Open pricing tool and save quote first.', 'x-circle');
+                                return;
+                            }
+                            enqueuePdfJob({ id: `${editingProjectId}-contract-manual`, projectId: editingProjectId, docType: 'contract', request: pricingData, breakdown: pricingData.breakdown });
+                            systemAlert('DOC GENERATION', 'Generating contract PDF...', 'loader-2');
+                        };
                     }
 
                 } catch (e) {
