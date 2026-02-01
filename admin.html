@@ -907,6 +907,7 @@
         let intelDataMap = {}; // Global store for visitor data
         let currentOpenedMessageId = null;
         let isGeneratingBackgroundPDF = false; // Track background generation
+        let autoPipelineUnsubscribe = null;
 
         // --- AUTO PIPELINE CONFIG ---
         const AUTO_PIPELINE_ENABLED = true; // Full auto; only final approval is manual
@@ -1185,6 +1186,7 @@
 
                         setupRealtimeListeners();
                         loadTrafficChart();
+                        startAutoPipelineListener();
 
                         // Live Metadata Update
                         setInterval(() => {
@@ -3359,6 +3361,21 @@
             }, error => {
                 console.error("❌ Stats Listener Error:", error);
             });
+        }
+
+        function startAutoPipelineListener() {
+            if (!AUTO_PIPELINE_ENABLED || autoPipelineUnsubscribe || !db) return;
+            autoPipelineUnsubscribe = db.collection('messages')
+                .orderBy('timestamp', 'desc')
+                .limit(50)
+                .onSnapshot(snapshot => {
+                    snapshot.forEach(doc => {
+                        const data = doc.data();
+                        autoCreateDossierFromMessage(doc.id, data);
+                    });
+                }, error => {
+                    console.error("Auto Pipeline Listener Error:", error);
+                });
         }
 
         async function loadViewStats() {
