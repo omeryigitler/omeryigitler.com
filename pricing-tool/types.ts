@@ -81,6 +81,7 @@ export interface AddonService {
 }
 
 export interface QuoteRequest {
+  projectId?: string;
   country: Country;
   siteType: SiteType;
   pageCount: number;

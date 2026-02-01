@@ -312,6 +312,7 @@ const ContractView: React.FC<Props> = ({ config, addons, request, onBack, langua
                     request: request,
                     breakdown: breakdown,
                     total: breakdown.finalTotal,
+                    projectId: request.projectId,
                     status: 'contract_signed',
                     quotePdf: null,
                     contractPdf: null

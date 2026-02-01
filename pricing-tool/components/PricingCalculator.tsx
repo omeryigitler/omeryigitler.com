@@ -309,7 +309,8 @@ const PricingCalculator: React.FC<Props> = ({ config, addons, onRequestUpdate, o
         payload: {
           request: request,
           breakdown: breakdown,
-          total: breakdown.finalTotal
+          total: breakdown.finalTotal,
+          projectId: request.projectId
         }
       }, '*');
 

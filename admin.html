@@ -982,6 +982,7 @@
         let pricingToolReady = false;
         let pricingToolLastPing = 0;
         let pricingToolPingTimer = null;
+        let pricingContextProjectId = null;
         let pendingPdfTimeout = null;
         const selectedQuotes = new Set();
         const selectedClients = new Set();
@@ -1375,6 +1376,7 @@
                 const payload = event.data.payload;
                 const request = payload.request;
                 const breakdown = payload.breakdown;
+                const pricingProjectId = payload.projectId || pricingContextProjectId || editingProjectId || null;
 
                 const quoteData = {
                     clientName: request.customerName,
@@ -1410,7 +1412,7 @@
                         lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
                     };
 
-                    let projectId = editingProjectId;
+                let projectId = pricingProjectId;
 
                     // CASE 1: Updating Existing Project
                     if (projectId) {
@@ -1431,6 +1433,7 @@
                             console.error('❌ Failed to sync project with quote:', err);
                             alert('Error updating project: ' + err.message);
                         }
+                        pricingContextProjectId = null;
                     }
                     // CASE 2: Creating NEW Project from Quote
                     else {
@@ -1560,6 +1563,8 @@
 
                         systemAlert('SUCCESS', 'Project Saved Successfully', 'check-circle');
                     }
+
+                    pricingContextProjectId = null;
 
                     // Refresh local view if needed
                     if (currentMessageFilter) filterMessages(currentMessageFilter);
@@ -4095,6 +4100,7 @@
             const data = currentProjectData || {};
             const clientName = formClientName || data.clientName || '';
             const clientEmail = formClientEmail || data.clientEmail || '';
+            const projectId = editingProjectId || data.id || null;
 
             if (!clientName) {
                 alert("Please enter a Client Identity first.");
@@ -4102,6 +4108,7 @@
             }
 
             const payload = {
+                projectId: projectId,
                 clientName: clientName,
                 clientEmail: clientEmail,
                 country: data.country || (data.currency === 'EUR' ? 'MT' : 'TR'),
@@ -4112,6 +4119,10 @@
                 maintenanceLevel: data.maintenanceLevel,
                 selectedAddons: Array.isArray(data.selectedAddons) ? data.selectedAddons : []
             };
+
+            if (projectId) {
+                pricingContextProjectId = projectId;
+            }
 
             // Close modal
             closeProjectModal();
@@ -4166,7 +4177,7 @@
                         d.documents = { ...(d.documents || {}), ...providedDocs };
                     }
 
-                    currentProjectData = d; // Store Globally
+                    currentProjectData = { id, ...d }; // Store Globally
 
                     // --- POPULATE HEADER ---
                     document.getElementById('p-header-id').innerText = '#' + (d.projectNumber || 'UNK');
@@ -4901,16 +4912,6 @@
                 <!-- TAB 2: FINANCIALS -->
                 <div id="tab-financials" class="project-tab-content hidden animate-fade-in">
                     <div class="max-w-2xl mx-auto">
-                        <div class="mb-6 bg-white/5 rounded-2xl border border-white/10 p-5 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                            <div>
-                                <div class="text-[10px] uppercase tracking-widest text-gray-500 font-black">Pricing Tool Sync</div>
-                                <div class="text-sm text-gray-300 mt-1">Auto-fill project data and sync the price from Pricing Tool.</div>
-                            </div>
-                            <button onclick="calculatePriceForProject()"
-                                class="px-5 py-3 rounded-xl bg-taurusGold text-black text-[10px] font-black uppercase tracking-widest hover:bg-white transition-all shadow-[0_0_20px_rgba(212,175,55,0.3)] flex items-center gap-2 justify-center">
-                                <i data-lucide="calculator" class="w-4 h-4"></i> Open Pricing Tool
-                            </button>
-                        </div>
                         <div class="bg-white/5 rounded-2xl border border-white/10 overflow-hidden">
                             <div class="p-6 border-b border-white/10 bg-white/5 flex justify-between items-center">
                                 <h4 class="text-lg font-bold text-white">Cost Breakdown</h4>
@@ -4998,6 +4999,10 @@
                 <button onclick="closeProjectModal()"
                     class="w-full md:w-auto px-8 py-4 rounded-xl border border-white/10 text-gray-500 font-black text-[10px] uppercase tracking-widest hover:bg-white/5 transition-all">
                     Cancel
+                </button>
+                <button onclick="calculatePriceForProject()"
+                    class="w-full md:w-auto px-8 py-4 rounded-xl bg-taurusGold text-black font-black text-[10px] uppercase tracking-widest hover:bg-white transition-all shadow-[0_0_20px_rgba(212,175,55,0.3)] flex items-center justify-center gap-2">
+                    <i data-lucide="calculator" class="w-4 h-4"></i> Pricing Tool
                 </button>
                 <button onclick="saveProject()"
                     class="w-full md:w-auto px-10 py-4 rounded-xl bg-taurusGold text-black font-black text-[10px] uppercase tracking-widest hover:bg-white hover:scale-[1.02] transition-all shadow-[0_0_20px_rgba(212,175,55,0.3)]">

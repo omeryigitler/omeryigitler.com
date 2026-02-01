@@ -144,6 +144,7 @@ const App: React.FC = () => {
           clientName,
           clientEmail,
           country,
+          projectId,
           siteType,
           designType,
           pageCount,
@@ -157,6 +158,7 @@ const App: React.FC = () => {
           customerName: clientName || prev.customerName,
           customerEmail: clientEmail || prev.customerEmail,
           country: (country as Country) || prev.country,
+          projectId: projectId || prev.projectId,
 
           // Map Technical Specs
           siteType: (siteType as SiteType) || prev.siteType,
