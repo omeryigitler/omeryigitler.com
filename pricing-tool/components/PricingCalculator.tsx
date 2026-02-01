@@ -359,51 +359,63 @@ const PricingCalculator: React.FC<Props> = ({ config, addons, onRequestUpdate, o
         {/* Input Form */}
         <div className="lg:col-span-2 space-y-8">
 
-          {/* Section 1: Project Scope (Yellow) */}
-          <div className="bg-zinc-900 rounded-3xl border border-zinc-800 p-8 sm:p-10 shadow-[0_0_60px_rgba(255,215,0,0.25)] relative">
-            <h2 className="text-2xl font-bold text-white mb-8 flex items-center font-poppins">
-              <span className="bg-zinc-800 text-[#FFD700] w-10 h-10 flex items-center justify-center rounded-xl mr-4 text-sm font-bold border border-zinc-700">01</span>
-              {t.title1}
-            </h2>
+          {/* Section 1: Project Details */}
+          <div className="bg-zinc-950/70 rounded-3xl border border-zinc-800 p-8 sm:p-10 shadow-[0_0_60px_rgba(255,215,0,0.18)] relative overflow-hidden">
+            <div className="absolute -top-24 -right-24 w-56 h-56 bg-[#FFD700]/10 rounded-full blur-3xl pointer-events-none"></div>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8 relative z-10">
+              <div className="flex items-center">
+                <span className="bg-zinc-900 text-[#FFD700] w-11 h-11 flex items-center justify-center rounded-xl mr-4 text-sm font-bold border border-zinc-700">01</span>
+                <div>
+                  <h2 className="text-2xl font-bold text-white font-poppins">{t.title1}</h2>
+                  <p className="text-[10px] text-zinc-500 uppercase tracking-widest">{upper(t.projectType)} / {upper(t.designPref)}</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 text-[10px] uppercase tracking-widest text-zinc-500">
+                <span className="px-3 py-2 rounded-full bg-black/40 border border-zinc-800">{upper(t.targetMarket)}</span>
+                <span className="px-3 py-2 rounded-full bg-black/40 border border-zinc-800">{upper(t.pageCount)}</span>
+              </div>
+            </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 relative z-10">
 
               {/* Customer Name */}
-              <div className="space-y-4 border border-zinc-900/50 p-6 rounded-xl bg-gradient-to-br from-zinc-900/80 to-black backdrop-blur-sm relative overflow-hidden group hover:border-[#FFD700]/30 transition-all duration-500">
-                <div className="absolute inset-0 bg-gradient-to-r from-[#FFD700]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                <div className="flex items-center space-x-2 mb-2 relative z-10">
-                  <div className="p-2 bg-[#FFD700]/20 rounded-lg group-hover:bg-[#FFD700] transition-colors duration-300">
-                    <User className="w-5 h-5 text-[#FFD700] group-hover:text-black transition-colors duration-300" />
+              <div className="space-y-4 border border-zinc-800 p-6 rounded-2xl bg-black/50 backdrop-blur-sm relative overflow-hidden">
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="p-2 bg-[#FFD700]/15 rounded-lg">
+                    <User className="w-5 h-5 text-[#FFD700]" />
                   </div>
-                  <label className="text-sm font-bold text-zinc-300 group-hover:text-white transition-colors">{t.customerInfo}</label>
+                  <div>
+                    <label className="text-[10px] uppercase tracking-widest text-zinc-500">{t.sectionClient}</label>
+                    <div className="text-sm font-bold text-white">{t.customerName}</div>
+                  </div>
                 </div>
 
                 <div className="space-y-3">
                   <div>
-                    <label className="text-xs text-zinc-500 mb-1 block">{t.customerName}</label>
+                    <label className="text-xs text-zinc-500 mb-2 block">{t.customerName}</label>
                     <input
                       type="text"
                       value={request.customerName}
                       onChange={(e) => setRequest({ ...request, customerName: e.target.value })}
                       placeholder={t.customerPlaceholder}
-                      className="w-full bg-black/50 border border-zinc-800 rounded-lg px-4 py-3 text-white placeholder-zinc-600 focus:outline-none focus:border-[#FFD700] transition-all hover:border-zinc-700"
+                      className="w-full bg-black/60 border border-zinc-800 rounded-xl px-4 py-3 text-white placeholder-zinc-600 focus:outline-none focus:border-[#FFD700] transition-all"
                     />
                   </div>
                   <div>
-                    <label className="text-xs text-zinc-500 mb-1 block">{t.customerEmail}</label>
+                    <label className="text-xs text-zinc-500 mb-2 block">{t.customerEmail}</label>
                     <input
                       type="email"
                       value={request.customerEmail || ''}
                       onChange={(e) => setRequest({ ...request, customerEmail: e.target.value })}
                       placeholder={t.customerEmailPlaceholder}
-                      className="w-full bg-black/50 border border-zinc-800 rounded-lg px-4 py-3 text-white placeholder-zinc-600 focus:outline-none focus:border-[#FFD700] transition-all hover:border-zinc-700"
+                      className="w-full bg-black/60 border border-zinc-800 rounded-xl px-4 py-3 text-white placeholder-zinc-600 focus:outline-none focus:border-[#FFD700] transition-all"
                     />
                   </div>
                 </div>
               </div>
 
               {/* Country Select */}
-              <div>
+              <div className="rounded-2xl border border-zinc-800 bg-black/50 p-4">
                 <CustomSelect
                   label={upper(t.targetMarket)}
                   value={request.country}
@@ -414,7 +426,7 @@ const PricingCalculator: React.FC<Props> = ({ config, addons, onRequestUpdate, o
               </div>
 
               {/* Site Type Select */}
-              <div>
+              <div className="rounded-2xl border border-zinc-800 bg-black/50 p-4">
                 <CustomSelect
                   label={upper(t.projectType)}
                   value={request.siteType}
@@ -425,7 +437,7 @@ const PricingCalculator: React.FC<Props> = ({ config, addons, onRequestUpdate, o
               </div>
 
               {/* Page Count Slider */}
-              <div>
+              <div className="rounded-2xl border border-zinc-800 bg-black/50 p-4">
                 <label className={labelClass}>
                   {upper(t.pageCount)}: <span className="text-[#FFD700] ml-1 text-sm">{request.pageCount}</span>
                 </label>
@@ -447,7 +459,7 @@ const PricingCalculator: React.FC<Props> = ({ config, addons, onRequestUpdate, o
               </div>
 
               {/* Design Preference Radio */}
-              <div className="md:col-span-2 mt-2">
+              <div className="md:col-span-2 mt-4 rounded-2xl border border-zinc-800 bg-black/50 p-6">
                 <label className={labelClass}>{upper(t.designPref)}</label>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <label className={`relative group cursor-pointer border rounded-2xl p-5 transition-all duration-300 flex items-start space-x-4 ${request.designType === DesignType.TEMPLATE ? 'border-[#FFD700] bg-zinc-900 shadow-[0_0_15px_rgba(255,215,0,0.15)]' : 'border-zinc-800 bg-black hover:border-zinc-600'}`}>
@@ -487,7 +499,7 @@ const PricingCalculator: React.FC<Props> = ({ config, addons, onRequestUpdate, o
               </div>
 
               {/* Technical & Creative Extras */}
-              <div className="space-y-4 md:col-span-2 mt-2">
+              <div className="space-y-4 md:col-span-2 mt-4 rounded-2xl border border-zinc-800 bg-black/50 p-6">
                 <label className={labelClass}>{upper(t.technicalTitle)}</label>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -694,32 +706,26 @@ const PricingCalculator: React.FC<Props> = ({ config, addons, onRequestUpdate, o
 
                   {/* Clean Input Field with Dynamic Padding and Positioning */}
                   <div className="relative">
+                    {showSymbolLeft && (
+                      <div className="absolute inset-y-0 left-5 flex items-center text-zinc-500 pointer-events-none font-bold leading-none">
+                        {displaySymbol}
+                      </div>
+                    )}
+
+                    {showSymbolRight && (
+                      <div className="absolute inset-y-0 right-5 flex items-center text-zinc-500 pointer-events-none font-bold leading-none">
+                        {displaySymbol}
+                      </div>
+                    )}
+
                     <input
                       type="number"
                       min="0"
                       placeholder="0"
                       value={request.discountValue || ''}
                       onChange={(e) => setRequest({ ...request, discountValue: parseFloat(e.target.value) || 0 })}
-                      className="w-full bg-zinc-900 border border-zinc-800 rounded-xl py-4 text-white font-bold text-lg text-left tabular-nums focus:border-[#FFD700] focus:outline-none appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
-                      style={{
-                        // Add padding to the side where the symbol is located to prevent overlap
-                        paddingLeft: showSymbolLeft ? '3rem' : '1.25rem',
-                        paddingRight: showSymbolRight ? '3rem' : '1.25rem',
-                      }}
+                      className={`w-full h-14 bg-zinc-900 border border-zinc-800 rounded-xl text-white font-bold text-lg text-left tabular-nums leading-none focus:border-[#FFD700] focus:outline-none appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none ${showSymbolLeft ? 'pl-12' : 'pl-5'} ${showSymbolRight ? 'pr-12' : 'pr-5'}`}
                     />
-
-                    {/* Symbol Positioning */}
-                    {showSymbolLeft && (
-                      <div className="absolute left-5 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none font-bold">
-                        {displaySymbol}
-                      </div>
-                    )}
-
-                    {showSymbolRight && (
-                      <div className="absolute right-5 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none font-bold">
-                        {displaySymbol}
-                      </div>
-                    )}
                   </div>
 
                   {breakdown && breakdown.discountAmount > 0 && (

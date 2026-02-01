@@ -80,11 +80,14 @@ const Dashboard: React.FC<Props> = ({ onNavigate, language, onRequestUpdate }) =
   }, []);
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-24 sm:px-6 lg:px-8">
-      <div className="text-center mb-24">
+    <div className="max-w-7xl mx-auto px-4 py-16 sm:px-6 lg:px-8">
+      <div className="text-center mb-20">
         {/* Removed 'uppercase' class and used toLocaleUpperCase(locale) for correct i/I handling */}
-        <h1 className="text-5xl font-extrabold text-white sm:text-6xl sm:tracking-tight lg:text-7xl font-poppins mb-6">
-          {t.heroTitlePrefix.toLocaleUpperCase(locale)} <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#FFD700] to-[#FFD700] drop-shadow-[0_0_10px_rgba(255,215,0,0.3)]">{t.heroTitleHighlight.toLocaleUpperCase(locale)}</span>
+        <h1 className="text-5xl font-extrabold text-white sm:text-6xl sm:tracking-tight lg:text-7xl font-poppins mb-6 leading-[1.05]">
+          <span className="inline-block">{t.heroTitlePrefix.toLocaleUpperCase(locale)}</span>{' '}
+          <span className="inline-flex items-center bg-[#FFD700] text-black px-3 py-1 rounded-xl shadow-[0_0_30px_rgba(255,215,0,0.35)]">
+            {t.heroTitleHighlight.toLocaleUpperCase(locale)}
+          </span>
         </h1>
         <p className="max-w-2xl mx-auto text-xl text-zinc-400 font-light leading-relaxed">
           {t.heroSubtitle}
