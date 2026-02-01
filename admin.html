@@ -4094,17 +4094,49 @@
          * Calculate price for the current project in modal
          * Takes the client name and email from the open project form and opens pricing tool
          */
-        function calculatePriceForProject() {
+        async function calculatePriceForProject() {
             const formClientName = (document.getElementById('p-client').value || '').trim();
             const formClientEmail = (document.getElementById('p-email').value || '').trim();
+            const formProjectName = (document.getElementById('p-name').value || '').trim();
+            const formRequests = (document.getElementById('p-requests')?.value || '').trim();
             const data = currentProjectData || {};
             const clientName = formClientName || data.clientName || '';
             const clientEmail = formClientEmail || data.clientEmail || '';
-            const projectId = editingProjectId || data.id || null;
+            const existingProjectId = editingProjectId || data.id || pricingContextProjectId || null;
 
             if (!clientName) {
                 alert("Please enter a Client Identity first.");
                 return;
+            }
+
+            let projectId = existingProjectId;
+            if (!projectId) {
+                try {
+                    const draftName = formProjectName || data.projectName || `Project for ${clientName}`;
+                    const draftData = {
+                        clientName: clientName,
+                        clientEmail: clientEmail,
+                        projectName: draftName,
+                        name: draftName,
+                        status: 'active',
+                        workflowStage: 'lead',
+                        requests: formRequests || data.description || '',
+                        description: formRequests || data.description || '',
+                        country: data.country || (data.currency === 'EUR' ? 'MT' : 'TR'),
+                        autoPipeline: false
+                    };
+                    projectId = await saveProjectToFirestore(draftData);
+                    if (!projectId) {
+                        alert("Failed to create project ID. Please try again.");
+                        return;
+                    }
+                    pricingContextProjectId = projectId;
+                    currentProjectData = { ...data, id: projectId, clientName, clientEmail, projectName: draftName };
+                } catch (e) {
+                    console.error('Failed to create project ID:', e);
+                    alert("Failed to create project ID. Please try again.");
+                    return;
+                }
             }
 
             const payload = {
@@ -4155,6 +4187,7 @@
 
         async function openProjectModal(id = null, providedDocs = null) {
             editingProjectId = id;
+            pricingContextProjectId = id || null;
             const modal = document.getElementById('project-modal');
             modal.classList.remove('hidden');
             document.body.style.overflow = 'hidden';
@@ -4339,6 +4372,7 @@
             } else {
                 // New Project Mode
                 currentProjectData = {};
+                pricingContextProjectId = null;
                 document.getElementById('p-modal-title').innerText = "NEW DEPLOYMENT";
                 document.getElementById('p-header-id').innerText = "#NEW";
                 document.getElementById('p-delete-btn').classList.add('hidden');
@@ -4608,8 +4642,12 @@
                 lastUpdated: firebase.firestore.FieldValue.serverTimestamp(),
                 timestamp: firebase.firestore.FieldValue.serverTimestamp()
             };
-            if (editingProjectId) await db.collection('projects').doc(editingProjectId).update(data);
-            else await saveProjectToFirestore(data);
+            const targetId = editingProjectId || pricingContextProjectId;
+            if (targetId) {
+                await db.collection('projects').doc(targetId).update(data);
+            } else {
+                await saveProjectToFirestore(data);
+            }
             closeProjectModal();
         }
 
