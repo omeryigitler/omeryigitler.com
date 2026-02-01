@@ -69,10 +69,29 @@
         color: black !important;
         display: block !important;
         margin: 0 !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
       }
 
       #root {
         width: 100% !important;
+      }
+
+      .proposal-wrap,
+      .contract-wrap {
+        max-width: none !important;
+        width: 210mm !important;
+        margin: 0 auto !important;
+        padding: 0 !important;
+      }
+
+      #proposal-content,
+      #contract-content {
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 16mm !important;
+        border-radius: 0 !important;
+        box-shadow: none !important;
       }
     }
 

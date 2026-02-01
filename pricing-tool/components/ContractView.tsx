@@ -254,7 +254,7 @@ const ContractView: React.FC<Props> = ({ config, addons, request, onBack, langua
   );
 
   return (
-    <div className="max-w-4xl mx-auto py-8 px-4 relative">
+    <div className="max-w-4xl mx-auto py-8 px-4 relative contract-wrap">
       {/* 
         HIDDEN PROPOSAL VIEW FOR PDF GENERATION 
         We mount it off-screen so we can capture it with html2canvas.

@@ -78,7 +78,7 @@ const ProposalView: React.FC<Props> = ({ config, addons, request, breakdown, onB
   ];
 
   return (
-    <div className="max-w-4xl mx-auto py-8 px-4">
+    <div className="max-w-4xl mx-auto py-8 px-4 proposal-wrap">
       {/* Action Bar */}
       <div className="mb-8 flex justify-between items-center no-print">
         <button onClick={onBack} className="flex items-center text-zinc-400 hover:text-white font-medium transition-colors">
