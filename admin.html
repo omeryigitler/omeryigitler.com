@@ -1186,20 +1186,32 @@
         // POST MESSAGE LISTENER - Pricing Tool Integration
         // POST MESSAGE LISTENER - Pricing Tool Integration
         async function storeGeneratedPdfForProject(docType, dataUri, projectId) {
-            if (!docType || !dataUri || !projectId) return;
-            const key = `project_pdf_${docType}_${projectId}`;
-            localStorage.setItem(key, dataUri);
+            if (!docType || !projectId) return;
+            let key = null;
+            if (!USE_SERVER_PDF && dataUri) {
+                try {
+                    key = `project_pdf_${docType}_${projectId}`;
+                    localStorage.setItem(key, dataUri);
+                } catch (e) {
+                    console.warn("Local PDF storage failed:", e.message);
+                    key = null;
+                }
+            }
             try {
-                await db.collection('projects').doc(projectId).update({
-                    [`documents.${docType}LocalKey`]: key,
+                const updates = {
                     [`documents.${docType}GeneratedAt`]: firebase.firestore.FieldValue.serverTimestamp(),
+                    [`documents.${docType}Ready`]: true,
                     lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
-                });
+                };
+                if (key) {
+                    updates[`documents.${docType}LocalKey`] = key;
+                }
+                await db.collection('projects').doc(projectId).update(updates);
                 if (docType === 'contract') {
                     await updateWorkflow(projectId, 'review', { source: 'manual' });
                 }
             } catch (e) {
-                console.warn("PDF local key save failed:", e.message);
+                console.warn("PDF metadata save failed:", e.message);
             }
         }
 
@@ -1224,19 +1236,9 @@
                     const dataUri = docType === 'quote' ? payload.quotePdf : payload.contractPdf;
 
                     if (dataUri) {
-                        const key = `project_pdf_${docType}_${pdfJobActive.projectId}`;
-                        localStorage.setItem(key, dataUri);
-                        try {
-                            await db.collection('projects').doc(pdfJobActive.projectId).update({
-                                [`documents.${docType}LocalKey`]: key,
-                                [`documents.${docType}GeneratedAt`]: firebase.firestore.FieldValue.serverTimestamp(),
-                                lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
-                            });
-                            if (docType === 'contract') {
-                                await updateWorkflow(pdfJobActive.projectId, 'review', { source: 'auto' });
-                            }
-                        } catch (e) {
-                            console.warn("PDF local key save failed:", e.message);
+                        await storeGeneratedPdfForProject(docType, dataUri, pdfJobActive.projectId);
+                        if (docType === 'contract') {
+                            await updateWorkflow(pdfJobActive.projectId, 'review', { source: 'auto' });
                         }
                     }
 
@@ -1430,21 +1432,12 @@
 
                     if (projectId) {
                         // --- LOCAL STORAGE PERSISTENCE (Client-Side) ---
-                        // Save PDFs to localStorage so they persist across reloads
-                        const freshDocuments = {};
-
+                        // Avoid localStorage for large PDFs; mark metadata only
                         if (payload.quotePdf) {
-                            const key = `project_pdf_quote_${projectId}`;
-                            localStorage.setItem(key, payload.quotePdf);
-                            freshDocuments.quoteUrl = payload.quotePdf; // Pass Data URI directly
-                            console.log(`✅ Quote PDF saved to localStorage: ${key}`);
+                            await storeGeneratedPdfForProject('quote', payload.quotePdf, projectId);
                         }
-
                         if (payload.contractPdf) {
-                            const key = `project_pdf_contract_${projectId}`;
-                            localStorage.setItem(key, payload.contractPdf);
-                            freshDocuments.contractUrl = payload.contractPdf; // Pass Data URI directly
-                            console.log(`✅ Contract PDF saved to localStorage: ${key}`);
+                            await storeGeneratedPdfForProject('contract', payload.contractPdf, projectId);
                         }
 
                         event.source.postMessage({ type: 'QUOTE_SAVED', success: true, quoteId: id }, '*');
@@ -1455,10 +1448,10 @@
                         // Switch to projects tab and show the new project
                         switchTab('projects');
 
-                        // Open modal with fresh documents immediately available
-                        openProjectModal(projectId, freshDocuments);
+                        // Open modal with fresh data
+                        openProjectModal(projectId);
 
-                        systemAlert('SUCCESS', 'Project Saved Successfully (Local)', 'check-circle');
+                        systemAlert('SUCCESS', 'Project Saved Successfully', 'check-circle');
                     }
 
                     // Refresh local view if needed
@@ -2258,8 +2251,7 @@
                 throw new Error(errText || `Server PDF failed (${response.status})`);
             }
             const blob = await response.blob();
-            const dataUrl = await blobToDataUrl(blob);
-            await storeGeneratedPdfForProject(job.docType, dataUrl, job.projectId);
+            await storeGeneratedPdfForProject(job.docType, null, job.projectId);
             if (job.download) {
                 downloadBlobFile(blob, job.fileName || `${job.docType.toUpperCase()}.pdf`);
             }
@@ -3884,10 +3876,15 @@
 
                     const quoteLocalKey = d.documents?.quoteLocalKey;
                     const localQuote = quoteLocalKey ? localStorage.getItem(quoteLocalKey) : null;
+                    const quoteReady = !!(d.documents?.quoteReady || d.documents?.quoteGeneratedAt);
                     if (localQuote) {
                         quoteBtn.innerHTML = '<i data-lucide="download" class="w-4 h-4 mr-2 inline"></i> Download Proposal';
                         quoteBtn.className = 'w-full py-3 rounded-lg bg-taurusGold text-black border border-taurusGold/40 hover:bg-white font-bold text-xs uppercase tracking-widest transition-all';
                         quoteBtn.onclick = () => downloadBase64File(localQuote, `Quote_${d.projectNumber || 'Project'}.pdf`);
+                    } else if (quoteReady) {
+                        quoteBtn.innerHTML = '<i data-lucide="download" class="w-4 h-4 mr-2 inline"></i> Download Proposal';
+                        quoteBtn.className = 'w-full py-3 rounded-lg bg-taurusGold text-black border border-taurusGold/40 hover:bg-white font-bold text-xs uppercase tracking-widest transition-all';
+                        quoteBtn.onclick = () => generateProjectPDF('quote');
                     } else {
                         quoteBtn.innerHTML = '<i data-lucide="file-text" class="w-4 h-4 mr-2 inline"></i> Generate Proposal PDF';
                         quoteBtn.className = 'w-full py-3 rounded-lg bg-taurusGold/10 text-taurusGold border border-taurusGold/20 hover:bg-taurusGold hover:text-black font-bold text-xs uppercase tracking-widest transition-all';
@@ -3911,10 +3908,15 @@
 
                     const contractLocalKey = d.documents?.contractLocalKey;
                     const localContract = contractLocalKey ? localStorage.getItem(contractLocalKey) : null;
+                    const contractReady = !!(d.documents?.contractReady || d.documents?.contractGeneratedAt);
                     if (localContract) {
                         contractBtn.innerHTML = '<i data-lucide="download" class="w-4 h-4 mr-2 inline"></i> Download Contract';
                         contractBtn.className = 'w-full py-3 rounded-lg bg-taurusGold text-black border border-taurusGold/40 hover:bg-white font-bold text-xs uppercase tracking-widest transition-all';
                         contractBtn.onclick = () => downloadBase64File(localContract, `Contract_${d.projectNumber || 'Project'}.pdf`);
+                    } else if (contractReady) {
+                        contractBtn.innerHTML = '<i data-lucide="download" class="w-4 h-4 mr-2 inline"></i> Download Contract';
+                        contractBtn.className = 'w-full py-3 rounded-lg bg-taurusGold text-black border border-taurusGold/40 hover:bg-white font-bold text-xs uppercase tracking-widest transition-all';
+                        contractBtn.onclick = () => generateProjectPDF('contract');
                     } else {
                         contractBtn.innerHTML = '<i data-lucide="scroll" class="w-4 h-4 mr-2 inline"></i> Generate Contract PDF';
                         contractBtn.className = 'w-full py-3 rounded-lg bg-taurusGold/10 text-taurusGold border border-taurusGold/20 hover:bg-taurusGold hover:text-black font-bold text-xs uppercase tracking-widest transition-all';
