@@ -604,6 +604,25 @@
                         </div>
                     </div>
 
+                    <!-- Bulk Actions -->
+                    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+                        <div class="flex items-center gap-3 text-[10px] uppercase tracking-widest text-gray-500">
+                            <label
+                                class="flex items-center gap-2 px-3 py-2 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 transition-all">
+                                <input id="quotes-select-all" type="checkbox" class="accent-[#FFD700]"
+                                    onchange="toggleSelectAllQuotes(this.checked)">
+                                Select All
+                            </label>
+                            <span id="quotes-selected-count"
+                                class="px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-gray-400">0
+                                Selected</span>
+                        </div>
+                        <button id="quotes-bulk-delete" onclick="bulkDeleteQuotes()" disabled
+                            class="px-4 py-2 rounded-lg bg-red-500/10 text-red-500 border border-red-500/20 text-[10px] font-bold uppercase tracking-widest hover:bg-red-500 hover:text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+                            Delete Selected
+                        </button>
+                    </div>
+
                     <!-- Quotes Grid -->
                     <div id="quotes-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         <!-- Quotes will be loaded here -->
@@ -679,6 +698,25 @@
                     </div>
                 </div>
 
+                <!-- Bulk Actions -->
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
+                    <div class="flex items-center gap-3 text-[10px] uppercase tracking-widest text-gray-500">
+                        <label
+                            class="flex items-center gap-2 px-3 py-2 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 transition-all">
+                            <input id="clients-select-all" type="checkbox" class="accent-[#FFD700]"
+                                onchange="toggleSelectAllClients(this.checked)">
+                            Select All
+                        </label>
+                        <span id="clients-selected-count"
+                            class="px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-gray-400">0
+                            Selected</span>
+                    </div>
+                    <button id="clients-bulk-delete" onclick="bulkDeleteClients()" disabled
+                        class="px-4 py-2 rounded-lg bg-red-500/10 text-red-500 border border-red-500/20 text-[10px] font-bold uppercase tracking-widest hover:bg-red-500 hover:text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+                        Delete Selected
+                    </button>
+                </div>
+
                 <!-- Clients Table -->
                 <div class="flex-1 overflow-auto">
                     <div class="bg-white/5 border border-white/10 rounded-2xl overflow-hidden">
@@ -686,6 +724,10 @@
                             <thead class="sticky top-0 bg-black/50 backdrop-blur">
                                 <tr
                                     class="text-gray-500 text-[10px] font-bold uppercase tracking-widest border-b border-white/5">
+                                    <th class="p-4 text-center">
+                                        <input id="clients-select-all-top" type="checkbox" class="accent-[#FFD700]"
+                                            onchange="toggleSelectAllClients(this.checked)">
+                                    </th>
                                     <th class="p-4">Client</th>
                                     <th class="p-4 text-center">Messages</th>
                                     <th class="p-4 text-center">Quotes</th>
@@ -697,7 +739,7 @@
                             <tbody id="clients-table-body" class="text-sm">
                                 <!-- Dynamic Client Rows -->
                                 <tr>
-                                    <td colspan="6" class="p-8 text-center text-gray-500">Loading clients...</td>
+                                    <td colspan="7" class="p-8 text-center text-gray-500">Loading clients...</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -746,9 +788,24 @@
                 <div class="p-6 rounded-2xl bg-white/5 border border-white/10 backdrop-blur overflow-hidden">
                     <div class="flex justify-between items-center mb-6">
                         <h3 class="font-bold text-lg uppercase tracking-wider">Live Signal Feed</h3>
-                        <button onclick="loadIntelligence()"
-                            class="p-2 hover:bg-white/10 rounded-full transition-colors"><i data-lucide="refresh-cw"
-                                class="w-4 h-4"></i></button>
+                        <div class="flex items-center gap-3">
+                            <label
+                                class="flex items-center gap-2 px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-[10px] uppercase tracking-widest text-gray-400">
+                                <input id="visitors-select-all" type="checkbox" class="accent-[#FFD700]"
+                                    onchange="toggleSelectAllVisitors(this.checked)">
+                                Select All
+                            </label>
+                            <span id="visitors-selected-count"
+                                class="px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-[10px] uppercase tracking-widest text-gray-400">0
+                                Selected</span>
+                            <button id="visitors-bulk-delete" onclick="bulkDeleteVisitors()" disabled
+                                class="px-3 py-2 rounded-lg bg-red-500/10 text-red-500 border border-red-500/20 text-[10px] font-bold uppercase tracking-widest hover:bg-red-500 hover:text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+                                Delete Selected
+                            </button>
+                            <button onclick="loadIntelligence()"
+                                class="p-2 hover:bg-white/10 rounded-full transition-colors"><i
+                                    data-lucide="refresh-cw" class="w-4 h-4"></i></button>
+                        </div>
                     </div>
 
                     <div class="overflow-x-auto">
@@ -756,6 +813,7 @@
                             <thead>
                                 <tr
                                     class="text-gray-500 text-[10px] font-bold uppercase tracking-widest border-b border-white/5 text-center">
+                                    <th class="pb-4">Select</th>
                                     <th class="pb-4">Status</th>
                                     <th class="pb-4">Location</th>
                                     <th class="pb-4">ISP / Org</th>
@@ -768,7 +826,7 @@
                             <tbody id="visitor-table-body" class="text-sm font-mono text-gray-300">
                                 <!-- JS Will Populate This -->
                                 <tr>
-                                    <td colspan="7" class="py-8 text-center text-gray-500">Scanning frequency...</td>
+                                    <td colspan="8" class="py-8 text-center text-gray-500">Scanning frequency...</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -882,6 +940,12 @@
         let pricingToolLastPing = 0;
         let pricingToolPingTimer = null;
         let pendingPdfTimeout = null;
+        const selectedQuotes = new Set();
+        const selectedClients = new Set();
+        const selectedVisitors = new Set();
+        let visibleQuoteIds = [];
+        let visibleClientIds = [];
+        let visibleVisitorIds = [];
 
         // --- AUTO PIPELINE CONFIG ---
         const AUTO_PIPELINE_ENABLED = true; // Full auto; only final approval is manual
@@ -2800,6 +2864,74 @@
 
         let currentQuoteFilter = 'all';
 
+        function pruneSelection(set, validIds) {
+            const validSet = new Set(validIds);
+            Array.from(set).forEach(id => {
+                if (!validSet.has(id)) set.delete(id);
+            });
+        }
+
+        function updateQuotesBulkUI() {
+            const count = selectedQuotes.size;
+            const total = visibleQuoteIds.length;
+            const countEl = document.getElementById('quotes-selected-count');
+            const deleteBtn = document.getElementById('quotes-bulk-delete');
+            const selectAll = document.getElementById('quotes-select-all');
+
+            if (countEl) countEl.innerText = `${count} Selected`;
+            if (deleteBtn) deleteBtn.disabled = count === 0;
+            if (selectAll) {
+                selectAll.checked = total > 0 && count === total;
+                selectAll.indeterminate = count > 0 && count < total;
+            }
+        }
+
+        function toggleQuoteSelection(id, checked) {
+            if (checked) selectedQuotes.add(id);
+            else selectedQuotes.delete(id);
+            updateQuotesBulkUI();
+        }
+
+        function toggleSelectAllQuotes(checked) {
+            if (checked) {
+                visibleQuoteIds.forEach(id => selectedQuotes.add(id));
+            } else {
+                visibleQuoteIds.forEach(id => selectedQuotes.delete(id));
+            }
+            document.querySelectorAll('.quote-select-checkbox').forEach(cb => {
+                cb.checked = checked;
+            });
+            updateQuotesBulkUI();
+        }
+
+        async function deleteQuote(id) {
+            const confirmed = await systemConfirm('DELETE QUOTE', 'Delete this quote permanently?', 'trash-2');
+            if (!confirmed) return;
+            try {
+                await db.collection('quotes').doc(id).delete();
+                selectedQuotes.delete(id);
+                updateQuotesBulkUI();
+            } catch (e) {
+                systemAlert('ERROR', 'Delete failed: ' + e.message, 'x-circle');
+            }
+        }
+
+        async function bulkDeleteQuotes() {
+            if (selectedQuotes.size === 0) return;
+            const confirmed = await systemConfirm('BULK DELETE', `Delete ${selectedQuotes.size} selected quotes?`, 'trash-2');
+            if (!confirmed) return;
+            const ids = Array.from(selectedQuotes);
+            try {
+                const batch = db.batch();
+                ids.forEach(id => batch.delete(db.collection('quotes').doc(id)));
+                await batch.commit();
+                selectedQuotes.clear();
+                updateQuotesBulkUI();
+            } catch (e) {
+                systemAlert('ERROR', 'Bulk delete failed: ' + e.message, 'x-circle');
+            }
+        }
+
         /**
          * Load quotes from Firestore with real-time listener
          */
@@ -2812,9 +2944,12 @@
                 .orderBy('createdAt', 'desc')
                 .onSnapshot(snapshot => {
                     container.innerHTML = '';
+                    visibleQuoteIds = [];
 
                     if (snapshot.empty) {
                         container.innerHTML = '<div class="col-span-full py-20 text-center text-gray-500 uppercase tracking-widest text-xs">No quotes yet.</div>';
+                        selectedQuotes.clear();
+                        updateQuotesBulkUI();
                         return;
                     }
 
@@ -2823,6 +2958,7 @@
 
                         // Filter by status
                         if (currentQuoteFilter !== 'all' && quote.status !== currentQuoteFilter) return;
+                        visibleQuoteIds.push(quote.id);
 
                         // Get status badge class
                         let statusClass = '';
@@ -2834,14 +2970,25 @@
                             default: statusClass = 'bg-white/10 text-white';
                         }
 
+                        const checkedAttr = selectedQuotes.has(quote.id) ? 'checked' : '';
                         const card = `
                             <div class="bg-white/5 border border-white/10 rounded-3xl p-6 hover:border-[#FFD700]/30 transition-all cursor-pointer group">
                                 <!-- Quote Number & Status -->
                                 <div class="flex justify-between items-start mb-4">
-                                    <h3 class="text-xl font-bold text-white group-hover:text-[#FFD700] transition-colors">${quote.quoteNumber || 'N/A'}</h3>
-                                    <span class="px-3 py-1 rounded-full text-xs font-bold uppercase ${statusClass}">
-                                        ${quote.status || 'draft'}
-                                    </span>
+                                    <div class="flex items-center gap-2">
+                                        <input type="checkbox" class="quote-select-checkbox accent-[#FFD700]" ${checkedAttr}
+                                            onclick="event.stopPropagation()" onchange="toggleQuoteSelection('${quote.id}', this.checked)">
+                                        <h3 class="text-xl font-bold text-white group-hover:text-[#FFD700] transition-colors">${quote.quoteNumber || 'N/A'}</h3>
+                                    </div>
+                                    <div class="flex items-center gap-2">
+                                        <span class="px-3 py-1 rounded-full text-xs font-bold uppercase ${statusClass}">
+                                            ${quote.status || 'draft'}
+                                        </span>
+                                        <button onclick="deleteQuote('${quote.id}'); event.stopPropagation()" title="Delete Quote"
+                                            class="p-2 rounded-md bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white transition-all border border-red-500/20">
+                                            <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                        </button>
+                                    </div>
                                 </div>
                                 
                                 <!-- Client Info -->
@@ -2865,6 +3012,8 @@
                         container.insertAdjacentHTML('beforeend', card);
                     });
 
+                    pruneSelection(selectedQuotes, visibleQuoteIds);
+                    updateQuotesBulkUI();
                     lucide.createIcons();
                 });
         }
@@ -2898,6 +3047,69 @@
         // CLIENTS
         // ============================================
 
+        function updateClientsBulkUI() {
+            const count = selectedClients.size;
+            const total = visibleClientIds.length;
+            const countEl = document.getElementById('clients-selected-count');
+            const deleteBtn = document.getElementById('clients-bulk-delete');
+            const selectAll = document.getElementById('clients-select-all');
+            const selectAllTop = document.getElementById('clients-select-all-top');
+
+            if (countEl) countEl.innerText = `${count} Selected`;
+            if (deleteBtn) deleteBtn.disabled = count === 0;
+            [selectAll, selectAllTop].forEach(el => {
+                if (!el) return;
+                el.checked = total > 0 && count === total;
+                el.indeterminate = count > 0 && count < total;
+            });
+        }
+
+        function toggleClientSelection(id, checked) {
+            if (checked) selectedClients.add(id);
+            else selectedClients.delete(id);
+            updateClientsBulkUI();
+        }
+
+        function toggleSelectAllClients(checked) {
+            if (checked) {
+                visibleClientIds.forEach(id => selectedClients.add(id));
+            } else {
+                visibleClientIds.forEach(id => selectedClients.delete(id));
+            }
+            document.querySelectorAll('.client-select-checkbox').forEach(cb => {
+                cb.checked = checked;
+            });
+            updateClientsBulkUI();
+        }
+
+        async function deleteClient(clientId) {
+            const confirmed = await systemConfirm('DELETE CLIENT', 'Delete this client permanently?', 'trash-2');
+            if (!confirmed) return;
+            try {
+                await db.collection('clients').doc(clientId).delete();
+                selectedClients.delete(clientId);
+                updateClientsBulkUI();
+            } catch (e) {
+                systemAlert('ERROR', 'Delete failed: ' + e.message, 'x-circle');
+            }
+        }
+
+        async function bulkDeleteClients() {
+            if (selectedClients.size === 0) return;
+            const confirmed = await systemConfirm('BULK DELETE', `Delete ${selectedClients.size} selected clients?`, 'trash-2');
+            if (!confirmed) return;
+            const ids = Array.from(selectedClients);
+            try {
+                const batch = db.batch();
+                ids.forEach(id => batch.delete(db.collection('clients').doc(id)));
+                await batch.commit();
+                selectedClients.clear();
+                updateClientsBulkUI();
+            } catch (e) {
+                systemAlert('ERROR', 'Bulk delete failed: ' + e.message, 'x-circle');
+            }
+        }
+
         /**
          * Load all clients from Firestore and populate the clients table
          * Real-time listener for instant updates
@@ -2911,6 +3123,7 @@
                 .onSnapshot(snapshot => {
                     let clientsHtml = '';
                     let totalMessages = 0, totalQuotes = 0, totalProjects = 0;
+                    visibleClientIds = [];
 
                     snapshot.forEach(doc => {
                         const data = doc.data();
@@ -2922,9 +3135,15 @@
                         totalMessages += data.totalMessages || 0;
                         totalQuotes += data.totalQuotes || 0;
                         totalProjects += data.totalProjects || 0;
+                        visibleClientIds.push(doc.id);
+                        const checkedAttr = selectedClients.has(doc.id) ? 'checked' : '';
 
                         clientsHtml += `
                             <tr onclick="openClientModal('${doc.id}')" class="border-b border-white/5 hover:bg-white/5 transition-all cursor-pointer group">
+                                <td class="p-4 text-center" onclick="event.stopPropagation()">
+                                    <input type="checkbox" class="client-select-checkbox accent-[#FFD700]" ${checkedAttr}
+                                        onchange="toggleClientSelection('${doc.id}', this.checked)">
+                                </td>
                                 <td class="p-4">
                                     <div class="font-bold text-white group-hover:text-taurusGold transition-colors">${data.name || 'Unknown'}</div>
                                     <div class="text-xs text-gray-500">${data.email}</div>
@@ -2934,15 +3153,21 @@
                                 <td class="p-4 text-center text-green-400 font-bold">${data.totalProjects || 0}</td>
                                 <td class="p-4 text-gray-400 text-xs">${lastContact}</td>
                                 <td class="p-4" onclick="event.stopPropagation()">
-                                    <button onclick="openClientModal('${doc.id}')" class="px-3 py-1 bg-taurusGold/10 text-taurusGold rounded hover:bg-taurusGold hover:text-black transition-all text-xs font-bold uppercase">
-                                        VIEW DETAILS
-                                    </button>
+                                    <div class="flex items-center justify-end gap-2">
+                                        <button onclick="openClientModal('${doc.id}')" class="px-3 py-1 bg-taurusGold/10 text-taurusGold rounded hover:bg-taurusGold hover:text-black transition-all text-xs font-bold uppercase">
+                                            VIEW DETAILS
+                                        </button>
+                                        <button onclick="deleteClient('${doc.id}')" title="Delete Client"
+                                            class="p-2 rounded-md bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white transition-all border border-red-500/20">
+                                            <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                        </button>
+                                    </div>
                                 </td>
                             </tr>
                         `;
                     });
 
-                    clientsTable.innerHTML = clientsHtml || '<tr><td colspan="6" class="p-8 text-center text-gray-500">No clients yet</td></tr>';
+                    clientsTable.innerHTML = clientsHtml || '<tr><td colspan="7" class="p-8 text-center text-gray-500">No clients yet</td></tr>';
 
                     // Update stats summary
                     document.getElementById('clients-total-count').textContent = snapshot.size;
@@ -2950,6 +3175,8 @@
                     document.getElementById('clients-total-quotes').textContent = totalQuotes;
                     document.getElementById('clients-total-projects').textContent = totalProjects;
 
+                    pruneSelection(selectedClients, visibleClientIds);
+                    updateClientsBulkUI();
                     lucide.createIcons();
                 });
         }
@@ -3125,6 +3352,56 @@
         }
 
         let intelUnsubscribe = null;
+
+        function updateVisitorsBulkUI() {
+            const count = selectedVisitors.size;
+            const total = visibleVisitorIds.length;
+            const countEl = document.getElementById('visitors-selected-count');
+            const deleteBtn = document.getElementById('visitors-bulk-delete');
+            const selectAll = document.getElementById('visitors-select-all');
+
+            if (countEl) countEl.innerText = `${count} Selected`;
+            if (deleteBtn) deleteBtn.disabled = count === 0;
+            if (selectAll) {
+                selectAll.checked = total > 0 && count === total;
+                selectAll.indeterminate = count > 0 && count < total;
+            }
+        }
+
+        function toggleVisitorSelection(id, checked) {
+            if (checked) selectedVisitors.add(id);
+            else selectedVisitors.delete(id);
+            updateVisitorsBulkUI();
+        }
+
+        function toggleSelectAllVisitors(checked) {
+            if (checked) {
+                visibleVisitorIds.forEach(id => selectedVisitors.add(id));
+            } else {
+                visibleVisitorIds.forEach(id => selectedVisitors.delete(id));
+            }
+            document.querySelectorAll('.visitor-select-checkbox').forEach(cb => {
+                cb.checked = checked;
+            });
+            updateVisitorsBulkUI();
+        }
+
+        async function bulkDeleteVisitors() {
+            if (selectedVisitors.size === 0) return;
+            const confirmed = await systemConfirm('BULK DELETE', `Delete ${selectedVisitors.size} selected sessions?`, 'trash-2');
+            if (!confirmed) return;
+            const ids = Array.from(selectedVisitors);
+            try {
+                const batch = db.batch();
+                ids.forEach(id => batch.delete(db.collection('visitors_v1').doc(id)));
+                await batch.commit();
+                selectedVisitors.clear();
+                updateVisitorsBulkUI();
+            } catch (e) {
+                systemAlert('ERROR', 'Bulk delete failed: ' + e.message, 'x-circle');
+            }
+        }
+
         async function loadIntelligence() {
             if (!db) return;
             const container = document.getElementById('visitor-table-body');
@@ -3140,7 +3417,7 @@
             }
 
             // Set loading state
-            if (container) container.innerHTML = '<tr><td colspan="7" class="py-12 text-center text-gray-500 animate-pulse font-mono text-xs">ESTABLISHING REAL-TIME SIGNAL...</td></tr>';
+            if (container) container.innerHTML = '<tr><td colspan="8" class="py-12 text-center text-gray-500 animate-pulse font-mono text-xs">ESTABLISHING REAL-TIME SIGNAL...</td></tr>';
 
             // Real-time listener
             intelUnsubscribe = db.collection('visitors_v1').orderBy('last_seen', 'desc').limit(50)
@@ -3148,7 +3425,7 @@
                     console.log("🎯 Intelligence Synced:", snapshot.size, "signals");
 
                     if (snapshot.empty) {
-                        if (container) container.innerHTML = '<tr><td colspan="7" class="py-12 text-center text-gray-600 font-mono text-xs">NO SIGNALS DETECTED YET.</td></tr>';
+                        if (container) container.innerHTML = '<tr><td colspan="8" class="py-12 text-center text-gray-600 font-mono text-xs">NO SIGNALS DETECTED YET.</td></tr>';
                         if (totalEl) totalEl.innerText = "0";
                         if (onlineEl) onlineEl.innerText = "0";
                         if (topLocEl) topLocEl.innerText = "N/A";
@@ -3160,6 +3437,7 @@
                     let onlineCount = 0;
                     let mobileCount = 0;
                     let locationMap = {};
+                    visibleVisitorIds = [];
 
                     snapshot.forEach(doc => {
                         const d = doc.data();
@@ -3181,9 +3459,15 @@
 
                         const visitorId = doc.id;
                         intelDataMap[visitorId] = d;
+                        visibleVisitorIds.push(visitorId);
+                        const checkedAttr = selectedVisitors.has(visitorId) ? 'checked' : '';
 
                         html += `
                             <tr class="border-b border-white/5 hover:bg-white/5 transition-all cursor-pointer" onclick="openSessionModal('${visitorId}')">
+                                <td class="p-4 align-middle text-center" onclick="event.stopPropagation()">
+                                    <input type="checkbox" class="visitor-select-checkbox accent-[#FFD700]" ${checkedAttr}
+                                        onchange="toggleVisitorSelection('${visitorId}', this.checked)">
+                                </td>
                                 <td class="p-4 align-middle">
                                     ${isOnline
                                 ? '<div class="flex items-center gap-2"><div class="w-2 h-2 rounded-full bg-green-500 animate-pulse shadow-[0_0_10px_#22c55e]"></div><span class="text-green-500 text-[10px] font-bold uppercase tracking-wider">ONLINE</span></div>'
@@ -3246,9 +3530,12 @@
                         }
                     }
                     if (topLocEl) topLocEl.innerText = topLoc;
+
+                    pruneSelection(selectedVisitors, visibleVisitorIds);
+                    updateVisitorsBulkUI();
                 }, (error) => {
                     console.error("🎯 Logic Sync Error:", error);
-                    if (container) container.innerHTML = `<tr><td colspan="7" class="py-12 text-center text-red-500 font-mono text-xs">ENCRYPTION ERROR: ${error.message}</td></tr>`;
+                    if (container) container.innerHTML = `<tr><td colspan="8" class="py-12 text-center text-red-500 font-mono text-xs">ENCRYPTION ERROR: ${error.message}</td></tr>`;
                 });
         }
 
@@ -3258,6 +3545,8 @@
             if (confirmed) {
                 try {
                     await db.collection('visitors_v1').doc(id).delete();
+                    selectedVisitors.delete(id);
+                    updateVisitorsBulkUI();
                 } catch (e) { console.error("Deletion failed", e); }
             }
         }
