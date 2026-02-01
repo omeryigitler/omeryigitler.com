@@ -67,9 +67,11 @@ module.exports = async (req, res) => {
       margin: { top: '12mm', bottom: '12mm', left: '12mm', right: '12mm' }
     });
 
+    const outputBuffer = Buffer.isBuffer(pdfBuffer) ? pdfBuffer : Buffer.from(pdfBuffer);
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `attachment; filename=${view === 'proposal' ? 'Quote' : 'Contract'}.pdf`);
-    res.status(200).send(pdfBuffer);
+    res.setHeader('Content-Length', outputBuffer.length);
+    res.status(200).send(outputBuffer);
   } catch (e) {
     console.error('PDF generation failed:', e);
     res.status(500).json({ error: 'PDF generation failed', details: e.message || String(e) });
