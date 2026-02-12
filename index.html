@@ -1734,15 +1734,17 @@ function turnstileSuccess(token) {
             }
 
             // --- Open Modal ---
-            initBtn.addEventListener('click', (e) => {
-                e.preventDefault();
-                // Basic Validation first
-                const name = document.getElementById('name').value;
-                const email = document.getElementById('email').value;
-                if (!name || !email) {
-                    alert("Please enter your name and email first.");
-                    return;
-                }
+            initBtn.addEventListener('click', async (e) => { // Buraya "async" ekledik
+    e.preventDefault();
+    
+    const name = document.getElementById('name').value;
+    const email = document.getElementById('email').value;
+    
+    if (!name || !email) {
+        // alert yerine senin şık modalın:
+        await systemAlert('INPUT REQUIRED', 'Please enter your name and email address to continue.', 'info');
+        return;
+    }
 
                 modal.classList.remove('hidden');
                 // Small delay for fade in
