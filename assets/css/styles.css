@@ -2,3 +2,72 @@
 #cookieyes-banner .cky-btn-accept { background-color: #FFD700 !important; color: #000 !important; border: none !important; }
 #cookieyes-banner .cky-btn-reject { background-color: #333 !important; color: #fff !important; }
 #cookieyes-banner { background-color: rgba(10, 10, 10, 0.95) !important; backdrop-filter: blur(10px); }
+/* ============================= */
+/* CookieYes - Black & Gold Set  */
+/* (Banner + Buttons + Revisit)  */
+/* ============================= */
+
+/* Banner (senin mevcut kodun: #cookieyes-banner) */
+#cookieyes-banner {
+  background-color: rgba(10, 10, 10, 0.95) !important;
+  backdrop-filter: blur(10px) !important;
+  -webkit-backdrop-filter: blur(10px) !important;
+  border-top: 1px solid rgba(255, 215, 0, 0.25) !important;
+}
+
+/* Accept (senin mevcut kodun: #cookieyes-banner .cky-btn-accept) */
+#cookieyes-banner .cky-btn-accept {
+  background-color: #FFD700 !important;
+  color: #000 !important;
+  border: 1px solid #FFD700 !important;
+}
+
+/* Reject (senin mevcut kodun: #cookieyes-banner .cky-btn-reject) */
+#cookieyes-banner .cky-btn-reject {
+  background-color: #111 !important;
+  color: #fff !important;
+  border: 1px solid rgba(255, 215, 0, 0.35) !important;
+}
+
+/* ============================= */
+/* Revisit Button (Floating icon)*/
+/* ============================= */
+
+/* Inline style'ı EZMEK için: [style] ekledim */
+.cky-btn-revisit-wrapper,
+div.cky-btn-revisit-wrapper[style] {
+  background-color: #000 !important;
+  border: 2px solid #FFD700 !important;
+  border-radius: 9999px !important;
+  box-shadow: 0 0 15px rgba(255, 215, 0, 0.35) !important;
+  transition: all 0.25s ease !important;
+}
+
+/* İçindeki buton şeffaf kalsın */
+.cky-btn-revisit {
+  background: transparent !important;
+}
+
+/* İç icon (mavi) -> sarı (img veya svg olabiliyor) */
+.cky-btn-revisit img,
+.cky-btn-revisit svg {
+  filter: brightness(0) saturate(100%) invert(83%) sepia(63%) saturate(747%)
+    hue-rotate(1deg) brightness(103%) contrast(101%) !important;
+  transition: all 0.25s ease !important;
+}
+
+/* Hover: arka plan sarı */
+.cky-btn-revisit-wrapper:hover,
+div.cky-btn-revisit-wrapper[style]:hover {
+  background-color: #FFD700 !important;
+  box-shadow: 0 0 20px rgba(255, 215, 0, 0.65) !important;
+}
+
+/* Hover: icon siyah */
+.cky-btn-revisit-wrapper:hover img,
+.cky-btn-revisit-wrapper:hover svg,
+div.cky-btn-revisit-wrapper[style]:hover img,
+div.cky-btn-revisit-wrapper[style]:hover svg {
+  filter: brightness(0) invert(0) !important;
+}
+
