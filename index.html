@@ -1765,7 +1765,7 @@ function turnstileSuccess(token) {
             // --- Confirm & Submit ---
             confirmBtn.addEventListener('click', async () => {
                 if (!isHuman) {
-        await systemAlert('GÜVENLİK', 'Lütfen insan olduğunuzu doğrulamak için kutucuğu işaretleyin.', 'shield-alert');
+        await systemAlert('SECURITY', 'Please complete the human verification to proceed.', 'shield-alert');
         return;
     }
                 
