@@ -60,6 +60,8 @@
     <!-- Canonical URL -->
     <link rel="canonical" href="https://omeryigitler.com/">
 
+    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+
     <!-- Google Workspace & Business Identity (JSON-LD) -->
     <script type="application/ld+json">
     {
@@ -608,6 +610,8 @@
                         <input type="text" name="website" id="honeypot-trap" placeholder="Your Website (Optional)"
                             style="position: absolute; left: -9999px; top: -9999px; width: 1px; height: 1px; opacity: 0;"
                             tabindex="-1" autocomplete="off" aria-hidden="true">
+                        
+                        <div class="cf-turnstile" data-sitekey="0x4AAAAAACbHCrGU00_mYxPM" data-theme="dark" data-callback="turnstileSuccess"></div>
 
                         <button type="button" id="init-project-btn"
                             class="w-full py-4 rounded-xl bg-taurusGold text-black font-bold uppercase tracking-widest text-xs hover:bg-white hover:scale-[1.02] active:scale-95 transition-all duration-300 shadow-[0_0_20px_-5px_rgba(255,215,0,0.3)]">
@@ -624,6 +628,12 @@
                 <script src="assets/js/firebase-config.js"></script>
 
                 <script>
+                    // Turnstile Kontrolü
+let isHuman = false;
+function turnstileSuccess(token) {
+    isHuman = true;
+    console.log("İnsan doğrulaması başarılı.");
+}
                     document.addEventListener('DOMContentLoaded', () => {
                         const contactForm = document.getElementById('contact-form');
 
@@ -1746,6 +1756,11 @@
 
             // --- Confirm & Submit ---
             confirmBtn.addEventListener('click', async () => {
+                if (!isHuman) {
+        await systemAlert('GÜVENLİK', 'Lütfen insan olduğunuzu doğrulamak için kutucuğu işaretleyin.', 'shield-alert');
+        return;
+    }
+                
                 // 1. Gather Selected Addons
                 const addons = [];
                 if (document.getElementById('addon_logo').checked) addons.push('logo_design');
