@@ -1863,13 +1863,13 @@ function turnstileSuccess(token) {
 
 
 <style>
-  /* 0. Temel Renk Değişkenleri */
+  /* 0. Global Renk Değişkenleri - Her yeri etkiler */
   :root {
     --cky-primary-color: #FFD700 !important;
     --cky-link-color: #FFD700 !important;
   }
 
-  /* 1. Banner Genel Görünüm */
+  /* 1. Banner Arka Plan */
   div.cky-consent-container .cky-consent-bar {
     background-color: rgba(10, 10, 10, 0.98) !important;
     border-top: 2px solid #FFD700 !important;
@@ -1883,15 +1883,14 @@ function turnstileSuccess(token) {
     color: #f1f1f1 !important;
   }
 
-  /* 3. "Show Less / Show More" Linkleri (Sarı Yapma) */
+  /* 3. Show Less / Show More Linkleri */
   div.cky-consent-container .cky-show-desc-btn,
   div.cky-consent-container .cky-notice-des a {
     color: #FFD700 !important;
-    background: transparent !important;
     text-decoration: underline !important;
   }
 
-  /* 4. Butonlar: Accept & Save Preferences (Sarı) */
+  /* 4. Butonlar: Accept & Save Preferences */
   div.cky-consent-container button.cky-btn-accept,
   div.cky-consent-container button.cky-btn-preferences {
     background-color: #FFD700 !important;
@@ -1900,22 +1899,43 @@ function turnstileSuccess(token) {
     font-weight: 800 !important;
   }
 
-  /* 5. Buton: Reject (Siyah) */
+  /* 5. Buton: Reject */
   div.cky-consent-container button.cky-btn-reject {
     background-color: #000000 !important;
     color: #ffffff !important;
     border: 1px solid rgba(255, 215, 0, 0.5) !important;
   }
 
-  /* 6. TOGGLE (ANAHTAR) - MAVİYİ KESİN OLARAK SİLER */
-  /* Açık durumdaki arka plan rengi ve görseli */
-  div.cky-consent-container .cky-switch input:checked + .cky-slider {
-    background-color: #FFD700 !important;
-    background-image: none !important; /* Mavi gradienti siler */
+  /* 6. TOGGLE (ANAHTAR) - MAVİYİ TAMAMEN SİLER */
+  /* Bazı CookieYes sürümlerinde toggle rengi direkt input#ckySwitch... inline style ile geliyor */
+  div.cky-consent-container input[id^="ckySwitch"] {
+    background-color: #2b2b2b !important; /* kapalı */
+    background: #2b2b2b !important;
+    border-color: rgba(255, 215, 0, 0.35) !important;
+    box-shadow: none !important;
   }
 
-  /* Toggle'ın etrafındaki mavi gölgeyi sarı yap */
-  div.cky-consent-container .cky-switch input:checked:focus + .cky-slider {
+  div.cky-consent-container input[id^="ckySwitch"]:checked {
+    background-color: #FFD700 !important; /* açık */
+    background: #FFD700 !important;
+    border-color: #FFD700 !important;
+    box-shadow: none !important;
+  }
+
+  /* Toggle'ın focus/halo efektini sarı yapar */
+  div.cky-consent-container input[id^="ckySwitch"]:focus {
+    outline: none !important;
+    box-shadow: 0 0 0 2px rgba(255, 215, 0, 0.35) !important;
+  }
+
+  /* (Fallback) Slider yapısı olan sürümler için */
+  div.cky-consent-container .cky-switch input:checked + .cky-slider {
+    background-color: #FFD700 !important;
+    background: #FFD700 !important;
+  }
+
+  div.cky-consent-container .cky-switch input:checked:focus + .cky-slider,
+  div.cky-consent-container .cky-switch input:focus + .cky-slider {
     box-shadow: 0 0 1px #FFD700 !important;
   }
 
@@ -1929,12 +1949,41 @@ function turnstileSuccess(token) {
     background-color: #000 !important;
     border: 2px solid #FFD700 !important;
   }
-  
-  .cky-btn-revisit-wrapper img, 
+
+  .cky-btn-revisit-wrapper img,
   .cky-btn-revisit-wrapper svg {
-    filter: brightness(0) saturate(100%) invert(83%) sepia(63%) saturate(747%) hue-rotate(1deg) brightness(103%) contrast(101%) !important;
+    filter: brightness(0) saturate(100%) invert(83%) sepia(63%) saturate(747%)
+      hue-rotate(1deg) brightness(103%) contrast(101%) !important;
+  }
+
+  /* Hover Efektleri */
+  div.cky-consent-container button:hover {
+    opacity: 0.85 !important;
   }
 </style>
+
+<script>
+  /* CookieYes JS bazen toggle'a inline mavi background-color basıyor; bunu temizleyip CSS'in kazanmasını garanti eder */
+  (function () {
+    const fixCkySwitch = () => {
+      document.querySelectorAll('div.cky-consent-container input[id^="ckySwitch"]').forEach((el) => {
+        el.style.removeProperty('background-color');
+        el.style.removeProperty('background');
+        el.style.removeProperty('box-shadow');
+      });
+    };
+
+    window.addEventListener('load', fixCkySwitch);
+    document.addEventListener('click', (e) => {
+      if (e.target && e.target.matches('div.cky-consent-container input[id^="ckySwitch"]')) {
+        fixCkySwitch();
+      }
+    });
+
+    const obs = new MutationObserver(fixCkySwitch);
+    obs.observe(document.documentElement, { childList: true, subtree: true });
+  })();
+</script>
     
     </body>
 </html>
