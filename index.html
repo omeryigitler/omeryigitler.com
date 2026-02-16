@@ -1862,8 +1862,8 @@ function turnstileSuccess(token) {
 </script>
 
 
-    <style>
-  /* 1. Tüm CookieYes Elementlerini Kapsayan Alan */
+<style>
+  /* Banner Arka Plan */
   div.cky-consent-container .cky-consent-bar {
     background-color: rgba(10, 10, 10, 0.95) !important;
     backdrop-filter: blur(10px) !important;
@@ -1871,29 +1871,16 @@ function turnstileSuccess(token) {
     border-top: 2px solid #FFD700 !important;
   }
 
-  /* 2. Yazı Renklerini Beyaz Yap */
+  /* Tüm Metinler */
   div.cky-consent-container .cky-title,
   div.cky-consent-container .cky-notice-des,
-  div.cky-consent-container p {
+  div.cky-consent-container p,
+  div.cky-consent-container .cky-label {
     color: #f1f1f1 !important;
   }
 
-  /* 3. Accept Butonu - SARI */
-  div.cky-consent-container button.cky-btn-accept {
-    background-color: #FFD700 !important;
-    border-color: #FFD700 !important;
-    color: #000000 !important;
-    font-weight: 800 !important;
-  }
-
-  /* 4. Reject Butonu - SİYAH */
-  div.cky-consent-container button.cky-btn-reject {
-    background-color: #000000 !important;
-    color: #ffffff !important;
-    border: 1px solid rgba(255, 215, 0, 0.5) !important;
-  }
-
-  /* 5. Save My Preferences Butonu (Mavi olan yer burasıydı) */
+  /* Accept & Save Preferences Butonları */
+  div.cky-consent-container button.cky-btn-accept,
   div.cky-consent-container button.cky-btn-preferences {
     background-color: #FFD700 !important;
     border-color: #FFD700 !important;
@@ -1901,7 +1888,19 @@ function turnstileSuccess(token) {
     font-weight: 800 !important;
   }
 
-  /* 6. Sol Alttaki Revisit İkonu */
+  /* Reject Butonu */
+  div.cky-consent-container button.cky-btn-reject {
+    background-color: #000000 !important;
+    color: #ffffff !important;
+    border: 1px solid rgba(255, 215, 0, 0.5) !important;
+  }
+
+  /* TOGGLE (ANAHTAR) RENGİ */
+  div.cky-consent-container .cky-switch input:checked + .cky-slider {
+    background-color: #FFD700 !important;
+  }
+
+  /* Revisit İkonu */
   .cky-btn-revisit-wrapper {
     background-color: #000 !important;
     border: 2px solid #FFD700 !important;
