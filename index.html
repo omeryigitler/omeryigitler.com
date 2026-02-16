@@ -1863,52 +1863,55 @@ function turnstileSuccess(token) {
 
 
     <style>
-      div.cky-consent-container .cky-consent-bar {
-        background-color: rgba(10, 10, 10, 0.95) !important;
-        backdrop-filter: blur(10px) !important;
-        -webkit-backdrop-filter: blur(10px) !important;
-        border-top: 2px solid #FFD700 !important;
-        box-shadow: 0 -10px 30px rgba(0,0,0,0.8) !important;
-      }
-    
-      div.cky-consent-container .cky-title,
-      div.cky-consent-container .cky-notice-des,
-      div.cky-consent-container p {
-        color: #f1f1f1 !important;
-      }
-    
-      div.cky-consent-container button.cky-btn-accept {
-        background-color: #FFD700 !important;
-        border-color: #FFD700 !important;
-        color: #000000 !important;
-        border-width: 2px !important;
-        box-shadow: none !important;
-        font-weight: 800 !important;
-        opacity: 1 !important;
-      }
-      
-      div.cky-consent-container button.cky-btn-accept:hover {
-        background-color: #e6c200 !important;
-        color: #000000 !important;
-      }
-    
-      div.cky-consent-container button.cky-btn-reject {
-        background-color: #000000 !important;
-        color: #ffffff !important;
-        border: 1px solid rgba(255, 215, 0, 0.5) !important;
-      }
-    
-      .cky-btn-revisit-wrapper {
-        background-color: #000 !important;
-        border: 2px solid #FFD700 !important;
-      }
-      
-      .cky-btn-revisit-wrapper img, 
-      .cky-btn-revisit-wrapper svg {
-        filter: brightness(0) saturate(100%) invert(83%) sepia(63%) saturate(747%) hue-rotate(1deg) brightness(103%) contrast(101%) !important;
-      }
-    </style>
-    <!-- Kod Bitti -->
+  /* 1. Tüm CookieYes Elementlerini Kapsayan Alan */
+  div.cky-consent-container .cky-consent-bar {
+    background-color: rgba(10, 10, 10, 0.95) !important;
+    backdrop-filter: blur(10px) !important;
+    -webkit-backdrop-filter: blur(10px) !important;
+    border-top: 2px solid #FFD700 !important;
+  }
+
+  /* 2. Yazı Renklerini Beyaz Yap */
+  div.cky-consent-container .cky-title,
+  div.cky-consent-container .cky-notice-des,
+  div.cky-consent-container p {
+    color: #f1f1f1 !important;
+  }
+
+  /* 3. Accept Butonu - SARI */
+  div.cky-consent-container button.cky-btn-accept {
+    background-color: #FFD700 !important;
+    border-color: #FFD700 !important;
+    color: #000000 !important;
+    font-weight: 800 !important;
+  }
+
+  /* 4. Reject Butonu - SİYAH */
+  div.cky-consent-container button.cky-btn-reject {
+    background-color: #000000 !important;
+    color: #ffffff !important;
+    border: 1px solid rgba(255, 215, 0, 0.5) !important;
+  }
+
+  /* 5. Save My Preferences Butonu (Mavi olan yer burasıydı) */
+  div.cky-consent-container button.cky-btn-preferences {
+    background-color: #FFD700 !important;
+    border-color: #FFD700 !important;
+    color: #000000 !important;
+    font-weight: 800 !important;
+  }
+
+  /* 6. Sol Alttaki Revisit İkonu */
+  .cky-btn-revisit-wrapper {
+    background-color: #000 !important;
+    border: 2px solid #FFD700 !important;
+  }
+  
+  .cky-btn-revisit-wrapper img, 
+  .cky-btn-revisit-wrapper svg {
+    filter: brightness(0) saturate(100%) invert(83%) sepia(63%) saturate(747%) hue-rotate(1deg) brightness(103%) contrast(101%) !important;
+  }
+</style>
     
     </body>
 </html>
