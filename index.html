@@ -1863,76 +1863,73 @@ function turnstileSuccess(token) {
 
 
 <style>
-  /* 0. Temel Renk Değişkenlerini Zorla (Maviyi kökten çözer) */
+  /* 0. Global Renk Değişkenleri - Her yeri etkiler */
   :root {
     --cky-primary-color: #FFD700 !important;
     --cky-link-color: #FFD700 !important;
-    --cky-btn-accept-bg: #FFD700 !important;
-    --cky-btn-preferences-bg: #FFD700 !important;
   }
 
-  /* 1. Banner Arka Plan ve Genel Kutu */
+  /* 1. Banner Arka Plan */
   div.cky-consent-container .cky-consent-bar {
     background-color: rgba(10, 10, 10, 0.98) !important;
-    backdrop-filter: blur(10px) !important;
-    -webkit-backdrop-filter: blur(10px) !important;
     border-top: 2px solid #FFD700 !important;
-    box-shadow: 0 -10px 30px rgba(0,0,0,0.8) !important;
   }
 
-  /* 2. Tüm Metinler (Başlık, Açıklama, Etiketler) */
+  /* 2. Yazı Renkleri */
   div.cky-consent-container .cky-title,
   div.cky-consent-container .cky-notice-des,
-  div.cky-consent-container .cky-notice-des p,
   div.cky-consent-container .cky-label,
   div.cky-consent-container p {
     color: #f1f1f1 !important;
   }
 
-  /* 3. "Show Less / Show More" Linkleri */
+  /* 3. Show Less / Show More Linkleri */
   div.cky-consent-container .cky-show-desc-btn,
   div.cky-consent-container .cky-notice-des a {
     color: #FFD700 !important;
-    background: transparent !important;
     text-decoration: underline !important;
   }
 
-  /* 4. Butonlar: Accept (Kabul Et) ve Save Preferences (Kaydet) */
+  /* 4. Butonlar: Accept & Save Preferences */
   div.cky-consent-container button.cky-btn-accept,
   div.cky-consent-container button.cky-btn-preferences {
     background-color: #FFD700 !important;
     border: 1px solid #FFD700 !important;
     color: #000000 !important;
     font-weight: 800 !important;
-    text-transform: uppercase !important;
   }
 
-  /* 5. Buton: Reject (Reddet) */
+  /* 5. Buton: Reject */
   div.cky-consent-container button.cky-btn-reject {
     background-color: #000000 !important;
     color: #ffffff !important;
     border: 1px solid rgba(255, 215, 0, 0.5) !important;
-    text-transform: uppercase !important;
   }
 
-  /* 6. Toggle (Anahtar) - Mavi Yerine Altın */
+  /* 6. TOGGLE (ANAHTAR) - MAVİYİ TAMAMEN SİLER */
+  /* Açık durumdaki arka planı sarı yapar */
   div.cky-consent-container .cky-switch input:checked + .cky-slider {
     background-color: #FFD700 !important;
+    background: #FFD700 !important; /* Bazı versiyonlar için */
   }
 
-  /* 7. "Always Active" (Her Zaman Etkin) Metni */
+  /* Toggle'ın etrafındaki mavi gölgeyi (focus) sarı yapar veya siler */
+  div.cky-consent-container .cky-switch input:checked:focus + .cky-slider,
+  div.cky-consent-container .cky-switch input:focus + .cky-slider {
+    box-shadow: 0 0 1px #FFD700 !important;
+  }
+
+  /* 7. Always Active Metni */
   div.cky-consent-container .cky-always-active {
     color: #FFD700 !important;
   }
 
-  /* 8. Sol Alttaki Yuvarlak İkon (Revisit) */
+  /* 8. Revisit İkonu (Sol Alt) */
   .cky-btn-revisit-wrapper {
     background-color: #000 !important;
     border: 2px solid #FFD700 !important;
-    box-shadow: 0 0 15px rgba(255, 215, 0, 0.4) !important;
   }
   
-  /* İkon içindeki mavi resmi altın rengine çevirir */
   .cky-btn-revisit-wrapper img, 
   .cky-btn-revisit-wrapper svg {
     filter: brightness(0) saturate(100%) invert(83%) sepia(63%) saturate(747%) hue-rotate(1deg) brightness(103%) contrast(101%) !important;
@@ -1940,8 +1937,7 @@ function turnstileSuccess(token) {
 
   /* Hover Efektleri */
   div.cky-consent-container button:hover {
-    opacity: 0.9 !important;
-    transform: translateY(-1px);
+    opacity: 0.85 !important;
   }
 </style>
     
