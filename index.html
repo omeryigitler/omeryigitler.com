@@ -1863,13 +1863,13 @@ function turnstileSuccess(token) {
 
 
 <style>
-  /* 0. Global Renk Değişkenleri - Her yeri etkiler */
+  /* 0. Temel Renk Değişkenleri */
   :root {
     --cky-primary-color: #FFD700 !important;
     --cky-link-color: #FFD700 !important;
   }
 
-  /* 1. Banner Arka Plan */
+  /* 1. Banner Genel Görünüm */
   div.cky-consent-container .cky-consent-bar {
     background-color: rgba(10, 10, 10, 0.98) !important;
     border-top: 2px solid #FFD700 !important;
@@ -1883,14 +1883,15 @@ function turnstileSuccess(token) {
     color: #f1f1f1 !important;
   }
 
-  /* 3. Show Less / Show More Linkleri */
+  /* 3. "Show Less / Show More" Linkleri (Sarı Yapma) */
   div.cky-consent-container .cky-show-desc-btn,
   div.cky-consent-container .cky-notice-des a {
     color: #FFD700 !important;
+    background: transparent !important;
     text-decoration: underline !important;
   }
 
-  /* 4. Butonlar: Accept & Save Preferences */
+  /* 4. Butonlar: Accept & Save Preferences (Sarı) */
   div.cky-consent-container button.cky-btn-accept,
   div.cky-consent-container button.cky-btn-preferences {
     background-color: #FFD700 !important;
@@ -1899,23 +1900,22 @@ function turnstileSuccess(token) {
     font-weight: 800 !important;
   }
 
-  /* 5. Buton: Reject */
+  /* 5. Buton: Reject (Siyah) */
   div.cky-consent-container button.cky-btn-reject {
     background-color: #000000 !important;
     color: #ffffff !important;
     border: 1px solid rgba(255, 215, 0, 0.5) !important;
   }
 
-  /* 6. TOGGLE (ANAHTAR) - MAVİYİ TAMAMEN SİLER */
-  /* Açık durumdaki arka planı sarı yapar */
+  /* 6. TOGGLE (ANAHTAR) - MAVİYİ KESİN OLARAK SİLER */
+  /* Açık durumdaki arka plan rengi ve görseli */
   div.cky-consent-container .cky-switch input:checked + .cky-slider {
     background-color: #FFD700 !important;
-    background: #FFD700 !important; /* Bazı versiyonlar için */
+    background-image: none !important; /* Mavi gradienti siler */
   }
 
-  /* Toggle'ın etrafındaki mavi gölgeyi (focus) sarı yapar veya siler */
-  div.cky-consent-container .cky-switch input:checked:focus + .cky-slider,
-  div.cky-consent-container .cky-switch input:focus + .cky-slider {
+  /* Toggle'ın etrafındaki mavi gölgeyi sarı yap */
+  div.cky-consent-container .cky-switch input:checked:focus + .cky-slider {
     box-shadow: 0 0 1px #FFD700 !important;
   }
 
@@ -1933,11 +1933,6 @@ function turnstileSuccess(token) {
   .cky-btn-revisit-wrapper img, 
   .cky-btn-revisit-wrapper svg {
     filter: brightness(0) saturate(100%) invert(83%) sepia(63%) saturate(747%) hue-rotate(1deg) brightness(103%) contrast(101%) !important;
-  }
-
-  /* Hover Efektleri */
-  div.cky-consent-container button:hover {
-    opacity: 0.85 !important;
   }
 </style>
     
