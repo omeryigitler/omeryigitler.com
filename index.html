@@ -1,9 +1,10 @@
+
 <!DOCTYPE html>
 <html lang="en">
 
 <head>
     <!-- Start cookieyes banner --> 
-    <script id="cookieyes" type="text/javascript" src="https://cdn-cookieyes.com/client_data/f886281621648ff421f1bfbe80595834/script.js"></script>
+    <script id="cookieyes" type="text/javascript" src="https://cdn-cookieyes.com/client_data/f886281621648ff421f1bfbe80595834/script.js" defer></script>
     <!-- End cookieyes banner -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -11,32 +12,35 @@
     <link rel="icon" href="assets/favicon_transparent.svg" type="image/svg+xml">
 
     <!-- Google Analytics 4 -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-516666531"></script>
-    <script>
+    <script type="text/plain" data-cookieyes="analytics" async src="https://www.googletagmanager.com/gtag/js?id=G-516666531"></script>
+    <script type="text/plain" data-cookieyes="analytics">
         window.dataLayer = window.dataLayer || [];
         function gtag() { dataLayer.push(arguments); }
         gtag('js', new Date());
         gtag('config', 'G-516666531');
     </script>
-    <script type="text/javascript">
-        (function(c,l,a,r,i,t,y){
+    <script type="text/plain" data-cookieyes="analytics">
+(function(c,l,a,r,i,t,y){
         c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
         t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
         y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
         })(window, document, "clarity", "script", "vgbxwv8c1c");
-    </script>
-
+</script>
 
     <!-- Performance: Preconnect to external resources -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://cdn-cookieyes.com" crossorigin>
+    <link rel="preconnect" href="https://www.googletagmanager.com" crossorigin>
+    <link rel="preconnect" href="https://www.clarity.ms" crossorigin>
+    <link rel="preconnect" href="https://challenges.cloudflare.com" crossorigin>
+<link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="preconnect" href="https://unpkg.com">
     <link rel="dns-prefetch" href="https://www.googletagmanager.com">
     <link rel="dns-prefetch" href="https://firestore.googleapis.com">
 
     <link href="assets/css/styles.css?v=V10" rel="stylesheet">
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <script src="assets/js/system-modals.js?v=V10"></script>
+    <script src="https://unpkg.com/lucide@latest" defer></script>
+    <script src="assets/js/system-modals.js?v=V10" defer></script>
     <link
         href="https://fonts.googleapis.com/css2?family=Syncopate:wght@400;700&family=Manrope:wght@300;400;600;800&display=swap"
         rel="stylesheet">
@@ -69,10 +73,7 @@
 
     <!-- Canonical URL -->
     <link rel="canonical" href="https://omeryigitler.com/">
-
-    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
-
-    <!-- Google Workspace & Business Identity (JSON-LD) -->
+<!-- Google Workspace & Business Identity (JSON-LD) -->
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
@@ -94,16 +95,140 @@
       }
     }
     </script>
+<style>
+  /* 0. Global Renk Değişkenleri - Her yeri etkiler */
+  :root {
+    --cky-primary-color: #FFD700 !important;
+    --cky-link-color: #FFD700 !important;
+  }
 
+  /* 1. Banner Arka Plan */
+  div.cky-consent-container .cky-consent-bar {
+    background-color: rgba(10, 10, 10, 0.98) !important;
+    border-top: 2px solid #FFD700 !important;
+  }
 
-    <!-- EmailJS SDK -->
-    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
-    <script type="text/javascript">
-        (function () {
-            // https://dashboard.emailjs.com/admin/account
-            emailjs.init("V1YT-CYD1Y7eX0BIE");
-        })();
-    </script>
+  /* 2. Yazı Renkleri */
+  div.cky-consent-container .cky-title,
+  div.cky-consent-container .cky-notice-des,
+  div.cky-consent-container .cky-label,
+  div.cky-consent-container p {
+    color: #f1f1f1 !important;
+  }
+
+  /* 3. Show Less / Show More Linkleri */
+  div.cky-consent-container .cky-show-desc-btn,
+  div.cky-consent-container .cky-notice-des a {
+    color: #FFD700 !important;
+    text-decoration: underline !important;
+  }
+
+  /* 4. Butonlar: Accept & Save Preferences */
+  div.cky-consent-container button.cky-btn-accept,
+  div.cky-consent-container button.cky-btn-preferences {
+    background-color: #FFD700 !important;
+    border: 1px solid #FFD700 !important;
+    color: #000000 !important;
+    font-weight: 800 !important;
+  }
+
+  /* 5. Buton: Reject */
+  div.cky-consent-container button.cky-btn-reject {
+    background-color: #000000 !important;
+    color: #ffffff !important;
+    border: 1px solid rgba(255, 215, 0, 0.5) !important;
+  }
+
+  /* 6. TOGGLE (ANAHTAR) - MAVİYİ TAMAMEN SİLER */
+  /* Bazı CookieYes sürümlerinde toggle rengi direkt input#ckySwitch... inline style ile geliyor */
+  div.cky-consent-container input[id^="ckySwitch"] {
+    background-color: #2b2b2b !important; /* kapalı */
+    background: #2b2b2b !important;
+    border-color: rgba(255, 215, 0, 0.35) !important;
+    box-shadow: none !important;
+  }
+
+  div.cky-consent-container input[id^="ckySwitch"]:checked {
+    background-color: #FFD700 !important; /* açık */
+    background: #FFD700 !important;
+    border-color: #FFD700 !important;
+    box-shadow: none !important;
+  }
+
+  /* Toggle'ın focus/halo efektini sarı yapar */
+  div.cky-consent-container input[id^="ckySwitch"]:focus {
+    outline: none !important;
+    box-shadow: 0 0 0 2px rgba(255, 215, 0, 0.35) !important;
+  }
+
+  /* (Fallback) Slider yapısı olan sürümler için */
+  div.cky-consent-container .cky-switch input:checked + .cky-slider {
+    background-color: #FFD700 !important;
+    background: #FFD700 !important;
+  }
+
+  div.cky-consent-container .cky-switch input:checked:focus + .cky-slider,
+  div.cky-consent-container .cky-switch input:focus + .cky-slider {
+    box-shadow: 0 0 1px #FFD700 !important;
+  }
+
+  /* 7. Always Active Metni */
+  div.cky-consent-container .cky-always-active {
+    color: #FFD700 !important;
+  }
+
+  /* 8. Revisit İkonu (Sol Alt) */
+  .cky-btn-revisit-wrapper {
+    background-color: #000 !important;
+    border: 2px solid #FFD700 !important;
+  }
+
+  .cky-btn-revisit-wrapper img,
+  .cky-btn-revisit-wrapper svg {
+    filter: brightness(0) saturate(100%) invert(83%) sepia(63%) saturate(747%)
+      hue-rotate(1deg) brightness(103%) contrast(101%) !important;
+  }
+
+  /* Hover Efektleri */
+  div.cky-consent-container button:hover {
+    opacity: 0.85 !important;
+  }
+
+  /* 9. Performance (mobile): CookieYes overlay repaint optimizations */
+  div.cky-consent-container {
+    contain: layout paint;
+  }
+
+  /* Inline-style'ı bastırmak için (inline normal ise) !important zaten yeterli olur */
+  div.cky-consent-container input[id^="ckySwitch"] {
+    accent-color: #FFD700 !important;
+  }
+
+  /* Mobilde ekstra blur/backdrop maliyetini azalt */
+  @media (max-width: 768px) {
+    div.cky-consent-container .cky-consent-bar,
+    div.cky-consent-container .cky-modal,
+    div.cky-consent-container .cky-consent-container {
+      -webkit-backdrop-filter: none !important;
+      backdrop-filter: none !important;
+    }
+  }
+
+  /* Turnstile (Cloudflare) çerçevesini site temasıyla uyumlu yap (iframe içi renk değişmez) */
+  .cf-turnstile {
+    padding: 10px 12px;
+    background: rgba(255, 215, 0, 0.04);
+    border: 1px solid rgba(255, 215, 0, 0.22);
+    border-radius: 16px;
+    display: table;
+    margin: 15px auto;
+  }
+  .cf-turnstile iframe {
+    border-radius: 12px;
+    overflow: hidden;
+  }
+
+</style>
 </head>
 
 <body
@@ -633,10 +758,10 @@
                 </div>
 
                 <!-- Firebase & Contact Logic -->
-                <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-                <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
-                <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
-                <script src="assets/js/firebase-config.js"></script>
+                <script src="https://www\.gstatic\.com/firebasejs/9\.22\.0/firebase-app-compat\.js" defer></script>
+                <script src="https://www\.gstatic\.com/firebasejs/9\.22\.0/firebase-auth-compat\.js" defer></script>
+                <script src="https://www\.gstatic\.com/firebasejs/9\.22\.0/firebase-firestore-compat\.js" defer></script>
+                <script src="assets/js/firebase-config.js" defer></script>
 
                 <script>
                     // Turnstile Kontrolü
@@ -648,7 +773,38 @@ function turnstileSuccess(token) {
                     document.addEventListener('DOMContentLoaded', () => {
                         const contactForm = document.getElementById('contact-form');
 
-                        // 1. STATS SYNCHRONIZATION (Unified via window.db)
+                        
+                        // Lazy-load EmailJS only when needed (improves first load + CookieYes responsiveness)
+                        const loadEmailJS = (() => {
+                            let p;
+                            return () => {
+                                if (p) return p;
+                                p = new Promise((resolve, reject) => {
+                                    if (window.emailjs && typeof window.emailjs.send === 'function') {
+                                        return resolve(window.emailjs);
+                                    }
+                                    const s = document.createElement('script');
+                                    s.src = 'https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js';
+                                    s.async = true;
+                                    s.onload = () => {
+                                        try {
+                                            // Init once
+                                            if (!window.__emailjs_inited) {
+                                                window.emailjs.init("V1YT-CYD1Y7eX0BIE");
+                                                window.__emailjs_inited = true;
+                                            }
+                                            resolve(window.emailjs);
+                                        } catch (e) {
+                                            reject(e);
+                                        }
+                                    };
+                                    s.onerror = () => reject(new Error('EmailJS failed to load'));
+                                    document.head.appendChild(s);
+                                });
+                                return p;
+                            };
+                        })();
+// 1. STATS SYNCHRONIZATION (Unified via window.db)
                         const syncStats = () => {
                             if (window.db) {
                                 try {
@@ -764,31 +920,32 @@ function turnstileSuccess(token) {
 
                             // --- TASK B: EMAIL NOTIFICATION ---
                             try {
-                                if (typeof emailjs !== 'undefined') {
-                                    const templateParams = {
-                                        from_name: nameVal,
-                                        reply_to: emailVal,
-                                        message: messageVal + "\n\n--- TECHNICAL CONFIGURATION ---\n" +
-                                            (window.projectConfigData ?
-                                                `• Project Type: ${window.projectConfigData.siteType}\n` +
-                                                `• Design Style: ${window.projectConfigData.designType}\n` +
-                                                `• Page Count: ${window.projectConfigData.pageCount}\n` +
-                                                `• Delivery: ${window.projectConfigData.deliverySpeed}\n` +
-                                                `• Maintenance: ${window.projectConfigData.maintenanceLevel}\n`
-                                                : "Standard Form Submission (No Config)"),
-                                        message_html: window.projectConfigHtml || '',
-                                        project_type: window.projectConfigData?.siteType || 'Standard',
-                                        to_email: emailVal,
-                                        from_email: emailVal,
-                                        email: emailVal,
-                                        is_auto_receipt: true
-                                    };
+                                const emailjsLib = await loadEmailJS();
 
-                                    await emailjs.send('service_z24kvj8', 'template_frpxeef', templateParams);
-                                    console.log("Email: Sent Successfully");
-                                    submissionSuccess = true;
-                                }
+                                const templateParams = {
+                                    from_name: nameVal,
+                                    reply_to: emailVal,
+                                    message: messageVal + "\n\n--- TECHNICAL CONFIGURATION ---\n" +
+                                        (window.projectConfigData ?
+                                            `• Project Type: ${window.projectConfigData.siteType}\n` +
+                                            `• Design Style: ${window.projectConfigData.designType}\n` +
+                                            `• Page Count: ${window.projectConfigData.pageCount}\n` +
+                                            `• Delivery: ${window.projectConfigData.deliverySpeed}\n` +
+                                            `• Maintenance: ${window.projectConfigData.maintenanceLevel}\n`
+                                            : "Standard Form Submission (No Config)"),
+                                    message_html: window.projectConfigHtml || '',
+                                    project_type: window.projectConfigData?.siteType || 'Standard',
+                                    to_email: emailVal,
+                                    from_email: emailVal,
+                                    email: emailVal,
+                                    is_auto_receipt: true
+                                };
+
+                                await emailjsLib.send('service_z24kvj8', 'template_frpxeef', templateParams);
+                                console.log("Email: Sent Successfully");
+                                submissionSuccess = true;
                             } catch (mailError) {
+
                                 console.error("Notification Error:", mailError);
                                 await systemAlert('EMAIL ERROR', 'Email Failed: ' + (mailError.text || mailError.message), 'alert-triangle');
                             }
@@ -1111,107 +1268,94 @@ function turnstileSuccess(token) {
     </div>
 
     <script>
-        lucide.createIcons();
+document.addEventListener('DOMContentLoaded', () => {
+  // Icons (lucide) - defer ile geldiği için burada güvenli
+  if (window.lucide && typeof window.lucide.createIcons === 'function') {
+    window.lucide.createIcons();
+  }
 
-        // Refactored Mega Menu & Backdrop Logic
-        const trigger = document.getElementById('expertise-trigger');
-        const backdrop = document.getElementById('mega-menu-backdrop');
-        const menuContainer = document.getElementById('mega-menu-container');
-        const menuContent = document.getElementById('mega-menu-content');
+  // Refactored Mega Menu & Backdrop Logic
+  const trigger = document.getElementById('expertise-trigger');
+  const backdrop = document.getElementById('mega-menu-backdrop');
+  const menuContainer = document.getElementById('mega-menu-container');
+  const menuContent = document.getElementById('mega-menu-content');
 
-        let hideTimeout;
+  let hideTimeout;
 
-        function showMenu() {
-            if (hideTimeout) clearTimeout(hideTimeout);
+  function showMenu() {
+    if (hideTimeout) clearTimeout(hideTimeout);
 
-            // Show Backdrop
-            backdrop.classList.remove('opacity-0', 'invisible');
-            backdrop.classList.add('opacity-100', 'visible');
+    // Show Backdrop
+    backdrop.classList.remove('opacity-0', 'invisible');
+    backdrop.classList.add('opacity-100', 'visible');
 
-            // Show Container
-            menuContainer.classList.remove('opacity-0', 'invisible');
-            menuContainer.classList.add('opacity-100', 'visible');
+    // Show Container
+    menuContainer.classList.remove('opacity-0', 'invisible');
+    menuContainer.classList.add('opacity-100', 'visible');
 
-            // Scale content for nice effect
-            menuContent.classList.remove('scale-95');
-            menuContent.classList.add('scale-100');
-        }
+    // Scale content for nice effect
+    menuContent.classList.remove('scale-95');
+    menuContent.classList.add('scale-100');
+  }
 
-        function hideMenu() {
-            if (hideTimeout) clearTimeout(hideTimeout); // Prevent multiple timers
-            hideTimeout = setTimeout(() => {
-                // Hide Backdrop
-                backdrop.classList.remove('opacity-100', 'visible');
-                backdrop.classList.add('opacity-0', 'invisible');
+  function hideMenu() {
+    if (hideTimeout) clearTimeout(hideTimeout);
+    hideTimeout = setTimeout(() => {
+      // Hide Backdrop
+      backdrop.classList.remove('opacity-100', 'visible');
+      backdrop.classList.add('opacity-0', 'invisible');
 
-                // Hide Container
-                menuContainer.classList.remove('opacity-100', 'visible');
-                menuContainer.classList.add('opacity-0', 'invisible');
+      // Hide Container
+      menuContainer.classList.remove('opacity-100', 'visible');
+      menuContainer.classList.add('opacity-0', 'invisible');
 
-                // Reset Scale
-                menuContent.classList.remove('scale-100');
-                menuContent.classList.add('scale-95');
-            }, 500); // 500ms grace period
-        }
+      // Reset Scale
+      menuContent.classList.remove('scale-100');
+      menuContent.classList.add('scale-95');
+    }, 500); // 500ms grace period
+  }
 
-        if (trigger && backdrop && menuContainer && menuContent) {
+  if (trigger && backdrop && menuContainer && menuContent) {
+    trigger.addEventListener('mouseenter', showMenu);
+    trigger.addEventListener('mouseleave', hideMenu);
 
-            // 1. Trigger Hover
-            trigger.addEventListener('mouseenter', showMenu);
-            trigger.addEventListener('mouseleave', hideMenu);
+    menuContent.addEventListener('mouseenter', showMenu);
+    menuContent.addEventListener('mouseleave', hideMenu);
 
-            // 2. Content Hover (Keep open)
-            menuContent.addEventListener('mouseenter', showMenu);
-            menuContent.addEventListener('mouseleave', hideMenu);
+    backdrop.addEventListener('mouseenter', hideMenu);
+  }
 
-            // 3. Backdrop Hover (Close immediately if user strays into void)
-            // Backdrop is a sibling to container, so hovering it means you definitely left content.
-            backdrop.addEventListener('mouseenter', hideMenu);
-        }
+  // Gizli logo click logic (home + 3 click gateway)
+  const gizliButon = document.querySelector('.logo-container') || document.querySelector('header a');
 
-        document.addEventListener('DOMContentLoaded', () => {
-            // 1. LOGOYU BULMA KISMI
-            // Eğer logonun class'ı farklıysa (örneğin .logo veya #header-logo), 
-            // parantez içindeki '.logo-container' kısmını ona göre değiştirmen gerekebilir.
-            const gizliButon = document.querySelector('.logo-container') || document.querySelector('header a');
+  if (gizliButon) {
+    let tiklamaSayisi = 0;
+    let sifirlamaZamanlayicisi;
 
-            if (gizliButon) {
-                let tiklamaSayisi = 0;
-                let sifirlamaZamanlayicisi;
+    gizliButon.addEventListener('click', (e) => {
+      e.preventDefault();
 
-                gizliButon.addEventListener('click', (e) => {
-                    // Sayfa yenilenmesini engelle ama fonksiyonelliği çalıştır
-                    e.preventDefault();
+      tiklamaSayisi++;
 
-                    tiklamaSayisi++;
+      if (tiklamaSayisi === 1) {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
 
-                    // 1. TEK TIKLAMADA HOME (SAYFA BAŞI) ETKİSİ
-                    if (tiklamaSayisi === 1) {
-                        window.scrollTo({
-                            top: 0,
-                            behavior: 'smooth'
-                        });
-                    }
+      if (tiklamaSayisi === 3) {
+        if (window.taurus_set_internal) window.taurus_set_internal();
+        window.location.href = 'gateway.html';
+        tiklamaSayisi = 0;
+        return;
+      }
 
-                    // 2. 3 KERE TIKLANDI MI KONTROLÜ
-                    if (tiklamaSayisi === 3) {
-                        // Başarılı! Güvenlik paneline yönlendirir.
-                        if (window.taurus_set_internal) window.taurus_set_internal();
-                        window.location.href = 'gateway.html';
-                        tiklamaSayisi = 0;
-                        return;
-                    }
-
-                    // 3. SÜREYİ SIFIRLAMA
-                    // Eğer 600 milisaniye içinde tekrar tıklanmazsa sayacı sıfırla.
-                    clearTimeout(sifirlamaZamanlayicisi);
-                    sifirlamaZamanlayicisi = setTimeout(() => {
-                        tiklamaSayisi = 0;
-                    }, 600);
-                });
-            }
-        });
-    </script>
+      clearTimeout(sifirlamaZamanlayicisi);
+      sifirlamaZamanlayicisi = setTimeout(() => {
+        tiklamaSayisi = 0;
+      }, 600);
+    });
+  }
+});
+</script>
 
 
     <!-- System Modal -->
@@ -1237,8 +1381,8 @@ function turnstileSuccess(token) {
     <!-- Firebase SDKs (Required for Tracker) -->
 
     <!-- TAURUS TRACKER v5.5 (Final System) -->
-    <script src="assets/js/tracker/logo_data.js"></script>
-    <script src="assets/js/tracker/taurus-tracker.js?v=V42"></script>
+    <script src="assets/js/tracker/logo_data.js" defer></script>
+    <script src="assets/js/tracker/taurus-tracker.js?v=V42" defer></script>
 
 
     <!-- PROJECT CONFIGURATION MODAL -->
@@ -1728,7 +1872,56 @@ function turnstileSuccess(token) {
                 TAURUS AGENCY SYSTEMS // END OF TRANSMISSION
             </div>
         </div>
-    </body>
+    
+    <!-- Performance: Lazy-load Cloudflare Turnstile only when user is near / interacting with the contact form -->
+    <script>
+      (function () {
+        let loading = false;
+        let loaded = false;
+
+        function loadTurnstile() {
+          if (loaded || loading) return;
+          loading = true;
+
+          const s = document.createElement('script');
+          s.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js';
+          s.async = true;
+          s.defer = true;
+          s.onload = () => { loaded = true; };
+          s.onerror = () => { loading = false; };
+          document.head.appendChild(s);
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+          // 1) Scroll/viewport based load (pre-warm)
+          const contact = document.getElementById('contact');
+          if (contact && 'IntersectionObserver' in window) {
+            const io = new IntersectionObserver((entries) => {
+              if (entries.some(e => e.isIntersecting)) {
+                io.disconnect();
+                loadTurnstile();
+              }
+            }, { rootMargin: '500px' });
+            io.observe(contact);
+          }
+
+          // 2) Intent based load (click/focus)
+          const intentHandler = (e) => {
+            const t = e.target;
+            if (!t) return;
+            if (t.closest && (t.closest('#contact-form') || t.id === 'init-project-btn' || t.closest('#project-config-modal'))) {
+              loadTurnstile();
+            }
+          };
+
+          document.addEventListener('pointerdown', intentHandler, { passive: true, capture: true });
+          document.addEventListener('touchstart', intentHandler, { passive: true, capture: true });
+          document.addEventListener('focusin', intentHandler, { passive: true, capture: true });
+        });
+      })();
+    </script>
+
+</body>
 
     </html>
     `;
@@ -1860,128 +2053,9 @@ function turnstileSuccess(token) {
  
 
 
-<style>
-  /* 0. Global Renk Değişkenleri - Her yeri etkiler */
-  :root {
-    --cky-primary-color: #FFD700 !important;
-    --cky-link-color: #FFD700 !important;
-  }
 
-  /* 1. Banner Arka Plan */
-  div.cky-consent-container .cky-consent-bar {
-    background-color: rgba(10, 10, 10, 0.98) !important;
-    border-top: 2px solid #FFD700 !important;
-  }
 
-  /* 2. Yazı Renkleri */
-  div.cky-consent-container .cky-title,
-  div.cky-consent-container .cky-notice-des,
-  div.cky-consent-container .cky-label,
-  div.cky-consent-container p {
-    color: #f1f1f1 !important;
-  }
 
-  /* 3. Show Less / Show More Linkleri */
-  div.cky-consent-container .cky-show-desc-btn,
-  div.cky-consent-container .cky-notice-des a {
-    color: #FFD700 !important;
-    text-decoration: underline !important;
-  }
-
-  /* 4. Butonlar: Accept & Save Preferences */
-  div.cky-consent-container button.cky-btn-accept,
-  div.cky-consent-container button.cky-btn-preferences {
-    background-color: #FFD700 !important;
-    border: 1px solid #FFD700 !important;
-    color: #000000 !important;
-    font-weight: 800 !important;
-  }
-
-  /* 5. Buton: Reject */
-  div.cky-consent-container button.cky-btn-reject {
-    background-color: #000000 !important;
-    color: #ffffff !important;
-    border: 1px solid rgba(255, 215, 0, 0.5) !important;
-  }
-
-  /* 6. TOGGLE (ANAHTAR) - MAVİYİ TAMAMEN SİLER */
-  /* Bazı CookieYes sürümlerinde toggle rengi direkt input#ckySwitch... inline style ile geliyor */
-  div.cky-consent-container input[id^="ckySwitch"] {
-    background-color: #2b2b2b !important; /* kapalı */
-    background: #2b2b2b !important;
-    border-color: rgba(255, 215, 0, 0.35) !important;
-    box-shadow: none !important;
-  }
-
-  div.cky-consent-container input[id^="ckySwitch"]:checked {
-    background-color: #FFD700 !important; /* açık */
-    background: #FFD700 !important;
-    border-color: #FFD700 !important;
-    box-shadow: none !important;
-  }
-
-  /* Toggle'ın focus/halo efektini sarı yapar */
-  div.cky-consent-container input[id^="ckySwitch"]:focus {
-    outline: none !important;
-    box-shadow: 0 0 0 2px rgba(255, 215, 0, 0.35) !important;
-  }
-
-  /* (Fallback) Slider yapısı olan sürümler için */
-  div.cky-consent-container .cky-switch input:checked + .cky-slider {
-    background-color: #FFD700 !important;
-    background: #FFD700 !important;
-  }
-
-  div.cky-consent-container .cky-switch input:checked:focus + .cky-slider,
-  div.cky-consent-container .cky-switch input:focus + .cky-slider {
-    box-shadow: 0 0 1px #FFD700 !important;
-  }
-
-  /* 7. Always Active Metni */
-  div.cky-consent-container .cky-always-active {
-    color: #FFD700 !important;
-  }
-
-  /* 8. Revisit İkonu (Sol Alt) */
-  .cky-btn-revisit-wrapper {
-    background-color: #000 !important;
-    border: 2px solid #FFD700 !important;
-  }
-
-  .cky-btn-revisit-wrapper img,
-  .cky-btn-revisit-wrapper svg {
-    filter: brightness(0) saturate(100%) invert(83%) sepia(63%) saturate(747%)
-      hue-rotate(1deg) brightness(103%) contrast(101%) !important;
-  }
-
-  /* Hover Efektleri */
-  div.cky-consent-container button:hover {
-    opacity: 0.85 !important;
-  }
-</style>
-
-<script>
-  /* CookieYes JS bazen toggle'a inline mavi background-color basıyor; bunu temizleyip CSS'in kazanmasını garanti eder */
-  (function () {
-    const fixCkySwitch = () => {
-      document.querySelectorAll('div.cky-consent-container input[id^="ckySwitch"]').forEach((el) => {
-        el.style.removeProperty('background-color');
-        el.style.removeProperty('background');
-        el.style.removeProperty('box-shadow');
-      });
-    };
-
-    window.addEventListener('load', fixCkySwitch);
-    document.addEventListener('click', (e) => {
-      if (e.target && e.target.matches('div.cky-consent-container input[id^="ckySwitch"]')) {
-        fixCkySwitch();
-      }
-    });
-
-    const obs = new MutationObserver(fixCkySwitch);
-    obs.observe(document.documentElement, { childList: true, subtree: true });
-  })();
-</script>
     
     </body>
 </html>
