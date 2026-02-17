@@ -1,13 +1,20 @@
+# Yapay Zeka Botlarını Engelle
+User-agent: GPTBot
+Disallow: /
+
+User-agent: CCBot
+Disallow: /
+
+User-agent: Google-Extended
+Disallow: /
+
+# Tüm Botlar İçin Genel Kurallar
 User-agent: *
 Allow: /
-
-# Block all admin and sensitive areas
 Disallow: /admin.html
 Disallow: /gateway.html
 Disallow: /assets/js/firebase-config.js
+Crawl-delay: 1
 
 # Sitemap
 Sitemap: https://omeryigitler.com/sitemap.xml
-
-# Crawl-delay (optional, helps prevent server overload)
-Crawl-delay: 1
