@@ -1,97 +1,213 @@
 const admin = require('firebase-admin');
 const axios = require('axios');
 
-// Initialize Firebase (Using the project's standard fallback)
+// ─── Firebase Init ───────────────────────────────────────────────────────────
 if (!admin.apps.length) {
+    const privateKey    = process.env.FIREBASE_PRIVATE_KEY;
+    const clientEmail   = process.env.FIREBASE_CLIENT_EMAIL;
+    const projectId     = process.env.FIREBASE_PROJECT_ID;
+
+    if (!privateKey || !clientEmail || !projectId) {
+        throw new Error(
+            'Missing Firebase env vars: FIREBASE_PRIVATE_KEY, FIREBASE_CLIENT_EMAIL, FIREBASE_PROJECT_ID'
+        );
+    }
+
     admin.initializeApp({
         credential: admin.credential.cert({
-            "project_id": "omeryigitler-5abfb",
-            "private_key": process.env.FIREBASE_PRIVATE_KEY
-                ? process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n')
-                : "-----BEGIN PRIVATE KEY-----\nMIIEvAIBADANBgkqhkiG9w0BAQEFAASCBKYwggSiAgEAAoIBAQCqBSNaafCJWDjO\nz60CQWqAxTmH7gIqSXaHlSBSUWaBELd4uznWI9DFcKILkxFsyd2aNpZPZWjS6opn\ng2E8lXnr2P0Ho5oRzzsRw5qwe/CmvNEcx4HiHZbnbhIQ6JiP3mX9Q3Ur3MW+TzA3\nhO5HBdyEe6E1LAhDwGFvXRBsi48F33sSLCDrSjPl+VerVi4kbhd1qp7Qfj2eGl6h\nIWYpgcpYtHS++3rHK/u8DZZ47DM6MD4djma8rJgaCcW9r75D3ksPsXfYJkTPw5e5\nUdF79pTMEVjSiCayNdSv4Xmh6psC/UtELR4YKsgtUTDU40qkZorfOWy0pIL9D1WS\nFYPpcpNLAgMBAAECggEABL8G+R+q+NKPJ2rRvBXiaLzYucwxoEeTuP43PEUMdP7n\n+EVVvH4cdl6KD4OoAV7zQjpS4N2GWxj0Cya2QLA1iplwmtV82BFuZzUMLPAQzD7K\nIaEKJatIyqYed/1eQOnm8/Z9n19W39SrFmmuEyp9OO+QlQDpLCcDMU4qRrVwpSvH\nxoycWFozjgjUVQbtogb+e7uTq3IgJFdK1aiNKV+bmgG5KVrv+vF3dPFxw7SWh+ST\nDVbXUF/ULOKF4JOTs6dunPVG209VRYJS6+jw8PPTIozDDTSY0ev0yBhRUFUwXGjd\naJOlv2gLzRU/kWO7zDz95ZrTLMT6kFILdSLXxVUCpQKBgQDYADF9uvRPBhKTEsgG\nM6oXgh5G/ESIY4e5lFMF0gFjLvqezzLhMeMLTM69MWX9nUA0imzTjv1EpeOSPVQd\nlF5KH19dZdihEYe0QjLDMb3VJe66SN0aXFW4/BCcQVnPI4+bzFAhnIDhdeQllusV\nRgEj8YWKa9B+qeLkev4QoxbS1QKBgQDJgSsjOp0hgDTMCECLBDKunvPndoBuAnh0\nFPAf2FajPxbvUqEpugYRMMfzNxpuW12/2CGNsOsRllWHy2+rJdx1lbts/hDUQCUF\nFePRFf2vtvDuKXI7xMzo1MFYbHWNlzGKmuhYVsBUrr5SToJKyCRQ8jglyXiqqJXE\n88mXxZWdnwKBgDPPmA94kLGD22C72I7kRaBt7aVJTYcJmLzC/0ceIIcR9buyJ5os\nxTEos05eUwCKf6QasA/u9IFK6VNispKFzDgrXkyg6V15PvvWBScc/1PpTWIRqDdy\nfn1ouPNCGbC97uyIDZCCYcey5468rJblu9BLVqTlR5WaWnpDpj2HYSohAoGAerdX\ndhT0LLrPbJJ5/C+KTh4vm/7nKBgJE2jM9Bfka3a4mPdRfv/zQfTbUJt2VU7/QR53\nELt17TgIzrJuR2S/ZjzR8AaqaRjHctlp7KPf42seP2yuTQgFYqZvOVKUJK63VRoR\n9fqfFvN0pNt7Ld/FfiaFWz3fZs9UpqVxWCTUgTECgYB60AYRqgfHG7ATIUGb9oyB\nO2D+DgmT3dcgP+Cw4POvr+nWmRtuCswgHWkQcaG0vpclhYbcvcwrP84Rh35yBYmQ\n8fD6ZFxuxoT1mDgMy1ZgzaoMBHmSBor07rnct0DZ8LKHR7ixVG3fmMG4US3aStvy\n5H0sIhu0upGXfh67QPHmvw==\n-----END PRIVATE KEY-----\n",
-            "client_email": "firebase-adminsdk-fbsvc@omeryigitler-5abfb.iam.gserviceaccount.com"
+            projectId,
+            privateKey:  privateKey.replace(/\\n/g, '\n'),
+            clientEmail
         })
     });
 }
 
 const db = admin.firestore();
-const BOT_TOKEN = "8567285538:AAHKfo8bqee43rprC-GCv3Je423R57YQkCE";
-const CHAT_ID = "6886010817";
 
+// ─── Config ──────────────────────────────────────────────────────────────────
+const BOT_TOKEN    = process.env.TELEGRAM_BOT_TOKEN;
+const CHAT_ID      = process.env.TELEGRAM_CHAT_ID;
+const TRACKER_KEY  = process.env.TRACKER_SECRET_KEY; // secret header for endpoint protection
+
+if (!BOT_TOKEN || !CHAT_ID) {
+    throw new Error('Missing Telegram env vars: TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID');
+}
+
+const SEPARATOR = '━━━━━━━━━━━━━━━━━━━━━';
+
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+
+/** Escapes HTML special characters to prevent Telegram HTML injection. */
+function escapeHtml(str = '') {
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+}
+
+/**
+ * Normalizes the device field regardless of whether it arrives
+ * as a plain string or as an object with { model, os } properties.
+ */
+function normalizeDevice(device) {
+    if (!device) return { model: 'Unknown', os: 'N/A' };
+    if (typeof device === 'string') return { model: device || 'Unknown', os: 'N/A' };
+    if (typeof device === 'object') return { model: device.model || 'Unknown', os: device.os || 'N/A' };
+    return { model: 'Unknown', os: 'N/A' };
+}
+
+/**
+ * Determines whether the ipData received from the frontend is usable.
+ * Returns false if it's missing, empty, or contains placeholder values.
+ */
+function isValidIpData(ipData) {
+    if (!ipData || typeof ipData !== 'object') return false;
+    if (!ipData.city || !ipData.country_name) return false;
+    if (ipData.ip === '0.0.0.0' || ipData.ip === '127.0.0.1') return false;
+    return true;
+}
+
+/**
+ * Normalizes IPv6-mapped IPv4 addresses (e.g. ::ffff:127.0.0.1 → 127.0.0.1)
+ * and detects private/loopback IPs to skip unnecessary geo API calls.
+ */
+function normalizeIP(ip = '') {
+    const cleaned = ip.replace(/^::ffff:/, '');
+    const isPrivate = /^(10\.|172\.(1[6-9]|2\d|3[01])\.|192\.168\.|127\.|::1$)/.test(cleaned);
+    return { ip: cleaned, isPrivate };
+}
+
+/**
+ * Fetches geo-location data from ipapi.co for a given IP address.
+ * Skips the call for private/loopback IPs.
+ */
+async function fetchGeoData(ip) {
+    const { ip: cleanIP, isPrivate } = normalizeIP(ip);
+    if (isPrivate) return { ip: cleanIP };
+    try {
+        const { data } = await axios.get(`https://ipapi.co/${cleanIP}/json/`, { timeout: 5000 });
+        return data;
+    } catch (err) {
+        console.warn('Server-side Geo Fetch Failed:', err.message);
+        return { ip: cleanIP };
+    }
+}
+
+/**
+ * Generates a short 8-character hash from a string.
+ * Used for Telegram callback_data which has a 64-byte limit.
+ */
+function shortHash(str = '') {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+        hash = (Math.imul(31, hash) + str.charCodeAt(i)) | 0;
+    }
+    return Math.abs(hash).toString(36).substring(0, 8);
+}
+
+// ─── Handler ─────────────────────────────────────────────────────────────────
 module.exports = async (req, res) => {
-    if (req.method !== 'POST') return res.status(200).send('OK');
+    // 1. Method check
+    if (req.method !== 'POST') return res.status(405).send('Method Not Allowed');
 
-    let { sessionID, ipData, device, browser, pathname } = req.body;
+    // 2. Secret key check (only enforced if TRACKER_SECRET_KEY is set in env)
+    if (TRACKER_KEY) {
+        const incomingKey = req.headers['x-tracker-key'];
+        if (incomingKey !== TRACKER_KEY) {
+            return res.status(401).send('Unauthorized');
+        }
+    }
+
+    const { sessionID, ipData: rawIpData, device: rawDevice, browser, pathname } = req.body;
 
     if (!sessionID) return res.status(400).send('Missing Session ID');
 
     try {
-        // 1. Server-side IP Detection (Reliable fallback for office networks)
-        const clientIP = req.headers['x-forwarded-for']?.split(',')[0].trim() || req.socket.remoteAddress;
+        // 3. Resolve and normalize client IP
+        const rawIP = req.headers['x-forwarded-for']?.split(',')[0].trim()
+            || req.socket?.remoteAddress
+            || 'Unknown';
+        const { ip: clientIP } = normalizeIP(rawIP);
 
-        // 2. Fetch Geo-data on server if frontend failed or to verify
-        if (!ipData || !ipData.city || ipData.ip === '0.0.0.0') {
-            try {
-                const geoRes = await axios.get(`https://ipapi.co/${clientIP}/json/`);
-                ipData = geoRes.data;
-            } catch (e) {
-                console.warn("Server-side Geo Fetch Failed:", e.message);
-                ipData = ipData || { ip: clientIP };
-            }
-        }
+        // 4. Resolve geo data — server-side fetch is authoritative
+        const ipData = isValidIpData(rawIpData)
+            ? rawIpData
+            : await fetchGeoData(clientIP);
 
-        const sessionData = {
+        // 5. Normalize device info
+        const device = normalizeDevice(rawDevice);
+
+        // 6. Build session document
+        //    - Timestamps stored as Firestore serverTimestamp for consistent querying
+        //    - history uses arrayUnion to append entries without overwriting previous ones
+        const sessionBase = {
             sessionID,
-            ip: clientIP,
-            city: ipData.city || 'Unknown',
-            country: ipData.country_name || 'Unknown',
-            org: ipData.org || 'Unknown',
-            device: device || 'Unknown',
-            browser: browser || 'Unknown',
-            startTime: new Date().toISOString(),
-            status: 'online',
+            ip:        clientIP,
+            city:      ipData.city         || 'Unknown',
+            country:   ipData.country_name || 'Unknown',
+            org:       ipData.org          || 'Unknown',
+            device,
+            browser:   browser || 'Unknown',
+            startTime: admin.firestore.FieldValue.serverTimestamp(),
+            status:    'online',
             last_seen: admin.firestore.FieldValue.serverTimestamp(),
-            history: [
-                { time: new Date().toLocaleTimeString('tr-TR'), action: 'Entrance', detail: pathname || 'Unknown' }
-            ]
         };
 
-        // 3. Initialize/Update Firestore Document
-        await db.collection('visitors_v1').doc(sessionID).set(sessionData, { merge: true });
+        const historyEntry = admin.firestore.FieldValue.arrayUnion({
+            time:   new Date().toISOString(),
+            action: 'Entrance',
+            detail: pathname || 'Unknown'
+        });
 
-        // 4. Send Telegram Notification (Neural Link Established - Standardized Format)
-        const separator = `━━━━━━━━━━━━━━━━━━━━━`;
-        const telegramMsg = `🎯 <b>Neural Link Established</b>\n` +
-            `${separator}\n` +
-            `🆔 <b>SESSION:</b> <code>${sessionID}</code>\n` +
-            `🌍 <b>LOCATION:</b> ${sessionData.city}, ${sessionData.country}\n` +
-            `📡 <b>IP:</b> <code>${sessionData.ip}</code>\n` +
-            `🏢 <b>ISP:</b> ${sessionData.org}\n` +
-            `💻 <b>DEVICE:</b> ${(sessionData.device && sessionData.device.model) ? sessionData.device.model : (sessionData.device || 'Unknown')} (${(sessionData.device && sessionData.device.os) ? sessionData.device.os : 'N/A'})\n` +
-            `${separator}`;
+        await db.collection('visitors_v1').doc(sessionID).set(
+            { ...sessionBase, history: historyEntry },
+            { merge: true }
+        );
 
-        const buttons = {
+        // 7. Send Telegram notification
+        //    - All user-supplied fields are HTML-escaped to prevent injection
+        //    - callback_data uses a short hash to stay within Telegram's 64-byte limit
+        const cbHash = shortHash(sessionID);
+
+        const telegramMsg =
+            `🎯 <b>Neural Link Established</b>\n` +
+            `${SEPARATOR}\n` +
+            `🆔 <b>SESSION:</b> <code>${escapeHtml(sessionID)}</code>\n` +
+            `🌍 <b>LOCATION:</b> ${escapeHtml(sessionBase.city)}, ${escapeHtml(sessionBase.country)}\n` +
+            `📡 <b>IP:</b> <code>${escapeHtml(clientIP)}</code>\n` +
+            `🏢 <b>ISP:</b> ${escapeHtml(sessionBase.org)}\n` +
+            `💻 <b>DEVICE:</b> ${escapeHtml(device.model)} (${escapeHtml(device.os)})\n` +
+            `🌐 <b>BROWSER:</b> ${escapeHtml(sessionBase.browser)}\n` +
+            `${SEPARATOR}`;
+
+        const replyMarkup = {
             inline_keyboard: [
                 [
-                    { text: "🚨 ALARM", callback_data: `alarm_${sessionID}` },
-                    { text: "⛔ BLOCK", callback_data: `block_${sessionID}` }
+                    { text: '🚨 ALARM', callback_data: `alarm_${cbHash}` },
+                    { text: '⛔ BLOCK', callback_data: `block_${cbHash}` }
                 ],
                 [
-                    { text: "🟢 CLEAR", callback_data: `clear_${sessionID}` }
+                    { text: '🟢 CLEAR', callback_data: `clear_${cbHash}` }
                 ]
             ]
         };
 
-        await axios.post(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
-            chat_id: CHAT_ID,
-            text: telegramMsg,
-            parse_mode: 'HTML',
-            reply_markup: buttons
-        });
+        try {
+            await axios.post(
+                `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`,
+                { chat_id: CHAT_ID, text: telegramMsg, parse_mode: 'HTML', reply_markup: replyMarkup },
+                { timeout: 5000 }
+            );
+        } catch (telegramErr) {
+            // Telegram failure should not fail the whole request — Firestore save was successful
+            console.error('Telegram Notification Failed:', telegramErr.message);
+            return res.status(200).json({ success: true, telegramSent: false });
+        }
 
-        return res.status(200).json({ success: true });
+        return res.status(200).json({ success: true, telegramSent: true });
+
     } catch (error) {
-        console.error("Tracker API Error:", error);
+        console.error('Tracker API Error:', error);
         return res.status(500).json({ error: error.message });
     }
 };
