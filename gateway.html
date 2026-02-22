@@ -19,9 +19,7 @@
 
     <link href="assets/css/styles.css?v=V10" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
-    <link
-        href="https://fonts.googleapis.com/css2?family=Syncopate:wght@400;700&family=Manrope:wght@300;400;600;800&display=swap"
-        rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Syncopate:wght@400;700&family=Manrope:wght@300;400;600;800&display=swap" rel="stylesheet">
 
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
@@ -39,7 +37,6 @@
                 linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
         }
 
-        /* PREMIUM GLOW (PUS) */
         .gold-blur {
             position: absolute;
             top: -100px;
@@ -62,8 +59,6 @@
             z-index: -1;
         }
 
-
-        /* MASTER CSS (Unified Design System - Hardcoded for Stability) */
         .taurus-master-panel {
             background: rgba(10, 10, 10, 0.4);
             border: 1px solid rgba(255, 255, 255, 0.1);
@@ -71,19 +66,15 @@
             width: 90%;
             max-width: 400px;
             height: 750px !important;
-            /* FIXED DIMENSION - A4 STYLE */
             max-height: 85vh;
-            /* Mobile/Landscape cap */
             border-radius: 2.5rem;
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: flex-start;
-            /* Distribute content evenly */
             overflow: hidden;
             padding-top: 3.5rem;
-            /* Reduced from 6rem */
             padding-bottom: 2rem;
             padding-left: 2rem;
             padding-right: 2rem;
@@ -94,12 +85,9 @@
             .taurus-master-panel {
                 padding: 2.5rem;
                 padding-top: 5rem;
-                /* Reduced from 6rem */
             }
         }
 
-
-        /* Standard Button Container (Action Button) */
         .taurus-btn-container {
             width: 100%;
             padding: 0 1rem;
@@ -123,7 +111,6 @@
             text-transform: uppercase;
         }
 
-        /* Gateway Code Box Specific Overrides */
         .taurus-code-box {
             height: 70px !important;
             font-size: 2.5rem !important;
@@ -142,51 +129,27 @@
         }
 
         @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(5px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+            from { opacity: 0; transform: translateY(5px); }
+            to   { opacity: 1; transform: translateY(0); }
         }
     </style>
 </head>
 
-<body
-    class="bg-obsidian text-white font-body h-screen flex flex-col items-center justify-center overflow-hidden selection:bg-taurusGold selection:text-black">
+<body class="bg-obsidian text-white font-body h-screen flex flex-col items-center justify-center overflow-hidden selection:bg-taurusGold selection:text-black">
 
     <div class="fixed inset-0 w-full h-full grid-bg -z-10 opacity-40"></div>
     <div class="gold-blur"></div>
     <div class="gold-blur-bottom"></div>
-    <div
-        class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-taurusGold rounded-full blur-[150px] -z-10 opacity-5">
-    </div>
+    <div class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-taurusGold rounded-full blur-[150px] -z-10 opacity-5"></div>
 
     <div class="taurus-master-panel" id="main-panel">
 
-        <!-- LOGO CONTAINER (Inside with abundant top space) -->
-        <div
-            style="position: relative; width: 140px; height: 140px; margin: 0 auto 2.5rem auto; display: flex; justify-content: center; align-items: center; flex-shrink: 0;">
-            <div
-                style="position: absolute; inset: 0; border: 2px solid #FFD700; border-radius: 50%; animation: taurus-ripple 2.5s infinite;">
-            </div>
-            <div
-                style="position: absolute; inset: 10px; border: 1px solid rgba(255, 215, 0, 0.5); border-radius: 50%; animation: taurus-ripple 2.5s infinite 0.8s;">
-            </div>
-            <img src="assets/favicon_taurus.png" id="taurus-main-img" style="
-                width: 100px; height: 100px; 
-                border-radius: 50%; 
-                object-fit: cover; 
-                border: 3px solid #FFD700; 
-                box-shadow: 0 0 40px rgba(255, 215, 0, 0.4); 
-                z-index: 10;
-            ">
+        <div style="position: relative; width: 140px; height: 140px; margin: 0 auto 2.5rem auto; display: flex; justify-content: center; align-items: center; flex-shrink: 0;">
+            <div style="position: absolute; inset: 0; border: 2px solid #FFD700; border-radius: 50%; animation: taurus-ripple 2.5s infinite;"></div>
+            <div style="position: absolute; inset: 10px; border: 1px solid rgba(255, 215, 0, 0.5); border-radius: 50%; animation: taurus-ripple 2.5s infinite 0.8s;"></div>
+            <img src="assets/favicon_taurus.png" id="taurus-main-img" style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 3px solid #FFD700; box-shadow: 0 0 40px rgba(255, 215, 0, 0.4); z-index: 10;">
         </div>
 
-        <!-- Status Text -->
         <h2 id="status-title" class="font-display text-2xl font-bold tracking-widest text-taurusGold mb-2 text-center"
             style="animation: taurus-pulse-text 2s infinite ease-in-out; margin-top: 1rem;">
             TAURUS GATEWAY
@@ -196,34 +159,24 @@
         </p>
 
         <div id="challenge-container" class="flex flex-col items-center animate-fade-in w-full mt-4 flex-1 justify-end">
-
-            <!-- Icon & Status moved UP -->
             <div class="flex flex-col items-center gap-3 mb-8">
                 <i data-lucide="shield-check" class="w-12 h-12 text-taurusGold/50"></i>
                 <div class="flex items-center gap-2 animate-pulse">
                     <span class="w-1.5 h-1.5 bg-taurusGold rounded-full"></span>
-                    <span class="font-mono text-[10px] text-taurusGold uppercase tracking-widest">Awaiting
-                        Verification</span>
+                    <span class="font-mono text-[10px] text-taurusGold uppercase tracking-widest">Awaiting Verification</span>
                 </div>
             </div>
-
-            <!-- "Alarm Button" Style Code Bar (Bottom) -->
             <div class="taurus-btn-container taurus-code-box">
                 <span id="challenge-code">--</span>
             </div>
-
-            <!-- Hidden Footer for alignment parity with Alarm Modal -->
-            <div class="taurus-footer"
-                style="position: relative; bottom: auto; left: auto; margin-top: 1.5rem; width: 100%; visibility: hidden;">
+            <div class="taurus-footer" style="position: relative; bottom: auto; left: auto; margin-top: 1.5rem; width: 100%; visibility: hidden;">
                 <div class="taurus-footer-line"></div>
                 <p class="taurus-footer-text">RESTRICTED ACCESS MODE</p>
             </div>
         </div>
 
-        <!-- Error/Lockout Display -->
         <div id="error-container" class="hidden flex-col items-center animate-fade-in text-center">
-            <div
-                class="w-16 h-16 rounded-full bg-red-500/10 flex items-center justify-center mb-4 border border-red-500/20">
+            <div class="w-16 h-16 rounded-full bg-red-500/10 flex items-center justify-center mb-4 border border-red-500/20">
                 <i data-lucide="x-circle" class="w-8 h-8 text-red-500"></i>
             </div>
             <h3 class="text-red-500 font-bold tracking-widest mb-1">ACCESS DENIED</h3>
@@ -236,21 +189,19 @@
 
     </div>
 
-    <div id="error-display"
-        class="hidden mt-4 p-3 bg-red-900/50 text-red-200 rounded-lg text-sm border border-red-500/30 backdrop-blur-sm">
-    </div>
+    <div id="error-display" class="hidden mt-4 p-3 bg-red-900/50 text-red-200 rounded-lg text-sm border border-red-500/30 backdrop-blur-sm"></div>
 
     <!-- DEBUG CONSOLE (HIDDEN) -->
     <div id="debug-console"
         class="fixed bottom-0 left-0 w-full h-40 bg-black/90 text-green-400 text-[10px] font-mono p-4 overflow-y-auto z-50 text-left border-t border-green-900/50 shadow-2xl"
         style="display: none !important;">
-        <div class="mb-2 text-xs border-b border-green-900/50 pb-1">CONSOLE OUTPUT (Screenshot this if stuck):</div>
+        <div class="mb-2 text-xs border-b border-green-900/50 pb-1">CONSOLE OUTPUT:</div>
     </div>
 
     <script>
         lucide.createIcons();
 
-        let challengeCode = null;
+        let challengeCode   = null;
         let pollingInterval = null;
         const REQ_ID = Math.random().toString(36).substring(7);
 
@@ -262,12 +213,10 @@
         };
 
         log("System Booting...");
-        log(`Generated REQ_ID: ${REQ_ID}`);
+        log(`REQ_ID: ${REQ_ID}`);
 
         // ─── Init ─────────────────────────────────────────────────────────────
         (async function init() {
-            // NOTE: ?unlock bypass has been removed — it allowed anyone with the URL to skip auth.
-
             if (checkLockout()) return;
 
             try {
@@ -281,35 +230,33 @@
                     log(`Firebase Auth Warning: ${authErr.message}`);
                 }
 
-                // Load Telegram config from Firestore only — no hardcoded fallback
+                // Firestore'dan config çek, yoksa fallback kullan
                 let botToken = null;
                 let chatId   = null;
 
                 try {
                     const doc = await db.collection('security_config').doc('telegram').get();
-                    if (doc.exists && doc.data().botToken && doc.data().chatId) {
+                    if (doc.exists && doc.data().botToken) {
                         botToken = doc.data().botToken;
                         chatId   = doc.data().chatId;
-                        log("Telegram Config: Loaded from Firestore");
-                    } else {
-                        log("Telegram Config: Document missing or incomplete");
+                        log("Telegram Config: Firestore");
                     }
-                } catch (dbErr) {
-                    log(`Telegram Config Fetch Failed: ${dbErr.message}`);
+                } catch (e) {
+                    log(`Telegram Config Fetch Failed: ${e.message}`);
                 }
 
+                // TODO: Kendi bilgisayarın gelince Firestore'a ekle ve bu fallback'i kaldır
                 if (!botToken || !chatId) {
-                    // Cannot proceed without Telegram config — auth system requires it
-                    log("CRITICAL: Telegram config unavailable. Auth aborted.");
-                    showError('Configuration Error. Contact Admin.');
-                    return;
+                    botToken = '8567285538:AAHKfo8bqee43rprC-GCv3Je423R57YQkCE';
+                    chatId   = '6886010817';
+                    log("Telegram Config: Fallback");
                 }
 
                 startAuthentication(db, botToken, chatId);
 
             } catch (error) {
                 console.error('Init Error:', error);
-                log(`CRITICAL INIT ERROR: ${error.message}`);
+                log(`CRITICAL: ${error.message}`);
                 showError('Configuration Failed. Contact Admin.');
             }
         })();
@@ -319,7 +266,6 @@
             challengeCode = Math.floor(Math.random() * 90) + 10;
             log(`Challenge Code: ${challengeCode}`);
 
-            // Generate 2 decoy codes
             let decoys = [];
             while (decoys.length < 2) {
                 let n = Math.floor(Math.random() * 90) + 10;
@@ -328,36 +274,32 @@
 
             const buttons = [challengeCode, ...decoys].sort(() => Math.random() - 0.5);
 
-            // Register auth request via backend
-            log("Registering Request via Backend...");
+            log("Registering via Backend...");
             try {
                 await fetch('/api/gateway?action=auth_init', {
-                    method: 'POST',
+                    method:  'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ reqId: REQ_ID, expectedCode: challengeCode, action: 'auth_init' })
+                    body:    JSON.stringify({ reqId: REQ_ID, expectedCode: challengeCode, action: 'auth_init' })
                 });
-                log("Backend Registration: SUCCESS");
+                log("Backend Registration: OK");
             } catch (err) {
-                log(`Backend Registration FAILED: ${err.message} — trying direct Firestore write`);
-                // Fallback: write directly to Firestore
+                log(`Backend Failed: ${err.message} — Firestore fallback`);
                 await db.collection('auth_requests').doc(REQ_ID).set({
                     expectedCode: challengeCode,
                     status:       'pending',
                     timestamp:    firebase.firestore.FieldValue.serverTimestamp()
-                }).catch(e => log(`Client Fallback FAILED: ${e.message}`));
+                }).catch(e => log(`Firestore Fallback FAILED: ${e.message}`));
             }
 
-            // Poll backend for approval
-            log("Starting Status Polling (2000ms interval)...");
+            log("Polling started (2s)...");
             pollingInterval = setInterval(async () => {
                 let status = null;
                 try {
-                    const res = await fetch(`/api/gateway?action=check_status&reqId=${REQ_ID}&t=${Date.now()}`);
+                    const res  = await fetch(`/api/gateway?action=check_status&reqId=${REQ_ID}&t=${Date.now()}`);
                     if (!res.ok) throw new Error("API_Unavailable");
                     const data = await res.json();
-                    status = data.status;
+                    status     = data.status;
                 } catch (e) {
-                    // API unavailable — fall back to direct Firestore read
                     try {
                         const doc = await db.collection('auth_requests').doc(REQ_ID).get();
                         if (doc.exists) status = doc.data().status;
@@ -365,28 +307,26 @@
                 }
 
                 if (status === 'approved') {
-                    log("✅ STATUS: APPROVED");
+                    log("✅ APPROVED");
                     clearInterval(pollingInterval);
                     grantAccess();
                 } else if (status === 'denied') {
-                    log("⛔ STATUS: DENIED");
+                    log("⛔ DENIED");
                     clearInterval(pollingInterval);
                     failAuth("Incorrect Code Selected");
                     recordFailedAttempt();
                 } else if (status === 'expired') {
-                    log("⏱ STATUS: EXPIRED");
+                    log("⏱ EXPIRED");
                     clearInterval(pollingInterval);
                     failAuth("Verification timed out. Please retry.");
                 }
             }, 2000);
 
-            // Update UI
             document.getElementById('challenge-code').innerText = challengeCode;
             document.getElementById('status-desc').innerText    = 'Verification Request Sent';
 
-            // Send challenge to Telegram
             const ip = await getIPInfo();
-            log(`IP Detected: ${ip}`);
+            log(`IP: ${ip}`);
             await sendChallengeToTelegram(buttons, ip, botToken, chatId);
         }
 
@@ -400,7 +340,7 @@
 
         // ─── Telegram ────────────────────────────────────────────────────────
         async function sendChallengeToTelegram(options, ip, botToken, chatId) {
-            log("Sending Telegram Buttons...");
+            log("Sending Telegram...");
 
             const keyboard = {
                 inline_keyboard: [
@@ -411,8 +351,6 @@
                 ]
             };
 
-            const device    = navigator.platform;
-            const time      = new Date().toLocaleTimeString();
             const separator = `━━━━━━━━━━━━━━━━━━━━━`;
 
             try {
@@ -421,23 +359,22 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         chat_id:      chatId,
-                        text:         `🚨 <b>GATEWAY AUTH REQ</b>\n${separator}\n🆔 <b>ID:</b> <code>${REQ_ID}</code>\n📍 <b>IP:</b> ${ip}\n💻 <b>DEVICE:</b> ${device}\n⏰ <b>TIME:</b> ${time}\n\n<b>Tap the matching number:</b>\n${separator}`,
+                        text:         `🚨 <b>GATEWAY AUTH REQ</b>\n${separator}\n🆔 <b>ID:</b> <code>${REQ_ID}</code>\n📍 <b>IP:</b> ${ip}\n💻 <b>DEVICE:</b> ${navigator.platform}\n⏰ <b>TIME:</b> ${new Date().toLocaleTimeString()}\n\n<b>Tap the matching number:</b>\n${separator}`,
                         parse_mode:   'HTML',
                         reply_markup: keyboard
                     })
                 });
-                log("Telegram Message Sent. Waiting for you...");
+                log("Telegram: Sent. Waiting...");
             } catch (error) {
-                console.error('Telegram Send Error:', error);
-                log(`Telegram Send FAILED: ${error.message}`);
-                showError('Connection Failed. Check Console.');
+                console.error('Telegram Error:', error);
+                log(`Telegram FAILED: ${error.message}`);
+                showError('Connection Failed.');
             }
         }
 
         // ─── Access Control ───────────────────────────────────────────────────
         async function grantAccess() {
             if (pollingInterval) clearInterval(pollingInterval);
-            console.log("🔓 Login Successful - Redirecting...");
             sessionStorage.setItem('authToken', 'valid');
             localStorage.setItem('authToken', 'valid');
             if (window.taurus_set_internal) window.taurus_set_internal();
@@ -457,7 +394,7 @@
             document.getElementById('status-desc').classList.add('text-red-500');
         }
 
-        // ─── Lockout Logic ────────────────────────────────────────────────────
+        // ─── Lockout ──────────────────────────────────────────────────────────
         function checkLockout() {
             const lockoutData = JSON.parse(localStorage.getItem('authLockout') || '{}');
             const now = Date.now();
@@ -483,14 +420,14 @@
             const now = Date.now();
 
             if (lockoutData.lockedUntil && now > lockoutData.lockedUntil) {
-                lockoutData.attempts   = 0;
+                lockoutData.attempts    = 0;
                 lockoutData.lockedUntil = null;
             }
 
             lockoutData.attempts = (lockoutData.attempts || 0) + 1;
 
             if (lockoutData.attempts >= 3) {
-                lockoutData.lockedUntil = now + (5 * 60000); // 5 dakika kilit
+                lockoutData.lockedUntil = now + (5 * 60000);
             }
 
             localStorage.setItem('authLockout', JSON.stringify(lockoutData));
