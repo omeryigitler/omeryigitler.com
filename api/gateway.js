@@ -1,249 +1,107 @@
-const admin  = require('firebase-admin');
-const crypto = require('crypto');
+const admin = require('firebase-admin');
 
-// ─── Firebase Init ───────────────────────────────────────────────────────────
+// Initialize Firebase with Fallback Logic (Same as Webhook)
 if (!admin.apps.length) {
-    const privateKey  = process.env.FIREBASE_PRIVATE_KEY;
-    const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
-    const projectId   = process.env.FIREBASE_PROJECT_ID;
-
-    if (!privateKey || !clientEmail || !projectId) {
-        throw new Error(
-            'Missing Firebase env vars: FIREBASE_PRIVATE_KEY, FIREBASE_CLIENT_EMAIL, FIREBASE_PROJECT_ID'
-        );
-    }
-
     admin.initializeApp({
         credential: admin.credential.cert({
-            projectId,
-            privateKey:  privateKey.replace(/\\n/g, '\n'),
-            clientEmail
+            "project_id": "omeryigitler-5abfb",
+            "private_key": process.env.FIREBASE_PRIVATE_KEY
+                ? process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n')
+                : "-----BEGIN PRIVATE KEY-----\nMIIEvAIBADANBgkqhkiG9w0BAQEFAASCBKYwggSiAgEAAoIBAQCqBSNaafCJWDjO\nz60CQWqAxTmH7gIqSXaHlSBSUWaBELd4uznWI9DFcKILkxFsyd2aNpZPZWjS6opn\ng2E8lXnr2P0Ho5oRzzsRw5qwe/CmvNEcx4HiHZbnbhIQ6JiP3mX9Q3Ur3MW+TzA3\nhO5HBdyEe6E1LAhDwGFvXRBsi48F33sSLCDrSjPl+VerVi4kbhd1qp7Qfj2eGl6h\nIWYpgcpYtHS++3rHK/u8DZZ47DM6MD4djma8rJgaCcW9r75D3ksPsXfYJkTPw5e5\nUdF79pTMEVjSiCayNdSv4Xmh6psC/UtELR4YKsgtUTDU40qkZorfOWy0pIL9D1WS\nFYPpcpNLAgMBAAECggEABL8G+R+q+NKPJ2rRvBXiaLzYucwxoEeTuP43PEUMdP7n\n+EVVvH4cdl6KD4OoAV7zQjpS4N2GWxj0Cya2QLA1iplwmtV82BFuZzUMLPAQzD7K\nIaEKJatIyqYed/1eQOnm8/Z9n19W39SrFmmuEyp9OO+QlQDpLCcDMU4qRrVwpSvH\nxoycWFozjgjUVQbtogb+e7uTq3IgJFdK1aiNKV+bmgG5KVrv+vF3dPFxw7SWh+ST\nDVbXUF/ULOKF4JOTs6dunPVG209VRYJS6+jw8PPTIozDDTSY0ev0yBhRUFUwXGjd\naJOlv2gLzRU/kWO7zDz95ZrTLMT6kFILdSLXxVUCpQKBgQDYADF9uvRPBhKTEsgG\nM6oXgh5G/ESIY4e5lFMF0gFjLvqezzLhMeMLTM69MWX9nUA0imzTjv1EpeOSPVQd\nlF5KH19dZdihEYe0QjLDMb3VJe66SN0aXFW4/BCcQVnPI4+bzFAhnIDhdeQllusV\nRgEj8YWKa9B+qeLkev4QoxbS1QKBgQDJgSsjOp0hgDTMCECLBDKunvPndoBuAnh0\nFPAf2FajPxbvUqEpugYRMMfzNxpuW12/2CGNsOsRllWHy2+rJdx1lbts/hDUQCUF\nFePRFf2vtvDuKXI7xMzo1MFYbHWNlzGKmuhYVsBUrr5SToJKyCRQ8jglyXiqqJXE\n88mXxZWdnwKBgDPPmA94kLGD22C72I7kRaBt7aVJTYcJmLzC/0ceIIcR9buyJ5os\nxTEos05eUwCKf6QasA/u9IFK6VNispKFzDgrXkyg6V15PvvWBScc/1PpTWIRqDdy\nfn1ouPNCGbC97uyIDZCCYcey5468rJblu9BLVqTlR5WaWnpDpj2HYSohAoGAerdX\ndhT0LLrPbJJ5/C+KTh4vm/7nKBgJE2jM9Bfka3a4mPdRfv/zQfTbUJt2VU7/QR53\nELt17TgIzrJuR2S/ZjzR8AaqaRjHctlp7KPf42seP2yuTQgFYqZvOVKUJK63VRoR\n9fqfFvN0pNt7Ld/FfiaFWz3fZs9UpqVxWCTUgTECgYB60AYRqgfHG7ATIUGb9oyB\nO2D+DgmT3dcgP+Cw4POvr+nWmRtuCswgHWkQcaG0vpclhYbcvcwrP84Rh35yBYmQ\n8fD6ZFxuxoT1mDgMy1ZgzaoMBHmSBor07rnct0DZ8LKHR7ixVG3fmMG4US3aStvy\n5H0sIhu0upGXfh67QPHmvw==\n-----END PRIVATE KEY-----\n",
+            "client_email": "firebase-adminsdk-fbsvc@omeryigitler-5abfb.iam.gserviceaccount.com"
         })
     });
 }
 
 const db = admin.firestore();
 
-// ─── Config ──────────────────────────────────────────────────────────────────
-const TRACKER_KEY    = process.env.TRACKER_SECRET_KEY;
-const ALLOWED_ORIGIN = process.env.ALLOWED_ORIGIN || 'https://omeryigitler.com';
-const CODE_SALT      = process.env.CODE_SALT || 'taurus_default_salt'; // Add to .env for production
-
-// ─── Rate Limiter ─────────────────────────────────────────────────────────────
-// NOTE: This is an in-memory rate limiter. It works for single-instance deployments
-// but will be inconsistent on serverless (Vercel) where each cold start resets it.
-// For production at scale, replace with Upstash Redis:
-//   https://upstash.com — drop-in replacement, ~5 lines of change
-const rateLimitMap = new Map();
-const RATE_LIMIT_MAX    = 30;
-const RATE_LIMIT_WINDOW = 60 * 1000;
-
-function isRateLimited(ip) {
-    const now   = Date.now();
-    const entry = rateLimitMap.get(ip);
-
-    if (!entry || now > entry.resetAt) {
-        rateLimitMap.set(ip, { count: 1, resetAt: now + RATE_LIMIT_WINDOW });
-        // Prune old entries to prevent memory growth on long-running instances
-        if (rateLimitMap.size > 5000) {
-            for (const [key, val] of rateLimitMap) {
-                if (now > val.resetAt) rateLimitMap.delete(key);
-            }
-        }
-        return false;
-    }
-
-    if (entry.count >= RATE_LIMIT_MAX) return true;
-    entry.count++;
-    return false;
-}
-
-// ─── Helpers ─────────────────────────────────────────────────────────────────
-
-function normalizeIP(ip = '') {
-    return ip.replace(/^::ffff:/, '');
-}
-
-function parseBody(body) {
-    if (typeof body === 'string') {
-        try { return JSON.parse(body); } catch { return {}; }
-    }
-    return body || {};
-}
-
-/** Validates a sessionId or reqId string — alphanumeric + _ - only, max 64 chars. */
-function isValidId(id) {
-    return typeof id === 'string' && id.length > 0 && id.length <= 64 && /^[a-zA-Z0-9_-]+$/.test(id);
-}
-
-/**
- * Hashes an expectedCode with a salt using SHA-256.
- * Stored in Firestore instead of plaintext to protect OTP values.
- */
-function hashCode(code) {
-    return crypto.createHash('sha256').update(`${code}:${CODE_SALT}`).digest('hex');
-}
-
-/**
- * Safely serializes a Firestore Timestamp to ISO string.
- * Falls back gracefully if the value is already a string or null.
- */
-function serializeTimestamp(value) {
-    if (!value) return null;
-    if (typeof value.toDate === 'function') return value.toDate().toISOString();
-    return String(value);
-}
-
-// ─── Handler ─────────────────────────────────────────────────────────────────
+// Unified Vercel Function: Gateway
+// Handles: check_command, ack_command, auth_init, check_status
 module.exports = async (req, res) => {
-    // 1. CORS — only allow requests from the configured origin
-    const requestOrigin = req.headers.origin;
-    if (requestOrigin === ALLOWED_ORIGIN) {
-        res.setHeader('Access-Control-Allow-Origin', ALLOWED_ORIGIN);
-        res.setHeader('Vary', 'Origin');
-    }
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, x-tracker-key');
-    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    // Enable CORS
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
     res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
 
     if (req.method === 'OPTIONS') return res.status(200).send('OK');
 
-    // 2. Resolve client IP
-    const clientIP = normalizeIP(
-        req.headers['cf-connecting-ip'] ||
-        req.headers['x-real-ip'] ||
-        req.headers['x-forwarded-for']?.split(',')[0].trim() ||
-        req.socket?.remoteAddress ||
-        'Unknown'
-    );
-
-    // 3. Rate limit
-    if (isRateLimited(clientIP)) {
-        res.setHeader('Retry-After', '60');
-        return res.status(429).json({ error: 'Too Many Requests' });
-    }
-
-    // 4. Secret key check (only enforced if TRACKER_SECRET_KEY is set)
-    if (TRACKER_KEY && req.headers['x-tracker-key'] !== TRACKER_KEY) {
-        return res.status(401).json({ error: 'Unauthorized' });
-    }
-
-    // 5. Parse body and determine action
-    const body   = parseBody(req.body);
-    const action = req.query.action || body.action;
+    // Determine Action (from query or body)
+    const action = req.query.action || req.body.action;
 
     if (!action) {
         return res.status(400).json({ error: 'Missing action parameter' });
     }
 
-    // 6. Method enforcement
-    const GET_ACTIONS  = ['check_command', 'check_status'];
-    const POST_ACTIONS = ['ack_command', 'auth_init'];
-
-    if (GET_ACTIONS.includes(action) && req.method !== 'GET') {
-        return res.status(405).json({ error: 'Method Not Allowed — use GET' });
-    }
-    if (POST_ACTIONS.includes(action) && req.method !== 'POST') {
-        return res.status(405).json({ error: 'Method Not Allowed — use POST' });
-    }
-
     try {
+        // --- ROUTING LOGIC ---
 
-        // ── 1. CHECK COMMAND ─────────────────────────────────────────────────
-        // Tracker polls this to receive remote commands (alarm, block, freeze, clear)
+        // 1. CHECK COMMAND (Tracker Polls this)
         if (action === 'check_command') {
-            const sessionId = req.query.sessionId || body.sessionId;
-            if (!isValidId(sessionId)) return res.status(400).json({ error: 'Invalid or missing sessionId' });
+            const sessionId = req.query.sessionId || req.body.sessionId;
+            if (!sessionId) return res.status(400).json({ error: 'Missing sessionId' });
 
             const doc = await db.collection('visitors_v1').doc(sessionId).get();
             if (!doc.exists) return res.status(200).json({ action: null });
 
             const data = doc.data();
             return res.status(200).json({
-                action:           data.action                          || null,
-                action_timestamp: serializeTimestamp(data.action_timestamp)
+                action: data.action || null,
+                action_timestamp: data.action_timestamp || null
             });
         }
 
-        // ── 2. ACK COMMAND ───────────────────────────────────────────────────
-        // Tracker confirms it has executed a command — clears it from Firestore
+        // 2. ACK COMMAND (Tracker confirms execution)
         if (action === 'ack_command') {
+            // Handle body parsing if stringified (sometimes happens with fetch)
+            let body = req.body;
+            if (typeof body === 'string') {
+                try { body = JSON.parse(body); } catch (e) { }
+            }
             const sessionId = req.query.sessionId || body.sessionId;
-            if (!isValidId(sessionId)) return res.status(400).json({ error: 'Invalid or missing sessionId' });
 
-            const docRef = db.collection('visitors_v1').doc(sessionId);
-            const snap   = await docRef.get();
+            if (!sessionId) return res.status(400).json({ error: 'Missing sessionId' });
 
-            // If doc doesn't exist, treat as already cleared — not an error
-            if (!snap.exists) return res.status(200).json({ status: 'cleared' });
-
-            await docRef.update({
-                action:           admin.firestore.FieldValue.delete(),
+            await db.collection('visitors_v1').doc(sessionId).update({
+                action: admin.firestore.FieldValue.delete(),
                 action_timestamp: admin.firestore.FieldValue.delete()
             });
-
             return res.status(200).json({ status: 'cleared' });
         }
 
-        // ── 3. AUTH INIT ─────────────────────────────────────────────────────
-        // Gateway page creates an auth request with an expected code
+        // 3. AUTH INIT (Gateway Page requests access)
         if (action === 'auth_init') {
+            let body = req.body;
+            if (typeof body === 'string') {
+                try { body = JSON.parse(body); } catch (e) { }
+            }
             const { reqId, expectedCode } = body;
 
-            if (!isValidId(reqId)) {
-                return res.status(400).json({ error: 'Invalid or missing reqId' });
-            }
+            if (!reqId || !expectedCode) return res.status(400).json({ error: 'Missing Data' });
 
-            // expectedCode: digits only, 1-10 chars
-            if (!expectedCode || !/^\d{1,10}$/.test(String(expectedCode))) {
-                return res.status(400).json({ error: 'Invalid expectedCode — must be numeric, max 10 digits' });
-            }
-
-            const docRef = db.collection('auth_requests').doc(reqId);
-            const snap   = await docRef.get();
-
-            // Prevent overwriting an existing pending request
-            if (snap.exists && snap.data().status === 'pending') {
-                return res.status(409).json({ error: 'Auth request already exists' });
-            }
-
-            // Store hashed code — never store OTP values in plaintext
-            await docRef.set({
-                expectedCodeHash: hashCode(String(expectedCode)),
-                status:           'pending',
-                createdAt:        admin.firestore.FieldValue.serverTimestamp(),
-                expiresAt:        new Date(Date.now() + 5 * 60 * 1000).toISOString(), // 5 min TTL
-                ip:               clientIP
+            await db.collection('auth_requests').doc(reqId).set({
+                expectedCode: expectedCode,
+                status: 'pending',
+                timestamp: admin.firestore.FieldValue.serverTimestamp()
             });
-
             return res.status(200).json({ status: 'ok' });
         }
 
-        // ── 4. CHECK STATUS ──────────────────────────────────────────────────
-        // Gateway page polls this to see if auth has been approved
+        // 4. CHECK STATUS (Gateway Page polls this)
         if (action === 'check_status') {
-            const reqId = req.query.reqId || body.reqId;
-            if (!isValidId(reqId)) return res.status(400).json({ error: 'Invalid or missing reqId' });
+            const reqId = req.query.reqId;
+            if (!reqId) return res.status(400).json({ error: 'Missing reqId' });
 
             const doc = await db.collection('auth_requests').doc(reqId).get();
             if (!doc.exists) return res.status(404).json({ status: 'not_found' });
 
-            const data = doc.data();
-
-            // Enforce TTL — expire requests older than 5 minutes
-            if (data.expiresAt && new Date() > new Date(data.expiresAt)) {
-                return res.status(200).json({ status: 'expired' });
-            }
-
-            return res.status(200).json({ status: data.status });
+            return res.status(200).json({ status: doc.data().status });
         }
 
-        // Unknown action
+        // Unknown Action
         return res.status(400).json({ error: 'Invalid action' });
 
     } catch (e) {
-        // Never expose internal error details to the client in production
-        console.error('Gateway Error:', e);
-        return res.status(500).json({ error: 'Internal server error' });
+        console.error("Gateway Error:", e);
+        return res.status(500).json({ error: e.message });
     }
 };

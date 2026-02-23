@@ -1,257 +1,97 @@
-const admin  = require('firebase-admin');
-const axios  = require('axios');
-const crypto = require('crypto');
+const admin = require('firebase-admin');
+const axios = require('axios');
 
-// ─── Firebase Init ───────────────────────────────────────────────────────────
+// Initialize Firebase (Using the project's standard fallback)
 if (!admin.apps.length) {
-    const privateKey  = process.env.FIREBASE_PRIVATE_KEY;
-    const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
-    const projectId   = process.env.FIREBASE_PROJECT_ID;
-
-    if (!privateKey || !clientEmail || !projectId) {
-        throw new Error(
-            'Missing Firebase env vars: FIREBASE_PRIVATE_KEY, FIREBASE_CLIENT_EMAIL, FIREBASE_PROJECT_ID'
-        );
-    }
-
     admin.initializeApp({
         credential: admin.credential.cert({
-            projectId,
-            privateKey:  privateKey.replace(/\\n/g, '\n'),
-            clientEmail
+            "project_id": "omeryigitler-5abfb",
+            "private_key": process.env.FIREBASE_PRIVATE_KEY
+                ? process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n')
+                : "-----BEGIN PRIVATE KEY-----\nMIIEvAIBADANBgkqhkiG9w0BAQEFAASCBKYwggSiAgEAAoIBAQCqBSNaafCJWDjO\nz60CQWqAxTmH7gIqSXaHlSBSUWaBELd4uznWI9DFcKILkxFsyd2aNpZPZWjS6opn\ng2E8lXnr2P0Ho5oRzzsRw5qwe/CmvNEcx4HiHZbnbhIQ6JiP3mX9Q3Ur3MW+TzA3\nhO5HBdyEe6E1LAhDwGFvXRBsi48F33sSLCDrSjPl+VerVi4kbhd1qp7Qfj2eGl6h\nIWYpgcpYtHS++3rHK/u8DZZ47DM6MD4djma8rJgaCcW9r75D3ksPsXfYJkTPw5e5\nUdF79pTMEVjSiCayNdSv4Xmh6psC/UtELR4YKsgtUTDU40qkZorfOWy0pIL9D1WS\nFYPpcpNLAgMBAAECggEABL8G+R+q+NKPJ2rRvBXiaLzYucwxoEeTuP43PEUMdP7n\n+EVVvH4cdl6KD4OoAV7zQjpS4N2GWxj0Cya2QLA1iplwmtV82BFuZzUMLPAQzD7K\nIaEKJatIyqYed/1eQOnm8/Z9n19W39SrFmmuEyp9OO+QlQDpLCcDMU4qRrVwpSvH\nxoycWFozjgjUVQbtogb+e7uTq3IgJFdK1aiNKV+bmgG5KVrv+vF3dPFxw7SWh+ST\nDVbXUF/ULOKF4JOTs6dunPVG209VRYJS6+jw8PPTIozDDTSY0ev0yBhRUFUwXGjd\naJOlv2gLzRU/kWO7zDz95ZrTLMT6kFILdSLXxVUCpQKBgQDYADF9uvRPBhKTEsgG\nM6oXgh5G/ESIY4e5lFMF0gFjLvqezzLhMeMLTM69MWX9nUA0imzTjv1EpeOSPVQd\nlF5KH19dZdihEYe0QjLDMb3VJe66SN0aXFW4/BCcQVnPI4+bzFAhnIDhdeQllusV\nRgEj8YWKa9B+qeLkev4QoxbS1QKBgQDJgSsjOp0hgDTMCECLBDKunvPndoBuAnh0\nFPAf2FajPxbvUqEpugYRMMfzNxpuW12/2CGNsOsRllWHy2+rJdx1lbts/hDUQCUF\nFePRFf2vtvDuKXI7xMzo1MFYbHWNlzGKmuhYVsBUrr5SToJKyCRQ8jglyXiqqJXE\n88mXxZWdnwKBgDPPmA94kLGD22C72I7kRaBt7aVJTYcJmLzC/0ceIIcR9buyJ5os\nxTEos05eUwCKf6QasA/u9IFK6VNispKFzDgrXkyg6V15PvvWBScc/1PpTWIRqDdy\nfn1ouPNCGbC97uyIDZCCYcey5468rJblu9BLVqTlR5WaWnpDpj2HYSohAoGAerdX\ndhT0LLrPbJJ5/C+KTh4vm/7nKBgJE2jM9Bfka3a4mPdRfv/zQfTbUJt2VU7/QR53\nELt17TgIzrJuR2S/ZjzR8AaqaRjHctlp7KPf42seP2yuTQgFYqZvOVKUJK63VRoR\n9fqfFvN0pNt7Ld/FfiaFWz3fZs9UpqVxWCTUgTECgYB60AYRqgfHG7ATIUGb9oyB\nO2D+DgmT3dcgP+Cw4POvr+nWmRtuCswgHWkQcaG0vpclhYbcvcwrP84Rh35yBYmQ\n8fD6ZFxuxoT1mDgMy1ZgzaoMBHmSBor07rnct0DZ8LKHR7ixVG3fmMG4US3aStvy\n5H0sIhu0upGXfh67QPHmvw==\n-----END PRIVATE KEY-----\n",
+            "client_email": "firebase-adminsdk-fbsvc@omeryigitler-5abfb.iam.gserviceaccount.com"
         })
     });
 }
 
 const db = admin.firestore();
+const BOT_TOKEN = "8567285538:AAHKfo8bqee43rprC-GCv3Je423R57YQkCE";
+const CHAT_ID = "6886010817";
 
-// ─── Config ──────────────────────────────────────────────────────────────────
-const BOT_TOKEN   = process.env.TELEGRAM_BOT_TOKEN;
-const CHAT_ID     = process.env.TELEGRAM_CHAT_ID;
-const TRACKER_KEY = process.env.TRACKER_SECRET_KEY;
-
-if (!BOT_TOKEN || !CHAT_ID) {
-    throw new Error('Missing Telegram env vars: TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID');
-}
-
-const SEPARATOR = '━━━━━━━━━━━━━━━━━━━━━';
-
-// ─── In-memory rate limiter ───────────────────────────────────────────────────
-// Tracks request count per IP. Resets automatically after the window expires.
-const rateLimitMap = new Map(); // ip → { count, resetAt }
-const RATE_LIMIT_MAX    = 20;          // max requests
-const RATE_LIMIT_WINDOW = 60 * 1000;  // per 60 seconds
-
-function isRateLimited(ip) {
-    const now  = Date.now();
-    const entry = rateLimitMap.get(ip);
-
-    if (!entry || now > entry.resetAt) {
-        rateLimitMap.set(ip, { count: 1, resetAt: now + RATE_LIMIT_WINDOW });
-        return false;
-    }
-
-    if (entry.count >= RATE_LIMIT_MAX) return true;
-
-    entry.count++;
-    return false;
-}
-
-// ─── Helpers ─────────────────────────────────────────────────────────────────
-
-/** Escapes HTML special characters to prevent Telegram message injection. */
-function escapeHtml(str = '') {
-    return String(str)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;');
-}
-
-/** Truncates a string to a max length to prevent oversized Firestore writes. */
-function cap(str, max) {
-    if (!str || typeof str !== 'string') return '';
-    return str.slice(0, max);
-}
-
-/** Validates and sanitizes all incoming string fields. */
-function sanitizeInput({ sessionID, browser, pathname }) {
-    const sid  = cap(String(sessionID || ''), 128).trim();
-    const brws = cap(String(browser   || ''), 100).trim();
-    const path = cap(String(pathname  || ''), 300).trim();
-
-    if (!sid) throw new Error('Invalid sessionID');
-
-    return { sessionID: sid, browser: brws, pathname: path };
-}
-
-/**
- * Normalizes the device field regardless of whether it arrives
- * as a plain string or as an object with { model, os } properties.
- */
-function normalizeDevice(device) {
-    if (!device) return { model: 'Unknown', os: 'N/A' };
-    if (typeof device === 'string') return { model: device || 'Unknown', os: 'N/A' };
-    if (typeof device === 'object') return {
-        model: cap(device.model, 100) || 'Unknown',
-        os:    cap(device.os,    100) || 'N/A'
-    };
-    return { model: 'Unknown', os: 'N/A' };
-}
-
-/**
- * Normalizes IPv6-mapped IPv4 addresses (e.g. ::ffff:127.0.0.1 → 127.0.0.1)
- * and detects private/loopback IPs to skip unnecessary geo API calls.
- */
-function normalizeIP(ip = '') {
-    const cleaned   = ip.replace(/^::ffff:/, '');
-    const isPrivate = /^(10\.|172\.(1[6-9]|2\d|3[01])\.|192\.168\.|127\.|::1$)/.test(cleaned);
-    return { ip: cleaned, isPrivate };
-}
-
-/**
- * Always fetches geo data server-side for accuracy.
- * Frontend data is not trusted as it can be spoofed.
- * Skips the call for private/loopback IPs.
- */
-async function fetchGeoData(ip) {
-    const { ip: cleanIP, isPrivate } = normalizeIP(ip);
-    if (isPrivate) return { ip: cleanIP };
-    try {
-        const { data } = await axios.get(`https://ipapi.co/${cleanIP}/json/`, { timeout: 5000 });
-        return data;
-    } catch (err) {
-        console.warn('Server-side Geo Fetch Failed:', err.message);
-        return { ip: cleanIP };
-    }
-}
-
-/**
- * Generates a short collision-resistant hash using SHA-256.
- * Used for Telegram callback_data which has a 64-byte limit.
- * Also stored in Firestore so callback handlers can resolve the session.
- */
-function shortHash(str = '') {
-    return crypto.createHash('sha256').update(str).digest('hex').slice(0, 10);
-}
-
-// ─── Handler ─────────────────────────────────────────────────────────────────
 module.exports = async (req, res) => {
-    // 1. Method check
-    if (req.method !== 'POST') return res.status(405).send('Method Not Allowed');
+    if (req.method !== 'POST') return res.status(200).send('OK');
 
-    // 2. Resolve client IP early (needed for rate limiting)
-    const rawIP    = req.headers['cf-connecting-ip']          // Cloudflare
-        || req.headers['x-real-ip']                           // nginx
-        || req.headers['x-forwarded-for']?.split(',')[0].trim() // generic proxy
-        || req.socket?.remoteAddress
-        || 'Unknown';
-    const { ip: clientIP } = normalizeIP(rawIP);
+    let { sessionID, ipData, device, browser, pathname } = req.body;
 
-    // 3. Rate limit check
-    if (isRateLimited(clientIP)) {
-        return res.status(429).send('Too Many Requests');
-    }
-
-    // 4. Secret key check (only enforced if TRACKER_SECRET_KEY is set)
-    if (TRACKER_KEY && req.headers['x-tracker-key'] !== TRACKER_KEY) {
-        return res.status(401).send('Unauthorized');
-    }
-
-    // 5. Input validation & sanitization
-    let sessionID, browser, pathname;
-    try {
-        ({ sessionID, browser, pathname } = sanitizeInput(req.body));
-    } catch {
-        return res.status(400).send('Invalid input');
-    }
-
-    const rawDevice = req.body.device;
+    if (!sessionID) return res.status(400).send('Missing Session ID');
 
     try {
-        // 6. Fetch geo data server-side (not trusting frontend)
-        const ipData = await fetchGeoData(clientIP);
+        // 1. Server-side IP Detection (Reliable fallback for office networks)
+        const clientIP = req.headers['x-forwarded-for']?.split(',')[0].trim() || req.socket.remoteAddress;
 
-        // 7. Normalize device info
-        const device = normalizeDevice(rawDevice);
-
-        // 8. Persist to Firestore
-        //    - startTime is only written on first visit (won't reset on re-entry)
-        //    - history uses arrayUnion to append without overwriting previous entries
-        //    - callbackKey stored so callback handlers can resolve the session by hash
-        const cbHash  = shortHash(sessionID);
-        const docRef  = db.collection('visitors_v1').doc(sessionID);
-        const snap    = await docRef.get();
+        // 2. Fetch Geo-data on server if frontend failed or to verify
+        if (!ipData || !ipData.city || ipData.ip === '0.0.0.0') {
+            try {
+                const geoRes = await axios.get(`https://ipapi.co/${clientIP}/json/`);
+                ipData = geoRes.data;
+            } catch (e) {
+                console.warn("Server-side Geo Fetch Failed:", e.message);
+                ipData = ipData || { ip: clientIP };
+            }
+        }
 
         const sessionData = {
             sessionID,
-            ip:          clientIP,
-            city:        ipData.city         || 'Unknown',
-            country:     ipData.country_name || 'Unknown',
-            org:         ipData.org          || 'Unknown',
-            device,
-            browser:     browser || 'Unknown',
-            status:      'online',
-            last_seen:   admin.firestore.FieldValue.serverTimestamp(),
-            callbackKey: cbHash,
-            history:     admin.firestore.FieldValue.arrayUnion({
-                time:   new Date().toISOString(),
-                action: 'Entrance',
-                detail: pathname || 'Unknown'
-            })
+            ip: clientIP,
+            city: ipData.city || 'Unknown',
+            country: ipData.country_name || 'Unknown',
+            org: ipData.org || 'Unknown',
+            device: device || 'Unknown',
+            browser: browser || 'Unknown',
+            startTime: new Date().toISOString(),
+            status: 'online',
+            last_seen: admin.firestore.FieldValue.serverTimestamp(),
+            history: [
+                { time: new Date().toLocaleTimeString('tr-TR'), action: 'Entrance', detail: pathname || 'Unknown' }
+            ]
         };
 
-        // Only set startTime on first document creation
-        if (!snap.exists) {
-            sessionData.startTime = admin.firestore.FieldValue.serverTimestamp();
-        }
+        // 3. Initialize/Update Firestore Document
+        await db.collection('visitors_v1').doc(sessionID).set(sessionData, { merge: true });
 
-        await docRef.set(sessionData, { merge: true });
+        // 4. Send Telegram Notification (Neural Link Established - Standardized Format)
+        const separator = `━━━━━━━━━━━━━━━━━━━━━`;
+        const telegramMsg = `🎯 <b>Neural Link Established</b>\n` +
+            `${separator}\n` +
+            `🆔 <b>SESSION:</b> <code>${sessionID}</code>\n` +
+            `🌍 <b>LOCATION:</b> ${sessionData.city}, ${sessionData.country}\n` +
+            `📡 <b>IP:</b> <code>${sessionData.ip}</code>\n` +
+            `🏢 <b>ISP:</b> ${sessionData.org}\n` +
+            `💻 <b>DEVICE:</b> ${(sessionData.device && sessionData.device.model) ? sessionData.device.model : (sessionData.device || 'Unknown')} (${(sessionData.device && sessionData.device.os) ? sessionData.device.os : 'N/A'})\n` +
+            `${separator}`;
 
-        // 9. Build and send Telegram notification
-        const telegramMsg =
-            `🎯 <b>Neural Link Established</b>\n` +
-            `${SEPARATOR}\n` +
-            `🆔 <b>SESSION:</b> <code>${escapeHtml(sessionID)}</code>\n` +
-            `🌍 <b>LOCATION:</b> ${escapeHtml(sessionData.city)}, ${escapeHtml(sessionData.country)}\n` +
-            `📡 <b>IP:</b> <code>${escapeHtml(clientIP)}</code>\n` +
-            `🏢 <b>ISP:</b> ${escapeHtml(sessionData.org)}\n` +
-            `💻 <b>DEVICE:</b> ${escapeHtml(device.model)} (${escapeHtml(device.os)})\n` +
-            `🌐 <b>BROWSER:</b> ${escapeHtml(sessionData.browser)}\n` +
-            `${SEPARATOR}`;
-
-        const replyMarkup = {
+        const buttons = {
             inline_keyboard: [
                 [
-                    { text: '🚨 ALARM', callback_data: `alarm_${cbHash}` },
-                    { text: '⛔ BLOCK', callback_data: `block_${cbHash}` }
+                    { text: "🚨 ALARM", callback_data: `alarm_${sessionID}` },
+                    { text: "⛔ BLOCK", callback_data: `block_${sessionID}` }
                 ],
                 [
-                    { text: '🟢 CLEAR', callback_data: `clear_${cbHash}` }
+                    { text: "🟢 CLEAR", callback_data: `clear_${sessionID}` }
                 ]
             ]
         };
 
-        try {
-            const tgRes = await axios.post(
-                `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`,
-                { chat_id: CHAT_ID, text: telegramMsg, parse_mode: 'HTML', reply_markup: replyMarkup },
-                { timeout: 5000 }
-            );
+        await axios.post(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+            chat_id: CHAT_ID,
+            text: telegramMsg,
+            parse_mode: 'HTML',
+            reply_markup: buttons
+        });
 
-            // Telegram can return HTTP 200 but still signal failure in the body
-            if (!tgRes.data?.ok) {
-                throw new Error(tgRes.data?.description || 'Telegram API returned ok: false');
-            }
-        } catch (telegramErr) {
-            // Telegram failure does not fail the request — Firestore save was successful
-            console.error('Telegram Notification Failed:', telegramErr.message);
-            return res.status(200).json({ success: true, telegramSent: false });
-        }
-
-        return res.status(200).json({ success: true, telegramSent: true });
-
+        return res.status(200).json({ success: true });
     } catch (error) {
-        console.error('Tracker API Error:', error);
+        console.error("Tracker API Error:", error);
         return res.status(500).json({ error: error.message });
     }
 };
