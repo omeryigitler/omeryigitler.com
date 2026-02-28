@@ -80,8 +80,7 @@ const getApiKey = (provider: 'GEMINI' | 'OPENAI'): string | null => {
 // --- RAW HANDLERS (Prompt-agnostic) ---
 
 const callGemini = async (prompt: string, modelName: string): Promise<string> => {
-    const apiKey = getApiKey('GEMINI') || 'AIzaSyDlH6dieznFWfZtLSL4tHcfV6bgiJoVA6M'; // Default fallback (likely quota limited)
-
+    const apiKey = getApiKey('GEMINI');
     if (!apiKey) {
         console.warn(`Gemini (${modelName}) skipped: No API Key`);
         throw new Error("API_KEY_MISSING");
