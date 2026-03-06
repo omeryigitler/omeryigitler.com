@@ -1,70 +1,45 @@
 rules_version = '2';
-
 service cloud.firestore {
   match /databases/{database}/documents {
-    
-    // ============================================
-    // CLIENTS COLLECTION (Phase 1)
-    // ============================================
-    match /clients/{clientId} {
-      // Allow authenticated users to read and write
-      allow read, write: if request.auth != null;
-    }
-    
-    // ============================================
-    // MESSAGES COLLECTION (Updated for clientId)
-    // ============================================
-    match /messages/{messageId} {
-      // Allow anyone to create (contact form submissions)
+
+    // messages: herkes yazabilir (contact form), sadece auth okuyabilir
+    match /messages/{docId} {
       allow create: if true;
-      // Allow authenticated users to read, update, delete
       allow read, update, delete: if request.auth != null;
     }
-    
-    // ============================================
-    // PROJECTS COLLECTION (When migrated from localStorage)
-    // ============================================
-    match /projects/{projectId} {
-      // Allow authenticated users to read and write
+
+    // visitors_v1: sadece auth okuyabilir/yazabilir
+    match /visitors_v1/{docId} {
       allow read, write: if request.auth != null;
-    }
-    
-    // ============================================
-    // QUOTES COLLECTION (Phase 2 - Future)
-    // ============================================
-    match /quotes/{quoteId} {
-      // Allow authenticated users to read and write
-      allow read, write: if request.auth != null;
-    }
-    
-    // ============================================
-    // OTHER EXISTING COLLECTIONS
-    // ============================================
-    
-    // Security Config (Admin only - no changes)
-    match /security_config/{document=**} {
-      allow read, write: if request.auth != null;
-    }
-    
-    // Visitor Intelligence
-    match /visitors/{visitorId} {
-      // Allow writing without auth for tracking
-      allow write: if true;
-      // Reading requires auth
-      allow read: if request.auth != null;
     }
 
-    match /visitors_v1/{visitorId} {
-      allow write: if true;
-      allow read: if request.auth != null;
+    // authrequests: herkes oluşturabilir (gateway), sadece auth okuyabilir
+    match /authrequests/{docId} {
+      allow create: if true;
+      allow read, update, delete: if request.auth != null;
     }
-    
-    // Contact Messages (keep existing rules)
-    match /contact-messages/{messageId} {
-      // Allow writing without auth (contact form)
-      allow write: if true;
-      // Reading requires auth
-      allow read: if request.auth != null;
+
+    // projects, quotes, clients, stats: sadece auth
+    match /projects/{docId} {
+      allow read, write: if request.auth != null;
+    }
+    match /quotes/{docId} {
+      allow read, write: if request.auth != null;
+    }
+    match /clients/{docId} {
+      allow read, write: if request.auth != null;
+    }
+    match /stats/{docId} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+    match /securityconfig/{docId} {
+      allow read, write: if request.auth != null;
+    }
+
+    // Diğer her şey kapalı
+    match /{document=**} {
+      allow read, write: if false;
     }
   }
 }
