@@ -1,7 +1,8 @@
 [
     {
         "origin": [
-            "*"
+            "https://omeryigitler.com",
+            "https://www.omeryigitler.com"
         ],
         "method": [
             "GET",
@@ -12,7 +13,9 @@
             "OPTIONS"
         ],
         "responseHeader": [
-            "*"
+            "Content-Type",
+            "Authorization",
+            "Content-Length"
         ],
         "maxAgeSeconds": 3600
     }
