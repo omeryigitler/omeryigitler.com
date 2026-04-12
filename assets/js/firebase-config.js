@@ -14,7 +14,10 @@ const firebaseConfig = {
 window.firebaseConfig = firebaseConfig;
 
 // AUTO-INITIALIZE
-if (typeof firebase !== 'undefined') {
+const shouldAutoInitializeFirebase =
+    !(window.location && /\/admin\.html$/i.test(window.location.pathname));
+
+if (typeof firebase !== 'undefined' && shouldAutoInitializeFirebase) {
     if (!firebase.apps.length) {
         firebase.initializeApp(firebaseConfig);
         console.log("🔥 Firebase Initialized");
@@ -30,6 +33,8 @@ if (typeof firebase !== 'undefined') {
         window.storage = firebase.storage();
     }
     console.log("✅ Window.DB & Storage Exposed");
+} else if (typeof firebase !== 'undefined') {
+    console.log("Firebase auto-init skipped for admin-managed initialization.");
 } else {
     console.error("❌ Firebase SDK not found!");
 }
