@@ -20,9 +20,15 @@ if (typeof firebase !== 'undefined') {
         console.log("🔥 Firebase Initialized");
     }
     // Global DB Access
-    window.db = firebase.firestore();
-    window.auth = firebase.auth();
-    window.storage = firebase.storage();
+    if (typeof firebase.firestore === 'function') {
+        window.db = firebase.firestore();
+    }
+    if (typeof firebase.auth === 'function') {
+        window.auth = firebase.auth();
+    }
+    if (typeof firebase.storage === 'function') {
+        window.storage = firebase.storage();
+    }
     console.log("✅ Window.DB & Storage Exposed");
 } else {
     console.error("❌ Firebase SDK not found!");

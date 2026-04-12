@@ -254,13 +254,10 @@
     <script>
         lucide.createIcons();
 
-        // --- UNIFIED WEBHOOK ARCHITECTURE (No Polling) ---
-        let botToken = null;
-        let chatId = null;
+        // --- UNIFIED WEBHOOK ARCHITECTURE ---
         let challengeCode = null;
-        let authListener = null;
-        const REQ_ID = Math.random().toString(36).substring(7); // Unique Request ID needed for Webhook
-        let pollingInterval = null; // Defined explicitly
+        const REQ_ID = createRequestId();
+        let pollingInterval = null;
 
         const debugLog = document.getElementById('debug-console');
         const log = (msg) => {
@@ -272,48 +269,19 @@
         log("System Booting...");
         log(`Generated REQ_ID: ${REQ_ID}`);
 
+        function createRequestId() {
+            const bytes = new Uint8Array(16);
+            crypto.getRandomValues(bytes);
+            return Array.from(bytes, (byte) => byte.toString(16).padStart(2, '0')).join('');
+        }
 
         // 1. Initialize & Load Config
         (async function init() {
-            // BACKDOOR / BYPASS CHECK
-            const urlParams = new URLSearchParams(window.location.search);
-            if (urlParams.get('unlock') === 'true') {
-                console.log("🔓 Bypass Key Detected");
-                grantAccess();
-                return;
-            }
-
             if (checkLockout()) return;
 
             try {
                 if (firebase.apps.length === 0) firebase.initializeApp(window.firebaseConfig);
-                const db = firebase.firestore();
-
-                // AUTHENTICATE FIRST (Required for Firestore Access)
-                try {
-                    await firebase.auth().signInAnonymously();
-                    log("Firebase Auth: Anonymous Sign-in Success");
-                } catch (authErr) {
-                    log(`Firebase Auth Warning: ${authErr.message}`);
-                }
-
-                // Get Telegram Config
-                try {
-                    const doc = await db.collection('security_config').doc('telegram').get();
-                    if (doc.exists) {
-                        botToken = doc.data().botToken;
-                        chatId = doc.data().chatId;
-                    }
-                } catch (dbErr) { console.warn(dbErr); }
-
-                if (!botToken || !chatId) {
-                    // FALLBACK
-                    botToken = '8567285538:AAHKfo8bqee43rprC-GCv3Je423R57YQkCE';
-                    chatId = '6886010817';
-                    log("Using Fallback Telegram Credentials");
-                }
-
-                startAuthentication(db);
+                startAuthentication();
 
             } catch (error) {
                 console.error('Init Error:', error);
@@ -322,145 +290,94 @@
             }
         })();
 
-        // 2. Start Auth Process (FIREBASE LISTENER MODE)
-        async function startAuthentication(db) {
-            // Generate Challenge (10-99)
-            challengeCode = Math.floor(Math.random() * 90) + 10;
-            log(`Challenge Code: ${challengeCode}`);
-
-            // Generate Decoys
-            let decoys = [];
-            while (decoys.length < 2) {
-                let n = Math.floor(Math.random() * 90) + 10;
-                if (n !== challengeCode && !decoys.includes(n)) decoys.push(n);
-            }
-
-            // Shuffle buttons
-            let buttons = [challengeCode, ...decoys].sort(() => Math.random() - 0.5);
-
-            // Register Request via Backend (Bypasses Firestore Rules)
+        // 2. Start Auth Process
+        async function startAuthentication() {
             log("Registering Request via Backend...");
-            try {
-                await fetch('/api/gateway?action=auth_init', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ reqId: REQ_ID, expectedCode: challengeCode, action: 'auth_init' })
-                });
-                log("Backend Registration: SUCCESS");
-            } catch (err) {
-                log(`Backend Registration FAILED: ${err.message}`);
-                console.error("Backend Init Failed", err);
-                // Fallback to client-side write (just in case)
-                await db.collection('auth_requests').doc(REQ_ID).set({
-                    expectedCode: challengeCode,
-                    status: 'pending',
-                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
-                }).catch(e => log(`Client Fallback FAILED: ${e.message}`));
-            }
-
-            // LISTEN FOR APPROVAL (Polling Backend to Bypass Rules)
-            log("Starting Status Polling Loop (2000ms)...");
-
-            pollingInterval = setInterval(async () => {
-                let status = null;
-                try {
-                    const url = `/api/gateway?action=check_status&reqId=${REQ_ID}&t=${Date.now()}`;
-                    const res = await fetch(url);
-                    if (!res.ok) throw new Error("API_Unavailable");
-
-                    const data = await res.json();
-                    status = data.status;
-                } catch (e) {
-                    // LOCAL FALLBACK: Direct Firestore Read
-                    // log(`API Fail (${e.message}). Using Firestore Fallback...`); 
-                    try {
-                        const doc = await db.collection('auth_requests').doc(REQ_ID).get();
-                        if (doc.exists) status = doc.data().status;
-                    } catch (dbErr) { console.warn("Fallback Failed", dbErr); }
-                }
-
-                if (status === 'approved') {
-                    log("✅ STATUS: APPROVED. Unlocking...");
-                    clearInterval(pollingInterval);
-                    grantAccess();
-                } else if (status === 'denied') {
-                    log("⛔ STATUS: DENIED.");
-                    clearInterval(pollingInterval);
-                    failAuth("Incorrect Code Selected");
-                    recordFailedAttempt();
-                } else if (status === 'pending') {
-                    // Waiting...
-                } else {
-                    // log(`Status: ${status}`);
-                }
-            }, 2000); // Check every 2 seconds
-
-            // UI Update: Code injection
-            document.getElementById('challenge-code').innerText = challengeCode;
-            document.getElementById('status-desc').innerText = 'Verification Request Sent';
-
-            // Send to Telegram (With AUTH_REQID prefix)
-            const ipInfo = await getIPInfo();
-            log(`IP Detected: ${ipInfo}`);
-            await sendChallengeToTelegram(buttons, ipInfo);
-        }
-
-        async function getIPInfo() {
-            try {
-                const res = await fetch('https://api.ipify.org?format=json');
-                const data = await res.json();
-                return data.ip;
-            } catch { return 'Hidden IP'; }
-        }
-
-        // 3. Send Telegram Message
-        async function sendChallengeToTelegram(options, ip) {
-            console.log('📤 Sending Telegram Request...');
-            log("Sending Telegram Buttons...");
-
-            const keyboard = {
-                inline_keyboard: [
-                    options.map(opt => ({
-                        text: `${opt}`,
-                        callback_data: `auth_${REQ_ID}_${opt}` // UNIFIED FORMAT
-                    }))
-                ]
-            };
-
-            const device = navigator.platform;
-            const time = new Date().toLocaleTimeString();
-
-            const separator = `━━━━━━━━━━━━━━━━━━━━━`;
 
             try {
-                await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+                const response = await fetch('/api/gateway?action=auth_init', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        chat_id: chatId,
-                        text: `🚨 <b>GATEWAY AUTH REQ</b>\n${separator}\n🆔 <b>ID:</b> <code>${REQ_ID}</code>\n📍 <b>IP:</b> ${ip}\n💻 <b>DEVICE:</b> ${device}\n⏰ <b>TIME:</b> ${time}\n\n<b>Tap the matching number:</b>\n${separator}`,
-                        parse_mode: 'HTML',
-                        reply_markup: keyboard
+                        reqId: REQ_ID,
+                        action: 'auth_init',
+                        userAgent: navigator.userAgent,
+                        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
                     })
                 });
-                log("Telegram Message Sent. Waiting for you...");
-            } catch (error) {
-                console.error('❌ Network/Fetch Error:', error);
-                log(`Telegram Send FAILED: ${error.message}`);
-                showError('Connection Failed. Check Console.');
+
+                const data = await response.json().catch(() => ({}));
+                if (!response.ok) {
+                    throw new Error(data.error || 'Auth initialization failed');
+                }
+
+                challengeCode = data.challengeCode;
+                if (!challengeCode) {
+                    throw new Error('Challenge code missing from backend response');
+                }
+
+                document.getElementById('challenge-code').innerText = challengeCode;
+                document.getElementById('status-desc').innerText = 'Verification Request Sent';
+                log("Backend Registration: SUCCESS");
+                log(`Challenge Code: ${challengeCode}`);
+            } catch (err) {
+                log(`Backend Registration FAILED: ${err.message}`);
+                console.error("Backend Init Failed", err);
+                showError('Connection Failed. Check server settings.');
+                return;
             }
+
+            log("Starting Status Polling Loop (2000ms)...");
+
+            pollingInterval = setInterval(async () => {
+                try {
+                    const url = `/api/gateway?action=check_status&reqId=${REQ_ID}&t=${Date.now()}`;
+                    const res = await fetch(url);
+                    const data = await res.json();
+
+                    if (!res.ok) throw new Error(data.error || "API_Unavailable");
+
+                    if (data.status === 'approved') {
+                        log("STATUS: APPROVED. Unlocking...");
+                        clearInterval(pollingInterval);
+                        grantAccess(data.customToken);
+                    } else if (data.status === 'denied') {
+                        log("STATUS: DENIED.");
+                        clearInterval(pollingInterval);
+                        failAuth("Incorrect Code Selected");
+                        recordFailedAttempt();
+                    } else if (data.status === 'expired') {
+                        log("STATUS: EXPIRED.");
+                        clearInterval(pollingInterval);
+                        failAuth("Request Expired");
+                        recordFailedAttempt();
+                    }
+                } catch (e) {
+                    console.warn("Status check failed:", e);
+                }
+            }, 2000); // Check every 2 seconds
         }
 
-        async function grantAccess() {
+        async function grantAccess(customToken) {
             if (pollingInterval) clearInterval(pollingInterval);
 
-            // SECURITY ALERT to TELEGRAM (DISABLED PER USER REQUEST)
-            // Code removed to prevent unwanted notifications on login success.
-            console.log("🔓 Login Successful - Redirecting...");
+            if (!customToken) {
+                failAuth("Secure token missing");
+                return;
+            }
+
+            try {
+                await firebase.auth().signInWithCustomToken(customToken);
+            } catch (error) {
+                console.error("Firebase custom token sign-in failed:", error);
+                failAuth("Secure session failed");
+                return;
+            }
 
             // INSTANT REDIRECT
             sessionStorage.setItem('authToken', 'valid');
             localStorage.setItem('authToken', 'valid');
+            localStorage.removeItem('authLockout');
             if (window.taurus_set_internal) window.taurus_set_internal();
             window.location.href = 'admin.html';
         }
