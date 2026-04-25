@@ -63,6 +63,19 @@ function getClientIp(req) {
   return req.socket?.remoteAddress || "Unknown";
 }
 
+function cleanCommandMessage(value) {
+  if (typeof value !== "string") return null;
+
+  const cleaned = value
+    .replace(/[\u0000-\u001F\u007F]/g, " ")
+    .replace(/[<>]/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  if (!cleaned) return null;
+  return cleaned.slice(0, 180);
+}
+
 async function sendAuthChallenge({ reqId, challengeCode, options, ip, userAgent }) {
   const botToken = requireEnv("TELEGRAM_BOT_TOKEN");
   const chatId = getTelegramAdminChatId();
@@ -200,11 +213,12 @@ module.exports = async (req, res) => {
       if (!sessionId) return res.status(400).json({ error: "Missing sessionId" });
 
       const doc = await db.collection("visitors_v1").doc(sessionId).get();
-      if (!doc.exists) return res.status(200).json({ action: null });
+      if (!doc.exists) return res.status(200).json({ action: null, message: null });
 
       const data = doc.data();
       return res.status(200).json({
         action: data.action || null,
+        message: cleanCommandMessage(data.message),
         action_timestamp: data.action_timestamp || null,
       });
     }
@@ -215,6 +229,7 @@ module.exports = async (req, res) => {
 
       await db.collection("visitors_v1").doc(sessionId).update({
         action: admin.firestore.FieldValue.delete(),
+        message: admin.firestore.FieldValue.delete(),
         action_timestamp: admin.firestore.FieldValue.delete(),
       });
 
