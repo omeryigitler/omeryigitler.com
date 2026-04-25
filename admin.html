@@ -166,6 +166,10 @@
             width: 110px !important;
         }
 
+        .w-select {
+            width: 54px !important;
+        }
+
         .w-sender {
             width: 20% !important;
         }
@@ -557,6 +561,25 @@
                     </div>
                 </div>
 
+                <!-- Bulk Actions -->
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
+                    <div class="flex items-center gap-3 text-[10px] uppercase tracking-widest text-gray-500">
+                        <label
+                            class="flex items-center gap-2 px-3 py-2 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 transition-all">
+                            <input id="messages-select-all" type="checkbox" class="accent-[#FFD700]"
+                                onchange="toggleSelectAllMessages(this.checked)">
+                            Select All
+                        </label>
+                        <span id="messages-selected-count"
+                            class="px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-gray-400">0
+                            Selected</span>
+                    </div>
+                    <button id="messages-bulk-delete" onclick="bulkDeleteMessages()" disabled
+                        class="px-4 py-2 rounded-lg bg-red-500/10 text-red-500 border border-red-500/20 text-[10px] font-bold uppercase tracking-widest hover:bg-red-500 hover:text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+                        Delete Selected
+                    </button>
+                </div>
+
                 <!-- Desktop Table View -->
                 <div
                     class="hidden lg:block w-full bg-white/5 border border-glassBorder rounded-3xl overflow-hidden backdrop-blur-md">
@@ -564,6 +587,10 @@
                         <thead>
                             <tr
                                 class="bg-white/5 border-b border-white/5 text-[10px] font-black uppercase tracking-[0.2em] text-gray-500">
+                                <th class="p-4 w-select text-center">
+                                    <input id="messages-select-all-top" type="checkbox" class="accent-[#FFD700]"
+                                        onchange="toggleSelectAllMessages(this.checked)">
+                                </th>
                                 <th class="p-4 w-status">STATUS</th>
                                 <th class="p-4 w-sender">SENDER</th>
                                 <th class="p-4 w-message">MESSAGE</th>
@@ -988,6 +1015,8 @@
         const selectedQuotes = new Set();
         const selectedClients = new Set();
         const selectedVisitors = new Set();
+        const selectedMessages = new Set();
+        let visibleMessageIds = [];
         let visibleQuoteIds = [];
         let visibleClientIds = [];
         let visibleVisitorIds = [];
@@ -2901,13 +2930,17 @@
 
             db.collection('messages').orderBy('timestamp', 'desc').onSnapshot(snapshot => {
                 if (snapshot.empty) {
-                    desktopBody.innerHTML = '<tr><td colspan="5" class="p-10 text-center text-gray-500 uppercase tracking-widest text-[10px]">Neural link empty. No messages.</td></tr>';
+                    visibleMessageIds = [];
+                    selectedMessages.clear();
+                    updateMessagesBulkUI();
+                    desktopBody.innerHTML = '<tr><td colspan="6" class="p-10 text-center text-gray-500 uppercase tracking-widest text-[10px]">Neural link empty. No messages.</td></tr>';
                     mobileContainer.innerHTML = '<div class="p-10 text-center text-gray-600 uppercase tracking-widest text-[10px]">No incoming signals found.</div>';
                     if (recentLeadsContainer) recentLeadsContainer.innerHTML = '<p class="text-[10px] text-gray-600 uppercase text-center py-4">No leads detected</p>';
                     return;
                 }
 
                 messagesMap = {};
+                visibleMessageIds = [];
                 let desktopHtml = '';
                 let mobileHtml = '';
                 let leadsHtml = '';
@@ -2963,10 +2996,15 @@
 
                     // Filtering for Messages View
                     if (currentMessageFilter === 'unread' && !isNew) return;
+                    visibleMessageIds.push(id);
+                    const isSelected = selectedMessages.has(id);
 
                     // Desktop Row
                     desktopHtml += `
                         <tr onclick="openMessageModal('${id}')" class="border-b border-white/5 hover:bg-white/5 transition-all group cursor-pointer">
+                            <td class="p-4 w-select text-center" onclick="event.stopPropagation()">
+                                <input type="checkbox" data-message-select="${id}" class="accent-[#FFD700]" ${isSelected ? 'checked' : ''} onchange="toggleMessageSelection('${id}', this.checked)">
+                            </td>
                             <td class="p-4 w-status">
                                 ${isNew ? '<span class="px-2 py-0.5 rounded-full border border-taurusGold/50 text-taurusGold text-[9px] font-black uppercase">Unread</span>' : '<span class="px-2 py-0.5 rounded-full bg-white/5 text-gray-500 text-[9px] font-black uppercase">Archived</span>'}
                             </td>
@@ -2997,6 +3035,9 @@
                         <div onclick="openMessageModal('${id}')" class="message-card relative overflow-hidden active:scale-95 transition-all border ${isNew ? 'border-taurusGold bg-white/[0.02] ring-1 ring-taurusGold/20' : 'border-white/5 bg-white/[0.02]'}">
                             ${isNew ? '<div class="absolute top-0 right-0 p-2"><div class="w-2 h-2 bg-taurusGold rounded-full animate-pulse shadow-[0_0_8px_rgba(255,215,0,0.6)]"></div></div>' : ''}
                             <div class="flex items-center gap-4 mb-4">
+                                <div onclick="event.stopPropagation()" class="shrink-0">
+                                    <input type="checkbox" data-message-select="${id}" class="accent-[#FFD700]" ${isSelected ? 'checked' : ''} onchange="toggleMessageSelection('${id}', this.checked)">
+                                </div>
                                 <div class="w-12 h-12 rounded-full flex items-center justify-center bg-white/5 border border-white/10 text-taurusGold shadow-lg">
                                     <i data-lucide="user" class="w-6 h-6"></i>
                                 </div>
@@ -3022,8 +3063,60 @@
                 if (desktopBody) desktopBody.innerHTML = desktopHtml;
                 if (mobileContainer) mobileContainer.innerHTML = mobileHtml;
                 if (recentLeadsContainer) recentLeadsContainer.innerHTML = leadsHtml;
+                pruneSelection(selectedMessages, visibleMessageIds);
+                updateMessagesBulkUI();
                 lucide.createIcons();
             });
+        }
+
+        function updateMessagesBulkUI() {
+            const count = selectedMessages.size;
+            const total = visibleMessageIds.length;
+            const countEl = document.getElementById('messages-selected-count');
+            const deleteBtn = document.getElementById('messages-bulk-delete');
+            const selectAll = document.getElementById('messages-select-all');
+            const selectAllTop = document.getElementById('messages-select-all-top');
+
+            if (countEl) countEl.innerText = `${count} Selected`;
+            if (deleteBtn) deleteBtn.disabled = count === 0;
+            [selectAll, selectAllTop].forEach(el => {
+                if (!el) return;
+                el.checked = total > 0 && count === total;
+                el.indeterminate = count > 0 && count < total;
+            });
+        }
+
+        function toggleMessageSelection(id, checked) {
+            if (checked) selectedMessages.add(id);
+            else selectedMessages.delete(id);
+            document.querySelectorAll(`input[data-message-select="${id}"]`).forEach(el => { el.checked = checked; });
+            updateMessagesBulkUI();
+        }
+
+        function toggleSelectAllMessages(checked) {
+            if (checked) visibleMessageIds.forEach(id => selectedMessages.add(id));
+            else visibleMessageIds.forEach(id => selectedMessages.delete(id));
+            document.querySelectorAll('input[data-message-select]').forEach(el => {
+                el.checked = checked && visibleMessageIds.includes(el.dataset.messageSelect);
+            });
+            updateMessagesBulkUI();
+        }
+
+        async function bulkDeleteMessages() {
+            if (!db || selectedMessages.size === 0) return;
+            const count = selectedMessages.size;
+            const confirmed = await systemConfirm('BULK DELETE', `Delete ${count} selected messages?`, 'trash-2');
+            if (!confirmed) return;
+
+            try {
+                const batch = db.batch();
+                Array.from(selectedMessages).forEach(id => batch.delete(db.collection('messages').doc(id)));
+                await batch.commit();
+                selectedMessages.clear();
+                updateMessagesBulkUI();
+            } catch (e) {
+                systemAlert('ERROR', 'Bulk delete failed: ' + e.message, 'x-circle');
+            }
         }
 
         // ============================================
@@ -4042,6 +4135,8 @@
             const confirmed = await systemConfirm("NEUTRALIZATION", "Confirm neutralization of this data record?", "trash-2");
             if (!confirmed) return;
             await db.collection('messages').doc(id).delete();
+            selectedMessages.delete(id);
+            updateMessagesBulkUI();
         }
 
         function toggleRole() {
