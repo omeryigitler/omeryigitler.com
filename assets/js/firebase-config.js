@@ -13,6 +13,57 @@ const firebaseConfig = {
 // Global Exposure
 window.firebaseConfig = firebaseConfig;
 
+(function injectTaurusFreezeLayoutFix() {
+    const styleId = 'taurus-freeze-layout-fix';
+
+    function applyFix() {
+        const existing = document.getElementById(styleId);
+        if (existing) {
+            existing.remove();
+        }
+
+        const style = document.createElement('style');
+        style.id = styleId;
+        style.textContent = `
+            #taurus-overlay.mode-freeze #taurus-custom-msg {
+                display: block !important;
+                width: min(90vw, 520px) !important;
+                max-width: min(90vw, 520px) !important;
+                margin: 5.25rem auto 0 auto !important;
+                text-align: center !important;
+                transform: translateY(0.75rem);
+                line-height: 1.25 !important;
+            }
+
+            @media (max-height: 760px) {
+                #taurus-overlay.mode-freeze #taurus-custom-msg {
+                    margin-top: 4rem !important;
+                    transform: translateY(0.25rem);
+                    font-size: 1.2rem !important;
+                }
+            }
+
+            @media (max-width: 640px) {
+                #taurus-overlay.mode-freeze #taurus-custom-msg {
+                    margin-top: 4.5rem !important;
+                    max-width: 86vw !important;
+                    font-size: 1.1rem !important;
+                    letter-spacing: 0.08em !important;
+                }
+            }
+        `;
+        document.head.appendChild(style);
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', applyFix, { once: true });
+    } else {
+        applyFix();
+    }
+
+    window.addEventListener('load', () => setTimeout(applyFix, 250), { once: true });
+})();
+
 // AUTO-INITIALIZE
 const shouldAutoInitializeFirebase =
     !(window.location && /\/admin\.html$/i.test(window.location.pathname));
