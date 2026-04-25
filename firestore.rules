@@ -15,11 +15,13 @@ service cloud.firestore {
       allow read, update, delete: if isAdmin();
     }
 
-    // Public visitor tracker still writes with anonymous Firebase Auth.
-    // Reads and deletes are admin-only.
+    // Public visitor tracker writes with anonymous Firebase Auth.
+    // The browser may listen only to its own known session document for remote commands.
+    // Collection listing and deletes stay admin-only.
     match /visitors_v1/{docId} {
       allow create, update: if isSignedIn();
-      allow read, delete: if isAdmin();
+      allow get: if isSignedIn();
+      allow list, delete: if isAdmin();
     }
 
     // Gateway auth requests are written/read by backend Admin SDK.
