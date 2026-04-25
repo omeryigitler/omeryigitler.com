@@ -1,9 +1,25 @@
-// DEPLOY_TRIGGER: 2026-04-12_admin_auth_hardening
+// DEPLOY_TRIGGER: 2026-04-25_gemini_command_hardening
 const axios = require("axios");
-const { GoogleGenerativeAI } = require("@google/generative-ai");
-const { admin, db, requireEnv } = require("./_firebaseAdmin");
+const { GoogleGenerativeAI, SchemaType } = require("@google/generative-ai");
+const { admin, db } = require("./_firebaseAdmin");
 
 const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
+const VALID_COMMANDS = new Set(["FREEZE", "CLEAR", "ALARM", "BLOCK"]);
+const COMMAND_RESPONSE_SCHEMA = {
+  type: SchemaType.OBJECT,
+  properties: {
+    command: {
+      type: SchemaType.STRING,
+      enum: ["FREEZE", "CLEAR", "ALARM", "BLOCK", "UNKNOWN"],
+      description: "The normalized visitor-control command.",
+    },
+    message: {
+      type: SchemaType.STRING,
+      description: "Text to show on the visitor screen. Return an empty string when no screen message is requested.",
+    },
+  },
+  required: ["command", "message"],
+};
 
 function getAllowedTelegramIds() {
   return (process.env.TELEGRAM_ALLOWED_IDS || process.env.TELEGRAM_CHAT_ID || "")
@@ -17,13 +33,27 @@ function isAllowedTelegramId(id) {
   return allowedIds.length > 0 && allowedIds.includes(Number(id));
 }
 
+function isTelegramWebhookAuthorized(req) {
+  const expectedSecret = process.env.TELEGRAM_WEBHOOK_SECRET;
+  if (!expectedSecret) return true;
+
+  return req.headers["x-telegram-bot-api-secret-token"] === expectedSecret;
+}
+
 function getGeminiModel() {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) return null;
 
-  const modelName = process.env.GEMINI_MODEL || "gemini-2.5-flash-lite";
+  const modelName = process.env.GEMINI_MODEL || "gemini-2.5-flash";
   const genAI = new GoogleGenerativeAI(apiKey);
-  return genAI.getGenerativeModel({ model: modelName });
+  return genAI.getGenerativeModel({
+    model: modelName,
+    generationConfig: {
+      temperature: 0,
+      responseMimeType: "application/json",
+      responseSchema: COMMAND_RESPONSE_SCHEMA,
+    },
+  });
 }
 
 async function telegram(method, payload) {
@@ -45,6 +75,119 @@ async function answerCallback(callbackQuery, text) {
   } catch (error) {
     console.error("Callback answer failed:", error);
   }
+}
+
+function normalizeForIntent(value) {
+  return String(value || "")
+    .trim()
+    .toLocaleUpperCase("tr-TR")
+    .replace(/İ/g, "I")
+    .replace(/İ/g, "I")
+    .replace(/Ğ/g, "G")
+    .replace(/Ü/g, "U")
+    .replace(/Ş/g, "S")
+    .replace(/Ö/g, "O")
+    .replace(/Ç/g, "C");
+}
+
+function cleanScreenMessage(value) {
+  if (typeof value !== "string") return null;
+
+  const cleaned = value
+    .replace(/[\u0000-\u001F\u007F]/g, " ")
+    .replace(/[<>]/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  if (!cleaned) return null;
+  return cleaned.slice(0, 180);
+}
+
+function parseTextCommandFallback(rawText) {
+  const text = String(rawText || "").trim();
+  const normalized = normalizeForIntent(text);
+
+  const writePatterns = [
+    /^(?:DURDUR|KAPAT|FREEZE|STOP|DON)\s+(?:VE\s+)?(.+?)\s+(?:YAZDIR|YAZ|GOSTER|GÖSTER)$/i,
+    /^(?:EKRANA|SAYFAYA|ZIYARETCIYE|ZIYARETÇIYE|MESAJ|SUNU|ŞUNU)\s*:?\s*(.+?)(?:\s+(?:YAZDIR|YAZ|GOSTER|GÖSTER))?$/i,
+    /^(?:YAZDIR|YAZ|GOSTER|GÖSTER)\s*:?\s*(.+)$/i,
+  ];
+
+  for (const pattern of writePatterns) {
+    const match = text.match(pattern);
+    if (match) {
+      const screenMessage = cleanScreenMessage(match[1]);
+      if (screenMessage) {
+        return { command: "FREEZE", message: screenMessage };
+      }
+    }
+  }
+
+  if (["DURDUR", "KAPAT", "FREEZE", "STOP", "DON"].includes(normalized)) {
+    return { command: "FREEZE", message: null };
+  }
+
+  if (["TEMIZLE", "AC", "AÇ", "DEVAM ET", "CLEAR", "IPTAL", "İPTAL", "UNBLOCK", "ENGELI KALDIR", "ENGELİ KALDIR"].includes(normalized)) {
+    return { command: "CLEAR", message: null };
+  }
+
+  if (["ALARM", "UYAR", "UYARI", "SIREN", "SİREN"].includes(normalized)) {
+    return { command: "ALARM", message: null };
+  }
+
+  if (["ENGELLE", "BLOCK", "KARA LISTE", "KARA LİSTE", "BAN"].includes(normalized)) {
+    return { command: "BLOCK", message: null };
+  }
+
+  return { command: "UNKNOWN", message: null };
+}
+
+function normalizeGeminiCommand(responseData) {
+  const command = String(responseData?.command || "UNKNOWN").trim().toUpperCase();
+  const normalizedCommand = VALID_COMMANDS.has(command) ? command : "UNKNOWN";
+  const message = cleanScreenMessage(responseData?.message || "");
+
+  return {
+    command: normalizedCommand,
+    message,
+  };
+}
+
+async function classifyCommandWithGemini(model, inputs) {
+  const prompt = `
+You are a strict command classifier for a private website visitor-control system.
+The admin may send Turkish or English text, or a Turkish/English voice note.
+Return ONLY valid JSON that matches the schema. Do not include markdown, comments, explanations, or extra keys.
+
+Commands:
+- FREEZE: stop/freeze the latest visitor session. Use this when the admin says durdur, kapat, don, freeze, stop.
+- CLEAR: clear the active command and let the visitor continue. Use this when the admin says temizle, aç, devam et, iptal, clear, unblock, engeli kaldır.
+- ALARM: trigger an alert/warning on the visitor screen.
+- BLOCK: block/ban the visitor session. Use this only for explicit block/engelle/ban/kara liste intent.
+- UNKNOWN: use this if the intent is not one of the commands above.
+
+Screen message rule:
+- If the admin says "ekrana [text] yaz", "ziyaretçiye [text] göster", "mesaj: [text]", "durdur ve [text] yaz", or similar, return FREEZE and put only the clean screen text in message.
+- Do not include command words such as "ekrana", "yaz", "göster", "durdur" inside message.
+- If there is no explicit screen text, message must be an empty string.
+- Keep message under 180 characters.
+
+Examples:
+"Durdur" -> {"command":"FREEZE","message":""}
+"Ekrana bakımdayız yaz" -> {"command":"FREEZE","message":"bakımdayız"}
+"Durdur ve lütfen sonra tekrar dene yaz" -> {"command":"FREEZE","message":"lütfen sonra tekrar dene"}
+"Temizle" -> {"command":"CLEAR","message":""}
+"Engelle" -> {"command":"BLOCK","message":""}
+"Alarm ver" -> {"command":"ALARM","message":""}
+  `.trim();
+
+  const result = await model.generateContent([prompt, ...inputs]);
+  const responseText = result.response
+    .text()
+    .replace(/```json|```/g, "")
+    .trim();
+
+  return normalizeGeminiCommand(JSON.parse(responseText));
 }
 
 async function handleAuthCallback(callbackQuery) {
@@ -205,26 +348,10 @@ async function handleTelegramMessage(message, model) {
       },
     ];
   } else if (message.text) {
-    const textUpper = String(message.text).trim().toUpperCase();
+    const fallback = parseTextCommandFallback(message.text);
 
     if (!model) {
-      let fallbackCommand = "UNKNOWN";
-
-      if (["DURDUR", "KAPAT", "FREEZE", "STOP", "DON"].includes(textUpper)) {
-        fallbackCommand = "FREEZE";
-      } else if (
-        ["TEMIZLE", "AC", "AÇ", "DEVAM ET", "CLEAR", "IPTAL", "İPTAL"].includes(
-          textUpper
-        )
-      ) {
-        fallbackCommand = "CLEAR";
-      } else if (textUpper === "ALARM") {
-        fallbackCommand = "ALARM";
-      } else if (textUpper === "ENGELLE" || textUpper === "BLOCK") {
-        fallbackCommand = "BLOCK";
-      }
-
-      if (fallbackCommand === "UNKNOWN") {
+      if (fallback.command === "UNKNOWN") {
         await telegram("sendMessage", {
           chat_id: chatId,
           text: `Unknown command: "${message.text}"`,
@@ -232,46 +359,32 @@ async function handleTelegramMessage(message, model) {
         return;
       }
 
-      await executeVisitorCommand(chatId, fallbackCommand, null);
+      await executeVisitorCommand(chatId, fallback.command, fallback.message);
       return;
     }
 
     inputs = [`COMMAND TEXT: "${message.text}"`];
   }
 
-  const prompt = `
-Analyze the intent of the user's command (Audio or Text).
-Return ONLY raw JSON. No markdown formatting.
-
-Schema:
-{ "command": "FREEZE" | "CLEAR" | "ALARM" | "BLOCK" | "UNKNOWN", "message": string | null }
-
-Rules:
-1. "Durdur", "Kapat", "Freeze", "Stop", "Don" -> { "command": "FREEZE", "message": null }
-2. "Durdur ve [X] yaz", "Ekrana [X] yaz", "Mesaj: [X]" -> { "command": "FREEZE", "message": "[X]" }
-3. "Temizle", "Aç", "Devam et", "Clear", "İptal" -> { "command": "CLEAR", "message": null }
-4. "Alarm" -> ALARM, "Engelle" -> BLOCK
-5. If unknown -> UNKNOWN
-  `.trim();
-
-  const result = await model.generateContent([prompt, ...inputs]);
-  const responseText = result.response
-    .text()
-    .replace(/```json|```/g, "")
-    .trim();
-
   let responseData;
   try {
-    responseData = JSON.parse(responseText);
-  } catch {
-    throw new Error(`Invalid JSON returned from Gemini: ${responseText}`);
+    responseData = await classifyCommandWithGemini(model, inputs);
+  } catch (error) {
+    console.error("Gemini command parsing failed:", error);
+
+    if (message.text) {
+      responseData = parseTextCommandFallback(message.text);
+    } else {
+      await telegram("sendMessage", {
+        chat_id: chatId,
+        text: "Voice command could not be understood. Please try a shorter command.",
+      });
+      return;
+    }
   }
 
-  const command = String(responseData.command || "UNKNOWN").toUpperCase();
-  const messageContent = responseData.message || null;
-
-  if (["FREEZE", "CLEAR", "ALARM", "BLOCK"].includes(command)) {
-    await executeVisitorCommand(chatId, command, messageContent);
+  if (VALID_COMMANDS.has(responseData.command)) {
+    await executeVisitorCommand(chatId, responseData.command, responseData.message);
   } else if (message.text) {
     await telegram("sendMessage", {
       chat_id: chatId,
@@ -285,6 +398,11 @@ const model = getGeminiModel();
 module.exports = async (req, res) => {
   if (req.method !== "POST") {
     return res.status(200).send("OK");
+  }
+
+  if (!isTelegramWebhookAuthorized(req)) {
+    console.warn("Blocked webhook request with invalid Telegram secret token.");
+    return res.status(401).send("Unauthorized");
   }
 
   try {
