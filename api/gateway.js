@@ -1,107 +1,237 @@
-const admin = require('firebase-admin');
+const axios = require("axios");
+const { admin, db, requireEnv } = require("./_firebaseAdmin");
 
-// Initialize Firebase with Fallback Logic (Same as Webhook)
-if (!admin.apps.length) {
-    admin.initializeApp({
-        credential: admin.credential.cert({
-            "project_id": "omeryigitler-5abfb",
-            "private_key": process.env.FIREBASE_PRIVATE_KEY
-                ? process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n')
-                : "-----BEGIN PRIVATE KEY-----\nMIIEvAIBADANBgkqhkiG9w0BAQEFAASCBKYwggSiAgEAAoIBAQCqBSNaafCJWDjO\nz60CQWqAxTmH7gIqSXaHlSBSUWaBELd4uznWI9DFcKILkxFsyd2aNpZPZWjS6opn\ng2E8lXnr2P0Ho5oRzzsRw5qwe/CmvNEcx4HiHZbnbhIQ6JiP3mX9Q3Ur3MW+TzA3\nhO5HBdyEe6E1LAhDwGFvXRBsi48F33sSLCDrSjPl+VerVi4kbhd1qp7Qfj2eGl6h\nIWYpgcpYtHS++3rHK/u8DZZ47DM6MD4djma8rJgaCcW9r75D3ksPsXfYJkTPw5e5\nUdF79pTMEVjSiCayNdSv4Xmh6psC/UtELR4YKsgtUTDU40qkZorfOWy0pIL9D1WS\nFYPpcpNLAgMBAAECggEABL8G+R+q+NKPJ2rRvBXiaLzYucwxoEeTuP43PEUMdP7n\n+EVVvH4cdl6KD4OoAV7zQjpS4N2GWxj0Cya2QLA1iplwmtV82BFuZzUMLPAQzD7K\nIaEKJatIyqYed/1eQOnm8/Z9n19W39SrFmmuEyp9OO+QlQDpLCcDMU4qRrVwpSvH\nxoycWFozjgjUVQbtogb+e7uTq3IgJFdK1aiNKV+bmgG5KVrv+vF3dPFxw7SWh+ST\nDVbXUF/ULOKF4JOTs6dunPVG209VRYJS6+jw8PPTIozDDTSY0ev0yBhRUFUwXGjd\naJOlv2gLzRU/kWO7zDz95ZrTLMT6kFILdSLXxVUCpQKBgQDYADF9uvRPBhKTEsgG\nM6oXgh5G/ESIY4e5lFMF0gFjLvqezzLhMeMLTM69MWX9nUA0imzTjv1EpeOSPVQd\nlF5KH19dZdihEYe0QjLDMb3VJe66SN0aXFW4/BCcQVnPI4+bzFAhnIDhdeQllusV\nRgEj8YWKa9B+qeLkev4QoxbS1QKBgQDJgSsjOp0hgDTMCECLBDKunvPndoBuAnh0\nFPAf2FajPxbvUqEpugYRMMfzNxpuW12/2CGNsOsRllWHy2+rJdx1lbts/hDUQCUF\nFePRFf2vtvDuKXI7xMzo1MFYbHWNlzGKmuhYVsBUrr5SToJKyCRQ8jglyXiqqJXE\n88mXxZWdnwKBgDPPmA94kLGD22C72I7kRaBt7aVJTYcJmLzC/0ceIIcR9buyJ5os\nxTEos05eUwCKf6QasA/u9IFK6VNispKFzDgrXkyg6V15PvvWBScc/1PpTWIRqDdy\nfn1ouPNCGbC97uyIDZCCYcey5468rJblu9BLVqTlR5WaWnpDpj2HYSohAoGAerdX\ndhT0LLrPbJJ5/C+KTh4vm/7nKBgJE2jM9Bfka3a4mPdRfv/zQfTbUJt2VU7/QR53\nELt17TgIzrJuR2S/ZjzR8AaqaRjHctlp7KPf42seP2yuTQgFYqZvOVKUJK63VRoR\n9fqfFvN0pNt7Ld/FfiaFWz3fZs9UpqVxWCTUgTECgYB60AYRqgfHG7ATIUGb9oyB\nO2D+DgmT3dcgP+Cw4POvr+nWmRtuCswgHWkQcaG0vpclhYbcvcwrP84Rh35yBYmQ\n8fD6ZFxuxoT1mDgMy1ZgzaoMBHmSBor07rnct0DZ8LKHR7ixVG3fmMG4US3aStvy\n5H0sIhu0upGXfh67QPHmvw==\n-----END PRIVATE KEY-----\n",
-            "client_email": "firebase-adminsdk-fbsvc@omeryigitler-5abfb.iam.gserviceaccount.com"
-        })
-    });
+const AUTH_REQUEST_TTL_MS = 5 * 60 * 1000;
+
+function setCors(req, res) {
+  const allowedOrigins = new Set([
+    "https://omeryigitler.com",
+    "https://www.omeryigitler.com",
+  ]);
+  const origin = req.headers.origin;
+
+  if (allowedOrigins.has(origin)) {
+    res.setHeader("Access-Control-Allow-Origin", origin);
+    res.setHeader("Vary", "Origin");
+  }
+
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+  res.setHeader("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
+  res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
 }
 
-const db = admin.firestore();
-
-// Unified Vercel Function: Gateway
-// Handles: check_command, ack_command, auth_init, check_status
-module.exports = async (req, res) => {
-    // Enable CORS
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-
-    if (req.method === 'OPTIONS') return res.status(200).send('OK');
-
-    // Determine Action (from query or body)
-    const action = req.query.action || req.body.action;
-
-    if (!action) {
-        return res.status(400).json({ error: 'Missing action parameter' });
-    }
-
+function readBody(req) {
+  if (!req.body) return {};
+  if (typeof req.body === "string") {
     try {
-        // --- ROUTING LOGIC ---
-
-        // 1. CHECK COMMAND (Tracker Polls this)
-        if (action === 'check_command') {
-            const sessionId = req.query.sessionId || req.body.sessionId;
-            if (!sessionId) return res.status(400).json({ error: 'Missing sessionId' });
-
-            const doc = await db.collection('visitors_v1').doc(sessionId).get();
-            if (!doc.exists) return res.status(200).json({ action: null });
-
-            const data = doc.data();
-            return res.status(200).json({
-                action: data.action || null,
-                action_timestamp: data.action_timestamp || null
-            });
-        }
-
-        // 2. ACK COMMAND (Tracker confirms execution)
-        if (action === 'ack_command') {
-            // Handle body parsing if stringified (sometimes happens with fetch)
-            let body = req.body;
-            if (typeof body === 'string') {
-                try { body = JSON.parse(body); } catch (e) { }
-            }
-            const sessionId = req.query.sessionId || body.sessionId;
-
-            if (!sessionId) return res.status(400).json({ error: 'Missing sessionId' });
-
-            await db.collection('visitors_v1').doc(sessionId).update({
-                action: admin.firestore.FieldValue.delete(),
-                action_timestamp: admin.firestore.FieldValue.delete()
-            });
-            return res.status(200).json({ status: 'cleared' });
-        }
-
-        // 3. AUTH INIT (Gateway Page requests access)
-        if (action === 'auth_init') {
-            let body = req.body;
-            if (typeof body === 'string') {
-                try { body = JSON.parse(body); } catch (e) { }
-            }
-            const { reqId, expectedCode } = body;
-
-            if (!reqId || !expectedCode) return res.status(400).json({ error: 'Missing Data' });
-
-            await db.collection('auth_requests').doc(reqId).set({
-                expectedCode: expectedCode,
-                status: 'pending',
-                timestamp: admin.firestore.FieldValue.serverTimestamp()
-            });
-            return res.status(200).json({ status: 'ok' });
-        }
-
-        // 4. CHECK STATUS (Gateway Page polls this)
-        if (action === 'check_status') {
-            const reqId = req.query.reqId;
-            if (!reqId) return res.status(400).json({ error: 'Missing reqId' });
-
-            const doc = await db.collection('auth_requests').doc(reqId).get();
-            if (!doc.exists) return res.status(404).json({ status: 'not_found' });
-
-            return res.status(200).json({ status: doc.data().status });
-        }
-
-        // Unknown Action
-        return res.status(400).json({ error: 'Invalid action' });
-
-    } catch (e) {
-        console.error("Gateway Error:", e);
-        return res.status(500).json({ error: e.message });
+      return JSON.parse(req.body);
+    } catch (_) {
+      return {};
     }
+  }
+  return req.body;
+}
+
+function getTelegramAdminChatId() {
+  return (
+    process.env.TELEGRAM_CHAT_ID ||
+    (process.env.TELEGRAM_ALLOWED_IDS || "").split(",")[0]?.trim() ||
+    ""
+  );
+}
+
+function generateCode() {
+  return Math.floor(Math.random() * 90) + 10;
+}
+
+function generateOptions(challengeCode) {
+  const options = [challengeCode];
+
+  while (options.length < 3) {
+    const next = generateCode();
+    if (!options.includes(next)) options.push(next);
+  }
+
+  return options.sort(() => Math.random() - 0.5);
+}
+
+function getClientIp(req) {
+  const forwardedFor = req.headers["x-forwarded-for"];
+  if (typeof forwardedFor === "string" && forwardedFor.trim()) {
+    return forwardedFor.split(",")[0].trim();
+  }
+  return req.socket?.remoteAddress || "Unknown";
+}
+
+async function sendAuthChallenge({ reqId, challengeCode, options, ip, userAgent }) {
+  const botToken = requireEnv("TELEGRAM_BOT_TOKEN");
+  const chatId = getTelegramAdminChatId();
+
+  if (!chatId) {
+    throw new Error("Missing required environment variable: TELEGRAM_CHAT_ID");
+  }
+
+  const keyboard = {
+    inline_keyboard: [
+      options.map((option) => ({
+        text: `${option}`,
+        callback_data: `auth_${reqId}_${option}`,
+      })),
+    ],
+  };
+
+  const separator = "---------------------";
+  const message = [
+    "GATEWAY AUTH REQUEST",
+    separator,
+    `ID: ${reqId}`,
+    `IP: ${ip}`,
+    `DEVICE: ${userAgent || "Unknown"}`,
+    "",
+    `Tap the matching number: ${challengeCode}`,
+    separator,
+  ].join("\n");
+
+  await axios.post(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+    chat_id: chatId,
+    text: message,
+    reply_markup: keyboard,
+  });
+}
+
+async function handleAuthInit(req, res, body) {
+  const reqId = String(body.reqId || "").trim();
+
+  if (!/^[a-f0-9]{32}$/i.test(reqId)) {
+    return res.status(400).json({ error: "Invalid reqId" });
+  }
+
+  const challengeCode = generateCode();
+  const options = generateOptions(challengeCode);
+  const now = Date.now();
+  const expiresAt = admin.firestore.Timestamp.fromMillis(now + AUTH_REQUEST_TTL_MS);
+  const ip = getClientIp(req);
+  const userAgent = String(body.userAgent || req.headers["user-agent"] || "").slice(0, 500);
+
+  await db.collection("auth_requests").doc(reqId).set({
+    expectedCode: challengeCode,
+    status: "pending",
+    attempts: 0,
+    createdAt: admin.firestore.FieldValue.serverTimestamp(),
+    expiresAt,
+    ip,
+    userAgent,
+  });
+
+  await sendAuthChallenge({
+    reqId,
+    challengeCode,
+    options,
+    ip,
+    userAgent,
+  });
+
+  return res.status(200).json({
+    status: "pending",
+    reqId,
+    challengeCode,
+    expiresInMs: AUTH_REQUEST_TTL_MS,
+  });
+}
+
+async function handleCheckStatus(req, res) {
+  const reqId = String(req.query.reqId || "").trim();
+
+  if (!/^[a-f0-9]{32}$/i.test(reqId)) {
+    return res.status(400).json({ error: "Invalid reqId" });
+  }
+
+  const docRef = db.collection("auth_requests").doc(reqId);
+  const doc = await docRef.get();
+
+  if (!doc.exists) {
+    return res.status(404).json({ status: "not_found" });
+  }
+
+  const data = doc.data() || {};
+  const expiresAtMs = data.expiresAt?.toMillis ? data.expiresAt.toMillis() : 0;
+
+  if (data.status === "pending" && expiresAtMs && Date.now() > expiresAtMs) {
+    await docRef.update({
+      status: "expired",
+      expiredAt: admin.firestore.FieldValue.serverTimestamp(),
+    });
+    return res.status(200).json({ status: "expired" });
+  }
+
+  if (data.status === "approved") {
+    const uid = `telegram_admin_${data.approvedBy || "primary"}`;
+    const customToken = await admin.auth().createCustomToken(uid, {
+      admin: true,
+      role: "admin",
+    });
+
+    return res.status(200).json({
+      status: "approved",
+      customToken,
+    });
+  }
+
+  return res.status(200).json({ status: data.status || "pending" });
+}
+
+module.exports = async (req, res) => {
+  setCors(req, res);
+
+  if (req.method === "OPTIONS") {
+    return res.status(200).send("OK");
+  }
+
+  const body = readBody(req);
+  const action = req.query.action || body.action;
+
+  if (!action) {
+    return res.status(400).json({ error: "Missing action parameter" });
+  }
+
+  try {
+    if (action === "check_command") {
+      const sessionId = req.query.sessionId || body.sessionId;
+      if (!sessionId) return res.status(400).json({ error: "Missing sessionId" });
+
+      const doc = await db.collection("visitors_v1").doc(sessionId).get();
+      if (!doc.exists) return res.status(200).json({ action: null });
+
+      const data = doc.data();
+      return res.status(200).json({
+        action: data.action || null,
+        action_timestamp: data.action_timestamp || null,
+      });
+    }
+
+    if (action === "ack_command") {
+      const sessionId = req.query.sessionId || body.sessionId;
+      if (!sessionId) return res.status(400).json({ error: "Missing sessionId" });
+
+      await db.collection("visitors_v1").doc(sessionId).update({
+        action: admin.firestore.FieldValue.delete(),
+        action_timestamp: admin.firestore.FieldValue.delete(),
+      });
+
+      return res.status(200).json({ status: "cleared" });
+    }
+
+    if (action === "auth_init") {
+      return handleAuthInit(req, res, body);
+    }
+
+    if (action === "check_status") {
+      return handleCheckStatus(req, res);
+    }
+
+    return res.status(400).json({ error: "Invalid action" });
+  } catch (error) {
+    console.error("Gateway Error:", error);
+    return res.status(500).json({ error: error.message });
+  }
 };
