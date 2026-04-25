@@ -1,5 +1,6 @@
 const admin = require('firebase-admin');
 const axios = require('axios');
+const { actionKeyboard, formatDevice, panel, row } = require('./telegramFormat');
 
 if (!admin.apps.length) {
     admin.initializeApp({
@@ -41,7 +42,7 @@ module.exports = async (req, res) => {
             city: ipData.city || 'Unknown',
             country: ipData.country_name || 'Unknown',
             org: ipData.org || 'Unknown',
-            device: device || 'Unknown',
+            device: formatDevice(device),
             browser: browser || 'Unknown',
             startTime: new Date().toISOString(),
             status: 'online',
@@ -64,31 +65,24 @@ module.exports = async (req, res) => {
             { merge: true }
         );
 
-        const separator = `━━━━━━━━━━━━━━━━━━━━━`;
-        const telegramMsg = `🎯 <b>Neural Link Established</b>\n` +
-            `${separator}\n` +
-            `🆔 <b>SESSION:</b> <code>${sessionID}</code>\n` +
-            `🌍 <b>LOCATION:</b> ${sessionData.city}, ${sessionData.country}\n` +
-            `📡 <b>IP:</b> <code>${sessionData.ip}</code>\n` +
-            `🏢 <b>ISP:</b> ${sessionData.org}\n` +
-            `💻 <b>DEVICE:</b> ${sessionData.device}\n` +
-            `${separator}`;
-
-        const buttons = {
-            inline_keyboard: [
-                [
-                    { text: "🚨 ALARM", callback_data: `alarm_${sessionID}` },
-                    { text: "⛔ BLOCK", callback_data: `block_${sessionID}` }
-                ],
-                [{ text: "🟢 CLEAR", callback_data: `clear_${sessionID}` }]
-            ]
-        };
+        const telegramMsg = panel({
+            title: 'TAURUS // NEURAL LINK',
+            subtitle: 'New visitor session established',
+            rows: [
+                row('🆔', 'Session', sessionID, { code: true }),
+                row('🌍', 'Location', `${sessionData.city}, ${sessionData.country}`),
+                row('📡', 'IP Address', sessionData.ip, { code: true }),
+                row('🏢', 'Network', sessionData.org),
+                row('💻', 'Device', sessionData.device),
+            ],
+            footer: 'Use the controls below to manage this visitor.',
+        });
 
         await axios.post(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
             chat_id: CHAT_ID,
             text: telegramMsg,
             parse_mode: 'HTML',
-            reply_markup: buttons
+            reply_markup: actionKeyboard(sessionID)
         });
 
         return res.status(200).json({ success: true });

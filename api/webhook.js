@@ -2,6 +2,7 @@
 const axios = require("axios");
 const { GoogleGenerativeAI, SchemaType } = require("@google/generative-ai");
 const { admin, db } = require("./_firebaseAdmin");
+const { commandLabel, panel, row } = require("./telegramFormat");
 
 const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 const VALID_COMMANDS = new Set(["FREEZE", "CLEAR", "ALARM", "BLOCK"]);
@@ -285,7 +286,15 @@ async function executeVisitorCommand(chatId, command, messageContent) {
   if (snapshot.empty) {
     await telegram("sendMessage", {
       chat_id: chatId,
-      text: "No active sessions found to control.",
+      text: panel({
+        title: "TAURUS // COMMAND CENTER",
+        subtitle: "No active visitor session found",
+        rows: [
+          row("⚙️", "Requested Action", commandLabel(command)),
+        ],
+        footer: "Open visitor intelligence and wait for a live session.",
+      }),
+      parse_mode: "HTML",
     });
     return;
   }
@@ -303,7 +312,17 @@ async function executeVisitorCommand(chatId, command, messageContent) {
 
   await telegram("sendMessage", {
     chat_id: chatId,
-    text: `Command executed: ${command}\nMessage: ${messageContent || "No message"}`,
+    text: panel({
+      title: "TAURUS // COMMAND SENT",
+      subtitle: "Visitor control command delivered",
+      rows: [
+        row("⚙️", "Action", commandLabel(command)),
+        row("🆔", "Session", sessionDoc.id, { code: true }),
+        row("💬", "Screen Message", messageContent || "No message"),
+      ],
+      footer: "The visitor session will apply this command on the next pulse.",
+    }),
+    parse_mode: "HTML",
   });
 }
 
@@ -320,7 +339,15 @@ async function handleTelegramMessage(message, model) {
     if (!model) {
       await telegram("sendMessage", {
         chat_id: chatId,
-        text: "GEMINI_API_KEY missing. Voice command processing is disabled.",
+        text: panel({
+          title: "TAURUS // VOICE COMMAND OFFLINE",
+          subtitle: "Voice processing is not configured",
+          rows: [
+            row("🔑", "Missing Config", "GEMINI_API_KEY"),
+          ],
+          footer: "Type the command as text until voice processing is enabled.",
+        }),
+        parse_mode: "HTML",
       });
       return;
     }
@@ -354,7 +381,15 @@ async function handleTelegramMessage(message, model) {
       if (fallback.command === "UNKNOWN") {
         await telegram("sendMessage", {
           chat_id: chatId,
-          text: `Unknown command: "${message.text}"`,
+          text: panel({
+            title: "TAURUS // COMMAND NOT RECOGNIZED",
+            subtitle: "No visitor-control action was matched",
+            rows: [
+              row("💬", "Received", message.text),
+            ],
+            footer: "Try: freeze, clear, alarm, block, or 'ekrana mesaj yaz'.",
+          }),
+          parse_mode: "HTML",
         });
         return;
       }
@@ -377,7 +412,15 @@ async function handleTelegramMessage(message, model) {
     } else {
       await telegram("sendMessage", {
         chat_id: chatId,
-        text: "Voice command could not be understood. Please try a shorter command.",
+        text: panel({
+          title: "TAURUS // VOICE COMMAND FAILED",
+          subtitle: "The voice message could not be understood",
+          rows: [
+            row("🎙️", "Input", "Voice message"),
+          ],
+          footer: "Please send a shorter voice note or type the command.",
+        }),
+        parse_mode: "HTML",
       });
       return;
     }
@@ -388,7 +431,15 @@ async function handleTelegramMessage(message, model) {
   } else if (message.text) {
     await telegram("sendMessage", {
       chat_id: chatId,
-      text: `Unknown command: "${message.text}"`,
+      text: panel({
+        title: "TAURUS // COMMAND NOT RECOGNIZED",
+        subtitle: "No visitor-control action was matched",
+        rows: [
+          row("💬", "Received", message.text),
+        ],
+        footer: "Try: freeze, clear, alarm, block, or 'ekrana mesaj yaz'.",
+      }),
+      parse_mode: "HTML",
     });
   }
 }

