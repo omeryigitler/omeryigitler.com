@@ -222,7 +222,12 @@ function createRegistrationChallenge(secret) {
 
 function verifySignedChallenge(challenge, secret, kind) {
   try {
-    const parsed = JSON.parse(Buffer.from(challenge, "base64url").toString("utf8"));
+    let decoded = Buffer.from(challenge, "base64url").toString("utf8");
+    if (!decoded.trim().startsWith("{")) {
+      decoded = Buffer.from(decoded, "base64url").toString("utf8");
+    }
+
+    const parsed = JSON.parse(decoded);
     const { sig, ...payload } = parsed || {};
     if (!sig || !payload?.nonce || !payload?.exp || payload.kind !== kind || Date.now() > Number(payload.exp)) return false;
 
