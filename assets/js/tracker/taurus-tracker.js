@@ -124,22 +124,15 @@
         }
     }
 
-    // Exit event: Use pagehide (Desktop/Tab Close) + visibilitychange (Mobile Screen Off/App Switch)
-    // Global lock in sendExitMessage prevents duplicates if both fire
+    // Exit event: only real unload/pagehide should close a session.
+    // Tab switch, minimize and mobile app switch only trigger visibilitychange and must not be treated as exit.
     let exitListenerRegistered = false;
     if (!exitListenerRegistered) {
         window.addEventListener('pagehide', sendExitMessage);
         window.addEventListener('beforeunload', sendExitMessage);
 
-        // Critical for Mobile: Screen off / App switch
-        document.addEventListener('visibilitychange', () => {
-            if (document.visibilityState === 'hidden') {
-                sendExitMessage();
-            }
-        });
-
         exitListenerRegistered = true;
-        console.log('✅ Exit listeners registered (pagehide + visibilitychange)');
+        console.log('✅ Exit listeners registered (pagehide + beforeunload)');
     }
 
     // --- 1. VISUAL INTERFACE (THE DESIGN) ---

