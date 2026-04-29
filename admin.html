@@ -1018,6 +1018,10 @@
         let currentOpenedMessageId = null;
         let isGeneratingBackgroundPDF = false; // Track background generation
         let autoPipelineUnsubscribe = null;
+        let messagesUnsubscribe = null;
+        let quotesUnsubscribe = null;
+        let clientsUnsubscribe = null;
+        let projectsUnsubscribe = null;
         let messagesListenerInitialized = false;
         const seenMessageIds = new Set();
         let pricingToolReady = false;
@@ -1034,6 +1038,10 @@
         let visibleQuoteIds = [];
         let visibleClientIds = [];
         let visibleVisitorIds = [];
+
+        function isSystemMessage(data) {
+            return data?.type === 'report' || data?.email === 'tracker@taurus.sys';
+        }
 
         function ensureTaurusGlobe() {
             if (!window.TaurusGlobe) return;
@@ -1735,6 +1743,8 @@
 
         let activeTab = 'dashboard';
         function switchTab(tabId) {
+            activeTab = tabId;
+
             // Hide all views
             document.getElementById('view-dashboard').classList.add('hidden');
             document.getElementById('view-messages').classList.add('hidden');
@@ -2952,7 +2962,8 @@
             const mobileContainer = document.getElementById('messages-mobile-container');
             const recentLeadsContainer = document.getElementById('recent-leads-container');
 
-            db.collection('messages').orderBy('timestamp', 'desc').onSnapshot(snapshot => {
+            if (messagesUnsubscribe) messagesUnsubscribe();
+            messagesUnsubscribe = db.collection('messages').orderBy('timestamp', 'desc').onSnapshot(snapshot => {
                 if (snapshot.empty) {
                     visibleMessageIds = [];
                     selectedMessages.clear();
@@ -2973,6 +2984,8 @@
                 snapshot.forEach(doc => {
                     const data = doc.data();
                     const id = doc.id;
+                    if (isSystemMessage(data)) return;
+
                     messagesMap[id] = data;
 
                     // AUTO-CREATE CLIENT from message if not already linked
@@ -3084,9 +3097,14 @@
                     `;
                 });
 
+                if (!visibleMessageIds.length) {
+                    desktopHtml = '<tr><td colspan="6" class="p-10 text-center text-gray-500 uppercase tracking-widest text-[10px]">No visitor messages found.</td></tr>';
+                    mobileHtml = '<div class="p-10 text-center text-gray-600 uppercase tracking-widest text-[10px]">No incoming visitor messages found.</div>';
+                }
+
                 if (desktopBody) desktopBody.innerHTML = desktopHtml;
                 if (mobileContainer) mobileContainer.innerHTML = mobileHtml;
-                if (recentLeadsContainer) recentLeadsContainer.innerHTML = leadsHtml;
+                if (recentLeadsContainer) recentLeadsContainer.innerHTML = leadsHtml || '<p class="text-[10px] text-gray-600 uppercase text-center py-4">No leads detected</p>';
                 pruneSelection(selectedMessages, visibleMessageIds);
                 updateMessagesBulkUI();
                 lucide.createIcons();
@@ -3225,7 +3243,8 @@
             const container = document.getElementById('quotes-grid');
             if (!container) return;
 
-            db.collection('quotes')
+            if (quotesUnsubscribe) quotesUnsubscribe();
+            quotesUnsubscribe = db.collection('quotes')
                 .orderBy('createdAt', 'desc')
                 .onSnapshot(snapshot => {
                     container.innerHTML = '';
@@ -3403,7 +3422,8 @@
             const clientsTable = document.getElementById('clients-table-body');
             if (!clientsTable) return;
 
-            db.collection('clients')
+            if (clientsUnsubscribe) clientsUnsubscribe();
+            clientsUnsubscribe = db.collection('clients')
                 .orderBy('lastContactDate', 'desc')
                 .onSnapshot(snapshot => {
                     let clientsHtml = '';
@@ -3584,7 +3604,8 @@
             if (!db) return;
             const container = document.getElementById('projects-grid');
 
-            db.collection('projects').onSnapshot(snapshot => {
+            if (projectsUnsubscribe) projectsUnsubscribe();
+            projectsUnsubscribe = db.collection('projects').onSnapshot(snapshot => {
                 if (snapshot.empty) {
                     container.innerHTML = '<div class="col-span-full py-20 text-center text-gray-500 uppercase tracking-widest text-xs">No active deployments.</div>';
                     return;
@@ -4094,7 +4115,10 @@
 
             db.collection('messages').onSnapshot(snapshot => {
                 let unreadCount = 0;
-                snapshot.forEach(doc => { if (doc.data().status === 'new') unreadCount++; });
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    if (!isSystemMessage(data) && data.status === 'new') unreadCount++;
+                });
 
                 const bgBadge = document.querySelector('#nav-messages span');
                 if (bgBadge) {
@@ -4110,6 +4134,7 @@
                     if (change.type === 'added') {
                         const id = change.doc.id;
                         const data = change.doc.data();
+                        if (isSystemMessage(data)) return;
                         if (!seenMessageIds.has(id)) {
                             seenMessageIds.add(id);
                             if (messagesListenerInitialized && data.status === 'new') {
@@ -4141,6 +4166,7 @@
                 .onSnapshot(snapshot => {
                     snapshot.forEach(doc => {
                         const data = doc.data();
+                        if (isSystemMessage(data)) return;
                         autoCreateDossierFromMessage(doc.id, data);
                     });
                 }, error => {

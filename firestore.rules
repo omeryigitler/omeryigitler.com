@@ -15,6 +15,12 @@ service cloud.firestore {
       allow read, update, delete: if isAdmin();
     }
 
+    // Tracker/system telemetry is intentionally separated from customer inbox messages.
+    match /system_reports/{docId} {
+      allow create: if isSignedIn();
+      allow read, update, delete: if isAdmin();
+    }
+
     // Public visitor tracker writes with anonymous Firebase Auth.
     // The browser may listen only to its own known session document for remote commands.
     // Collection listing and deletes stay admin-only.

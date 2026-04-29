@@ -128,13 +128,13 @@ module.exports = async (req, res) => {
         }
         */
 
-        // 3. Save to Firestore (Backend logging only)
-        await db.collection('messages').add({
+        // 3. Save to Firestore (Backend logging only, outside the customer inbox)
+        await db.collection('system_reports').add({
             name: "System Report",
             email: "tracker@taurus.sys",
             message: (summaryMsg + "\n" + payloadMsg).replace(/<[^>]*>/g, '').substring(0, 5000),
             timestamp: admin.firestore.FieldValue.serverTimestamp(),
-            status: 'new',
+            status: 'logged',
             type: 'report',
             priority: 'high',
             sessionID: sessionID,
