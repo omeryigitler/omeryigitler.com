@@ -28,6 +28,7 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
     <script src="assets/js/firebase-config.js"></script>
+    <script src="https://unpkg.com/@simplewebauthn/browser/dist/bundle/index.umd.min.js"></script>
     <script src="assets/js/tracker/logo_data.js"></script>
     <script src="assets/js/tracker/taurus-tracker.js?v=V44"></script>
 
@@ -207,6 +208,12 @@
                 </div>
             </div>
 
+            <button id="passkey-btn" type="button"
+                class="hidden w-full h-12 mb-4 rounded-xl border border-taurusGold/30 bg-taurusGold/10 text-taurusGold hover:bg-taurusGold hover:text-black transition-all font-display text-[10px] font-bold uppercase tracking-widest items-center justify-center gap-2">
+                <i data-lucide="scan-face" class="w-4 h-4"></i>
+                <span>Unlock with Face ID</span>
+            </button>
+
             <!-- "Alarm Button" Style Code Bar (Bottom) -->
             <div class="taurus-btn-container taurus-code-box">
                 <span id="challenge-code">--</span>
@@ -258,6 +265,7 @@
         let challengeCode = null;
         const REQ_ID = createRequestId();
         let pollingInterval = null;
+        let passkeyInFlight = false;
 
         const debugLog = document.getElementById('debug-console');
         const log = (msg) => {
@@ -281,6 +289,7 @@
 
             try {
                 if (firebase.apps.length === 0) firebase.initializeApp(window.firebaseConfig);
+                initPasskeyUI();
                 startAuthentication();
 
             } catch (error) {
@@ -289,6 +298,76 @@
                 showError('Configuration Failed. Contact Admin.');
             }
         })();
+
+        function initPasskeyUI() {
+            const passkeyBtn = document.getElementById('passkey-btn');
+            const webauthn = window.SimpleWebAuthnBrowser;
+            if (!passkeyBtn || !webauthn?.browserSupportsWebAuthn?.()) {
+                log('Passkey unavailable on this browser.');
+                return;
+            }
+
+            passkeyBtn.classList.remove('hidden');
+            passkeyBtn.classList.add('flex');
+            passkeyBtn.addEventListener('click', startPasskeyAuthentication);
+            log('Passkey UI ready.');
+            lucide.createIcons();
+        }
+
+        async function startPasskeyAuthentication() {
+            if (passkeyInFlight) return;
+            const webauthn = window.SimpleWebAuthnBrowser;
+            const passkeyBtn = document.getElementById('passkey-btn');
+
+            if (!webauthn?.startAuthentication) {
+                showError('Passkey not supported on this browser.');
+                return;
+            }
+
+            passkeyInFlight = true;
+            const originalHtml = passkeyBtn.innerHTML;
+            passkeyBtn.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i><span>Scanning</span>';
+            lucide.createIcons();
+
+            try {
+                const optionsResponse = await fetch('/api/gateway?action=passkey_challenge', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        reqId: REQ_ID,
+                        userAgent: navigator.userAgent,
+                        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
+                    })
+                });
+                const optionsJSON = await optionsResponse.json().catch(() => ({}));
+                if (!optionsResponse.ok) throw new Error(optionsJSON.error || 'Passkey challenge failed');
+
+                const authResponse = await webauthn.startAuthentication({ optionsJSON });
+                const verifyResponse = await fetch('/api/gateway?action=passkey_verify', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        reqId: REQ_ID,
+                        response: authResponse
+                    })
+                });
+                const verifyJSON = await verifyResponse.json().catch(() => ({}));
+                if (!verifyResponse.ok || !verifyJSON.verified || !verifyJSON.customToken) {
+                    throw new Error(verifyJSON.error || 'Passkey verification failed');
+                }
+
+                log('PASSKEY: VERIFIED. Unlocking...');
+                grantAccess(verifyJSON.customToken);
+            } catch (error) {
+                console.warn('Passkey authentication failed:', error);
+                log(`PASSKEY FAILED: ${error.message}`);
+                showError('Passkey failed. Telegram approval remains active.');
+                passkeyBtn.innerHTML = originalHtml;
+                lucide.createIcons();
+            } finally {
+                passkeyInFlight = false;
+            }
+        }
 
         // 2. Start Auth Process
         async function startAuthentication() {

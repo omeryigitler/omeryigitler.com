@@ -1,8 +1,15 @@
 const axios = require("axios");
+const crypto = require("crypto");
+const {
+  generateAuthenticationOptions,
+  verifyAuthenticationResponse,
+} = require("@simplewebauthn/server");
+const { isoBase64URL } = require("@simplewebauthn/server/helpers");
 const { admin, db, requireEnv } = require("./_firebaseAdmin");
 const { authKeyboard, panel, row } = require("./telegramFormat");
 
 const AUTH_REQUEST_TTL_MS = 5 * 60 * 1000;
+const PASSKEY_CHALLENGE_TTL_MS = 2 * 60 * 1000;
 
 function setCors(req, res) {
   const allowedOrigins = new Set([
@@ -75,6 +82,92 @@ function cleanCommandMessage(value) {
 
   if (!cleaned) return null;
   return cleaned.slice(0, 180);
+}
+
+function optionalEnv(name) {
+  const value = process.env[name];
+  return value && String(value).trim() ? String(value).trim() : "";
+}
+
+function getPasskeyConfig() {
+  const rpID = optionalEnv("PASSKEY_RP_ID") || "omeryigitler.com";
+  const origins = (
+    optionalEnv("PASSKEY_ORIGINS") ||
+    optionalEnv("PASSKEY_ORIGIN") ||
+    `https://${rpID},https://www.${rpID}`
+  )
+    .split(",")
+    .map((origin) => origin.trim())
+    .filter(Boolean);
+  const credentialID = optionalEnv("PASSKEY_CREDENTIAL_ID");
+  const publicKey = optionalEnv("PASSKEY_PUBLIC_KEY");
+  const challengeSecret = optionalEnv("PASSKEY_CHALLENGE_SECRET") || optionalEnv("TELEGRAM_BOT_TOKEN");
+  const transports = (optionalEnv("PASSKEY_TRANSPORTS") || "internal")
+    .split(",")
+    .map((transport) => transport.trim())
+    .filter(Boolean);
+  const counter = Number(optionalEnv("PASSKEY_COUNTER") || 0);
+
+  if (!credentialID || !publicKey || !challengeSecret) {
+    return { enabled: false, rpID, origins, missing: true };
+  }
+
+  return {
+    enabled: true,
+    rpID,
+    origins,
+    credentialID,
+    publicKey,
+    challengeSecret,
+    transports,
+    counter: Number.isFinite(counter) ? counter : 0,
+  };
+}
+
+function signChallengePayload(payload, secret) {
+  return crypto.createHmac("sha256", secret).update(payload).digest("base64url");
+}
+
+function createPasskeyChallenge(secret) {
+  const payload = {
+    nonce: crypto.randomBytes(24).toString("base64url"),
+    exp: Date.now() + PASSKEY_CHALLENGE_TTL_MS,
+  };
+  const unsigned = Buffer.from(JSON.stringify(payload)).toString("base64url");
+  const sig = signChallengePayload(unsigned, secret);
+  return Buffer.from(JSON.stringify({ ...payload, sig })).toString("base64url");
+}
+
+function verifyPasskeyChallenge(challenge, secret) {
+  try {
+    const parsed = JSON.parse(Buffer.from(challenge, "base64url").toString("utf8"));
+    const { sig, ...payload } = parsed || {};
+    if (!sig || !payload?.nonce || !payload?.exp || Date.now() > Number(payload.exp)) return false;
+
+    const unsigned = Buffer.from(JSON.stringify(payload)).toString("base64url");
+    const expectedSig = signChallengePayload(unsigned, secret);
+    if (Buffer.byteLength(sig) !== Buffer.byteLength(expectedSig)) return false;
+    return crypto.timingSafeEqual(Buffer.from(sig), Buffer.from(expectedSig));
+  } catch (_) {
+    return false;
+  }
+}
+
+function getPasskeyPublicKeyBytes(publicKey) {
+  if (publicKey.trim().startsWith("[")) {
+    const parsed = JSON.parse(publicKey);
+    if (Array.isArray(parsed)) return new Uint8Array(parsed);
+  }
+
+  return new Uint8Array(isoBase64URL.toBuffer(publicKey));
+}
+
+async function createAdminCustomToken(provider = "passkey") {
+  return admin.auth().createCustomToken(`${provider}_admin_primary`, {
+    admin: true,
+    role: "admin",
+    provider,
+  });
 }
 
 async function sendAuthChallenge({ reqId, challengeCode, options, ip, userAgent }) {
@@ -170,10 +263,10 @@ async function handleCheckStatus(req, res) {
   }
 
   if (data.status === "approved") {
-    const uid = `telegram_admin_${data.approvedBy || "primary"}`;
-    const customToken = await admin.auth().createCustomToken(uid, {
+    const customToken = await admin.auth().createCustomToken(`telegram_admin_${data.approvedBy || "primary"}`, {
       admin: true,
       role: "admin",
+      provider: "telegram",
     });
 
     return res.status(200).json({
@@ -183,6 +276,73 @@ async function handleCheckStatus(req, res) {
   }
 
   return res.status(200).json({ status: data.status || "pending" });
+}
+
+async function handlePasskeyChallenge(req, res) {
+  const config = getPasskeyConfig();
+  if (!config.enabled) {
+    return res.status(503).json({ error: "Passkey is not configured" });
+  }
+
+  const options = await generateAuthenticationOptions({
+    rpID: config.rpID,
+    allowCredentials: [{
+      id: config.credentialID,
+      transports: config.transports,
+    }],
+    challenge: createPasskeyChallenge(config.challengeSecret),
+    timeout: PASSKEY_CHALLENGE_TTL_MS,
+    userVerification: "required",
+  });
+
+  return res.status(200).json(options);
+}
+
+async function handlePasskeyVerify(req, res, body) {
+  const config = getPasskeyConfig();
+  if (!config.enabled) {
+    return res.status(503).json({ error: "Passkey is not configured" });
+  }
+
+  const response = body.response || body;
+  if (!response?.id) {
+    return res.status(400).json({ error: "Missing passkey response" });
+  }
+
+  if (response.id !== config.credentialID) {
+    return res.status(403).json({ error: "Unknown credential" });
+  }
+
+  let verification;
+  try {
+    verification = await verifyAuthenticationResponse({
+      response,
+      expectedChallenge: (challenge) => verifyPasskeyChallenge(challenge, config.challengeSecret),
+      expectedOrigin: config.origins,
+      expectedRPID: config.rpID,
+      requireUserVerification: true,
+      credential: {
+        id: config.credentialID,
+        publicKey: getPasskeyPublicKeyBytes(config.publicKey),
+        counter: config.counter,
+        transports: config.transports,
+      },
+    });
+  } catch (error) {
+    console.error("Passkey verification failed:", error);
+    return res.status(400).json({ verified: false, error: error.message });
+  }
+
+  if (!verification.verified) {
+    return res.status(401).json({ verified: false });
+  }
+
+  const customToken = await createAdminCustomToken("passkey");
+  return res.status(200).json({
+    verified: true,
+    status: "approved",
+    customToken,
+  });
 }
 
 module.exports = async (req, res) => {
@@ -234,6 +394,14 @@ module.exports = async (req, res) => {
 
     if (action === "check_status") {
       return handleCheckStatus(req, res);
+    }
+
+    if (action === "passkey_challenge") {
+      return handlePasskeyChallenge(req, res);
+    }
+
+    if (action === "passkey_verify") {
+      return handlePasskeyVerify(req, res, body);
     }
 
     return res.status(400).json({ error: "Invalid action" });
