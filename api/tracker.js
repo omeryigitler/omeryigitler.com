@@ -16,6 +16,16 @@ const db = admin.firestore();
 const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 const CHAT_ID = process.env.TELEGRAM_CHAT_ID;
 
+function normalizeGeoCoordinates(ipData) {
+    const lat = Number(ipData?.latitude ?? ipData?.lat);
+    const lng = Number(ipData?.longitude ?? ipData?.lng ?? ipData?.lon);
+
+    if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null;
+    if (Math.abs(lat) > 90 || Math.abs(lng) > 180) return null;
+
+    return { lat, lng };
+}
+
 module.exports = async (req, res) => {
     if (req.method !== 'POST') return res.status(200).send('OK');
 
@@ -36,12 +46,26 @@ module.exports = async (req, res) => {
             }
         }
 
+        const geoCoordinates = normalizeGeoCoordinates(ipData);
+        const locationData = {
+            city: ipData.city || 'Unknown',
+            country: ipData.country_name || 'Unknown',
+            isp: ipData.org || 'Unknown'
+        };
+
+        if (ipData.country_code) locationData.country_code = ipData.country_code;
+        if (geoCoordinates) {
+            locationData.lat = geoCoordinates.lat;
+            locationData.lng = geoCoordinates.lng;
+        }
+
         const sessionData = {
             sessionID,
             ip: clientIP,
             city: ipData.city || 'Unknown',
             country: ipData.country_name || 'Unknown',
             org: ipData.org || 'Unknown',
+            location: locationData,
             device: formatDevice(device),
             browser: browser || 'Unknown',
             startTime: new Date().toISOString(),

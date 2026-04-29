@@ -854,6 +854,18 @@
                     </div>
                 </div>
 
+                <!-- Taurus Globe Visualization -->
+                <div id="taurus-globe-container"
+                    class="mb-8 rounded-2xl bg-black/40 border border-taurusGold/20 backdrop-blur overflow-hidden relative shadow-[0_0_40px_rgba(255,215,0,0.06)]">
+                    <div class="absolute left-5 top-5 z-10 pointer-events-none">
+                        <div class="text-[10px] text-taurusGold font-bold uppercase tracking-[0.3em]">Taurus Globe</div>
+                        <div id="taurus-globe-status" class="text-[10px] text-gray-500 uppercase tracking-widest mt-1">
+                            Awaiting mapped signals
+                        </div>
+                    </div>
+                    <div id="taurus-globe" class="w-full h-[360px] md:h-[460px] lg:h-[520px]"></div>
+                </div>
+
                 <!-- Main Traffic Table -->
                 <div class="p-6 rounded-2xl bg-white/5 border border-white/10 backdrop-blur overflow-hidden">
                     <div class="flex justify-between items-center mb-6">
@@ -993,6 +1005,8 @@
     <script src="assets/js/firebase-config.js"></script>
     <script src="assets/js/tracker/logo_data.js"></script>
     <script src="assets/js/tracker/taurus-tracker.js?v=V42"></script>
+    <script src="https://cdn.jsdelivr.net/npm/globe.gl"></script>
+    <script src="assets/js/tracker/taurus-globe.js?v=V1"></script>
 
     <script>
         lucide.createIcons();
@@ -1020,6 +1034,12 @@
         let visibleQuoteIds = [];
         let visibleClientIds = [];
         let visibleVisitorIds = [];
+
+        function ensureTaurusGlobe() {
+            if (!window.TaurusGlobe) return;
+            window.TaurusGlobe.init('taurus-globe');
+            window.TaurusGlobe.resize();
+        }
 
         // --- AUTO PIPELINE CONFIG ---
         const AUTO_PIPELINE_ENABLED = true; // Full auto; only final approval is manual
@@ -1761,7 +1781,11 @@
             if (tabId === 'quotes') loadQuotes(); // NEW
             if (tabId === 'clients') loadClients(); // NEW
             if (tabId === 'projects') loadProjects();
-            if (tabId === 'intelligence') loadIntelligence();
+            if (tabId === 'intelligence') {
+                ensureTaurusGlobe();
+                loadIntelligence();
+                setTimeout(ensureTaurusGlobe, 80);
+            }
             if (tabId === 'settings') initSecuritySettings();
         }
 
@@ -3670,10 +3694,12 @@
             const onlineEl = document.getElementById('intel-online-count');
             const topLocEl = document.getElementById('intel-top-loc');
             const mobileEl = document.getElementById('intel-mobile-pct');
+            ensureTaurusGlobe();
 
             // Prevent multiple listeners
             if (intelUnsubscribe) {
                 console.log("🐂 Sync active, maintaining signal connection.");
+                ensureTaurusGlobe();
                 return;
             }
 
@@ -3691,6 +3717,7 @@
                         if (onlineEl) onlineEl.innerText = "0";
                         if (topLocEl) topLocEl.innerText = "N/A";
                         if (mobileEl) mobileEl.innerText = "0%";
+                        if (window.TaurusGlobe) window.TaurusGlobe.updateVisitors([]);
                         return;
                     }
 
@@ -3698,6 +3725,7 @@
                     let onlineCount = 0;
                     let mobileCount = 0;
                     let locationMap = {};
+                    let globeVisitors = [];
                     visibleVisitorIds = [];
 
                     snapshot.forEach(doc => {
@@ -3721,6 +3749,12 @@
                         const visitorId = doc.id;
                         intelDataMap[visitorId] = d;
                         visibleVisitorIds.push(visitorId);
+                        globeVisitors.push({
+                            id: visitorId,
+                            ...d,
+                            isOnline,
+                            lastSeenTime
+                        });
                         const checkedAttr = selectedVisitors.has(visitorId) ? 'checked' : '';
 
                         html += `
@@ -3775,6 +3809,7 @@
 
                     if (container) container.innerHTML = html;
                     lucide.createIcons();
+                    if (window.TaurusGlobe) window.TaurusGlobe.updateVisitors(globeVisitors);
 
                     // Update Global Stats
                     if (totalEl) totalEl.innerText = snapshot.size + (snapshot.size === 50 ? '+' : '');

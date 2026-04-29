@@ -983,6 +983,16 @@
         };
     }
 
+    function normalizeGeoCoordinates(ipData) {
+        const lat = Number(ipData?.latitude ?? ipData?.lat);
+        const lng = Number(ipData?.longitude ?? ipData?.lng ?? ipData?.lon);
+
+        if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null;
+        if (Math.abs(lat) > 90 || Math.abs(lng) > 180) return null;
+
+        return { lat, lng };
+    }
+
     async function gatherAndNotify() {
         let ipData = { ip: '0.0.0.0', city: 'Unknown', country_name: 'Unknown', org: 'Unknown ISP' };
 
@@ -1080,14 +1090,23 @@
                     } catch (e) { trafficSource = 'Referral / Unknown'; }
                 }
 
+                const geoCoordinates = normalizeGeoCoordinates(ipData);
+                const locationData = {
+                    city: ipData.city || 'Unknown',
+                    country: ipData.country_name || 'Unknown',
+                    isp: ipData.org || 'Unknown Network'
+                };
+
+                if (ipData.country_code) locationData.country_code = ipData.country_code;
+                if (geoCoordinates) {
+                    locationData.lat = geoCoordinates.lat;
+                    locationData.lng = geoCoordinates.lng;
+                }
+
                 await window.db.collection(CONFIG.collection).doc(sessionID).set({
                     session_id: sessionID,
                     ip_masked: ipData.ip || 'Unknown',
-                    location: {
-                        city: ipData.city || 'Unknown',
-                        country: ipData.country_name || 'Unknown',
-                        isp: ipData.org || 'Unknown Network'
-                    },
+                    location: locationData,
                     device: {
                         model: sessionData.device.model,
                         type: sessionData.device.type,
