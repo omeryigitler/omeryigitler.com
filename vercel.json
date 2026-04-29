@@ -22,6 +22,10 @@
             "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow, noarchive" }]
         },
         {
+            "source": "/passkey-setup.html",
+            "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow, noarchive" }]
+        },
+        {
             "source": "/sitemap.xml",
             "headers": [{ "key": "Content-Type", "value": "application/xml" }]
         },

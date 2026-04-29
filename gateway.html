@@ -214,8 +214,14 @@
                 <span>Unlock with Face ID</span>
             </button>
 
+            <button id="telegram-fallback-btn" type="button"
+                class="hidden w-full h-11 mb-4 rounded-xl border border-white/10 bg-white/5 text-white/70 hover:text-white hover:bg-white/10 transition-all font-display text-[9px] font-bold uppercase tracking-widest items-center justify-center gap-2">
+                <i data-lucide="send" class="w-4 h-4"></i>
+                <span>Use Telegram Approval</span>
+            </button>
+
             <!-- "Alarm Button" Style Code Bar (Bottom) -->
-            <div class="taurus-btn-container taurus-code-box">
+            <div id="telegram-code-box" class="taurus-btn-container taurus-code-box hidden">
                 <span id="challenge-code">--</span>
             </div>
 
@@ -266,6 +272,8 @@
         const REQ_ID = createRequestId();
         let pollingInterval = null;
         let passkeyInFlight = false;
+        let passkeySupported = false;
+        let telegramStarted = false;
 
         const debugLog = document.getElementById('debug-console');
         const log = (msg) => {
@@ -289,8 +297,14 @@
 
             try {
                 if (firebase.apps.length === 0) firebase.initializeApp(window.firebaseConfig);
-                initPasskeyUI();
-                startAuthentication();
+                passkeySupported = initPasskeyUI();
+                const passkeyEnabled = passkeySupported && await checkPasskeyStatus();
+
+                if (passkeyEnabled) {
+                    showPasskeyMode();
+                } else {
+                    startAuthentication();
+                }
 
             } catch (error) {
                 console.error('Init Error:', error);
@@ -301,17 +315,47 @@
 
         function initPasskeyUI() {
             const passkeyBtn = document.getElementById('passkey-btn');
+            const telegramFallbackBtn = document.getElementById('telegram-fallback-btn');
             const webauthn = window.SimpleWebAuthnBrowser;
             if (!passkeyBtn || !webauthn?.browserSupportsWebAuthn?.()) {
                 log('Passkey unavailable on this browser.');
-                return;
+                return false;
             }
 
-            passkeyBtn.classList.remove('hidden');
-            passkeyBtn.classList.add('flex');
             passkeyBtn.addEventListener('click', startPasskeyAuthentication);
+            telegramFallbackBtn?.addEventListener('click', startAuthentication);
             log('Passkey UI ready.');
             lucide.createIcons();
+            return true;
+        }
+
+        async function checkPasskeyStatus() {
+            try {
+                const response = await fetch(`/api/gateway?action=passkey_status&t=${Date.now()}`);
+                const data = await response.json().catch(() => ({}));
+                return response.ok && data.enabled;
+            } catch (error) {
+                console.warn('Passkey status unavailable:', error);
+                return false;
+            }
+        }
+
+        function showPasskeyMode() {
+            const passkeyBtn = document.getElementById('passkey-btn');
+            const telegramFallbackBtn = document.getElementById('telegram-fallback-btn');
+            document.getElementById('telegram-code-box').classList.add('hidden');
+            passkeyBtn.classList.remove('hidden');
+            passkeyBtn.classList.add('flex');
+            telegramFallbackBtn.classList.remove('hidden');
+            telegramFallbackBtn.classList.add('flex');
+            showStatus('Passkey Ready. Telegram is fallback.');
+            lucide.createIcons();
+        }
+
+        function showTelegramMode() {
+            document.getElementById('telegram-code-box').classList.remove('hidden');
+            document.getElementById('telegram-fallback-btn').classList.add('hidden');
+            showStatus('Telegram Verification Request Sent');
         }
 
         async function startPasskeyAuthentication() {
@@ -361,7 +405,9 @@
             } catch (error) {
                 console.warn('Passkey authentication failed:', error);
                 log(`PASSKEY FAILED: ${error.message}`);
-                showError('Passkey failed. Telegram approval remains active.');
+                showError('Passkey failed. Use Telegram approval below.');
+                document.getElementById('telegram-fallback-btn')?.classList.remove('hidden');
+                document.getElementById('telegram-fallback-btn')?.classList.add('flex');
                 passkeyBtn.innerHTML = originalHtml;
                 lucide.createIcons();
             } finally {
@@ -371,6 +417,9 @@
 
         // 2. Start Auth Process
         async function startAuthentication() {
+            if (telegramStarted) return;
+            telegramStarted = true;
+            showTelegramMode();
             log("Registering Request via Backend...");
 
             try {
@@ -396,7 +445,7 @@
                 }
 
                 document.getElementById('challenge-code').innerText = challengeCode;
-                document.getElementById('status-desc').innerText = 'Verification Request Sent';
+                showStatus('Telegram Verification Request Sent');
                 log("Backend Registration: SUCCESS");
                 log(`Challenge Code: ${challengeCode}`);
             } catch (err) {
@@ -470,8 +519,13 @@
         }
 
         function showError(msg) {
-            document.getElementById('status-desc').innerText = msg;
-            document.getElementById('status-desc').classList.add('text-red-500');
+            showStatus(msg, true);
+        }
+
+        function showStatus(msg, isError = false) {
+            const statusDesc = document.getElementById('status-desc');
+            statusDesc.innerText = msg;
+            statusDesc.classList.toggle('text-red-500', Boolean(isError));
         }
 
         // --- LOCKOUT LOGIC ---

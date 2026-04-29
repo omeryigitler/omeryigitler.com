@@ -2,7 +2,9 @@ const axios = require("axios");
 const crypto = require("crypto");
 const {
   generateAuthenticationOptions,
+  generateRegistrationOptions,
   verifyAuthenticationResponse,
+  verifyRegistrationResponse,
 } = require("@simplewebauthn/server");
 const { isoBase64URL } = require("@simplewebauthn/server/helpers");
 const { admin, db, requireEnv } = require("./_firebaseAdmin");
@@ -10,6 +12,7 @@ const { authKeyboard, panel, row } = require("./telegramFormat");
 
 const AUTH_REQUEST_TTL_MS = 5 * 60 * 1000;
 const PASSKEY_CHALLENGE_TTL_MS = 2 * 60 * 1000;
+const PASSKEY_REGISTRATION_TTL_MS = 5 * 60 * 1000;
 
 function setCors(req, res) {
   const allowedOrigins = new Set([
@@ -99,16 +102,10 @@ function getPasskeyConfig() {
     .split(",")
     .map((origin) => origin.trim())
     .filter(Boolean);
-  const credentialID = optionalEnv("PASSKEY_CREDENTIAL_ID");
-  const publicKey = optionalEnv("PASSKEY_PUBLIC_KEY");
+  const credentials = getPasskeyCredentials();
   const challengeSecret = optionalEnv("PASSKEY_CHALLENGE_SECRET") || optionalEnv("TELEGRAM_BOT_TOKEN");
-  const transports = (optionalEnv("PASSKEY_TRANSPORTS") || "internal")
-    .split(",")
-    .map((transport) => transport.trim())
-    .filter(Boolean);
-  const counter = Number(optionalEnv("PASSKEY_COUNTER") || 0);
 
-  if (!credentialID || !publicKey || !challengeSecret) {
+  if (!credentials.length || !challengeSecret) {
     return { enabled: false, rpID, origins, missing: true };
   }
 
@@ -116,33 +113,118 @@ function getPasskeyConfig() {
     enabled: true,
     rpID,
     origins,
-    credentialID,
-    publicKey,
     challengeSecret,
-    transports,
-    counter: Number.isFinite(counter) ? counter : 0,
+    credentials,
   };
+}
+
+function getPasskeySetupConfig() {
+  const rpID = optionalEnv("PASSKEY_RP_ID") || "omeryigitler.com";
+  const origins = (
+    optionalEnv("PASSKEY_ORIGINS") ||
+    optionalEnv("PASSKEY_ORIGIN") ||
+    `https://${rpID},https://www.${rpID}`
+  )
+    .split(",")
+    .map((origin) => origin.trim())
+    .filter(Boolean);
+  const challengeSecret = optionalEnv("PASSKEY_CHALLENGE_SECRET") || optionalEnv("TELEGRAM_BOT_TOKEN");
+  const setupToken = optionalEnv("PASSKEY_SETUP_TOKEN");
+
+  return {
+    enabled: Boolean(challengeSecret && setupToken),
+    rpID,
+    origins,
+    challengeSecret,
+    setupToken,
+    credentials: getPasskeyCredentials(),
+  };
+}
+
+function getPasskeyCredentials() {
+  const configured = optionalEnv("PASSKEY_CREDENTIALS");
+  if (configured) {
+    try {
+      const parsed = JSON.parse(configured);
+      if (Array.isArray(parsed)) {
+        return parsed
+          .map((credential, index) => normalizePasskeyCredential(credential, index))
+          .filter(Boolean);
+      }
+    } catch (error) {
+      console.error("Invalid PASSKEY_CREDENTIALS JSON:", error);
+    }
+  }
+
+  const credentialID = optionalEnv("PASSKEY_CREDENTIAL_ID");
+  const publicKey = optionalEnv("PASSKEY_PUBLIC_KEY");
+  if (!credentialID || !publicKey) return [];
+
+  return [normalizePasskeyCredential({
+    label: optionalEnv("PASSKEY_LABEL") || "Primary Device",
+    id: credentialID,
+    publicKey,
+    counter: optionalEnv("PASSKEY_COUNTER") || 0,
+    transports: optionalEnv("PASSKEY_TRANSPORTS") || "internal",
+  }, 0)].filter(Boolean);
+}
+
+function normalizePasskeyCredential(credential, index) {
+  const id = String(credential?.id || credential?.credentialID || "").trim();
+  const publicKey = String(credential?.publicKey || credential?.credentialPublicKey || "").trim();
+  if (!id || !publicKey) return null;
+
+  const transportValue = credential?.transports || "internal";
+  const transports = Array.isArray(transportValue)
+    ? transportValue
+    : String(transportValue).split(",");
+  const counter = Number(credential?.counter || 0);
+
+  return {
+    label: String(credential?.label || `Device ${index + 1}`).trim(),
+    id,
+    publicKey,
+    counter: Number.isFinite(counter) ? counter : 0,
+    transports: transports.map((transport) => String(transport).trim()).filter(Boolean),
+  };
+}
+
+function verifySetupToken(value, expected) {
+  if (!value || !expected) return false;
+  const actualBuffer = Buffer.from(String(value));
+  const expectedBuffer = Buffer.from(String(expected));
+  if (actualBuffer.length !== expectedBuffer.length) return false;
+  return crypto.timingSafeEqual(actualBuffer, expectedBuffer);
 }
 
 function signChallengePayload(payload, secret) {
   return crypto.createHmac("sha256", secret).update(payload).digest("base64url");
 }
 
-function createPasskeyChallenge(secret) {
+function createSignedChallenge(secret, ttlMs, kind) {
   const payload = {
+    kind,
     nonce: crypto.randomBytes(24).toString("base64url"),
-    exp: Date.now() + PASSKEY_CHALLENGE_TTL_MS,
+    exp: Date.now() + ttlMs,
   };
   const unsigned = Buffer.from(JSON.stringify(payload)).toString("base64url");
   const sig = signChallengePayload(unsigned, secret);
   return Buffer.from(JSON.stringify({ ...payload, sig })).toString("base64url");
 }
 
-function verifyPasskeyChallenge(challenge, secret) {
+function createPasskeyChallenge(secret) {
+  return createSignedChallenge(secret, PASSKEY_CHALLENGE_TTL_MS, "authentication");
+}
+
+function createRegistrationChallenge(secret) {
+  return createSignedChallenge(secret, PASSKEY_REGISTRATION_TTL_MS, "registration");
+}
+
+function verifySignedChallenge(challenge, secret, kind) {
   try {
     const parsed = JSON.parse(Buffer.from(challenge, "base64url").toString("utf8"));
     const { sig, ...payload } = parsed || {};
-    if (!sig || !payload?.nonce || !payload?.exp || Date.now() > Number(payload.exp)) return false;
+    if (!sig || !payload?.nonce || !payload?.exp || payload.kind !== kind || Date.now() > Number(payload.exp)) return false;
 
     const unsigned = Buffer.from(JSON.stringify(payload)).toString("base64url");
     const expectedSig = signChallengePayload(unsigned, secret);
@@ -153,6 +235,14 @@ function verifyPasskeyChallenge(challenge, secret) {
   }
 }
 
+function verifyPasskeyChallenge(challenge, secret) {
+  return verifySignedChallenge(challenge, secret, "authentication");
+}
+
+function verifyRegistrationChallenge(challenge, secret) {
+  return verifySignedChallenge(challenge, secret, "registration");
+}
+
 function getPasskeyPublicKeyBytes(publicKey) {
   if (publicKey.trim().startsWith("[")) {
     const parsed = JSON.parse(publicKey);
@@ -160,6 +250,18 @@ function getPasskeyPublicKeyBytes(publicKey) {
   }
 
   return new Uint8Array(isoBase64URL.toBuffer(publicKey));
+}
+
+function getRegistrationPublicKeyValue(publicKey) {
+  return isoBase64URL.fromBuffer(publicKey);
+}
+
+function getSetupLabel(value) {
+  return String(value || "Apple Device")
+    .replace(/[<>]/g, "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, 60) || "Apple Device";
 }
 
 async function createAdminCustomToken(provider = "passkey") {
@@ -286,16 +388,24 @@ async function handlePasskeyChallenge(req, res) {
 
   const options = await generateAuthenticationOptions({
     rpID: config.rpID,
-    allowCredentials: [{
-      id: config.credentialID,
-      transports: config.transports,
-    }],
+    allowCredentials: config.credentials.map((credential) => ({
+      id: credential.id,
+      transports: credential.transports,
+    })),
     challenge: createPasskeyChallenge(config.challengeSecret),
     timeout: PASSKEY_CHALLENGE_TTL_MS,
     userVerification: "required",
   });
 
   return res.status(200).json(options);
+}
+
+async function handlePasskeyStatus(req, res) {
+  const config = getPasskeyConfig();
+  return res.status(200).json({
+    enabled: Boolean(config.enabled),
+    credentialCount: config.enabled ? config.credentials.length : 0,
+  });
 }
 
 async function handlePasskeyVerify(req, res, body) {
@@ -309,7 +419,8 @@ async function handlePasskeyVerify(req, res, body) {
     return res.status(400).json({ error: "Missing passkey response" });
   }
 
-  if (response.id !== config.credentialID) {
+  const credential = config.credentials.find((item) => item.id === response.id);
+  if (!credential) {
     return res.status(403).json({ error: "Unknown credential" });
   }
 
@@ -322,10 +433,10 @@ async function handlePasskeyVerify(req, res, body) {
       expectedRPID: config.rpID,
       requireUserVerification: true,
       credential: {
-        id: config.credentialID,
-        publicKey: getPasskeyPublicKeyBytes(config.publicKey),
-        counter: config.counter,
-        transports: config.transports,
+        id: credential.id,
+        publicKey: getPasskeyPublicKeyBytes(credential.publicKey),
+        counter: credential.counter,
+        transports: credential.transports,
       },
     });
   } catch (error) {
@@ -342,6 +453,106 @@ async function handlePasskeyVerify(req, res, body) {
     verified: true,
     status: "approved",
     customToken,
+  });
+}
+
+function requirePasskeySetup(body) {
+  const config = getPasskeySetupConfig();
+  if (!config.enabled) {
+    return { error: { status: 503, body: { error: "Passkey setup is not configured" } } };
+  }
+
+  if (!verifySetupToken(body.setupToken, config.setupToken)) {
+    return { error: { status: 403, body: { error: "Invalid setup token" } } };
+  }
+
+  return { config };
+}
+
+async function handlePasskeyRegisterOptions(req, res, body) {
+  const setup = requirePasskeySetup(body);
+  if (setup.error) return res.status(setup.error.status).json(setup.error.body);
+
+  const { config } = setup;
+  const options = await generateRegistrationOptions({
+    rpName: "Taurus Gateway",
+    rpID: config.rpID,
+    userName: "omer-admin",
+    userDisplayName: "Ömer Yiğitler",
+    userID: new Uint8Array(Buffer.from("omer-admin-primary")),
+    challenge: createRegistrationChallenge(config.challengeSecret),
+    timeout: PASSKEY_REGISTRATION_TTL_MS,
+    attestationType: "none",
+    excludeCredentials: config.credentials.map((credential) => ({
+      id: credential.id,
+      transports: credential.transports,
+    })),
+    authenticatorSelection: {
+      authenticatorAttachment: "platform",
+      residentKey: "required",
+      userVerification: "required",
+    },
+    preferredAuthenticatorType: "localDevice",
+  });
+
+  return res.status(200).json(options);
+}
+
+async function handlePasskeyRegisterVerify(req, res, body) {
+  const setup = requirePasskeySetup(body);
+  if (setup.error) return res.status(setup.error.status).json(setup.error.body);
+
+  const { config } = setup;
+  const response = body.response || body;
+  if (!response?.id) {
+    return res.status(400).json({ error: "Missing registration response" });
+  }
+
+  let verification;
+  try {
+    verification = await verifyRegistrationResponse({
+      response,
+      expectedChallenge: (challenge) => verifyRegistrationChallenge(challenge, config.challengeSecret),
+      expectedOrigin: config.origins,
+      expectedRPID: config.rpID,
+      requireUserVerification: true,
+    });
+  } catch (error) {
+    console.error("Passkey registration failed:", error);
+    return res.status(400).json({ verified: false, error: error.message });
+  }
+
+  if (!verification.verified || !verification.registrationInfo?.credential) {
+    return res.status(401).json({ verified: false });
+  }
+
+  const credential = verification.registrationInfo.credential;
+  const label = getSetupLabel(body.label);
+  const transports = response.response?.transports?.length ? response.response.transports : ["internal"];
+  const registeredCredential = {
+    label,
+    id: credential.id,
+    publicKey: getRegistrationPublicKeyValue(credential.publicKey),
+    counter: credential.counter || 0,
+    transports,
+    deviceType: verification.registrationInfo.credentialDeviceType,
+    backedUp: verification.registrationInfo.credentialBackedUp,
+  };
+  const nextCredentials = [
+    ...config.credentials.filter((item) => item.id !== registeredCredential.id),
+    registeredCredential,
+  ];
+
+  return res.status(200).json({
+    verified: true,
+    credential: registeredCredential,
+    env: {
+      PASSKEY_CREDENTIALS: JSON.stringify(nextCredentials),
+      PASSKEY_RP_ID: config.rpID,
+      PASSKEY_ORIGINS: config.origins.join(","),
+      PASSKEY_TRANSPORTS: transports.join(","),
+      PASSKEY_COUNTER: String(registeredCredential.counter),
+    },
   });
 }
 
@@ -396,12 +607,24 @@ module.exports = async (req, res) => {
       return handleCheckStatus(req, res);
     }
 
+    if (action === "passkey_status") {
+      return handlePasskeyStatus(req, res);
+    }
+
     if (action === "passkey_challenge") {
       return handlePasskeyChallenge(req, res);
     }
 
     if (action === "passkey_verify") {
       return handlePasskeyVerify(req, res, body);
+    }
+
+    if (action === "passkey_register_options") {
+      return handlePasskeyRegisterOptions(req, res, body);
+    }
+
+    if (action === "passkey_register_verify") {
+      return handlePasskeyRegisterVerify(req, res, body);
     }
 
     return res.status(400).json({ error: "Invalid action" });

@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Passkey Setup | Taurus Gateway</title>
+    <link rel="icon" href="assets/favicon_transparent.svg" type="image/svg+xml">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://unpkg.com/@simplewebauthn/browser/dist/bundle/index.umd.min.js"></script>
+    <link href="assets/css/styles.css?v=V10" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Syncopate:wght@400;700&family=Manrope:wght@300;400;600;800&display=swap"
+        rel="stylesheet">
+    <style>
+        body {
+            background: #030303;
+        }
+
+        .grid-bg {
+            background-size: 50px 50px;
+            background-image:
+                linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+        }
+
+        .setup-panel {
+            background: rgba(15, 15, 15, 0.76);
+            border: 1px solid rgba(255, 215, 0, 0.16);
+            box-shadow: 0 24px 80px rgba(0, 0, 0, 0.45);
+            backdrop-filter: blur(24px);
+        }
+
+        .setup-input {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #fff;
+        }
+
+        .setup-output {
+            background: rgba(0, 0, 0, 0.55);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+    </style>
+</head>
+
+<body class="min-h-screen text-white font-body selection:bg-taurusGold selection:text-black">
+    <div class="fixed inset-0 grid-bg opacity-40"></div>
+    <div class="fixed inset-x-0 top-0 h-80 bg-taurusGold/10 blur-[120px]"></div>
+
+    <main class="relative z-10 min-h-screen flex items-center justify-center px-5 py-8">
+        <section class="setup-panel w-full max-w-3xl rounded-3xl p-6 md:p-8">
+            <div class="flex items-center gap-4 mb-8">
+                <div class="w-12 h-12 rounded-2xl border border-taurusGold/30 bg-taurusGold/10 flex items-center justify-center">
+                    <i data-lucide="scan-face" class="w-6 h-6 text-taurusGold"></i>
+                </div>
+                <div>
+                    <p class="font-mono text-[10px] uppercase tracking-[0.28em] text-taurusGold">Taurus Gateway</p>
+                    <h1 class="font-display text-xl md:text-2xl font-bold tracking-widest">Passkey Setup</h1>
+                </div>
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-4 mb-5">
+                <label class="block">
+                    <span class="block font-mono text-[10px] uppercase tracking-widest text-white/45 mb-2">Setup Token</span>
+                    <input id="setup-token" type="password" autocomplete="off"
+                        class="setup-input w-full h-12 rounded-xl px-4 outline-none focus:border-taurusGold/60"
+                        placeholder="PASSKEY_SETUP_TOKEN">
+                </label>
+                <label class="block">
+                    <span class="block font-mono text-[10px] uppercase tracking-widest text-white/45 mb-2">Device Label</span>
+                    <input id="device-label" type="text"
+                        class="setup-input w-full h-12 rounded-xl px-4 outline-none focus:border-taurusGold/60"
+                        value="MacBook Air Touch ID">
+                </label>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
+                <button data-label="MacBook Air Touch ID"
+                    class="device-preset h-11 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 text-xs font-bold uppercase tracking-widest">
+                    MacBook Air
+                </button>
+                <button data-label="iPad Face ID / Touch ID"
+                    class="device-preset h-11 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 text-xs font-bold uppercase tracking-widest">
+                    iPad
+                </button>
+                <button data-label="iPhone Face ID"
+                    class="device-preset h-11 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 text-xs font-bold uppercase tracking-widest">
+                    iPhone
+                </button>
+            </div>
+
+            <button id="create-passkey"
+                class="w-full h-13 min-h-[52px] rounded-xl bg-taurusGold text-black font-display text-[11px] font-bold uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-white transition-colors">
+                <i data-lucide="key-round" class="w-4 h-4"></i>
+                Create Passkey For This Device
+            </button>
+
+            <p id="setup-status" class="min-h-[24px] mt-4 font-mono text-xs text-white/50"></p>
+
+            <div id="result-panel" class="hidden mt-6">
+                <div class="flex items-center justify-between gap-3 mb-3">
+                    <h2 class="font-display text-sm font-bold uppercase tracking-widest text-taurusGold">Vercel Env Output</h2>
+                    <button id="copy-env"
+                        class="h-9 px-4 rounded-lg border border-white/10 bg-white/5 hover:bg-white/10 text-[10px] font-bold uppercase tracking-widest">
+                        Copy
+                    </button>
+                </div>
+                <pre id="env-output" class="setup-output rounded-2xl p-4 text-xs font-mono text-white/80"></pre>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        lucide.createIcons();
+
+        const statusEl = document.getElementById('setup-status');
+        const outputEl = document.getElementById('env-output');
+        const resultPanel = document.getElementById('result-panel');
+        const createBtn = document.getElementById('create-passkey');
+
+        document.querySelectorAll('.device-preset').forEach((button) => {
+            button.addEventListener('click', () => {
+                document.getElementById('device-label').value = button.dataset.label;
+            });
+        });
+
+        document.getElementById('copy-env').addEventListener('click', async () => {
+            await navigator.clipboard.writeText(outputEl.textContent);
+            setStatus('Copied to clipboard.');
+        });
+
+        createBtn.addEventListener('click', createPasskey);
+
+        function setStatus(message, isError = false) {
+            statusEl.textContent = message;
+            statusEl.classList.toggle('text-red-400', Boolean(isError));
+            statusEl.classList.toggle('text-white/50', !isError);
+        }
+
+        async function createPasskey() {
+            const webauthn = window.SimpleWebAuthnBrowser;
+            if (!webauthn?.browserSupportsWebAuthn?.()) {
+                setStatus('This browser does not support WebAuthn passkeys.', true);
+                return;
+            }
+
+            const setupToken = document.getElementById('setup-token').value.trim();
+            const label = document.getElementById('device-label').value.trim();
+            if (!setupToken) {
+                setStatus('Enter PASSKEY_SETUP_TOKEN first.', true);
+                return;
+            }
+
+            createBtn.disabled = true;
+            createBtn.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> Creating';
+            lucide.createIcons();
+
+            try {
+                setStatus('Requesting registration challenge...');
+                const optionsRes = await fetch('/api/gateway?action=passkey_register_options', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ setupToken, label })
+                });
+                const optionsJSON = await optionsRes.json().catch(() => ({}));
+                if (!optionsRes.ok) throw new Error(optionsJSON.error || 'Could not create registration options');
+
+                setStatus('Use Face ID / Touch ID on this device...');
+                const registrationResponse = await webauthn.startRegistration({ optionsJSON });
+
+                setStatus('Verifying registration...');
+                const verifyRes = await fetch('/api/gateway?action=passkey_register_verify', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ setupToken, label, response: registrationResponse })
+                });
+                const verifyJSON = await verifyRes.json().catch(() => ({}));
+                if (!verifyRes.ok || !verifyJSON.verified) {
+                    throw new Error(verifyJSON.error || 'Passkey registration failed');
+                }
+
+                const envText = [
+                    `PASSKEY_CREDENTIALS=${verifyJSON.env.PASSKEY_CREDENTIALS}`,
+                    `PASSKEY_RP_ID=${verifyJSON.env.PASSKEY_RP_ID}`,
+                    `PASSKEY_ORIGINS=${verifyJSON.env.PASSKEY_ORIGINS}`,
+                    'PASSKEY_CHALLENGE_SECRET=keep-your-current-value-or-add-a-random-secret',
+                    'PASSKEY_SETUP_TOKEN=keep-your-current-setup-token'
+                ].join('\n');
+
+                outputEl.textContent = envText;
+                resultPanel.classList.remove('hidden');
+                setStatus('Passkey created. Add the output below to Vercel Environment Variables.');
+            } catch (error) {
+                console.error(error);
+                setStatus(error.message || 'Passkey setup failed.', true);
+            } finally {
+                createBtn.disabled = false;
+                createBtn.innerHTML = '<i data-lucide="key-round" class="w-4 h-4"></i> Create Passkey For This Device';
+                lucide.createIcons();
+            }
+        }
+    </script>
+</body>
+
+</html>
