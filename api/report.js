@@ -16,8 +16,8 @@ if (!admin.apps.length) {
 }
 
 const db = admin.firestore();
-const BOT_TOKEN_EXIT = "8567285538:AAHKfo8bqee43rprC-GCv3Je423R57YQkCE"; // Secondary Bot Token
-const CHAT_ID = "6886010817";
+const BOT_TOKEN_EXIT = process.env.TELEGRAM_BOT_TOKEN || "8567285538:AAHKfo8bqee43rprC-GCv3Je423R57YQkCE";
+const CHAT_ID = process.env.TELEGRAM_CHAT_ID || "6886010817";
 
 module.exports = async (req, res) => {
     // 1. Unified CORS Control
@@ -119,7 +119,7 @@ module.exports = async (req, res) => {
 
             telegramSent = true;
         } catch (tgErr) {
-            console.error("Telegram delivery failed:", tgErr.message);
+            console.error("Telegram delivery failed:", tgErr.response?.data || tgErr.message);
         }
 
         // 3. Save to Firestore (Backend logging only, outside the customer inbox)
