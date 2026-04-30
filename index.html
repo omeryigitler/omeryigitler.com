@@ -48,6 +48,8 @@
 
     <link href="assets/css/styles.css?v=V10" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://unpkg.com/three@0.160.0/build/three.min.js"></script>
+    <script src="https://unpkg.com/globe.gl@2.32.1/dist/globe.gl.min.js"></script>
     <script src="assets/js/system-modals.js?v=V10"></script>
     <link
         href="https://fonts.googleapis.com/css2?family=Syncopate:wght@400;700&family=Manrope:wght@300;400;600;800&display=swap"
@@ -113,10 +115,137 @@
             emailjs.init("V1YT-CYD1Y7eX0BIE");
         })();
     </script>
+    <style id="globe-preloader-styles">
+        #intro-modal {
+            position: fixed;
+            inset: 0;
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            background: #0a0a0a;
+            color: #DEFF9A;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+            opacity: 1;
+            transition: opacity 500ms ease;
+            will-change: opacity;
+        }
+
+        #intro-modal.is-fading,
+        #globe-container.is-fading {
+            opacity: 0;
+        }
+
+        #globe-container {
+            position: absolute;
+            inset: 0;
+            width: 100vw;
+            height: 100vh;
+            opacity: 1;
+            transition: opacity 500ms ease;
+            will-change: opacity;
+        }
+
+        #globe-container canvas {
+            display: block;
+            cursor: default;
+        }
+
+        #signal-overlay {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            width: min(90vw, 780px);
+            padding: 0 1rem;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            color: #DEFF9A;
+            font-size: clamp(0.8rem, 2vw, 1.125rem);
+            font-weight: 700;
+            letter-spacing: 0;
+            line-height: 1.6;
+            text-transform: uppercase;
+            text-shadow: 0 0 10px rgba(222, 255, 154, 0.9), 0 0 28px rgba(222, 255, 154, 0.35);
+            opacity: 0;
+            transition: opacity 500ms ease;
+            will-change: opacity;
+            pointer-events: none;
+        }
+
+        #signal-overlay.is-visible {
+            opacity: 1;
+        }
+
+        .globe-preloader-status {
+            position: absolute;
+            top: 2rem;
+            left: 50%;
+            display: flex;
+            width: min(90vw, 64rem);
+            align-items: center;
+            gap: 1rem;
+            transform: translateX(-50%);
+            color: rgba(222, 255, 154, 0.72);
+            font-size: clamp(0.625rem, 1.4vw, 0.75rem);
+            line-height: 1;
+            text-transform: uppercase;
+            pointer-events: none;
+        }
+
+        .globe-preloader-status::before,
+        .globe-preloader-status::after {
+            content: "";
+            height: 1px;
+            flex: 1;
+            background: rgba(222, 255, 154, 0.3);
+        }
+
+        .globe-preloader-scan {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            width: min(72vw, 48rem);
+            height: 1px;
+            transform: translateX(-50%);
+            background: linear-gradient(90deg, transparent, #DEFF9A, transparent);
+            box-shadow: 0 0 24px rgba(222, 255, 154, 0.5);
+            opacity: 0.7;
+            animation: globePreloaderScan 2.8s ease-in-out infinite;
+            pointer-events: none;
+        }
+
+        @keyframes globePreloaderScan {
+            0% {
+                transform: translateX(-80%);
+                opacity: 0;
+            }
+
+            45%, 55% {
+                opacity: 0.7;
+            }
+
+            100% {
+                transform: translateX(-20%);
+                opacity: 0;
+            }
+        }
+    </style>
 </head>
 
 <body
     class="bg-obsidian text-white font-body min-h-screen flex flex-col items-center overflow-x-hidden selection:bg-taurusGold selection:text-black">
+
+    <div
+        id="intro-modal"
+        class="fixed inset-0 z-[9999] bg-[#0a0a0a]"
+        aria-live="polite"
+        aria-label="Initializing location signal">
+        <div id="globe-container" aria-hidden="true"></div>
+        <div class="globe-preloader-status">ORBITAL NODE SCAN</div>
+        <div class="globe-preloader-scan"></div>
+        <div id="signal-overlay">[ SIGNAL ACQUIRED: UNKNOWN NODE ]</div>
+    </div>
 
     <div class="fixed inset-0 w-full h-full grid-bg bg-symmetry-grid -z-10 opacity-40"></div>
 
@@ -193,7 +322,7 @@
     
     </header>
 
-    <main class="flex-grow flex flex-col items-center justify-center w-full max-w-7xl px-4 relative z-10 py-20 mt-32">
+    <main id="site-content" class="flex-grow flex flex-col items-center justify-center w-full max-w-7xl px-4 relative z-10 py-20 mt-32">
 
         <!-- Central Neon Scan Line (Symmetrical Axis) -->
         <div class="absolute top-0 left-1/2 -translate-x-1/2 w-[1px] h-full bg-white/5 overflow-hidden -z-10">
@@ -2076,6 +2205,198 @@ function turnstileSuccess(token) {
   } else {
     setup();
   }
+})();
+</script>
+<script>
+/* 3D Globe Preloader Intro */
+(function () {
+  const INTRO_DELAY_MS = 500;
+  const GEO_TIMEOUT_MS = 2000;
+  const FLY_TO_DURATION_MS = 2000;
+  const SIGNAL_HOLD_MS = 1500;
+  const FADE_DURATION_MS = 500;
+  const ACCENT_COLOR = "#DEFF9A";
+  const SPACE_COLOR = "#0a0a0a";
+
+  const introModal = document.getElementById("intro-modal");
+  const globeContainer = document.getElementById("globe-container");
+  const signalOverlay = document.getElementById("signal-overlay");
+
+  if (!introModal || !globeContainer || !signalOverlay) return;
+
+  const previousBodyOverflow = document.body.style.overflow;
+  let world = null;
+  let hasRevealedSite = false;
+  let resizeObserver = null;
+  let detachResizeHandler = null;
+
+  // Phase 1: Initialization (0ms) - lock scrolling before the globe sequence starts.
+  document.body.style.overflow = "hidden";
+
+  function revealSite(immediate) {
+    if (hasRevealedSite) return;
+    hasRevealedSite = true;
+
+    if (world) {
+      world.controls().autoRotate = false;
+    }
+
+    if (resizeObserver) {
+      resizeObserver.disconnect();
+    }
+
+    if (detachResizeHandler) {
+      detachResizeHandler();
+    }
+
+    signalOverlay.classList.remove("is-visible");
+    globeContainer.classList.add("is-fading");
+    introModal.classList.add("is-fading");
+
+    window.setTimeout(function () {
+      introModal.remove();
+      document.body.style.overflow = previousBodyOverflow;
+    }, immediate ? 0 : FADE_DURATION_MS);
+  }
+
+  function normalizeGeoPayload(payload) {
+    const lat = Number(payload && payload.latitude);
+    const lng = Number(payload && payload.longitude);
+
+    if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
+      throw new Error("Invalid geolocation payload");
+    }
+
+    return {
+      lat: lat,
+      lng: lng,
+      city: payload.city || "UNKNOWN NODE"
+    };
+  }
+
+  async function fetchUserLocation() {
+    const controller = new AbortController();
+    const timeoutId = window.setTimeout(function () {
+      controller.abort();
+    }, GEO_TIMEOUT_MS);
+
+    try {
+      const response = await fetch("https://ipapi.co/json/", {
+        signal: controller.signal,
+        cache: "no-store"
+      });
+
+      if (!response.ok) {
+        throw new Error("Geolocation request failed: " + response.status);
+      }
+
+      return normalizeGeoPayload(await response.json());
+    } finally {
+      window.clearTimeout(timeoutId);
+    }
+  }
+
+  function initGlobe() {
+    if (typeof Globe !== "function") {
+      throw new Error("Globe.gl library is unavailable");
+    }
+
+    world = Globe()(globeContainer)
+      .backgroundColor(SPACE_COLOR)
+      .globeImageUrl("https://unpkg.com/three-globe/example/img/earth-dark.jpg")
+      .showAtmosphere(true)
+      .atmosphereColor(ACCENT_COLOR)
+      .atmosphereAltitude(0.15)
+      .pointOfView({ lat: 0, lng: 0, altitude: 4 }, 0)
+      .ringsData([])
+      .ringColor(function () { return ACCENT_COLOR; })
+      .ringMaxRadius(3)
+      .ringPropagationSpeed(3)
+      .ringRepeatPeriod(700);
+
+    const controls = world.controls();
+    controls.enableZoom = false;
+    controls.enablePan = false;
+    controls.enableRotate = false;
+    controls.autoRotate = true;
+    controls.autoRotateSpeed = 0.45;
+
+    function syncGlobeSize() {
+      if (!world || hasRevealedSite) return;
+      world.width(window.innerWidth);
+      world.height(window.innerHeight);
+    }
+
+    syncGlobeSize();
+    window.addEventListener("resize", syncGlobeSize, { passive: true });
+    detachResizeHandler = function () {
+      window.removeEventListener("resize", syncGlobeSize);
+    };
+
+    if (typeof ResizeObserver === "function") {
+      resizeObserver = new ResizeObserver(syncGlobeSize);
+      resizeObserver.observe(globeContainer);
+    }
+  }
+
+  async function runSignalSequence() {
+    let geoPromise;
+
+    try {
+      initGlobe();
+      geoPromise = fetchUserLocation();
+    } catch (error) {
+      console.warn("[globe-preloader]", error);
+      revealSite(false);
+      return;
+    }
+
+    geoPromise.catch(function (error) {
+      console.warn("[globe-preloader]", error);
+      revealSite(false);
+    });
+
+    try {
+      await new Promise(function (resolve) {
+        window.setTimeout(resolve, INTRO_DELAY_MS);
+      });
+
+      const userLocation = await geoPromise;
+      if (hasRevealedSite) return;
+
+      // Phase 2: Fly-To Sequence - stop rotation and fly for exactly 2000ms.
+      world.controls().autoRotate = false;
+      world.pointOfView({
+        lat: userLocation.lat,
+        lng: userLocation.lng,
+        altitude: 0.4
+      }, FLY_TO_DURATION_MS);
+
+      window.setTimeout(function () {
+        if (hasRevealedSite) return;
+
+        // Phase 3: Signal Acquired - pulse the exact user coordinates and show the city.
+        world.ringsData([{ lat: userLocation.lat, lng: userLocation.lng }]);
+        signalOverlay.textContent = "[ SIGNAL ACQUIRED: " + String(userLocation.city).toUpperCase() + " ]";
+        signalOverlay.classList.add("is-visible");
+
+        // Phase 4: Fade Out & Reveal Site - hold the signal, fade out, then remove the modal.
+        window.setTimeout(function () {
+          signalOverlay.classList.remove("is-visible");
+          globeContainer.classList.add("is-fading");
+
+          window.setTimeout(function () {
+            revealSite(true);
+          }, FADE_DURATION_MS);
+        }, SIGNAL_HOLD_MS);
+      }, FLY_TO_DURATION_MS);
+    } catch (error) {
+      console.warn("[globe-preloader]", error);
+      revealSite(false);
+    }
+  }
+
+  runSignalSequence();
 })();
 </script>
   <script>
