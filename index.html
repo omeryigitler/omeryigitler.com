@@ -150,6 +150,7 @@
         #globe-container canvas {
             display: block;
             cursor: default;
+            filter: brightness(1.24) contrast(1.22) saturate(1.08);
         }
 
         #signal-overlay {
@@ -2217,6 +2218,8 @@ function turnstileSuccess(token) {
   const FADE_DURATION_MS = 500;
   const ACCENT_COLOR = "#DEFF9A";
   const SPACE_COLOR = "#0a0a0a";
+  const EARTH_NIGHT = "https://unpkg.com/three-globe/example/img/earth-night.jpg";
+  const EARTH_BUMP = "https://unpkg.com/three-globe/example/img/earth-topology.png";
 
   const introModal = document.getElementById("intro-modal");
   const globeContainer = document.getElementById("globe-container");
@@ -2303,16 +2306,24 @@ function turnstileSuccess(token) {
 
     world = Globe()(globeContainer)
       .backgroundColor(SPACE_COLOR)
-      .globeImageUrl("https://unpkg.com/three-globe/example/img/earth-dark.jpg")
+      .globeImageUrl(EARTH_NIGHT)
+      .bumpImageUrl(EARTH_BUMP)
       .showAtmosphere(true)
       .atmosphereColor(ACCENT_COLOR)
-      .atmosphereAltitude(0.15)
-      .pointOfView({ lat: 0, lng: 0, altitude: 4 }, 0)
+      .atmosphereAltitude(0.12)
+      .pointOfView({ lat: 0, lng: 0, altitude: 3.2 }, 0)
       .ringsData([])
       .ringColor(function () { return ACCENT_COLOR; })
       .ringMaxRadius(3)
       .ringPropagationSpeed(3)
       .ringRepeatPeriod(700);
+
+    if (typeof world.renderer === "function") {
+      const renderer = world.renderer();
+      if (renderer && typeof renderer.setPixelRatio === "function") {
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+      }
+    }
 
     const controls = world.controls();
     controls.enableZoom = false;
