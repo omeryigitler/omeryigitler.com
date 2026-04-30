@@ -2212,7 +2212,7 @@ function turnstileSuccess(token) {
 (function () {
   const INTRO_DELAY_MS = 500;
   const GEO_TIMEOUT_MS = 2000;
-  const FLY_TO_DURATION_MS = 2000;
+  const FLY_TO_DURATION_MS = 2500;
   const SIGNAL_HOLD_MS = 1500;
   const FADE_DURATION_MS = 500;
   const ACCENT_COLOR = "#DEFF9A";
@@ -2383,7 +2383,7 @@ function turnstileSuccess(token) {
       const userLocation = await geoPromise;
       if (hasRevealedSite) return;
 
-      // Phase 2: Fly-To Sequence - stop rotation and fly for exactly 2000ms.
+      // Phase 2: Fly-To Sequence - stop rotation and fly for exactly 2500ms.
       world.controls().autoRotate = false;
       world.pointOfView({
         lat: userLocation.lat,
