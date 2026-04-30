@@ -132,6 +132,31 @@
             will-change: opacity;
         }
 
+        #intro-modal::before,
+        #intro-modal::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        #intro-modal::before {
+            background-image:
+                linear-gradient(rgba(255, 215, 0, 0.08) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 215, 0, 0.08) 1px, transparent 1px);
+            background-size: 96px 96px;
+            opacity: 0.18;
+            -webkit-mask-image: radial-gradient(circle at 50% 50%, #000 0%, #000 42%, transparent 76%);
+            mask-image: radial-gradient(circle at 50% 50%, #000 0%, #000 42%, transparent 76%);
+        }
+
+        #intro-modal::after {
+            background:
+                linear-gradient(180deg, rgba(10, 10, 10, 0.72) 0%, transparent 24%, transparent 68%, rgba(10, 10, 10, 0.82) 100%),
+                linear-gradient(90deg, rgba(10, 10, 10, 0.68) 0%, transparent 20%, transparent 80%, rgba(10, 10, 10, 0.68) 100%);
+        }
+
         #intro-modal.is-fading,
         #globe-container.is-fading {
             opacity: 0;
@@ -145,6 +170,7 @@
             opacity: 1;
             transition: opacity 500ms ease;
             will-change: opacity;
+            z-index: 0;
         }
 
         #globe-container canvas {
@@ -171,6 +197,7 @@
             transition: opacity 500ms ease;
             will-change: opacity;
             pointer-events: none;
+            z-index: 4;
         }
 
         #signal-overlay.is-visible {
@@ -191,6 +218,7 @@
             line-height: 1;
             text-transform: uppercase;
             pointer-events: none;
+            z-index: 3;
         }
 
         .globe-preloader-status::before,
@@ -213,6 +241,7 @@
             box-shadow: 0 0 18px rgba(255, 215, 0, 0.26);
             opacity: 0.9;
             pointer-events: none;
+            z-index: 2;
         }
 
         .globe-preloader-scan::before {
@@ -2295,10 +2324,18 @@ function turnstileSuccess(token) {
   const FADE_DURATION_MS = 500;
   const ACCENT_COLOR = "#FFD700";
   const SPACE_COLOR = "#0a0a0a";
-  const EARTH_NIGHT = "https://unpkg.com/three-globe/example/img/earth-night.jpg";
+  const EARTH_NIGHT = "assets/globe/earth-black-marble-4k.jpg";
   const EARTH_BUMP = "https://unpkg.com/three-globe/example/img/earth-topology.png";
   const INITIAL_ALTITUDE = 3.2;
   const FOCUS_ALTITUDE = 1.35;
+  const NETWORK_NODES = [
+    { name: "MALTA CORE", lat: 35.8997, lng: 14.5146 },
+    { name: "ISTANBUL RELAY", lat: 41.0082, lng: 28.9784 },
+    { name: "LONDON NODE", lat: 51.5072, lng: -0.1276 },
+    { name: "NEW YORK GRID", lat: 40.7128, lng: -74.006 },
+    { name: "SINGAPORE HUB", lat: 1.3521, lng: 103.8198 },
+    { name: "TOKYO SIGNAL", lat: 35.6762, lng: 139.6503 }
+  ];
 
   const introModal = document.getElementById("intro-modal");
   const globeContainer = document.getElementById("globe-container");
@@ -2356,6 +2393,106 @@ function turnstileSuccess(token) {
     };
   }
 
+  function getBaseNetworkPoints() {
+    return NETWORK_NODES.map(function (node) {
+      return {
+        lat: node.lat,
+        lng: node.lng,
+        altitude: 0.012,
+        radius: 0.055,
+        color: "rgba(255, 215, 0, 0.72)"
+      };
+    });
+  }
+
+  function buildSignalArcs(userLocation) {
+    return NETWORK_NODES.map(function (node, index) {
+      return {
+        startLat: node.lat,
+        startLng: node.lng,
+        endLat: userLocation.lat,
+        endLng: userLocation.lng,
+        altitude: 0.18 + (index % 3) * 0.045,
+        stroke: window.innerWidth < 640 ? 0.34 : 0.5,
+        order: index
+      };
+    });
+  }
+
+  function tuneGlobeRenderer() {
+    if (!world || typeof world.renderer !== "function") return;
+
+    const renderer = world.renderer();
+    if (!renderer) return;
+
+    if (typeof renderer.setPixelRatio === "function") {
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2.5));
+    }
+
+    if (typeof renderer.setClearColor === "function") {
+      renderer.setClearColor(SPACE_COLOR, 1);
+    }
+
+    if (window.THREE) {
+      if (THREE.SRGBColorSpace) {
+        renderer.outputColorSpace = THREE.SRGBColorSpace;
+      }
+
+      if (THREE.ACESFilmicToneMapping) {
+        renderer.toneMapping = THREE.ACESFilmicToneMapping;
+        renderer.toneMappingExposure = 1.08;
+      }
+    }
+  }
+
+  function tuneGlobeMaterial() {
+    if (!world || !window.THREE || typeof world.globeMaterial !== "function") return;
+
+    const material = world.globeMaterial();
+    const renderer = typeof world.renderer === "function" ? world.renderer() : null;
+    const maxAnisotropy = renderer && renderer.capabilities
+      ? renderer.capabilities.getMaxAnisotropy()
+      : 1;
+
+    if (!material) return;
+
+    material.bumpScale = 3.8;
+    material.shininess = 16;
+
+    if (material.specular) {
+      material.specular = new THREE.Color("#f0c040");
+    }
+
+    if (material.emissive) {
+      material.emissive = new THREE.Color("#120d00");
+      material.emissiveIntensity = 0.16;
+    }
+
+    [material.map, material.bumpMap, material.specularMap].forEach(function (texture) {
+      if (!texture) return;
+      texture.anisotropy = Math.min(maxAnisotropy, 8);
+      texture.needsUpdate = true;
+    });
+
+    material.needsUpdate = true;
+  }
+
+  function tuneGlobeLights() {
+    if (!world || typeof world.lights !== "function" || !window.THREE) return;
+
+    world.lights().forEach(function (light) {
+      if (light.type === "AmbientLight") {
+        light.intensity = 1.85;
+      }
+
+      if (light.type === "DirectionalLight") {
+        light.color.set("#fff1a8");
+        light.intensity = 1.15;
+        light.position.set(-1.2, 0.85, 1.25);
+      }
+    });
+  }
+
   async function fetchUserLocation() {
     const controller = new AbortController();
     const timeoutId = window.setTimeout(function () {
@@ -2389,27 +2526,52 @@ function turnstileSuccess(token) {
       .bumpImageUrl(EARTH_BUMP)
       .showAtmosphere(true)
       .atmosphereColor(ACCENT_COLOR)
-      .atmosphereAltitude(0.12)
+      .atmosphereAltitude(0.14)
       .pointOfView({ lat: 0, lng: 0, altitude: INITIAL_ALTITUDE }, 0)
-      .pointsData([])
+      .pointsData(getBaseNetworkPoints())
       .pointLat("lat")
       .pointLng("lng")
-      .pointAltitude(0.025)
-      .pointRadius(0.22)
+      .pointAltitude("altitude")
+      .pointRadius("radius")
       .pointResolution(28)
-      .pointColor(function () { return ACCENT_COLOR; })
+      .pointColor("color")
+      .arcsData([])
+      .arcStartLat("startLat")
+      .arcStartLng("startLng")
+      .arcEndLat("endLat")
+      .arcEndLng("endLng")
+      .arcAltitude("altitude")
+      .arcStroke("stroke")
+      .arcCurveResolution(96)
+      .arcCircularResolution(8)
+      .arcColor(function () {
+        return [
+          "rgba(255, 215, 0, 0)",
+          "rgba(255, 215, 0, 0.92)",
+          "rgba(240, 192, 64, 0)"
+        ];
+      })
+      .arcDashLength(0.26)
+      .arcDashGap(0.86)
+      .arcDashInitialGap(function (arc) { return arc.order * 0.16; })
+      .arcDashAnimateTime(1200)
+      .arcsTransitionDuration(850)
       .ringsData([])
       .ringColor(function () { return ACCENT_COLOR; })
       .ringMaxRadius(3)
       .ringPropagationSpeed(3)
-      .ringRepeatPeriod(700);
+      .ringRepeatPeriod(700)
+      .onGlobeReady(function () {
+        tuneGlobeMaterial();
+      });
 
-    if (typeof world.renderer === "function") {
-      const renderer = world.renderer();
-      if (renderer && typeof renderer.setPixelRatio === "function") {
-        renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
-      }
+    if (typeof world.globeCurvatureResolution === "function") {
+      world.globeCurvatureResolution(2);
     }
+
+    tuneGlobeRenderer();
+    tuneGlobeMaterial();
+    tuneGlobeLights();
 
     const controls = world.controls();
     controls.enableZoom = false;
@@ -2473,8 +2635,17 @@ function turnstileSuccess(token) {
         if (hasRevealedSite) return;
 
         // Phase 3: Signal Acquired - pulse the exact user coordinates and show the city.
-        const signalPoint = [{ lat: userLocation.lat, lng: userLocation.lng }];
-        world.pointsData(signalPoint).ringsData(signalPoint);
+        const signalPoint = {
+          lat: userLocation.lat,
+          lng: userLocation.lng,
+          altitude: 0.026,
+          radius: 0.19,
+          color: ACCENT_COLOR
+        };
+        world
+          .pointsData(getBaseNetworkPoints().concat(signalPoint))
+          .arcsData(buildSignalArcs(userLocation))
+          .ringsData([signalPoint]);
         signalOverlay.textContent = "[ SIGNAL ACQUIRED: " + String(userLocation.city).toUpperCase() + " ]";
         signalOverlay.classList.add("is-visible");
 
@@ -2486,11 +2657,13 @@ function turnstileSuccess(token) {
           window.setTimeout(function () {
             revealSite(true);
           }, FADE_DURATION_MS);
-        }, SIGNAL_HOLD_MS);
+      }, SIGNAL_HOLD_MS);
       }, FLY_TO_DURATION_MS);
     } catch (error) {
-      console.warn("[globe-preloader]", error);
-      revealSite(false);
+      if (!hasRevealedSite) {
+        console.warn("[globe-preloader]", error);
+        revealSite(false);
+      }
     }
   }
 
