@@ -119,7 +119,7 @@
         #intro-modal {
             position: fixed;
             inset: 0;
-            z-index: 9999;
+            z-index: 2147483000;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -150,7 +150,6 @@
         #globe-container canvas {
             display: block;
             cursor: default;
-            filter: brightness(1.24) contrast(1.22) saturate(1.08);
         }
 
         #signal-overlay {
@@ -2220,6 +2219,8 @@ function turnstileSuccess(token) {
   const SPACE_COLOR = "#0a0a0a";
   const EARTH_NIGHT = "https://unpkg.com/three-globe/example/img/earth-night.jpg";
   const EARTH_BUMP = "https://unpkg.com/three-globe/example/img/earth-topology.png";
+  const INITIAL_ALTITUDE = 3.2;
+  const FOCUS_ALTITUDE = 1.35;
 
   const introModal = document.getElementById("intro-modal");
   const globeContainer = document.getElementById("globe-container");
@@ -2311,7 +2312,14 @@ function turnstileSuccess(token) {
       .showAtmosphere(true)
       .atmosphereColor(ACCENT_COLOR)
       .atmosphereAltitude(0.12)
-      .pointOfView({ lat: 0, lng: 0, altitude: 3.2 }, 0)
+      .pointOfView({ lat: 0, lng: 0, altitude: INITIAL_ALTITUDE }, 0)
+      .pointsData([])
+      .pointLat("lat")
+      .pointLng("lng")
+      .pointAltitude(0.025)
+      .pointRadius(0.22)
+      .pointResolution(28)
+      .pointColor(function () { return ACCENT_COLOR; })
       .ringsData([])
       .ringColor(function () { return ACCENT_COLOR; })
       .ringMaxRadius(3)
@@ -2380,14 +2388,15 @@ function turnstileSuccess(token) {
       world.pointOfView({
         lat: userLocation.lat,
         lng: userLocation.lng,
-        altitude: 0.4
+        altitude: FOCUS_ALTITUDE
       }, FLY_TO_DURATION_MS);
 
       window.setTimeout(function () {
         if (hasRevealedSite) return;
 
         // Phase 3: Signal Acquired - pulse the exact user coordinates and show the city.
-        world.ringsData([{ lat: userLocation.lat, lng: userLocation.lng }]);
+        const signalPoint = [{ lat: userLocation.lat, lng: userLocation.lng }];
+        world.pointsData(signalPoint).ringsData(signalPoint);
         signalOverlay.textContent = "[ SIGNAL ACQUIRED: " + String(userLocation.city).toUpperCase() + " ]";
         signalOverlay.classList.add("is-visible");
 
