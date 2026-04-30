@@ -2137,6 +2137,75 @@ function turnstileSuccess(token) {
   div.cky-consent-container button:hover {
     opacity: 0.85 !important;
   }
+
+  @media (max-width: 640px) {
+    div.cky-consent-container {
+      left: 0 !important;
+      right: 0 !important;
+      bottom: 0 !important;
+      width: 100% !important;
+      max-width: none !important;
+    }
+
+    div.cky-consent-container,
+    div.cky-consent-container * {
+      box-sizing: border-box !important;
+    }
+
+    div.cky-consent-container .cky-consent-bar {
+      width: 100% !important;
+      max-height: 38vh !important;
+      overflow-y: auto !important;
+      padding: 14px 18px calc(14px + env(safe-area-inset-bottom)) !important;
+      border-radius: 0 !important;
+      border-top-width: 2px !important;
+    }
+
+    div.cky-consent-container .cky-title {
+      margin: 0 0 6px !important;
+      font-size: 18px !important;
+      line-height: 1.2 !important;
+      font-weight: 800 !important;
+    }
+
+    div.cky-consent-container .cky-notice-des,
+    div.cky-consent-container .cky-notice-des p {
+      margin: 0 !important;
+      font-size: 13px !important;
+      line-height: 1.42 !important;
+    }
+
+    div.cky-consent-container .cky-notice-btn-wrapper {
+      display: grid !important;
+      grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+      gap: 8px !important;
+      margin-top: 12px !important;
+    }
+
+    div.cky-consent-container .cky-btn,
+    div.cky-consent-container button.cky-btn,
+    div.cky-consent-container button.cky-btn-accept,
+    div.cky-consent-container button.cky-btn-reject,
+    div.cky-consent-container button.cky-btn-customize,
+    div.cky-consent-container button.cky-btn-preferences {
+      width: 100% !important;
+      min-width: 0 !important;
+      min-height: 42px !important;
+      margin: 0 !important;
+      padding: 0 8px !important;
+      border-radius: 4px !important;
+      font-size: 13px !important;
+      line-height: 1.1 !important;
+    }
+
+    div.cky-consent-container .cky-footer-wrapper,
+    div.cky-consent-container .cky-powered-by {
+      margin-top: 8px !important;
+      padding-top: 0 !important;
+      font-size: 11px !important;
+      line-height: 1.2 !important;
+    }
+  }
 </style>
 
 
