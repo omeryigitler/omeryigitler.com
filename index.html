@@ -2649,15 +2649,11 @@ function turnstileSuccess(token) {
         signalOverlay.textContent = "[ SIGNAL ACQUIRED: " + String(userLocation.city).toUpperCase() + " ]";
         signalOverlay.classList.add("is-visible");
 
-        // Phase 4: Fade Out & Reveal Site - hold the signal, fade out, then remove the modal.
+        // Phase 4: Fade Out & Reveal Site - fade the full intro layer with the globe.
+        // This prevents a black gap on mobile after the WebGL canvas has disappeared.
         window.setTimeout(function () {
-          signalOverlay.classList.remove("is-visible");
-          globeContainer.classList.add("is-fading");
-
-          window.setTimeout(function () {
-            revealSite(true);
-          }, FADE_DURATION_MS);
-      }, SIGNAL_HOLD_MS);
+          revealSite(false);
+        }, SIGNAL_HOLD_MS);
       }, FLY_TO_DURATION_MS);
     } catch (error) {
       if (!hasRevealedSite) {
