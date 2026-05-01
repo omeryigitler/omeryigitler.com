@@ -16,7 +16,7 @@
     // CONFIGURATION (Sensitive tokens moved to backend)
     const CONFIG = {
         collection: 'visitors_v1',
-        ipApi: 'https://ipapi.co/json/',
+        ipApi: 'https://get.geojs.io/v1/ip/geo.json',
         api: {
             tracker: '/api/tracker',
             report: '/api/report'
@@ -870,12 +870,21 @@
         };
 
         try {
-            // Attempt 1: ipapi.co (Primary - Rich Data)
-            // Added 1.5s timeout to prevent hanging
-            const res = await fetchWithTimeout('https://ipapi.co/json/', 1500);
+            // Attempt 1: GeoJS (Primary - CORS friendly, avoids single-provider rate limits)
+            const res = await fetchWithTimeout(CONFIG.ipApi, 1200);
             if (res.ok) {
                 const data = await res.json();
-                if (data.ip) ipData = data;
+                if (data.ip) {
+                    ipData = {
+                        ip: data.ip,
+                        city: data.city || 'Unknown',
+                        country_name: data.country || data.country_name || 'Unknown',
+                        country_code: data.country_code,
+                        org: data.organization_name || data.organization || 'Unknown ISP',
+                        latitude: data.latitude,
+                        longitude: data.longitude
+                    };
+                }
             } else {
                 throw new Error("Primary API Failed");
             }

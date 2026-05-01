@@ -1448,7 +1448,7 @@ function turnstileSuccess(token) {
 
     <!-- TAURUS TRACKER v5.5 (Final System) -->
     <script src="assets/js/tracker/logo_data.js"></script>
-    <script src="assets/js/tracker/taurus-tracker.js?v=V44"></script>
+    <script src="assets/js/tracker/taurus-tracker.js?v=V45"></script>
 
 
     <!-- PROJECT CONFIGURATION MODAL -->
@@ -2319,6 +2319,7 @@ function turnstileSuccess(token) {
 (function () {
   const INTRO_DELAY_MS = 500;
   const GEO_TIMEOUT_MS = 2000;
+  const GEO_PROVIDER_TIMEOUT_MS = 900;
   const FLY_TO_DURATION_MS = 2500;
   const SIGNAL_HOLD_MS = 1500;
   const FADE_DURATION_MS = 500;
@@ -2328,6 +2329,14 @@ function turnstileSuccess(token) {
   const EARTH_BUMP = "https://unpkg.com/three-globe/example/img/earth-topology.png";
   const INITIAL_ALTITUDE = 3.2;
   const FOCUS_ALTITUDE = 1.35;
+  const GEO_CACHE_KEY = "taurus-globe-geo-v1";
+  const GEO_CACHE_TTL_MS = 6 * 60 * 60 * 1000;
+  const DEFAULT_LOCATION = {
+    lat: 35.8997,
+    lng: 14.5146,
+    city: "UNKNOWN NODE",
+    provider: "fallback"
+  };
   const NETWORK_NODES = [
     { name: "MALTA CORE", lat: 35.8997, lng: 14.5146 },
     { name: "ISTANBUL RELAY", lat: 41.0082, lng: 28.9784 },
@@ -2378,9 +2387,9 @@ function turnstileSuccess(token) {
     }, immediate ? 0 : FADE_DURATION_MS);
   }
 
-  function normalizeGeoPayload(payload) {
-    const lat = Number(payload && payload.latitude);
-    const lng = Number(payload && payload.longitude);
+  function normalizeLocation(latValue, lngValue, cityValue, providerName) {
+    const lat = Number(latValue);
+    const lng = Number(lngValue);
 
     if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
       throw new Error("Invalid geolocation payload");
@@ -2389,9 +2398,71 @@ function turnstileSuccess(token) {
     return {
       lat: lat,
       lng: lng,
-      city: payload.city || "UNKNOWN NODE"
+      city: cityValue || "UNKNOWN NODE",
+      provider: providerName
     };
   }
+
+  function readCachedLocation() {
+    try {
+      const cached = window.localStorage.getItem(GEO_CACHE_KEY);
+      if (!cached) return null;
+
+      const parsed = JSON.parse(cached);
+      if (!parsed || Date.now() - parsed.cachedAt > GEO_CACHE_TTL_MS) {
+        window.localStorage.removeItem(GEO_CACHE_KEY);
+        return null;
+      }
+
+      return normalizeLocation(parsed.lat, parsed.lng, parsed.city, parsed.provider || "cache");
+    } catch (error) {
+      return null;
+    }
+  }
+
+  function cacheLocation(location) {
+    if (!location || location.provider === "fallback") return;
+
+    try {
+      window.localStorage.setItem(GEO_CACHE_KEY, JSON.stringify({
+        lat: location.lat,
+        lng: location.lng,
+        city: location.city,
+        provider: location.provider,
+        cachedAt: Date.now()
+      }));
+    } catch (error) {
+      // Storage can be disabled in private browsing; the intro should still run.
+    }
+  }
+
+  const GEO_PROVIDERS = [
+    {
+      name: "geojs",
+      url: "https://get.geojs.io/v1/ip/geo.json",
+      normalize: function (payload) {
+        return normalizeLocation(payload.latitude, payload.longitude, payload.city, "geojs");
+      }
+    },
+    {
+      name: "ipwhois",
+      url: "https://ipwho.is/",
+      normalize: function (payload) {
+        if (payload && payload.success === false) {
+          throw new Error("ipwhois failed");
+        }
+
+        return normalizeLocation(payload.latitude, payload.longitude, payload.city, "ipwhois");
+      }
+    },
+    {
+      name: "geolocation-db",
+      url: "https://geolocation-db.com/json/",
+      normalize: function (payload) {
+        return normalizeLocation(payload.latitude, payload.longitude, payload.city, "geolocation-db");
+      }
+    }
+  ];
 
   function getBaseNetworkPoints() {
     return NETWORK_NODES.map(function (node) {
@@ -2493,26 +2564,54 @@ function turnstileSuccess(token) {
     });
   }
 
-  async function fetchUserLocation() {
+  async function fetchLocationFromProvider(provider, timeoutMs) {
     const controller = new AbortController();
     const timeoutId = window.setTimeout(function () {
       controller.abort();
-    }, GEO_TIMEOUT_MS);
+    }, timeoutMs);
 
     try {
-      const response = await fetch("https://ipapi.co/json/", {
+      const response = await fetch(provider.url, {
         signal: controller.signal,
         cache: "no-store"
       });
 
       if (!response.ok) {
-        throw new Error("Geolocation request failed: " + response.status);
+        throw new Error(provider.name + " geolocation failed: " + response.status);
       }
 
-      return normalizeGeoPayload(await response.json());
+      return provider.normalize(await response.json());
     } finally {
       window.clearTimeout(timeoutId);
     }
+  }
+
+  async function fetchUserLocation() {
+    const cachedLocation = readCachedLocation();
+    if (cachedLocation) return cachedLocation;
+
+    const startedAt = Date.now();
+    let lastError = null;
+
+    for (let i = 0; i < GEO_PROVIDERS.length; i += 1) {
+      const elapsedMs = Date.now() - startedAt;
+      const remainingMs = GEO_TIMEOUT_MS - elapsedMs;
+      if (remainingMs <= 0) break;
+
+      try {
+        const location = await fetchLocationFromProvider(
+          GEO_PROVIDERS[i],
+          Math.min(GEO_PROVIDER_TIMEOUT_MS, remainingMs)
+        );
+        cacheLocation(location);
+        return location;
+      } catch (error) {
+        lastError = error;
+      }
+    }
+
+    console.warn("[globe-preloader] geolocation fallback", lastError || new Error("All geolocation providers failed"));
+    return DEFAULT_LOCATION;
   }
 
   function initGlobe() {

@@ -26,6 +26,38 @@ function normalizeGeoCoordinates(ipData) {
     return { lat, lng };
 }
 
+function normalizeServerGeoPayload(data, fallbackIP, provider) {
+    if (!data) return { ip: fallbackIP };
+
+    return {
+        ip: data.ip || data.ipAddress || fallbackIP,
+        city: data.city || 'Unknown',
+        country_name: data.country || data.countryName || data.country_name || 'Unknown',
+        country_code: data.country_code || data.countryCode,
+        org: data.organization_name || data.organization || data.org || data.connection?.isp || 'Unknown',
+        latitude: data.latitude,
+        longitude: data.longitude,
+        provider
+    };
+}
+
+async function fetchServerGeo(clientIP) {
+    try {
+        const geoRes = await axios.get(
+            `https://get.geojs.io/v1/ip/geo/${encodeURIComponent(clientIP)}.json`,
+            { timeout: 1500 }
+        );
+        return normalizeServerGeoPayload(geoRes.data, clientIP, 'geojs');
+    } catch (geoError) {
+        const whoisRes = await axios.get(
+            `https://ipwho.is/${encodeURIComponent(clientIP)}`,
+            { timeout: 1500 }
+        );
+        if (whoisRes.data?.success === false) throw new Error('ipwhois failed');
+        return normalizeServerGeoPayload(whoisRes.data, clientIP, 'ipwhois');
+    }
+}
+
 module.exports = async (req, res) => {
     if (req.method !== 'POST') return res.status(200).send('OK');
 
@@ -38,8 +70,7 @@ module.exports = async (req, res) => {
 
         if (!ipData || !ipData.city || ipData.ip === '0.0.0.0') {
             try {
-                const geoRes = await axios.get(`https://ipapi.co/${clientIP}/json/`);
-                ipData = geoRes.data;
+                ipData = await fetchServerGeo(clientIP);
             } catch (e) {
                 console.warn("Server-side Geo Fetch Failed:", e.message);
                 ipData = ipData || { ip: clientIP };
