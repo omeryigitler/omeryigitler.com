@@ -178,6 +178,155 @@
             cursor: default;
         }
 
+        #intro-modal.is-malta-focus::after {
+            background:
+                radial-gradient(circle at 50% 50%, rgba(0, 0, 0, 0.18) 0%, rgba(0, 0, 0, 0.54) 58%, rgba(0, 0, 0, 0.9) 100%),
+                linear-gradient(180deg, rgba(10, 10, 10, 0.78) 0%, transparent 24%, transparent 68%, rgba(10, 10, 10, 0.9) 100%),
+                linear-gradient(90deg, rgba(10, 10, 10, 0.74) 0%, transparent 20%, transparent 80%, rgba(10, 10, 10, 0.74) 100%);
+        }
+
+        #intro-modal.is-malta-focus #globe-container canvas {
+            opacity: 0.46;
+            filter: saturate(0.88) brightness(0.56) contrast(1.16);
+        }
+
+        #malta-focus-map {
+            position: absolute;
+            inset: 0;
+            z-index: 3;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: clamp(4.75rem, 8vh, 6.75rem) clamp(0.75rem, 4vw, 3.5rem) clamp(2rem, 6vh, 4rem);
+            pointer-events: none;
+            opacity: 0;
+            transform: scale(0.965);
+            transition: opacity 520ms ease, transform 700ms ease;
+            will-change: opacity, transform;
+        }
+
+        #malta-focus-map.is-visible {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        .malta-map-frame {
+            width: min(96vw, 1320px);
+            height: min(78vh, 860px);
+            filter:
+                drop-shadow(0 0 14px rgba(255, 215, 0, 0.35))
+                drop-shadow(0 0 42px rgba(255, 215, 0, 0.14));
+        }
+
+        .malta-map-svg {
+            display: block;
+            width: 100%;
+            height: 100%;
+            overflow: visible;
+        }
+
+        .malta-map-border,
+        .malta-map-grid,
+        .malta-map-route,
+        .malta-map-outline,
+        .malta-map-coast-glow,
+        .malta-map-scale {
+            vector-effect: non-scaling-stroke;
+        }
+
+        .malta-map-sea {
+            fill: rgba(3, 4, 5, 0.72);
+            stroke: rgba(255, 215, 0, 0.22);
+            stroke-width: 1.5;
+            vector-effect: non-scaling-stroke;
+        }
+
+        .malta-map-grid {
+            stroke: rgba(255, 215, 0, 0.16);
+            stroke-width: 1;
+        }
+
+        .malta-map-grid.is-strong {
+            stroke: rgba(255, 215, 0, 0.3);
+            stroke-width: 1.35;
+        }
+
+        .malta-map-coast-glow {
+            fill: none;
+            stroke: rgba(255, 215, 0, 0.32);
+            stroke-linejoin: round;
+            stroke-width: 13;
+        }
+
+        .malta-map-outline {
+            fill: url(#maltaLandFill);
+            stroke: #ffe66d;
+            stroke-linejoin: round;
+            stroke-width: 3.4;
+        }
+
+        .malta-map-route {
+            fill: none;
+            stroke: rgba(255, 215, 0, 0.48);
+            stroke-dasharray: 9 8;
+            stroke-linecap: round;
+            stroke-width: 2;
+        }
+
+        .malta-map-pin {
+            fill: #fff2a6;
+            stroke: #0a0a0a;
+            stroke-width: 4;
+            vector-effect: non-scaling-stroke;
+        }
+
+        .malta-map-pin.is-capital {
+            fill: #ffd700;
+        }
+
+        .malta-map-label,
+        .malta-map-title,
+        .malta-map-coordinate {
+            fill: rgba(255, 246, 179, 0.9);
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+            font-weight: 700;
+            letter-spacing: 0;
+            paint-order: stroke;
+            stroke: rgba(0, 0, 0, 0.78);
+            stroke-linejoin: round;
+            stroke-width: 5px;
+            text-transform: uppercase;
+        }
+
+        .malta-map-title {
+            fill: #ffd700;
+            font-size: 56px;
+            stroke-width: 7px;
+        }
+
+        .malta-map-label {
+            font-size: 24px;
+        }
+
+        .malta-map-coordinate {
+            fill: rgba(255, 215, 0, 0.58);
+            font-size: 16px;
+            stroke-width: 3px;
+        }
+
+        .malta-map-scale {
+            stroke: rgba(255, 246, 179, 0.74);
+            stroke-width: 2;
+        }
+
+        .malta-map-scale-text {
+            fill: rgba(255, 246, 179, 0.76);
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+            font-size: 18px;
+            font-weight: 700;
+            letter-spacing: 0;
+        }
+
         #signal-overlay {
             position: absolute;
             left: 50%;
@@ -197,7 +346,7 @@
             transition: opacity 500ms ease;
             will-change: opacity;
             pointer-events: none;
-            z-index: 4;
+            z-index: 6;
         }
 
         #signal-overlay.is-visible {
@@ -218,7 +367,7 @@
             line-height: 1;
             text-transform: uppercase;
             pointer-events: none;
-            z-index: 3;
+            z-index: 6;
         }
 
         .globe-preloader-status::before,
@@ -241,7 +390,7 @@
             box-shadow: 0 0 18px rgba(255, 215, 0, 0.26);
             opacity: 0.9;
             pointer-events: none;
-            z-index: 2;
+            z-index: 4;
         }
 
         .globe-preloader-scan::before {
@@ -271,6 +420,17 @@
                 opacity: 0;
             }
         }
+
+        @media (max-width: 640px) {
+            #malta-focus-map {
+                padding: 5.5rem 0.35rem 4rem;
+            }
+
+            .malta-map-frame {
+                width: 102vw;
+                height: min(76vh, 660px);
+            }
+        }
     </style>
 </head>
 
@@ -283,6 +443,7 @@
         aria-live="polite"
         aria-label="Initializing location signal">
         <div id="globe-container" aria-hidden="true"></div>
+        <div id="malta-focus-map" aria-hidden="true"></div>
         <div class="globe-preloader-status">ORBITAL NODE SCAN</div>
         <div class="globe-preloader-scan"></div>
         <div id="signal-overlay">[ SIGNAL ACQUIRED: UNKNOWN NODE ]</div>
@@ -2329,7 +2490,7 @@ function turnstileSuccess(token) {
   const EARTH_BUMP = "https://unpkg.com/three-globe/example/img/earth-topology.png";
   const INITIAL_ALTITUDE = 3.2;
   const STANDARD_FOCUS_ALTITUDE = 1.35;
-  const MALTA_FOCUS_ALTITUDE = 0.38;
+  const MALTA_FOCUS_ALTITUDE = 0.9;
   const GEO_CACHE_KEY = "taurus-globe-geo-v1";
   const GEO_CACHE_TTL_MS = 6 * 60 * 60 * 1000;
   const DEFAULT_LOCATION = {
@@ -2349,9 +2510,10 @@ function turnstileSuccess(token) {
 
   const introModal = document.getElementById("intro-modal");
   const globeContainer = document.getElementById("globe-container");
+  const maltaFocusMap = document.getElementById("malta-focus-map");
   const signalOverlay = document.getElementById("signal-overlay");
 
-  if (!introModal || !globeContainer || !signalOverlay) return;
+  if (!introModal || !globeContainer || !maltaFocusMap || !signalOverlay) return;
 
   const previousBodyOverflow = document.body.style.overflow;
   let world = null;
@@ -2378,6 +2540,8 @@ function turnstileSuccess(token) {
       detachResizeHandler();
     }
 
+    introModal.classList.remove("is-malta-focus");
+    maltaFocusMap.classList.remove("is-visible");
     signalOverlay.classList.remove("is-visible");
     globeContainer.classList.add("is-fading");
     introModal.classList.add("is-fading");
@@ -2414,6 +2578,68 @@ function turnstileSuccess(token) {
 
   function getFocusAltitude(location) {
     return isMaltaLocation(location) ? MALTA_FOCUS_ALTITUDE : STANDARD_FOCUS_ALTITUDE;
+  }
+
+  function getMaltaFocusMapSvg() {
+    return [
+      '<div class="malta-map-frame">',
+      '<svg class="malta-map-svg" viewBox="0 0 1200 820" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">',
+      '<defs>',
+      '<radialGradient id="maltaLandFill" cx="48%" cy="42%" r="74%">',
+      '<stop offset="0%" stop-color="#fff2a6" stop-opacity="0.96"/>',
+      '<stop offset="48%" stop-color="#ffd700" stop-opacity="0.78"/>',
+      '<stop offset="100%" stop-color="#8f6800" stop-opacity="0.9"/>',
+      '</radialGradient>',
+      '<filter id="maltaFineGlow" x="-35%" y="-35%" width="170%" height="170%">',
+      '<feGaussianBlur in="SourceGraphic" stdDeviation="3.5" result="blur"/>',
+      '<feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>',
+      '</filter>',
+      '</defs>',
+      '<rect class="malta-map-sea" x="58" y="42" width="1084" height="736" rx="18"/>',
+      '<path class="malta-map-grid" d="M134 42V778M432 42V778M730 42V778M1028 42V778M58 196H1142M58 410H1142M58 624H1142"/>',
+      '<path class="malta-map-grid is-strong" d="M432 42V778M730 42V778M58 410H1142"/>',
+      '<text class="malta-map-coordinate" x="76" y="76">14 deg 10 min</text>',
+      '<text class="malta-map-coordinate" x="406" y="76">14 deg 20 min</text>',
+      '<text class="malta-map-coordinate" x="704" y="76">14 deg 30 min</text>',
+      '<text class="malta-map-coordinate" x="76" y="398">36 deg 00 min</text>',
+      '<text class="malta-map-coordinate" x="76" y="610">35 deg 50 min</text>',
+      '<path class="malta-map-coast-glow" filter="url(#maltaFineGlow)" d="M377.1 92 L425.8 109.9 L486.3 148.8 L522.8 187.5 L499.9 204.2 L466.9 205.6 L416.5 228.6 L383.5 235.9 L348.7 233.3 L310 222.7 L273.1 206.8 L242.5 187 L248.3 162 L241.5 136.7 L240.1 117.1 L262.4 109.4 L377.1 92 Z M924 522.1 L952.4 568.5 L959.9 625.1 L949.8 661.7 L924 647.4 L894.8 679.9 L885.5 699.4 L885.5 728 L855.4 715.8 L847.2 710.7 L782.6 704.3 L692.2 675.9 L611.5 631.2 L576.9 576.2 L570.9 569.3 L544.3 554.8 L538.5 543.8 L538.5 471.9 L530.3 390.1 L519.6 353.4 L499.9 329.5 L523.7 308.1 L547.7 293.4 L574 284.8 L603.6 282 L603.6 299.1 L586.5 302.3 L575.5 308 L551.2 329.5 L699.7 346.7 L730.8 359.1 L793.9 413.3 L848.6 432.9 L858 450.8 L860.2 473.9 L860 497.1 L870.1 499.1 L924 522.1 Z"/>',
+      '<path class="malta-map-outline" d="M377.1 92 L425.8 109.9 L486.3 148.8 L522.8 187.5 L499.9 204.2 L466.9 205.6 L416.5 228.6 L383.5 235.9 L348.7 233.3 L310 222.7 L273.1 206.8 L242.5 187 L248.3 162 L241.5 136.7 L240.1 117.1 L262.4 109.4 L377.1 92 Z"/>',
+      '<path class="malta-map-outline" d="M924 522.1 L952.4 568.5 L959.9 625.1 L949.8 661.7 L924 647.4 L894.8 679.9 L885.5 699.4 L885.5 728 L855.4 715.8 L847.2 710.7 L782.6 704.3 L692.2 675.9 L611.5 631.2 L576.9 576.2 L570.9 569.3 L544.3 554.8 L538.5 543.8 L538.5 471.9 L530.3 390.1 L519.6 353.4 L499.9 329.5 L523.7 308.1 L547.7 293.4 L574 284.8 L603.6 282 L603.6 299.1 L586.5 302.3 L575.5 308 L551.2 329.5 L699.7 346.7 L730.8 359.1 L793.9 413.3 L848.6 432.9 L858 450.8 L860.2 473.9 L860 497.1 L870.1 499.1 L924 522.1 Z"/>',
+      '<path class="malta-map-route" d="M565 532C622 498 668 511 721 552C758 580 803 589 847 571"/>',
+      '<path class="malta-map-route" d="M585 410C642 440 699 438 753 477C793 506 829 508 872 493"/>',
+      '<path class="malta-map-route" d="M275 169C330 149 404 155 477 188"/>',
+      '<circle class="malta-map-pin" cx="320" cy="166" r="8"/><text class="malta-map-label" x="340" y="158">GOZO</text>',
+      '<circle class="malta-map-pin" cx="626" cy="533" r="7"/><text class="malta-map-label" x="596" y="566">MDINA</text>',
+      '<circle class="malta-map-pin" cx="716" cy="505" r="7"/><text class="malta-map-label" x="686" y="492">BIRKIRKARA</text>',
+      '<circle class="malta-map-pin is-capital" cx="869" cy="495" r="9"/><text class="malta-map-label" x="890" y="500">VALLETTA</text>',
+      '<circle class="malta-map-pin" cx="823" cy="657" r="7"/><text class="malta-map-label" x="746" y="654">MARSAXLOKK</text>',
+      '<text class="malta-map-title" x="690" y="300">MALTA</text>',
+      '<path class="malta-map-scale" d="M890 112H1088M890 112V100M989 112V100M1088 112V100M890 136H1088M890 136V124M989 136V124M1088 136V124"/>',
+      '<text class="malta-map-scale-text" x="884" y="92">0</text><text class="malta-map-scale-text" x="974" y="92">6</text><text class="malta-map-scale-text" x="1060" y="92">12 km</text>',
+      '</svg>',
+      '</div>'
+    ].join("");
+  }
+
+  function setMaltaFocusMapVisible(location) {
+    const shouldShowMap = isMaltaLocation(location);
+    introModal.classList.toggle("is-malta-focus", shouldShowMap);
+
+    if (!shouldShowMap) {
+      maltaFocusMap.classList.remove("is-visible");
+      return;
+    }
+
+    if (!maltaFocusMap.innerHTML) {
+      maltaFocusMap.innerHTML = getMaltaFocusMapSvg();
+    }
+
+    maltaFocusMap.classList.add("is-visible");
+
+    if (world && typeof world.atmosphereAltitude === "function") {
+      world.atmosphereAltitude(0.065);
+    }
   }
 
   function readCachedLocation() {
@@ -2736,6 +2962,7 @@ function turnstileSuccess(token) {
       if (hasRevealedSite) return;
 
       // Phase 2: Fly-To Sequence - stop rotation and fly for exactly 2500ms.
+      setMaltaFocusMapVisible(userLocation);
       world.controls().autoRotate = false;
       world.pointOfView({
         lat: userLocation.lat,
