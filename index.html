@@ -2328,7 +2328,8 @@ function turnstileSuccess(token) {
   const EARTH_NIGHT = "assets/globe/earth-black-marble-4k.jpg";
   const EARTH_BUMP = "https://unpkg.com/three-globe/example/img/earth-topology.png";
   const INITIAL_ALTITUDE = 3.2;
-  const FOCUS_ALTITUDE = 1.35;
+  const STANDARD_FOCUS_ALTITUDE = 1.35;
+  const MALTA_FOCUS_ALTITUDE = 0.38;
   const GEO_CACHE_KEY = "taurus-globe-geo-v1";
   const GEO_CACHE_TTL_MS = 6 * 60 * 60 * 1000;
   const DEFAULT_LOCATION = {
@@ -2401,6 +2402,18 @@ function turnstileSuccess(token) {
       city: cityValue || "UNKNOWN NODE",
       provider: providerName
     };
+  }
+
+  function isMaltaLocation(location) {
+    return Boolean(location)
+      && location.lat >= 35.75
+      && location.lat <= 36.15
+      && location.lng >= 14.1
+      && location.lng <= 14.65;
+  }
+
+  function getFocusAltitude(location) {
+    return isMaltaLocation(location) ? MALTA_FOCUS_ALTITUDE : STANDARD_FOCUS_ALTITUDE;
   }
 
   function readCachedLocation() {
@@ -2727,7 +2740,7 @@ function turnstileSuccess(token) {
       world.pointOfView({
         lat: userLocation.lat,
         lng: userLocation.lng,
-        altitude: FOCUS_ALTITUDE
+        altitude: getFocusAltitude(userLocation)
       }, FLY_TO_DURATION_MS);
 
       window.setTimeout(function () {
