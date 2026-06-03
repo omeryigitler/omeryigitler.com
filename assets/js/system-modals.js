@@ -3,24 +3,6 @@
  * Replaces native alert() and confirm() with premium styled modals.
  */
 
-(function loadProjectIntegrations() {
-    function addScript(src) {
-        if (document.querySelector('script[src="' + src + '"]')) return;
-        const s = document.createElement('script');
-        s.src = src;
-        s.defer = true;
-        document.head.appendChild(s);
-    }
-
-    const path = window.location.pathname || '';
-    if (/admin\.html$/i.test(path)) {
-        addScript('assets/js/admin-public-showcase.js?v=V1');
-    }
-    if (/projects\.html$/i.test(path) || /links\.html$/i.test(path)) {
-        addScript('assets/js/public-projects.js?v=V1');
-    }
-})();
-
 window.systemAlert = (title, message, icon = 'info') => {
     return new Promise((resolve) => {
         const modal = document.getElementById('system-modal');
@@ -46,7 +28,7 @@ window.systemAlert = (title, message, icon = 'info') => {
         // Dynamic Styling for Loaders
         if (icon.includes('loader') || icon.includes('upload') || icon.includes('refresh')) {
             iconEl.classList.add('animate-spin');
-            document.getElementById('modal-confirm-btn').classList.add('hidden');
+            document.getElementById('modal-confirm-btn').classList.add('hidden'); // Hide OK button for loaders
         } else {
             iconEl.classList.remove('animate-spin');
             document.getElementById('modal-confirm-btn').classList.remove('hidden');
@@ -58,6 +40,7 @@ window.systemAlert = (title, message, icon = 'info') => {
         modal.classList.remove('hidden');
         modal.classList.add('flex');
 
+        // Use requestAnimationFrame for smoother entry
         requestAnimationFrame(() => {
             setTimeout(() => {
                 content.classList.remove('scale-95', 'opacity-0');
