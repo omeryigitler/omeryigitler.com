@@ -122,13 +122,13 @@ window.systemConfirm = (title, message, icon = 'help-circle') => {
     });
 };
 
-(function loadDigitalBuildSystem() {
+(function loadPortfolioBuildSystem() {
     if (window.__OAKLEY_SCROLL_LOADER__) return;
     window.__OAKLEY_SCROLL_LOADER__ = true;
 
     const script = document.createElement('script');
-    script.src = 'assets/js/digital-build-system.js?v=1';
+    script.src = 'assets/js/portfolio-build-system.js?v=1';
     script.defer = true;
-    script.dataset.experience = 'digital-build-system';
+    script.dataset.experience = 'portfolio-build-system';
     document.head.appendChild(script);
 })();
