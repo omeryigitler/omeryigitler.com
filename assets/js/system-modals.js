@@ -130,5 +130,12 @@ window.systemConfirm = (title, message, icon = 'help-circle') => {
     script.src = 'assets/js/portfolio-build-system.js?v=1';
     script.defer = true;
     script.dataset.experience = 'portfolio-build-system';
+    script.onload = () => {
+        const optionsScript = document.createElement('script');
+        optionsScript.src = 'assets/js/expertise-options.js?v=1';
+        optionsScript.defer = true;
+        optionsScript.dataset.experience = 'expertise-options';
+        document.head.appendChild(optionsScript);
+    };
     document.head.appendChild(script);
 })();
