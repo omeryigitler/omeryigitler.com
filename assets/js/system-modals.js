@@ -121,3 +121,14 @@ window.systemConfirm = (title, message, icon = 'help-circle') => {
         };
     });
 };
+
+(function loadOakleyScrollExperience() {
+    if (window.__OAKLEY_SCROLL_LOADER__) return;
+    window.__OAKLEY_SCROLL_LOADER__ = true;
+
+    const script = document.createElement('script');
+    script.src = 'assets/js/oakley-scroll-experience.js?v=1';
+    script.defer = true;
+    script.dataset.experience = 'oakley-scroll';
+    document.head.appendChild(script);
+})();
