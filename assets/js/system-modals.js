@@ -126,9 +126,16 @@ window.systemConfirm = (title, message, icon = 'help-circle') => {
     if (window.__OAKLEY_SCROLL_LOADER__) return;
     window.__OAKLEY_SCROLL_LOADER__ = true;
 
-    const script = document.createElement('script');
-    script.src = 'assets/js/oakley-scroll-clean.js?v=1';
-    script.defer = true;
-    script.dataset.experience = 'oakley-scroll-clean';
-    document.head.appendChild(script);
+    const cleanScript = document.createElement('script');
+    cleanScript.src = 'assets/js/oakley-scroll-clean.js?v=2';
+    cleanScript.defer = true;
+    cleanScript.dataset.experience = 'oakley-scroll-clean';
+    cleanScript.onload = () => {
+        const motionScript = document.createElement('script');
+        motionScript.src = 'assets/js/oakley-scroll-motion.js?v=1';
+        motionScript.defer = true;
+        motionScript.dataset.experience = 'oakley-scroll-motion';
+        document.head.appendChild(motionScript);
+    };
+    document.head.appendChild(cleanScript);
 })();
