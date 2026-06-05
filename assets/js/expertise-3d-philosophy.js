@@ -1,10 +1,14 @@
 (function () {
   if (window.__OY_EXPERTISE_3D_PHILOSOPHY__) return;
-  window.__OY_EXPERTISE_3D_PHILOSOPHY__ = 'v3';
+  window.__OY_EXPERTISE_3D_PHILOSOPHY__ = 'v4';
 
   const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
   const lerp = (start, end, progress) => start + (end - start) * progress;
   const easeOutCubic = (t) => 1 - Math.pow(1 - t, 3);
+  const smoothstep = (edge0, edge1, x) => {
+    const t = clamp((x - edge0) / Math.max(0.0001, edge1 - edge0), 0, 1);
+    return t * t * (3 - 2 * t);
+  };
 
   const style = document.createElement('style');
   style.id = 'expertise-3d-philosophy-style';
@@ -77,15 +81,14 @@
       100% { transform: translateX(120%); opacity: 0; }
     }
 
-    .oy-philosophy-scroll {
+    .oy-philosophy-root {
       position: relative !important;
-      min-height: 430vh !important;
+      min-height: 330vh !important;
       height: auto !important;
       display: block !important;
       padding: 0 !important;
       margin-top: clamp(5rem, 10vw, 9rem) !important;
       margin-bottom: 0 !important;
-      transform-style: preserve-3d;
       isolation: isolate;
     }
 
@@ -108,24 +111,38 @@
       content: "";
       position: absolute;
       left: 50%;
-      top: 9vh;
-      bottom: 9vh;
+      top: 8vh;
+      bottom: 8vh;
       width: 1px;
       transform: translateX(-50%) scaleY(var(--oy-line-progress, 0));
       transform-origin: top;
       background: linear-gradient(180deg, transparent, rgba(255, 215, 0, 0.5), transparent);
       box-shadow: 0 0 26px rgba(255, 215, 0, 0.3);
       pointer-events: none;
-      opacity: 0.82;
+      opacity: 0.78;
+      z-index: 0;
+    }
+
+    .oy-philosophy-root .space-y-4,
+    .oy-philosophy-root .md\:space-y-8 {
+      position: relative;
+      z-index: 2;
+    }
+
+    .oy-philosophy-root .space-y-4 > div:first-child,
+    .oy-philosophy-root .md\:space-y-8 > div:first-child {
+      transform: translate(-50%, -50%) !important;
+      opacity: 1 !important;
+      filter: none !important;
+      z-index: -1 !important;
+      pointer-events: none !important;
     }
 
     .oy-philosophy-line {
       position: relative;
       z-index: 2;
       margin: clamp(0.25rem, 1vh, 0.75rem) 0 !important;
-      transition:
-        color 240ms ease,
-        text-shadow 240ms ease;
+      transition: color 220ms ease, text-shadow 220ms ease;
       will-change: transform, opacity, filter;
       transform-origin: center;
     }
@@ -141,16 +158,18 @@
     }
 
     .oy-philosophy-line.oy-philosophy-active {
-      z-index: 4;
+      z-index: 5;
     }
 
-    .oy-philosophy-sticky > p,
-    .oy-philosophy-sticky > div:not(:has(h2)) {
+    .oy-philosophy-sticky > div:not(:first-child) {
       position: relative;
       z-index: 2;
-      opacity: var(--oy-copy-opacity, 1);
+    }
+
+    .oy-philosophy-copy-active {
+      opacity: var(--oy-copy-opacity, 1) !important;
       transform: translateY(var(--oy-copy-y, 0px));
-      transition: opacity 200ms ease;
+      transition: opacity 180ms ease;
     }
 
     @media (max-width: 767px) {
@@ -163,8 +182,8 @@
         opacity: 1 !important;
       }
 
-      .oy-philosophy-scroll {
-        min-height: 360vh !important;
+      .oy-philosophy-root {
+        min-height: 300vh !important;
       }
     }
 
@@ -196,12 +215,12 @@
       card.addEventListener('mouseenter', () => {
         card.dataset.oyHover = 'true';
         card.classList.add('oy-hovering');
-        applyExpertiseTransforms(true);
+        applyExpertiseTransforms();
       });
       card.addEventListener('mouseleave', () => {
         card.dataset.oyHover = 'false';
         card.classList.remove('oy-hovering');
-        applyExpertiseTransforms(true);
+        applyExpertiseTransforms();
       });
     });
 
@@ -218,7 +237,7 @@
       card.style.transform = `translateX(${values.x}px) translateY(${values.y}px) translateZ(${values.z}px) rotateY(${values.rotateY}deg) scale(${values.scale})`;
     }
 
-    function applyExpertiseTransforms(force) {
+    function applyExpertiseTransforms() {
       const raw = scrollProgress();
       const progress = easeOutCubic(raw);
       section.classList.toggle('oy-3d-active', raw > 0.08);
@@ -283,12 +302,12 @@
       if (ticking) return;
       ticking = true;
       requestAnimationFrame(() => {
-        applyExpertiseTransforms(false);
+        applyExpertiseTransforms();
         ticking = false;
       });
     };
 
-    applyExpertiseTransforms(true);
+    applyExpertiseTransforms();
     window.addEventListener('scroll', requestUpdate, { passive: true });
     window.addEventListener('resize', requestUpdate, { passive: true });
   }
@@ -302,19 +321,24 @@
     if (headings.length < 3) return;
 
     const lines = headings.slice(0, 3);
-    const section = lines[0].parentElement;
-    if (!section) return;
+    const originalLineGroup = lines[0].parentElement;
+    const root = originalLineGroup && originalLineGroup.parentElement ? originalLineGroup.parentElement : originalLineGroup;
+    if (!root) return;
 
-    section.classList.add('oy-philosophy-scroll');
+    root.classList.add('oy-philosophy-root');
 
-    let sticky = section.querySelector(':scope > .oy-philosophy-sticky');
+    let sticky = root.querySelector(':scope > .oy-philosophy-sticky');
     if (!sticky) {
       sticky = document.createElement('div');
       sticky.className = 'oy-philosophy-sticky';
-      const children = Array.from(section.childNodes);
+      const children = Array.from(root.childNodes);
       children.forEach((child) => sticky.appendChild(child));
-      section.appendChild(sticky);
+      root.appendChild(sticky);
     }
+
+    const lineGroup = sticky.contains(originalLineGroup) ? originalLineGroup : sticky.querySelector('div');
+    const copyBlock = Array.from(sticky.children).find((child) => child !== lineGroup && child.querySelector && child.querySelector('p'));
+    if (copyBlock) copyBlock.classList.add('oy-philosophy-copy-active');
 
     lines.forEach((line) => {
       line.classList.add('oy-philosophy-line');
@@ -324,38 +348,38 @@
     });
 
     function progress() {
-      const rect = section.getBoundingClientRect();
+      const rect = root.getBoundingClientRect();
       const viewport = window.innerHeight || 1;
       return clamp(-rect.top / Math.max(1, rect.height - viewport), 0, 1);
     }
 
     function updateLines() {
       const p = progress();
-      const exit = clamp((p - 0.78) / 0.18, 0, 1);
-      const visibleProgress = clamp(p / 0.78, 0, 1);
-      section.style.setProperty('--oy-line-progress', String(clamp(p * 1.18, 0, 1)));
-      sticky.style.setProperty('--oy-stage-y', `${lerp(0, -95, exit)}px`);
+      const exit = smoothstep(0.84, 0.98, p);
+      const activePosition = clamp(p / 0.72, 0, 1) * 2;
+      const copyProgress = smoothstep(0.56, 0.78, p) * (1 - exit);
+
+      root.style.setProperty('--oy-line-progress', String(clamp(p * 1.12, 0, 1)));
+      sticky.style.setProperty('--oy-stage-y', `${lerp(0, -85, exit)}px`);
       sticky.style.setProperty('--oy-stage-opacity', String(lerp(1, 0, exit)));
-      sticky.style.setProperty('--oy-copy-opacity', String(clamp((visibleProgress - 0.55) / 0.22, 0, 1) * (1 - exit)));
-      sticky.style.setProperty('--oy-copy-y', `${lerp(24, 0, clamp((visibleProgress - 0.55) / 0.22, 0, 1))}px`);
+      sticky.style.setProperty('--oy-copy-opacity', String(copyProgress));
+      sticky.style.setProperty('--oy-copy-y', `${lerp(22, 0, copyProgress)}px`);
 
       lines.forEach((line, index) => {
-        const phaseCenter = [0.13, 0.39, 0.65][index];
-        const distance = Math.abs(p - phaseCenter);
-        const strength = clamp(1 - distance / 0.19, 0, 1) * (1 - exit);
-        const active = strength > 0.58;
-        const direction = index - Math.round(clamp(p / 0.26, 0, 2));
-        const y = direction * 108 + lerp(18, 0, strength) - exit * 130;
-        const scale = lerp(0.78, 1.08, strength);
-        const opacity = lerp(0.12, 1, strength) * (1 - exit);
-        const blur = lerp(2.5, 0, strength) + exit * 5;
-        const z = Math.round(lerp(-80, 100, strength));
+        const distance = Math.abs(activePosition - index);
+        const strength = smoothstep(1.08, 0.05, distance) * (1 - exit);
+        const y = (index - activePosition) * 96 - exit * 120;
+        const scale = lerp(0.76, 1.08, strength);
+        const opacity = lerp(0.10, 1, strength) * (1 - exit);
+        const blur = lerp(3.2, 0, strength) + exit * 5;
+        const brightness = lerp(0.55, 1.13, strength);
+        const z = Math.round(lerp(-70, 120, strength));
 
-        line.classList.toggle('oy-philosophy-active', active);
+        line.classList.toggle('oy-philosophy-active', strength > 0.62);
         line.style.opacity = String(opacity);
         line.style.transform = `translate3d(0, ${y}px, ${z}px) scale(${scale})`;
         line.style.letterSpacing = `${lerp(-0.075, -0.038, strength)}em`;
-        line.style.filter = `blur(${blur}px) brightness(${lerp(0.62, 1.12, strength)})`;
+        line.style.filter = `blur(${blur}px) brightness(${brightness})`;
       });
     }
 
