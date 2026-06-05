@@ -130,12 +130,5 @@ window.systemConfirm = (title, message, icon = 'help-circle') => {
     script.src = 'assets/js/portfolio-build-system.js?v=1';
     script.defer = true;
     script.dataset.experience = 'portfolio-build-system';
-    script.onload = () => {
-        const effectsScript = document.createElement('script');
-        effectsScript.src = 'assets/js/expertise-3d-philosophy.js?v=1';
-        effectsScript.defer = true;
-        effectsScript.dataset.experience = 'expertise-3d-philosophy';
-        document.head.appendChild(effectsScript);
-    };
     document.head.appendChild(script);
 })();
