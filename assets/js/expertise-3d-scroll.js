@@ -14,7 +14,7 @@
 
     const cardTypes = ['left', 'center', 'right'];
     cards.forEach((card, index) => {
-      card.classList.add('expertise-3d-card');
+      card.classList.add('expertise-3d-card', `expertise-card-${index}`);
       card.dataset.expertiseCard = cardTypes[index];
     });
 
@@ -23,6 +23,7 @@
     style.textContent = `
       #expertise .expertise-3d-stage {
         perspective: 1200px;
+        perspective-origin: 50% 42%;
         transform-style: preserve-3d;
         align-items: stretch;
         overflow: visible;
@@ -31,10 +32,10 @@
       #expertise .expertise-3d-card {
         position: relative;
         transform-style: preserve-3d;
-        will-change: transform;
-        transition: transform 260ms ease, border-color 300ms ease, background-color 300ms ease, box-shadow 300ms ease;
+        will-change: transform, opacity;
         backface-visibility: hidden;
         z-index: 1;
+        cursor: default;
       }
 
       #expertise .expertise-3d-card[data-expertise-card="center"] {
@@ -54,6 +55,7 @@
 
         #expertise .expertise-3d-card {
           transform: none !important;
+          opacity: 1 !important;
         }
       }
     `;
@@ -61,58 +63,97 @@
 
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
-    const mix = (from, to, progress) => from + (to - from) * progress;
+    const lerp = (from, to, progress) => from + (to - from) * progress;
+    const easeOut3 = (t) => 1 - Math.pow(1 - t, 3);
 
-    const states = {
-      left: {
-        from: { x: -100, y: 0, z: -200, rotateY: 45, scale: 1 },
-        to: { x: 0, y: 0, z: -50, rotateY: 15, scale: 1 },
-        hover: { x: 12, y: -10, z: 110, rotateY: -12, scale: 1.07 }
-      },
-      center: {
-        from: { x: 0, y: 100, z: -50, rotateY: 0, scale: 0.8 },
-        to: { x: 0, y: 0, z: 50, rotateY: 0, scale: 1.05 },
-        hover: { x: 0, y: -12, z: 130, rotateY: 0, scale: 1.1 }
-      },
-      right: {
-        from: { x: 100, y: 0, z: -200, rotateY: -45, scale: 1 },
-        to: { x: 0, y: 0, z: -50, rotateY: -15, scale: 1 },
-        hover: { x: -12, y: -10, z: 110, rotateY: 12, scale: 1.07 }
-      }
-    };
-
-    let progress = 0;
-    let ticking = false;
+    let rawProgress = 0;
     let hoveredCard = null;
+    let ticking = false;
 
-    const getProgress = () => {
+    const getRawProgress = () => {
       const rect = section.getBoundingClientRect();
       const viewport = window.innerHeight || document.documentElement.clientHeight;
-      return clamp((viewport * 0.82 - rect.top) / (rect.height + viewport * 0.15), 0, 1);
+
+      // Same feel as the uploaded React sample: reveal over roughly 78% of viewport height.
+      return clamp((viewport * 0.9 - rect.top) / (viewport * 0.78), 0, 1);
     };
 
-    const buildTransform = (state) => (
-      `translate3d(${state.x}px, ${state.y}px, ${state.z}px) rotateY(${state.rotateY}deg) scale(${state.scale})`
-    );
+    const getCardState = (card) => {
+      const type = card.dataset.expertiseCard;
+      const p = prefersReducedMotion ? 1 : easeOut3(rawProgress);
+      const isHovered = hoveredCard === card;
+
+      let rotateY = 0;
+      let translateX = 0;
+      let translateY = 0;
+      let translateZ = 0;
+      let scale = 1;
+      let opacity = lerp(0.08, 1, p);
+
+      if (window.innerWidth < 768) {
+        return {
+          opacity: lerp(0.05, 1, p),
+          transform: `translateY(${lerp(28, 0, p)}px)`,
+          transition: 'transform 0.05s linear, opacity 0.05s linear'
+        };
+      }
+
+      if (type === 'left') {
+        if (isHovered) {
+          // Uploaded sample logic: side card flattens, comes forward, and grows.
+          translateZ = 22;
+          scale = 1.045;
+        } else {
+          rotateY = lerp(44, 14, p);
+          translateX = lerp(-72, 0, p);
+          translateZ = lerp(-200, -50, p);
+          scale = lerp(0.86, 1, p);
+        }
+      }
+
+      if (type === 'center') {
+        if (isHovered) {
+          translateY = -10;
+          translateZ = 68;
+          scale = 1.08;
+        } else {
+          translateY = lerp(80, -32, p);
+          translateZ = lerp(-50, 52, p);
+          scale = lerp(0.8, 1.05, p);
+        }
+      }
+
+      if (type === 'right') {
+        if (isHovered) {
+          // Uploaded sample logic: side card flattens, comes forward, and grows.
+          translateZ = 22;
+          scale = 1.045;
+        } else {
+          rotateY = lerp(-44, -14, p);
+          translateX = lerp(72, 0, p);
+          translateZ = lerp(-200, -50, p);
+          scale = lerp(0.86, 1, p);
+        }
+      }
+
+      return {
+        opacity,
+        transform: `translateX(${translateX}px) translateY(${translateY}px) translateZ(${translateZ}px) rotateY(${rotateY}deg) scale(${scale})`,
+        transition: isHovered
+          ? 'transform 0.38s cubic-bezier(0.23, 1, 0.32, 1), opacity 0.2s ease'
+          : 'transform 0.05s linear, opacity 0.05s linear'
+      };
+    };
 
     const applyCardState = (card) => {
-      const type = card.dataset.expertiseCard;
-      const config = states[type];
-      if (!config) return;
-
-      const target = card === hoveredCard ? config.hover : {
-        x: mix(config.from.x, config.to.x, progress),
-        y: mix(config.from.y, config.to.y, progress),
-        z: mix(config.from.z, config.to.z, progress),
-        rotateY: mix(config.from.rotateY, config.to.rotateY, progress),
-        scale: mix(config.from.scale, config.to.scale, progress)
-      };
-
-      card.style.transform = buildTransform(target);
+      const state = getCardState(card);
+      card.style.opacity = state.opacity;
+      card.style.transform = state.transform;
+      card.style.transition = state.transition;
     };
 
     const render = () => {
-      progress = prefersReducedMotion ? 1 : getProgress();
+      rawProgress = getRawProgress();
       cards.forEach(applyCardState);
       ticking = false;
     };
@@ -124,14 +165,14 @@
     };
 
     cards.forEach((card) => {
-      card.addEventListener('mouseenter', () => {
+      card.addEventListener('pointerenter', () => {
         if (window.innerWidth < 768) return;
         hoveredCard = card;
         cards.forEach((item) => item.classList.toggle('is-expertise-hovered', item === card));
         requestRender();
       });
 
-      card.addEventListener('mouseleave', () => {
+      card.addEventListener('pointerleave', () => {
         hoveredCard = null;
         cards.forEach((item) => item.classList.remove('is-expertise-hovered'));
         requestRender();
