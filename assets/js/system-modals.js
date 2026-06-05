@@ -149,7 +149,7 @@ window.systemConfirm = (title, message, icon = 'help-circle') => {
         const style = document.createElement('style');
         style.id = 'oy-css-var-expertise-3d';
         style.textContent = `
-            /* --- 3D EXPERTISE CARDS / STABLE HOVER VERSION --- */
+            /* --- 3D EXPERTISE CARDS / ELEMENT-FROM-POINT HOVER VERSION --- */
             #expertise-3d-track {
                 perspective: 1200px;
                 perspective-origin: 50% 42%;
@@ -191,21 +191,17 @@ window.systemConfirm = (title, message, icon = 'help-circle') => {
                 ) rotateY(calc(-45deg + (30deg * var(--scroll-progress, 0))));
             }
 
-            #expertise-3d-track .expertise-card-3d:hover,
             #expertise-3d-track .expertise-card-3d.is-hovered {
                 transition: transform 0.38s cubic-bezier(0.23, 1, 0.32, 1), box-shadow 0.3s ease, border-color 0.3s ease, background-color 0.3s ease;
                 z-index: 20;
             }
 
-            #expertise-3d-track .expertise-card-left:hover,
             #expertise-3d-track .expertise-card-left.is-hovered,
-            #expertise-3d-track .expertise-card-right:hover,
             #expertise-3d-track .expertise-card-right.is-hovered {
                 transform: translate3d(0, -8px, 70px) rotateY(0deg) scale(1.055) !important;
                 box-shadow: 0 0 30px rgba(255, 215, 0, 0.13);
             }
 
-            #expertise-3d-track .expertise-card-center:hover,
             #expertise-3d-track .expertise-card-center.is-hovered {
                 transform: translate3d(0, -10px, 90px) scale(1.08) !important;
                 box-shadow: 0 0 40px rgba(59, 130, 246, 0.16);
@@ -217,7 +213,6 @@ window.systemConfirm = (title, message, icon = 'help-circle') => {
                 }
 
                 #expertise-3d-track .expertise-card-3d,
-                #expertise-3d-track .expertise-card-3d:hover,
                 #expertise-3d-track .expertise-card-3d.is-hovered {
                     transform: none !important;
                     transition: none !important;
@@ -227,6 +222,15 @@ window.systemConfirm = (title, message, icon = 'help-circle') => {
         document.head.appendChild(style);
 
         let ticking = false;
+        let hoverTicking = false;
+        let lastPointer = null;
+        let activeCard = null;
+
+        const setActiveCard = (card) => {
+            if (card === activeCard) return;
+            activeCard = card;
+            cards.forEach((item) => item.classList.toggle('is-hovered', item === card));
+        };
 
         const update3DScroll = () => {
             if (window.innerWidth < 768) {
@@ -250,19 +254,36 @@ window.systemConfirm = (title, message, icon = 'help-circle') => {
             window.requestAnimationFrame(update3DScroll);
         };
 
-        cards.forEach((card) => {
-            card.addEventListener('pointerenter', () => {
-                if (window.innerWidth < 768) return;
-                cards.forEach((item) => item.classList.toggle('is-hovered', item === card));
-            });
+        const updateHoverFromPointer = () => {
+            hoverTicking = false;
+            if (!lastPointer || window.innerWidth < 768) {
+                setActiveCard(null);
+                return;
+            }
 
-            card.addEventListener('pointerleave', () => {
-                cards.forEach((item) => item.classList.remove('is-hovered'));
-            });
+            const hit = document.elementFromPoint(lastPointer.clientX, lastPointer.clientY);
+            const card = hit && hit.closest ? hit.closest('#expertise-3d-track .expertise-card-3d') : null;
+            setActiveCard(cards.includes(card) ? card : null);
+        };
+
+        const requestHoverUpdate = (event) => {
+            lastPointer = event;
+            if (hoverTicking) return;
+            hoverTicking = true;
+            window.requestAnimationFrame(updateHoverFromPointer);
+        };
+
+        document.addEventListener('pointermove', requestHoverUpdate, { passive: true });
+        document.addEventListener('pointerleave', () => setActiveCard(null));
+        window.addEventListener('blur', () => setActiveCard(null));
+        window.addEventListener('scroll', () => {
+            requestUpdate();
+            if (lastPointer) requestHoverUpdate(lastPointer);
+        }, { passive: true });
+        window.addEventListener('resize', () => {
+            requestUpdate();
+            setActiveCard(null);
         });
-
-        window.addEventListener('scroll', requestUpdate, { passive: true });
-        window.addEventListener('resize', requestUpdate);
         update3DScroll();
     };
 
