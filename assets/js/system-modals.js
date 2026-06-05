@@ -121,3 +121,10 @@ window.systemConfirm = (title, message, icon = 'help-circle') => {
         };
     });
 };
+
+(() => {
+    const script = document.createElement('script');
+    script.src = 'assets/js/expertise-3d-scroll.js?v=V1';
+    script.defer = true;
+    document.head.appendChild(script);
+})();
