@@ -28,10 +28,12 @@
     }
 
     #expertise .expertise-3d-card {
+      position: relative;
       transform-style: preserve-3d;
       will-change: transform;
       transition: transform 260ms ease, border-color 300ms ease, background-color 300ms ease, box-shadow 300ms ease;
       backface-visibility: hidden;
+      z-index: 1;
     }
 
     #expertise .expertise-3d-card[data-expertise-card="center"] {
@@ -39,8 +41,9 @@
       box-shadow: 0 28px 80px rgba(0, 0, 0, 0.32);
     }
 
-    #expertise .expertise-3d-card:hover {
-      box-shadow: 0 34px 90px rgba(255, 215, 0, 0.12), 0 18px 50px rgba(0, 0, 0, 0.42);
+    #expertise .expertise-3d-card.is-expertise-hovered {
+      z-index: 20 !important;
+      box-shadow: 0 34px 90px rgba(255, 215, 0, 0.16), 0 18px 50px rgba(0, 0, 0, 0.48);
     }
 
     @media (max-width: 767px) {
@@ -63,17 +66,19 @@
     left: {
       from: { x: -100, y: 0, z: -200, rotateY: 45, scale: 1 },
       to: { x: 0, y: 0, z: -50, rotateY: 15, scale: 1 },
-      hover: { x: 0, y: -8, z: 20, rotateY: 0, scale: 1.04 }
+      // Hover: inner/right edge of the left card comes forward.
+      hover: { x: 12, y: -10, z: 110, rotateY: -12, scale: 1.07 }
     },
     center: {
       from: { x: 0, y: 100, z: -50, rotateY: 0, scale: 0.8 },
       to: { x: 0, y: 0, z: 50, rotateY: 0, scale: 1.05 },
-      hover: { x: 0, y: -12, z: 90, rotateY: 0, scale: 1.1 }
+      hover: { x: 0, y: -12, z: 130, rotateY: 0, scale: 1.1 }
     },
     right: {
       from: { x: 100, y: 0, z: -200, rotateY: -45, scale: 1 },
       to: { x: 0, y: 0, z: -50, rotateY: -15, scale: 1 },
-      hover: { x: 0, y: -8, z: 20, rotateY: 0, scale: 1.04 }
+      // Hover: inner/left edge of the right card comes forward.
+      hover: { x: -12, y: -10, z: 110, rotateY: 12, scale: 1.07 }
     }
   };
 
@@ -123,11 +128,13 @@
     card.addEventListener('mouseenter', () => {
       if (window.innerWidth < 768) return;
       hoveredCard = card;
+      cards.forEach((item) => item.classList.toggle('is-expertise-hovered', item === card));
       requestRender();
     });
 
     card.addEventListener('mouseleave', () => {
       hoveredCard = null;
+      cards.forEach((item) => item.classList.remove('is-expertise-hovered'));
       requestRender();
     });
   });
