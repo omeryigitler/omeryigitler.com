@@ -127,41 +127,46 @@ window.systemConfirm = (title, message, icon = 'help-circle') => {
         const expertiseSection = document.getElementById('expertise');
         if (!expertiseSection || expertiseSection.dataset.oyCssVar3d === 'ready') return;
 
-        const container = expertiseSection.querySelector('.grid.grid-cols-1.md\\:grid-cols-3');
-        if (!container) return;
+        const track = expertiseSection.querySelector('.grid.grid-cols-1.md\\:grid-cols-3');
+        if (!track) return;
 
-        const cards = Array.from(container.children).filter((el) => el instanceof HTMLElement).slice(0, 3);
+        const cards = Array.from(track.children).filter((el) => el instanceof HTMLElement).slice(0, 3);
         if (cards.length !== 3) return;
 
         expertiseSection.dataset.oyCssVar3d = 'ready';
-        container.id = 'expertise-cards-container';
-        container.style.setProperty('--scroll-progress', '0');
+        track.id = 'expertise-3d-track';
+        track.style.setProperty('--scroll-progress', '0');
 
-        cards[0].classList.add('expertise-card-3d', 'card-3d-left');
-        cards[1].classList.add('expertise-card-3d', 'card-3d-center');
-        cards[2].classList.add('expertise-card-3d', 'card-3d-right');
+        cards.forEach((card) => {
+            card.classList.remove('transition-all', 'duration-500');
+            card.classList.add('expertise-card-3d');
+        });
+
+        cards[0].classList.add('expertise-card-left');
+        cards[1].classList.add('expertise-card-center');
+        cards[2].classList.add('expertise-card-right');
 
         const style = document.createElement('style');
         style.id = 'oy-css-var-expertise-3d';
         style.textContent = `
-            /* --- 3D EXPERTISE CARDS / CSS VARIABLE VERSION --- */
-            #expertise-cards-container {
+            /* --- 3D EXPERTISE CARDS / SENIOR CSS VARIABLE VERSION --- */
+            #expertise-3d-track {
                 perspective: 1200px;
                 perspective-origin: 50% 42%;
                 transform-style: preserve-3d;
                 overflow: visible;
             }
 
-            #expertise-cards-container .expertise-card-3d {
-                transition: transform 0.5s cubic-bezier(0.25, 1, 0.5, 1), box-shadow 0.3s ease, border-color 0.3s ease, background-color 0.3s ease;
-                will-change: transform;
-                transform-style: preserve-3d;
-                backface-visibility: hidden;
+            #expertise-3d-track .expertise-card-3d {
                 position: relative;
                 z-index: 1;
+                transform-style: preserve-3d;
+                will-change: transform;
+                backface-visibility: hidden;
+                transition: box-shadow 0.3s ease, border-color 0.3s ease, background-color 0.3s ease;
             }
 
-            #expertise-cards-container .card-3d-left {
+            #expertise-3d-track .expertise-card-left {
                 transform: translate3d(
                     calc(-100px * (1 - var(--scroll-progress, 0))),
                     0,
@@ -169,12 +174,7 @@ window.systemConfirm = (title, message, icon = 'help-circle') => {
                 ) rotateY(calc(45deg - (30deg * var(--scroll-progress, 0))));
             }
 
-            #expertise-cards-container .card-3d-left:hover {
-                transform: translate3d(0, -8px, 20px) rotateY(0deg) scale(1.05) !important;
-                z-index: 20;
-            }
-
-            #expertise-cards-container .card-3d-center {
+            #expertise-3d-track .expertise-card-center {
                 z-index: 2;
                 transform: translate3d(
                     0,
@@ -183,12 +183,7 @@ window.systemConfirm = (title, message, icon = 'help-circle') => {
                 ) scale(calc(0.8 + (0.25 * var(--scroll-progress, 0))));
             }
 
-            #expertise-cards-container .card-3d-center:hover {
-                transform: translate3d(0, -10px, 80px) scale(1.1) !important;
-                z-index: 20;
-            }
-
-            #expertise-cards-container .card-3d-right {
+            #expertise-3d-track .expertise-card-right {
                 transform: translate3d(
                     calc(100px * (1 - var(--scroll-progress, 0))),
                     0,
@@ -196,19 +191,31 @@ window.systemConfirm = (title, message, icon = 'help-circle') => {
                 ) rotateY(calc(-45deg + (30deg * var(--scroll-progress, 0))));
             }
 
-            #expertise-cards-container .card-3d-right:hover {
-                transform: translate3d(0, -8px, 20px) rotateY(0deg) scale(1.05) !important;
+            #expertise-3d-track .expertise-card-3d:hover {
+                transition: transform 0.38s cubic-bezier(0.23, 1, 0.32, 1), box-shadow 0.3s ease, border-color 0.3s ease, background-color 0.3s ease;
                 z-index: 20;
             }
 
-            @media (max-width: 767px) {
-                #expertise-cards-container {
+            #expertise-3d-track .expertise-card-left:hover,
+            #expertise-3d-track .expertise-card-right:hover {
+                transform: translate3d(0, -6px, 40px) rotateY(0deg) scale(1.04) !important;
+                box-shadow: 0 0 30px rgba(255, 215, 0, 0.1);
+            }
+
+            #expertise-3d-track .expertise-card-center:hover {
+                transform: translate3d(0, -10px, 80px) scale(1.08) !important;
+                box-shadow: 0 0 40px rgba(59, 130, 246, 0.15);
+            }
+
+            @media (max-width: 767px), (prefers-reduced-motion: reduce) {
+                #expertise-3d-track {
                     perspective: none;
                 }
 
-                #expertise-cards-container .expertise-card-3d,
-                #expertise-cards-container .expertise-card-3d:hover {
+                #expertise-3d-track .expertise-card-3d,
+                #expertise-3d-track .expertise-card-3d:hover {
                     transform: none !important;
+                    transition: none !important;
                 }
             }
         `;
@@ -217,20 +224,18 @@ window.systemConfirm = (title, message, icon = 'help-circle') => {
         let ticking = false;
 
         const update3DScroll = () => {
-            if (window.innerWidth < 768) {
-                container.style.setProperty('--scroll-progress', '1');
+            if (window.innerWidth < 768 || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                track.style.setProperty('--scroll-progress', '1');
                 ticking = false;
                 return;
             }
 
-            const rect = expertiseSection.getBoundingClientRect();
+            const rect = track.getBoundingClientRect();
             const windowHeight = window.innerHeight || document.documentElement.clientHeight;
-            const startScroll = windowHeight;
-            const endScroll = windowHeight / 3;
-            let progress = (startScroll - rect.top) / (startScroll - endScroll);
+            let progress = (windowHeight * 0.85 - rect.top) / (windowHeight * 0.55);
 
             progress = Math.max(0, Math.min(1, progress));
-            container.style.setProperty('--scroll-progress', progress.toFixed(4));
+            track.style.setProperty('--scroll-progress', progress.toFixed(4));
             ticking = false;
         };
 
