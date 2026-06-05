@@ -16,7 +16,10 @@
   </script>
   <style>
     html, body { margin: 0; min-height: 100%; background: #000; color: #fff; overflow-x: hidden; }
+    body { font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
     #root { min-height: 100vh; }
+    .spacer { min-height: 42vh; }
+    .expertise-card { min-height: 260px; }
   </style>
 </head>
 <body>
@@ -86,13 +89,13 @@
           className: 'w-full max-w-6xl mx-auto my-20 p-4',
           ref: containerRef
         },
-        e('div', { className: 'grid grid-cols-1 md:grid-cols-3 gap-6', style: { perspective: '1200px' } },
+        e('div', { className: 'grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch', style: { perspective: '1200px', transformStyle: 'preserve-3d' } },
           // SOL KART
           e(motion.div, {
               style: { x: leftX, z: leftZ, rotateY: leftRotateY },
               whileHover: { rotateY: 0, z: 20, scale: 1.02 },
               transition: { duration: 0.4 },
-              className: 'p-8 rounded-3xl bg-neutral-900 border border-white/10'
+              className: 'expertise-card p-8 rounded-3xl bg-neutral-900 border border-white/10 flex flex-col justify-center'
             },
             e(PenTool, { className: 'w-6 h-6 text-yellow-500 mb-4' }),
             e('h3', { className: 'text-white text-xl font-bold' }, 'UI/UX Design')
@@ -103,7 +106,7 @@
               style: { y: centerY, scale: centerScale, z: centerZ },
               whileHover: { scale: 1.08, z: 80 },
               transition: { duration: 0.4 },
-              className: 'p-8 rounded-3xl bg-neutral-800 border border-white/20 shadow-xl'
+              className: 'expertise-card p-8 rounded-3xl bg-neutral-800 border border-white/20 shadow-xl flex flex-col justify-center'
             },
             e(Code2, { className: 'w-6 h-6 text-blue-500 mb-4' }),
             e('h3', { className: 'text-white text-xl font-bold' }, 'Engineering')
@@ -114,7 +117,7 @@
               style: { x: rightX, z: rightZ, rotateY: rightRotateY },
               whileHover: { rotateY: 0, z: 20, scale: 1.02 },
               transition: { duration: 0.4 },
-              className: 'p-8 rounded-3xl bg-neutral-900 border border-white/10'
+              className: 'expertise-card p-8 rounded-3xl bg-neutral-900 border border-white/10 flex flex-col justify-center'
             },
             e(BarChart3, { className: 'w-6 h-6 text-green-500 mb-4' }),
             e('h3', { className: 'text-white text-xl font-bold' }, 'Strategy & SEO')
@@ -186,11 +189,10 @@
 
     function App() {
       return e(React.Fragment, null,
-        e('div', { className: 'min-h-[65vh]' }),
-        e(Expertise),
-        e('div', { className: 'min-h-[35vh]' }),
-        e(PhilosophySection),
-        e('div', { className: 'min-h-[80vh]' })
+        e('main', null,
+          e('section', { className: 'min-h-screen flex items-center' }, e(Expertise)),
+          e('section', { className: 'min-h-screen flex items-center justify-center' }, e(PhilosophySection))
+        )
       );
     }
 
