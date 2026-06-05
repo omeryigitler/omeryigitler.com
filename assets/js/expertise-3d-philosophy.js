@@ -1,9 +1,10 @@
 (function () {
   if (window.__OY_EXPERTISE_3D_PHILOSOPHY__) return;
-  window.__OY_EXPERTISE_3D_PHILOSOPHY__ = 'v1';
+  window.__OY_EXPERTISE_3D_PHILOSOPHY__ = 'v2';
 
   const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
   const lerp = (start, end, progress) => start + (end - start) * progress;
+  const easeOutCubic = (t) => 1 - Math.pow(1 - t, 3);
 
   const style = document.createElement('style');
   style.id = 'expertise-3d-philosophy-style';
@@ -17,6 +18,7 @@
       perspective: 1200px;
       transform-style: preserve-3d;
       overflow: visible;
+      perspective-origin: 50% 42%;
     }
 
     #expertise.oy-3d-expertise > .grid > div {
@@ -24,11 +26,20 @@
       transform-style: preserve-3d;
       will-change: transform, opacity, filter;
       transition:
+        transform 380ms cubic-bezier(.2,.8,.2,1),
         border-color 280ms ease,
         background 280ms ease,
         box-shadow 280ms ease,
         filter 280ms ease;
       backface-visibility: hidden;
+    }
+
+    #expertise.oy-3d-expertise.oy-scrolling > .grid > div:not(.oy-hovering) {
+      transition:
+        border-color 280ms ease,
+        background 280ms ease,
+        box-shadow 280ms ease,
+        filter 280ms ease;
     }
 
     #expertise.oy-3d-expertise > .grid > div::before {
@@ -48,15 +59,16 @@
       animation-delay: var(--oy-delay, 0ms);
     }
 
-    #expertise.oy-3d-expertise > .grid > div:hover {
+    #expertise.oy-3d-expertise > .grid > div.oy-hovering {
       border-color: rgba(255, 215, 0, 0.35) !important;
       background:
-        radial-gradient(circle at 50% 0%, rgba(255, 215, 0, 0.09), transparent 60%),
-        rgba(255, 255, 255, 0.055) !important;
+        radial-gradient(circle at 50% 0%, rgba(255, 215, 0, 0.10), transparent 60%),
+        rgba(255, 255, 255, 0.058) !important;
       box-shadow:
-        0 28px 90px -60px rgba(255, 215, 0, 0.65),
+        0 34px 100px -58px rgba(255, 215, 0, 0.72),
         inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
-      filter: brightness(1.08);
+      filter: brightness(1.1);
+      z-index: 5;
     }
 
     @keyframes oyExpertiseSweep {
@@ -132,8 +144,9 @@
     const section = document.getElementById('expertise');
     if (!section) return;
 
+    const grid = section.querySelector(':scope > .grid');
     const cards = Array.from(section.querySelectorAll(':scope > .grid > div'));
-    if (cards.length < 3) return;
+    if (!grid || cards.length < 3) return;
 
     section.classList.add('oy-3d-expertise');
     cards.forEach((card, index) => {
@@ -141,73 +154,82 @@
       card.style.setProperty('--oy-delay', `${index * 130}ms`);
       card.addEventListener('mouseenter', () => {
         card.dataset.oyHover = 'true';
+        card.classList.add('oy-hovering');
         applyExpertiseTransforms(true);
       });
       card.addEventListener('mouseleave', () => {
         card.dataset.oyHover = 'false';
+        card.classList.remove('oy-hovering');
         applyExpertiseTransforms(true);
       });
     });
 
-    function sectionProgress() {
-      const rect = section.getBoundingClientRect();
+    function scrollProgress() {
+      const rect = grid.getBoundingClientRect();
       const viewport = window.innerHeight || 1;
-      return clamp((viewport - rect.top) / (viewport * 0.72 + rect.height * 0.35), 0, 1);
+      const start = viewport * 0.98;
+      const end = viewport * 0.04;
+      return clamp((start - rect.top) / (start - end), 0, 1);
     }
 
     function transformCard(card, values) {
       card.style.opacity = String(values.opacity);
-      card.style.transform = `translate3d(${values.x}px, ${values.y}px, ${values.z}px) rotateY(${values.rotateY}deg) scale(${values.scale})`;
+      card.style.transform = `translateX(${values.x}px) translateY(${values.y}px) translateZ(${values.z}px) rotateY(${values.rotateY}deg) scale(${values.scale})`;
     }
 
     function applyExpertiseTransforms(force) {
-      const progress = sectionProgress();
-      if (progress > 0.16) section.classList.add('oy-3d-active');
+      const raw = scrollProgress();
+      const progress = easeOutCubic(raw);
+      section.classList.toggle('oy-3d-active', raw > 0.08);
+      section.classList.toggle('oy-scrolling', raw > 0.02 && raw < 0.98);
 
       const leftHover = cards[0].dataset.oyHover === 'true';
       const centerHover = cards[1].dataset.oyHover === 'true';
       const rightHover = cards[2].dataset.oyHover === 'true';
 
       const left = {
-        x: lerp(-100, 0, progress),
-        y: lerp(28, 0, progress),
-        z: lerp(-200, -50, progress),
-        rotateY: lerp(45, 15, progress),
-        scale: lerp(0.92, 1, progress),
-        opacity: lerp(0.35, 1, progress)
+        x: lerp(-170, 0, progress),
+        y: lerp(44, 0, progress),
+        z: lerp(-360, -45, progress),
+        rotateY: lerp(58, 14, progress),
+        scale: lerp(0.82, 1, progress),
+        opacity: lerp(0.16, 1, progress)
       };
 
       const center = {
         x: 0,
-        y: lerp(100, 0, progress),
-        z: lerp(-50, 50, progress),
+        y: lerp(138, 0, progress),
+        z: lerp(-120, 58, progress),
         rotateY: 0,
-        scale: lerp(0.8, 1.05, progress),
-        opacity: lerp(0.35, 1, progress)
+        scale: lerp(0.72, 1.055, progress),
+        opacity: lerp(0.18, 1, progress)
       };
 
       const right = {
-        x: lerp(100, 0, progress),
-        y: lerp(28, 0, progress),
-        z: lerp(-200, -50, progress),
-        rotateY: lerp(-45, -15, progress),
-        scale: lerp(0.92, 1, progress),
-        opacity: lerp(0.35, 1, progress)
+        x: lerp(170, 0, progress),
+        y: lerp(44, 0, progress),
+        z: lerp(-360, -45, progress),
+        rotateY: lerp(-58, -14, progress),
+        scale: lerp(0.82, 1, progress),
+        opacity: lerp(0.16, 1, progress)
       };
 
       if (leftHover) {
-        left.z = 20;
+        left.z = 70;
         left.rotateY = 0;
-        left.scale = 1.02;
+        left.scale = 1.035;
+        left.opacity = 1;
       }
       if (centerHover) {
-        center.z = 80;
-        center.scale = 1.08;
+        center.z = 110;
+        center.scale = 1.09;
+        center.opacity = 1;
       }
       if (rightHover) {
-        right.z = 20;
+        right.z = 70;
         right.rotateY = 0;
-        right.scale = 1.02;
+        right.scale = 1.035;
+        right.opacity = 1;
       }
 
       transformCard(cards[0], left);
