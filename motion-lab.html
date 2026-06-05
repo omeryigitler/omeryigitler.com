@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Motion Lab — Omer Yigitler</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: { taurusGold: '#FFD700' },
+          fontFamily: {
+            display: ['Syncopate', 'sans-serif'],
+            body: ['Manrope', 'sans-serif']
+          }
+        }
+      }
+    };
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Syncopate:wght@400;700&display=swap" rel="stylesheet" />
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
+  <style>
+    :root { --gold: #FFD700; --line: rgba(255,255,255,.11); --muted: rgba(170,177,190,.92); }
+    * { box-sizing: border-box; }
+    html, body { min-height: 100%; background: #030303; color: #fff; font-family: Manrope, sans-serif; }
+    body {
+      overflow-x: hidden;
+      background:
+        radial-gradient(circle at 50% 0%, rgba(27, 39, 54, .36), transparent 38rem),
+        radial-gradient(circle at 16% 32%, rgba(255, 215, 0, .08), transparent 26rem),
+        radial-gradient(circle at 84% 42%, rgba(56, 189, 248, .06), transparent 28rem),
+        #030303;
+    }
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background-image: linear-gradient(rgba(255,255,255,.035) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.035) 1px, transparent 1px);
+      background-size: 64px 64px;
+      mask-image: radial-gradient(circle at 50% 35%, black, transparent 76%);
+      opacity: .35;
+    }
+    .lab-shell { width: min(1240px, calc(100vw - 40px)); margin-inline: auto; }
+    .lab-pill { display: inline-flex; align-items: center; gap: .55rem; border: 1px solid rgba(255,215,0,.28); border-radius: 999px; padding: .45rem .85rem; background: rgba(255,215,0,.075); color: var(--gold); font: 800 .58rem Syncopate, sans-serif; letter-spacing: .18em; text-transform: uppercase; }
+    .lab-pill::before { content: ''; width: .42rem; height: .42rem; border-radius: 999px; background: var(--gold); box-shadow: 0 0 18px rgba(255,215,0,.7); }
+    .lab-title { font: 800 clamp(2.25rem, 6vw, 6rem)/.9 Syncopate, sans-serif; letter-spacing: -.075em; text-transform: uppercase; }
+    .lab-gradient { color: transparent; background: linear-gradient(180deg, #fff, #7e8490); -webkit-background-clip: text; background-clip: text; }
+    .glass { border: 1px solid var(--line); background: linear-gradient(145deg, rgba(255,255,255,.055), rgba(255,255,255,.012)); box-shadow: inset 0 1px 0 rgba(255,255,255,.07), 0 60px 150px -105px #000; backdrop-filter: blur(22px); }
+
+    /* EXPERTISE 3D */
+    .expertise-lab { min-height: 120vh; padding: 10rem 0 8rem; }
+    .expertise-stage { perspective: 1400px; perspective-origin: 50% 46%; transform-style: preserve-3d; }
+    .expertise-card { min-height: 300px; transform-style: preserve-3d; backface-visibility: hidden; will-change: transform, opacity, filter; position: relative; overflow: hidden; transition: border-color .25s ease, background .25s ease, box-shadow .25s ease; }
+    .expertise-card::after { content: ''; position: absolute; inset: 0; pointer-events: none; opacity: 0; transform: translateX(-120%); background: linear-gradient(105deg, transparent 0%, rgba(255,255,255,.13) 45%, transparent 62%); }
+    .expertise-card.is-sweeping::after { opacity: 1; animation: sweep 1.15s ease forwards; }
+    @keyframes sweep { 0% { transform: translateX(-120%); opacity: 0; } 30% { opacity: .75; } 100% { transform: translateX(120%); opacity: 0; } }
+    .expertise-card:hover { border-color: rgba(255,215,0,.44); background: radial-gradient(circle at 50% 0%, rgba(255,215,0,.12), transparent 62%), rgba(255,255,255,.055); box-shadow: 0 40px 120px -70px rgba(255,215,0,.8), inset 0 1px 0 rgba(255,255,255,.1); }
+
+    /* PHILOSOPHY LAB */
+    .philosophy-wrap { min-height: 360vh; position: relative; }
+    .philosophy-pin { height: 100vh; display: grid; place-items: center; overflow: hidden; position: relative; }
+    .taurus-bg { position: absolute; inset: auto; left: 50%; top: 50%; transform: translate(-50%, -50%); font: 800 min(17vw, 220px)/1 Syncopate, sans-serif; letter-spacing: -.08em; color: rgba(255,255,255,.045); pointer-events: none; z-index: 0; white-space: nowrap; }
+    .philosophy-lines { position: relative; z-index: 2; width: min(1180px, 92vw); text-align: center; height: 360px; display: grid; place-items: center; }
+    .philosophy-line { position: absolute; white-space: nowrap; font: 800 clamp(2.1rem, 6.6vw, 6rem)/.95 Syncopate, sans-serif; letter-spacing: -.065em; color: #fff; will-change: transform, opacity, filter; }
+    .philosophy-line .over { margin: 0 .35em; font-family: Manrope, sans-serif; font-style: italic; font-weight: 400; font-size: .36em; letter-spacing: -.09em; color: rgba(255,255,255,.34); }
+    .philosophy-line .dot { color: var(--gold); }
+    .philosophy-copy { position: relative; z-index: 3; text-align: center; margin-top: 2rem; color: #aab1be; font-size: clamp(.95rem, 1.4vw, 1.15rem); line-height: 1.6; opacity: 0; transform: translateY(22px); }
+    .philosophy-final { margin-top: 2.2rem; padding-top: 2rem; border-top: 1px solid rgba(255,255,255,.1); color: var(--gold); font: 800 clamp(.8rem, 1.8vw, 1.15rem)/1 Syncopate, sans-serif; letter-spacing: .28em; text-transform: uppercase; }
+
+    /* DBS IDEA SECTION */
+    .lab-dbs { padding: 8rem 0 12rem; }
+    .dbs-pin { position: relative; min-height: 720px; display: grid; grid-template-columns: .78fr 1.22fr; gap: 1.2rem; border-radius: 2rem; overflow: hidden; }
+    .dbs-left, .dbs-scene { position: relative; z-index: 2; }
+    .dbs-left { padding: clamp(1.2rem, 3vw, 2rem); display: flex; flex-direction: column; justify-content: space-between; gap: 1.2rem; }
+    .dbs-stage-label, .dbs-count, .dbs-topbar em { color: var(--gold); font: 800 .65rem Syncopate, sans-serif; letter-spacing: .17em; text-transform: uppercase; }
+    .dbs-step-text h3 { margin: 1rem 0; font: 800 clamp(2rem, 4.5vw, 4rem)/.95 Syncopate, sans-serif; letter-spacing: -.06em; text-transform: uppercase; }
+    .dbs-step-text p { color: var(--muted); font-size: 1rem; line-height: 1.75; max-width: 520px; }
+    .dbs-tabs { display: grid; gap: .75rem; }
+    .dbs-tab { display: grid; grid-template-columns: auto 1fr; align-items: center; gap: .9rem; padding: .95rem; border: 1px solid rgba(255,255,255,.09); border-radius: 1rem; background: rgba(255,255,255,.026); transition: .25s ease; }
+    .dbs-tab b { display: grid; place-items: center; width: 2.1rem; height: 2.1rem; border-radius: .75rem; border: 1px solid var(--c); color: var(--c); font: 800 .56rem Syncopate, sans-serif; }
+    .dbs-tab span { font: 800 .68rem Syncopate, sans-serif; letter-spacing: .12em; color: rgba(255,255,255,.78); text-transform: uppercase; }
+    .dbs-tab.on { border-color: var(--c); background: linear-gradient(135deg, var(--gl), rgba(255,255,255,.025)); transform: translateX(.25rem); }
+    .dbs-progress { height: 2px; background: rgba(255,255,255,.08); border-radius: 999px; overflow: hidden; }
+    .dbs-progress i { display: block; width: calc(var(--p, 0) * 100%); height: 100%; background: linear-gradient(90deg, var(--gold), #fff); }
+    .dbs-scene { margin: 1rem; border: 1px solid rgba(255,255,255,.09); border-radius: 1.5rem; background: rgba(0,0,0,.36); overflow: hidden; perspective: 1200px; }
+    .dbs-topbar { height: 3rem; display: flex; align-items: center; justify-content: space-between; padding: 0 1rem; border-bottom: 1px solid rgba(255,255,255,.08); color: rgba(255,255,255,.8); font: 800 .68rem Syncopate, sans-serif; letter-spacing: .14em; text-transform: uppercase; }
+    .dbs-canvas { position: absolute; inset: 3rem 0 0; }
+    .dbs-browser { position: absolute; left: 10%; top: 10%; width: 72%; height: 52%; border: 1px solid rgba(255,255,255,.14); border-radius: 1rem; background: rgba(0,0,0,.68); overflow: hidden; transform-style: preserve-3d; }
+    .dbs-windowbar { height: 2.2rem; display: flex; gap: .38rem; align-items: center; padding: 0 .8rem; border-bottom: 1px solid rgba(255,255,255,.08); background: rgba(255,255,255,.035); }
+    .dbs-dot { width: .44rem; height: .44rem; border-radius: 999px; background: rgba(255,255,255,.22); }
+    .dbs-dot:first-child { background: var(--gold); }
+    .dbs-screen { position: relative; height: calc(100% - 2.2rem); padding: 1rem; }
+    .dbs-layer { position: absolute; inset: 1rem; opacity: 0; pointer-events: none; }
+    .dbs-layer.on { opacity: 1; }
+    .wire-node { position: absolute; border: 1px solid rgba(255,215,0,.35); border-radius: .8rem; background: rgba(255,215,0,.06); }
+    .wire-node.n1 { left: 8%; top: 12%; width: 35%; height: 18%; }
+    .wire-node.n2 { right: 8%; top: 12%; width: 35%; height: 18%; }
+    .wire-node.n3 { left: 16%; bottom: 14%; width: 68%; height: 34%; border-color: rgba(255,255,255,.14); }
+    .wire-line { position: absolute; height: 1px; left: 25%; right: 25%; top: 43%; background: linear-gradient(90deg, transparent, var(--gold), transparent); }
+    .ui-hero { height: 36%; border-radius: .9rem; background: linear-gradient(135deg, rgba(255,215,0,.18), rgba(56,189,248,.11)); border: 1px solid rgba(255,215,0,.22); margin-bottom: .75rem; }
+    .ui-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: .65rem; }
+    .ui-card { height: 5rem; border: 1px solid rgba(255,255,255,.09); border-radius: .8rem; background: rgba(255,255,255,.04); }
+    .code-wrap { display: grid; grid-template-columns: 1fr 1fr; gap: .8rem; height: 100%; }
+    .code-panel { border: 1px solid rgba(56,189,248,.18); border-radius: .8rem; background: rgba(0,0,0,.5); padding: .8rem; }
+    .code-line { display: block; height: .42rem; border-radius: 999px; background: rgba(255,255,255,.14); margin: .55rem 0; }
+    .code-line:nth-child(2n) { width: 70%; background: rgba(56,189,248,.32); }
+    .code-line:nth-child(3n) { width: 48%; background: rgba(255,215,0,.38); }
+    .metrics { display: grid; gap: .7rem; }
+    .metric { border: 1px solid rgba(255,255,255,.09); border-radius: .8rem; padding: .9rem; background: rgba(255,255,255,.035); }
+    .metric strong { display: block; color: #fff; font-size: 1.5rem; line-height: 1; }
+    .metric small { color: var(--muted); font-size: .62rem; letter-spacing: .12em; text-transform: uppercase; }
+    .dbs-tablet, .dbs-phone { position: absolute; opacity: 0; border: 1px solid rgba(255,255,255,.12); background: rgba(0,0,0,.76); box-shadow: 0 28px 80px -50px #000; overflow: hidden; }
+    .dbs-tablet { left: 8%; bottom: 13%; width: 24%; height: 31%; border-radius: 1rem; transform: rotateZ(-7deg) rotateY(16deg); }
+    .dbs-phone { right: 10%; bottom: 12%; width: 16%; height: 36%; border-radius: 1.2rem; transform: rotateZ(7deg) rotateY(-16deg); }
+    .dev-line { display: block; height: .42rem; border-radius: 999px; margin: .65rem; background: rgba(255,255,255,.14); }
+    .dev-line.g { background: rgba(255,215,0,.45); width: 48%; }
+    .dev-line.b { background: rgba(56,189,248,.28); width: 74%; }
+    .dbs-badge { position: absolute; right: 1.1rem; bottom: 1.1rem; z-index: 5; padding: .8rem 1rem; border: 1px solid rgba(34,197,94,.32); border-radius: 1rem; background: rgba(0,0,0,.68); color: #fff; font-size: .78rem; line-height: 1.5; opacity: 0; }
+    .dbs-badge b { display: block; color: #22C55E; font-size: .62rem; letter-spacing: .15em; text-transform: uppercase; }
+    @media (max-width: 900px) { .dbs-pin { grid-template-columns: 1fr; } .dbs-scene { min-height: 580px; } .expertise-stage { grid-template-columns: 1fr !important; } .philosophy-line { white-space: normal; width: 100%; } }
+  </style>
+</head>
+<body>
+  <header class="fixed top-5 left-1/2 -translate-x-1/2 z-50 w-[min(980px,calc(100vw-40px))] rounded-full border border-white/10 bg-black/60 backdrop-blur-xl px-5 py-3 flex items-center justify-between">
+    <a href="./" class="font-display text-xs tracking-[.22em] text-taurusGold">OY / MOTION LAB</a>
+    <nav class="hidden md:flex gap-8 text-[10px] font-bold uppercase tracking-[.24em] text-gray-400">
+      <a href="#expertise-lab" class="hover:text-white">Expertise</a>
+      <a href="#philosophy-lab" class="hover:text-white">Philosophy</a>
+      <a href="#dbs-lab" class="hover:text-white">DBS</a>
+    </nav>
+    <a href="./" class="rounded-full bg-taurusGold px-5 py-2 text-[10px] font-black uppercase tracking-widest text-black">Back</a>
+  </header>
+
+  <main>
+    <section class="min-h-screen grid place-items-center px-5 pt-24">
+      <div class="lab-shell text-center">
+        <span class="lab-pill">Isolated Test Page</span>
+        <h1 class="lab-title mt-6">Motion <span class="lab-gradient block">Lab</span></h1>
+        <p class="mx-auto mt-6 max-w-2xl text-gray-400 leading-8">Ana sayfa bozulmadan, scroll ve hover efektleri burada test edilecek. Beğendiğimiz versiyonu sonra gerçek section'a taşırız.</p>
+      </div>
+    </section>
+
+    <section id="expertise-lab" class="expertise-lab lab-shell">
+      <div class="text-center mb-12">
+        <span class="lab-pill">Option 1 / Expertise Cards</span>
+        <h2 class="lab-title mt-5 text-[clamp(2rem,5vw,4.7rem)]">Complete Digital <span class="lab-gradient block">Solutions</span></h2>
+        <p class="mx-auto mt-5 max-w-2xl text-gray-400 leading-7">Temiz 3D kart denemesi. Sağ ve sol kartlar ayrı GSAP timeline ile kontrol edilir; hover JS tarafından ezilmez.</p>
+      </div>
+
+      <div class="expertise-stage grid grid-cols-1 md:grid-cols-3 gap-6">
+        <article class="expertise-card glass rounded-[1.6rem] p-8" data-card="left">
+          <div class="mb-8 grid h-12 w-12 place-items-center rounded-2xl bg-white/7 border border-white/5"><i data-lucide="pen-tool" class="h-6 w-6 text-taurusGold"></i></div>
+          <h3 class="font-display text-xl font-bold uppercase tracking-[-.04em]">UI/UX Design</h3>
+          <p class="mt-5 text-sm leading-7 text-gray-400">Crafting intuitive, user-centric interfaces that drive engagement and conversion.</p>
+          <ul class="mt-7 space-y-3 text-[10px] font-black uppercase tracking-wider text-gray-400">
+            <li><span class="text-taurusGold">•</span> Figma & Prototyping</li>
+            <li><span class="text-taurusGold">•</span> Design Systems</li>
+            <li><span class="text-taurusGold">•</span> Mobile-first Layouts</li>
+          </ul>
+        </article>
+
+        <article class="expertise-card glass rounded-[1.6rem] p-8" data-card="center">
+          <div class="mb-8 grid h-12 w-12 place-items-center rounded-2xl bg-white/7 border border-white/5"><i data-lucide="code-2" class="h-6 w-6 text-blue-400"></i></div>
+          <h3 class="font-display text-xl font-bold uppercase tracking-[-.04em]">Engineering</h3>
+          <p class="mt-5 text-sm leading-7 text-gray-400">Building robust, scalable, high-performance applications using clean code practices.</p>
+          <ul class="mt-7 space-y-3 text-[10px] font-black uppercase tracking-wider text-gray-400">
+            <li><span class="text-blue-400">•</span> React / Next.js</li>
+            <li><span class="text-blue-400">•</span> Tailwind CSS</li>
+            <li><span class="text-blue-400">•</span> API Integration</li>
+          </ul>
+        </article>
+
+        <article class="expertise-card glass rounded-[1.6rem] p-8" data-card="right">
+          <div class="mb-8 grid h-12 w-12 place-items-center rounded-2xl bg-white/7 border border-white/5"><i data-lucide="bar-chart-3" class="h-6 w-6 text-emerald-400"></i></div>
+          <h3 class="font-display text-xl font-bold uppercase tracking-[-.04em]">Strategy & SEO</h3>
+          <p class="mt-5 text-sm leading-7 text-gray-400">Optimizing for visibility and performance so the product reaches the right audience.</p>
+          <ul class="mt-7 space-y-3 text-[10px] font-black uppercase tracking-wider text-gray-400">
+            <li><span class="text-emerald-400">•</span> Technical SEO</li>
+            <li><span class="text-emerald-400">•</span> Performance Tuning</li>
+            <li><span class="text-emerald-400">•</span> Analytics</li>
+          </ul>
+        </article>
+      </div>
+    </section>
+
+    <section id="philosophy-lab" class="philosophy-wrap">
+      <div class="philosophy-pin">
+        <div class="taurus-bg">TAURUS</div>
+        <div>
+          <div class="philosophy-lines">
+            <h2 class="philosophy-line" data-line="0">Balance <span class="over">over</span> Chaos<span class="dot">.</span></h2>
+            <h2 class="philosophy-line" data-line="1">Symmetry <span class="over">over</span> Noise<span class="dot">.</span></h2>
+            <h2 class="philosophy-line" data-line="2">Quality <span class="over">over</span> Shortcuts<span class="dot">.</span></h2>
+          </div>
+          <div class="philosophy-copy">
+            <p>I design websites that feel <strong class="text-white">solid, intentional and timeless.</strong><br />Not trends. Not templates.</p>
+            <div class="philosophy-final">Just work that lasts.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="dbs-lab" class="lab-dbs lab-shell">
+      <div class="text-center mb-12">
+        <span class="lab-pill">Option 3 / DBS idea</span>
+        <h2 class="lab-title mt-5 text-[clamp(2rem,5vw,4.7rem)]">Digital Build <span class="lab-gradient block">System</span></h2>
+        <p class="mx-auto mt-5 max-w-2xl text-gray-400 leading-7">Senin gönderdiğin timeline mantığına göre sadeleştirilmiş test versiyonu.</p>
+      </div>
+
+      <div class="dbs-pin glass">
+        <div class="dbs-left">
+          <div>
+            <div class="dbs-stage-label">Website build experience</div>
+            <div class="dbs-step-text mt-6">
+              <div class="dbs-count">01 / Strategy</div>
+              <h3>Structure before pixels</h3>
+              <p>Sitemap, user flow and conversion path are defined before the design starts.</p>
+            </div>
+          </div>
+          <div>
+            <div class="dbs-tabs">
+              <div class="dbs-tab on" data-tab="0" style="--c:#FFD700;--gl:rgba(255,215,0,.12)"><b>01</b><span>Strategy</span></div>
+              <div class="dbs-tab" data-tab="1" style="--c:#A855F7;--gl:rgba(168,85,247,.12)"><b>02</b><span>Interface</span></div>
+              <div class="dbs-tab" data-tab="2" style="--c:#38BDF8;--gl:rgba(56,189,248,.12)"><b>03</b><span>Development</span></div>
+              <div class="dbs-tab" data-tab="3" style="--c:#22C55E;--gl:rgba(34,197,94,.12)"><b>04</b><span>Launch</span></div>
+            </div>
+            <div class="dbs-progress mt-8"><i></i></div>
+          </div>
+        </div>
+        <div class="dbs-scene">
+          <div class="dbs-topbar"><span>Live Website Assembly</span><em>Scroll Controlled</em></div>
+          <div class="dbs-canvas">
+            <div class="dbs-browser">
+              <div class="dbs-windowbar"><span class="dbs-dot"></span><span class="dbs-dot"></span><span class="dbs-dot"></span></div>
+              <div class="dbs-screen">
+                <div class="dbs-layer layer-wire on"><span class="wire-node n1"></span><span class="wire-node n2"></span><span class="wire-node n3"></span><span class="wire-line"></span></div>
+                <div class="dbs-layer layer-ui"><div class="ui-hero"></div><div class="ui-grid"><span class="ui-card"></span><span class="ui-card"></span><span class="ui-card"></span></div></div>
+                <div class="dbs-layer layer-code"><div class="code-wrap"><div class="code-panel"><span class="code-line"></span><span class="code-line"></span><span class="code-line"></span><span class="code-line"></span><span class="code-line"></span><span class="code-line"></span></div><div class="metrics"><div class="metric"><strong>95+</strong><small>Performance Target</small></div><div class="metric"><strong>SEO</strong><small>Technical Base</small></div><div class="metric"><strong>CMS</strong><small>Optional Control</small></div></div></div></div>
+              </div>
+            </div>
+            <div class="dbs-tablet"><div class="dbs-windowbar"><span class="dbs-dot"></span></div><span class="dev-line g"></span><span class="dev-line"></span><span class="dev-line b"></span></div>
+            <div class="dbs-phone"><div class="dbs-windowbar"><span class="dbs-dot"></span></div><span class="dev-line g"></span><span class="dev-line"></span><span class="dev-line b"></span><span class="dev-line"></span></div>
+            <div class="dbs-badge"><b>Live Ready</b>Desktop, tablet and mobile are aligned.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="assets/js/motion-lab.js?v=1"></script>
+</body>
+</html>
