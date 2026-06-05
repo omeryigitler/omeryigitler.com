@@ -135,6 +135,13 @@ window.systemConfirm = (title, message, icon = 'help-circle') => {
         optionsScript.src = 'assets/js/expertise-options.js?v=1';
         optionsScript.defer = true;
         optionsScript.dataset.experience = 'expertise-options';
+        optionsScript.onload = () => {
+            const compareScript = document.createElement('script');
+            compareScript.src = 'assets/js/found-design-comparison.js?v=1';
+            compareScript.defer = true;
+            compareScript.dataset.experience = 'found-design-comparison';
+            document.head.appendChild(compareScript);
+        };
         document.head.appendChild(optionsScript);
     };
     document.head.appendChild(script);
