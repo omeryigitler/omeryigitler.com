@@ -6,44 +6,67 @@
   const $ = (s, r = document) => r.querySelector(s);
   const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
 
-  // 1) Expertise cards — isolated GSAP scroll + CSS hover
+  // 1) Expertise cards — scroll controls OUTER cards, hover controls INNER content.
   function initExpertiseCards() {
-    const section = $('#expertise-lab');
     const stage = $('.expertise-stage');
     const left = $('[data-card="left"]');
     const center = $('[data-card="center"]');
     const right = $('[data-card="right"]');
-    if (!section || !stage || !left || !center || !right) return;
+    if (!stage || !left || !center || !right) return;
+
+    const cards = [left, center, right];
+
+    cards.forEach(card => {
+      if (!$('.expertise-card-inner', card)) {
+        const inner = document.createElement('div');
+        inner.className = 'expertise-card-inner';
+        inner.style.transformStyle = 'preserve-3d';
+        inner.style.height = '100%';
+        while (card.firstChild) inner.appendChild(card.firstChild);
+        card.appendChild(inner);
+      }
+    });
+
+    const inners = cards.map(card => $('.expertise-card-inner', card));
 
     gsap.set(stage, { transformStyle: 'preserve-3d' });
-    gsap.set(left, { x: -160, y: 45, z: -260, rotateY: 48, rotateX: 4, scale: .84, opacity: .3, filter: 'blur(3px) brightness(.72)' });
-    gsap.set(center, { y: 130, z: -80, rotateX: -4, scale: .78, opacity: .35, filter: 'blur(2px) brightness(.78)' });
-    gsap.set(right, { x: 160, y: 45, z: -260, rotateY: -48, rotateX: 4, scale: .84, opacity: .3, filter: 'blur(3px) brightness(.72)' });
+    gsap.set(cards, { transformStyle: 'preserve-3d', transformOrigin: '50% 50%' });
+    gsap.set(inners, { transformStyle: 'preserve-3d', transformOrigin: '50% 50%', willChange: 'transform, filter' });
 
-    const tl = gsap.timeline({
+    gsap.set(left, { x: -170, y: 46, z: -280, rotateY: 52, rotateX: 4, scale: .84, opacity: .3, filter: 'blur(3px) brightness(.72)' });
+    gsap.set(center, { y: 130, z: -90, rotateX: -4, scale: .78, opacity: .35, filter: 'blur(2px) brightness(.78)' });
+    gsap.set(right, { x: 170, y: 46, z: -280, rotateY: -52, rotateX: 4, scale: .84, opacity: .3, filter: 'blur(3px) brightness(.72)' });
+
+    gsap.timeline({
       scrollTrigger: {
         trigger: stage,
         start: 'top 82%',
         end: 'center 45%',
         scrub: .65,
-        onEnter: () => $$('.expertise-card').forEach((c, i) => setTimeout(() => c.classList.add('is-sweeping'), i * 120)),
-        onLeaveBack: () => $$('.expertise-card').forEach(c => c.classList.remove('is-sweeping'))
+        onEnter: () => cards.forEach((c, i) => setTimeout(() => c.classList.add('is-sweeping'), i * 120)),
+        onLeaveBack: () => cards.forEach(c => c.classList.remove('is-sweeping'))
       }
-    });
-
-    tl.to(left, { x: -10, y: 0, z: -55, rotateY: 14, rotateX: 0, scale: 1, opacity: 1, filter: 'blur(0px) brightness(1)', ease: 'power2.out' }, 0)
+    })
+      .to(left, { x: -12, y: 0, z: -55, rotateY: 14, rotateX: 0, scale: 1, opacity: 1, filter: 'blur(0px) brightness(1)', ease: 'power2.out' }, 0)
       .to(center, { y: 0, z: 70, rotateX: 0, scale: 1.055, opacity: 1, filter: 'blur(0px) brightness(1.04)', ease: 'power2.out' }, 0)
-      .to(right, { x: 10, y: 0, z: -55, rotateY: -14, rotateX: 0, scale: 1, opacity: 1, filter: 'blur(0px) brightness(1)', ease: 'power2.out' }, 0);
+      .to(right, { x: 12, y: 0, z: -55, rotateY: -14, rotateX: 0, scale: 1, opacity: 1, filter: 'blur(0px) brightness(1)', ease: 'power2.out' }, 0);
 
     const hoverMap = new Map([
-      [left, { x: -4, y: -14, z: 145, rotateY: 0, rotateX: -1, scale: 1.055, filter: 'blur(0px) brightness(1.13)' }],
-      [center, { x: 0, y: -16, z: 175, rotateY: 0, rotateX: -1, scale: 1.095, filter: 'blur(0px) brightness(1.16)' }],
-      [right, { x: 4, y: -14, z: 145, rotateY: 0, rotateX: -1, scale: 1.055, filter: 'blur(0px) brightness(1.13)' }]
+      [left, { y: -18, z: 155, rotateY: -14, rotateX: -2, scale: 1.07, filter: 'brightness(1.16)' }],
+      [center, { y: -20, z: 190, rotateY: 0, rotateX: -2, scale: 1.11, filter: 'brightness(1.18)' }],
+      [right, { y: -18, z: 155, rotateY: 14, rotateX: -2, scale: 1.07, filter: 'brightness(1.16)' }]
     ]);
 
-    $$('.expertise-card').forEach(card => {
-      card.addEventListener('mouseenter', () => gsap.to(card, { ...hoverMap.get(card), duration: .34, ease: 'power3.out', overwrite: 'auto' }));
-      card.addEventListener('mouseleave', () => ScrollTrigger.refresh(true));
+    cards.forEach((card, index) => {
+      const inner = inners[index];
+      card.addEventListener('mouseenter', () => {
+        card.classList.add('is-hovering');
+        gsap.to(inner, { ...hoverMap.get(card), duration: .32, ease: 'power3.out', overwrite: 'auto' });
+      });
+      card.addEventListener('mouseleave', () => {
+        card.classList.remove('is-hovering');
+        gsap.to(inner, { y: 0, z: 0, rotateY: 0, rotateX: 0, scale: 1, filter: 'brightness(1)', duration: .32, ease: 'power3.out', overwrite: 'auto' });
+      });
     });
   }
 
