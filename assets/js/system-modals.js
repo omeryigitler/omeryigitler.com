@@ -138,7 +138,7 @@ window.systemConfirm = (title, message, icon = 'help-circle') => {
         track.style.setProperty('--scroll-progress', '0');
 
         cards.forEach((card) => {
-            card.classList.remove('transition-all', 'duration-500');
+            card.classList.remove('transition-all', 'duration-300', 'duration-500');
             card.classList.add('expertise-card-3d');
         });
 
@@ -149,7 +149,7 @@ window.systemConfirm = (title, message, icon = 'help-circle') => {
         const style = document.createElement('style');
         style.id = 'oy-css-var-expertise-3d';
         style.textContent = `
-            /* --- 3D EXPERTISE CARDS / SENIOR CSS VARIABLE VERSION --- */
+            /* --- 3D EXPERTISE CARDS / STABLE HOVER VERSION --- */
             #expertise-3d-track {
                 perspective: 1200px;
                 perspective-origin: 50% 42%;
@@ -191,29 +191,34 @@ window.systemConfirm = (title, message, icon = 'help-circle') => {
                 ) rotateY(calc(-45deg + (30deg * var(--scroll-progress, 0))));
             }
 
-            #expertise-3d-track .expertise-card-3d:hover {
+            #expertise-3d-track .expertise-card-3d:hover,
+            #expertise-3d-track .expertise-card-3d.is-hovered {
                 transition: transform 0.38s cubic-bezier(0.23, 1, 0.32, 1), box-shadow 0.3s ease, border-color 0.3s ease, background-color 0.3s ease;
                 z-index: 20;
             }
 
             #expertise-3d-track .expertise-card-left:hover,
-            #expertise-3d-track .expertise-card-right:hover {
-                transform: translate3d(0, -6px, 40px) rotateY(0deg) scale(1.04) !important;
-                box-shadow: 0 0 30px rgba(255, 215, 0, 0.1);
+            #expertise-3d-track .expertise-card-left.is-hovered,
+            #expertise-3d-track .expertise-card-right:hover,
+            #expertise-3d-track .expertise-card-right.is-hovered {
+                transform: translate3d(0, -8px, 70px) rotateY(0deg) scale(1.055) !important;
+                box-shadow: 0 0 30px rgba(255, 215, 0, 0.13);
             }
 
-            #expertise-3d-track .expertise-card-center:hover {
-                transform: translate3d(0, -10px, 80px) scale(1.08) !important;
-                box-shadow: 0 0 40px rgba(59, 130, 246, 0.15);
+            #expertise-3d-track .expertise-card-center:hover,
+            #expertise-3d-track .expertise-card-center.is-hovered {
+                transform: translate3d(0, -10px, 90px) scale(1.08) !important;
+                box-shadow: 0 0 40px rgba(59, 130, 246, 0.16);
             }
 
-            @media (max-width: 767px), (prefers-reduced-motion: reduce) {
+            @media (max-width: 767px) {
                 #expertise-3d-track {
                     perspective: none;
                 }
 
                 #expertise-3d-track .expertise-card-3d,
-                #expertise-3d-track .expertise-card-3d:hover {
+                #expertise-3d-track .expertise-card-3d:hover,
+                #expertise-3d-track .expertise-card-3d.is-hovered {
                     transform: none !important;
                     transition: none !important;
                 }
@@ -224,7 +229,7 @@ window.systemConfirm = (title, message, icon = 'help-circle') => {
         let ticking = false;
 
         const update3DScroll = () => {
-            if (window.innerWidth < 768 || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+            if (window.innerWidth < 768) {
                 track.style.setProperty('--scroll-progress', '1');
                 ticking = false;
                 return;
@@ -244,6 +249,17 @@ window.systemConfirm = (title, message, icon = 'help-circle') => {
             ticking = true;
             window.requestAnimationFrame(update3DScroll);
         };
+
+        cards.forEach((card) => {
+            card.addEventListener('pointerenter', () => {
+                if (window.innerWidth < 768) return;
+                cards.forEach((item) => item.classList.toggle('is-hovered', item === card));
+            });
+
+            card.addEventListener('pointerleave', () => {
+                cards.forEach((item) => item.classList.remove('is-hovered'));
+            });
+        });
 
         window.addEventListener('scroll', requestUpdate, { passive: true });
         window.addEventListener('resize', requestUpdate);
