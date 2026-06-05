@@ -1,6 +1,6 @@
 (function () {
   if (window.__OY_SAFE_MOTION__) return;
-  window.__OY_SAFE_MOTION__ = 'v2';
+  window.__OY_SAFE_MOTION__ = 'v3';
 
   const clamp = (n, min, max) => Math.max(min, Math.min(max, n));
   const lerp = (a, b, t) => a + (b - a) * t;
@@ -25,14 +25,24 @@
       backface-visibility: hidden;
       will-change: transform, opacity, filter;
       transform-origin: center center;
+      cursor: pointer;
       transition: border-color 220ms ease, background 220ms ease, box-shadow 220ms ease, filter 220ms ease;
     }
-    #expertise.oy-expertise-3d > .grid > div.oy-hovering {
-      border-color: rgba(255,215,0,.38) !important;
-      background: radial-gradient(circle at 50% 0%, rgba(255,215,0,.11), transparent 62%), rgba(255,255,255,.058) !important;
-      box-shadow: 0 36px 105px -62px rgba(255,215,0,.75), inset 0 1px 0 rgba(255,255,255,.08) !important;
-      filter: brightness(1.1);
-      z-index: 8;
+    #expertise.oy-expertise-3d > .grid > div.oy-hovering,
+    #expertise.oy-expertise-3d > .grid > div:hover {
+      border-color: rgba(255,215,0,.46) !important;
+      background: radial-gradient(circle at 50% 0%, rgba(255,215,0,.14), transparent 62%), rgba(255,255,255,.07) !important;
+      box-shadow: 0 42px 120px -58px rgba(255,215,0,.85), inset 0 1px 0 rgba(255,255,255,.12) !important;
+      z-index: 20;
+    }
+    #expertise.oy-expertise-3d > .grid > div.oy-hovering h3,
+    #expertise.oy-expertise-3d > .grid > div:hover h3 {
+      color: #fff !important;
+      text-shadow: 0 0 18px rgba(255,255,255,.18);
+    }
+    #expertise.oy-expertise-3d > .grid > div.oy-hovering i,
+    #expertise.oy-expertise-3d > .grid > div:hover i {
+      filter: drop-shadow(0 0 14px rgba(255,215,0,.55));
     }
     #expertise.oy-expertise-3d > .grid > div::after {
       content: "";
@@ -40,14 +50,18 @@
       inset: 0;
       pointer-events: none;
       opacity: var(--oy-card-sheen, 0);
-      background: linear-gradient(105deg, transparent 0%, rgba(255,255,255,.085) 45%, transparent 62%);
+      background: linear-gradient(105deg, transparent 0%, rgba(255,255,255,.11) 45%, transparent 62%);
       transform: translateX(var(--oy-card-sheen-x, -120%));
     }
     .oy-philosophy-safe {
       position: relative;
       isolation: isolate;
+      padding-top: clamp(4rem, 8vw, 7rem) !important;
+      padding-bottom: clamp(4rem, 8vw, 7rem) !important;
     }
     .oy-philosophy-safe .oy-philosophy-line {
+      position: relative;
+      z-index: 3;
       will-change: transform, opacity, filter;
       transform-origin: center center;
       transition: text-shadow 180ms ease;
@@ -63,8 +77,22 @@
     .oy-philosophy-safe .oy-taurus-backdrop {
       transform: translate(-50%, -50%) !important;
       filter: none !important;
-      opacity: 1 !important;
+      opacity: .34 !important;
       pointer-events: none !important;
+      z-index: 0 !important;
+    }
+    .oy-philosophy-safe::after {
+      content: "";
+      position: absolute;
+      left: 50%;
+      top: 14%;
+      bottom: 14%;
+      width: 1px;
+      transform: translateX(-50%);
+      background: linear-gradient(180deg, transparent, rgba(255,215,0,.28), transparent);
+      box-shadow: 0 0 28px rgba(255,215,0,.15);
+      pointer-events: none;
+      z-index: 1;
     }
     @media (max-width: 767px), (prefers-reduced-motion: reduce) {
       #expertise.oy-expertise-3d > .grid > div,
@@ -99,18 +127,22 @@
 
     section.classList.add('oy-expertise-3d');
 
-    cards.forEach((card) => {
+    cards.forEach((card, index) => {
       card.dataset.hover = 'false';
-      card.addEventListener('mouseenter', () => {
+      const enter = () => {
         card.dataset.hover = 'true';
         card.classList.add('oy-hovering');
         update();
-      });
-      card.addEventListener('mouseleave', () => {
+      };
+      const leave = () => {
         card.dataset.hover = 'false';
         card.classList.remove('oy-hovering');
         update();
-      });
+      };
+      card.addEventListener('mouseenter', enter);
+      card.addEventListener('mouseleave', leave);
+      card.addEventListener('pointerenter', enter);
+      card.addEventListener('pointerleave', leave);
       card.style.setProperty('--oy-card-sheen', '0');
       card.style.setProperty('--oy-card-sheen-x', '-120%');
     });
@@ -179,17 +211,17 @@
       cards.forEach((card, index) => {
         card.style.setProperty('--oy-card-sheen', String(sheen));
         card.style.setProperty('--oy-card-sheen-x', sheenX);
-        const hovered = card.dataset.hover === 'true';
+        const hovered = card.dataset.hover === 'true' || card.matches(':hover');
         const v = values[index];
         if (hovered) {
-          v.x *= 0.28;
-          v.y -= 10;
-          v.z = 150;
+          v.x = index === 0 ? -4 : index === 2 ? 4 : 0;
+          v.y = -18;
+          v.z = index === 1 ? 190 : 170;
           v.ry = 0;
-          v.rx = 0;
-          v.scale = index === 1 ? 1.095 : 1.045;
+          v.rx = -1;
+          v.scale = index === 1 ? 1.105 : 1.065;
           v.opacity = 1;
-          v.brightness = 1.12;
+          v.brightness = 1.18;
           v.blur = 0;
         }
         apply(card, v);
@@ -231,34 +263,34 @@
     function progress() {
       const rect = root.getBoundingClientRect();
       const viewport = window.innerHeight || 1;
-      const start = viewport * 1.02;
-      const end = viewport * 0.12;
+      const start = viewport * 1.0;
+      const end = viewport * 0.16;
       return clamp((start - rect.top) / (start - end), 0, 1);
     }
 
     function update() {
       const p = progress();
-      const active = p * 2.12;
+      const active = p * 2;
 
       lines.forEach((line, index) => {
         const dist = Math.abs(active - index);
-        const strength = smooth(1 - clamp(dist / 0.78, 0, 1));
-        const y = (index - active) * 42;
-        const opacity = lerp(0.28, 1, strength);
-        const scale = lerp(0.9, 1.045, strength);
-        const blur = lerp(1.4, 0, strength);
-        const brightness = lerp(0.72, 1.08, strength);
+        const strength = smooth(1 - clamp(dist / 0.72, 0, 1));
+        const y = (index - active) * 36;
+        const opacity = lerp(0.14, 1, strength);
+        const scale = lerp(0.82, 1.03, strength);
+        const blur = lerp(1.1, 0, strength);
+        const brightness = lerp(0.62, 1.12, strength);
 
-        line.classList.toggle('oy-active', strength > 0.58);
+        line.classList.toggle('oy-active', strength > 0.6);
         line.style.opacity = opacity.toFixed(3);
         line.style.transform = `translate3d(0, ${y.toFixed(1)}px, 0) scale(${scale.toFixed(3)})`;
         line.style.filter = `blur(${blur.toFixed(2)}px) brightness(${brightness.toFixed(3)})`;
       });
 
       if (copyBlock) {
-        const showCopy = smooth((p - 0.52) / 0.26);
+        const showCopy = smooth((p - 0.68) / 0.22);
         copyBlock.style.opacity = showCopy.toFixed(3);
-        copyBlock.style.transform = `translateY(${lerp(18, 0, showCopy).toFixed(1)}px)`;
+        copyBlock.style.transform = `translateY(${lerp(14, 0, showCopy).toFixed(1)}px)`;
       }
     }
 
