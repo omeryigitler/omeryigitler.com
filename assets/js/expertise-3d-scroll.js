@@ -1,11 +1,61 @@
 (() => {
   const section = document.getElementById('expertise');
-  if (!section) return;
+  if (!section || section.dataset.expertise3dReady === 'true') return;
+
+  const grid = section.querySelector('.grid.grid-cols-1.md\\:grid-cols-3');
+  if (!grid) return;
+
+  const cards = Array.from(grid.children).slice(0, 3);
+  if (cards.length !== 3) return;
+
+  section.dataset.expertise3dReady = 'true';
+  grid.classList.add('expertise-3d-stage');
+
+  const cardTypes = ['left', 'center', 'right'];
+  cards.forEach((card, index) => {
+    card.classList.add('expertise-3d-card');
+    card.dataset.expertiseCard = cardTypes[index];
+  });
+
+  const style = document.createElement('style');
+  style.id = 'expertise-3d-scroll-styles';
+  style.textContent = `
+    #expertise .expertise-3d-stage {
+      perspective: 1200px;
+      transform-style: preserve-3d;
+      align-items: stretch;
+      overflow: visible;
+    }
+
+    #expertise .expertise-3d-card {
+      transform-style: preserve-3d;
+      will-change: transform;
+      transition: transform 260ms ease, border-color 300ms ease, background-color 300ms ease, box-shadow 300ms ease;
+      backface-visibility: hidden;
+    }
+
+    #expertise .expertise-3d-card[data-expertise-card="center"] {
+      z-index: 2;
+      box-shadow: 0 28px 80px rgba(0, 0, 0, 0.32);
+    }
+
+    #expertise .expertise-3d-card:hover {
+      box-shadow: 0 34px 90px rgba(255, 215, 0, 0.12), 0 18px 50px rgba(0, 0, 0, 0.42);
+    }
+
+    @media (max-width: 767px) {
+      #expertise .expertise-3d-stage {
+        perspective: none;
+      }
+
+      #expertise .expertise-3d-card {
+        transform: none !important;
+      }
+    }
+  `;
+  document.head.appendChild(style);
 
   const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const cards = Array.from(section.querySelectorAll('.expertise-3d-card'));
-  if (!cards.length) return;
-
   const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
   const mix = (from, to, progress) => from + (to - from) * progress;
 
