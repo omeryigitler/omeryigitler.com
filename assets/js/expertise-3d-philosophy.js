@@ -1,406 +1,276 @@
 (function () {
-  if (window.__OY_EXPERTISE_3D_PHILOSOPHY__) return;
-  window.__OY_EXPERTISE_3D_PHILOSOPHY__ = 'v4';
+  if (window.__OY_SAFE_MOTION__) return;
+  window.__OY_SAFE_MOTION__ = 'v1';
 
-  const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
-  const lerp = (start, end, progress) => start + (end - start) * progress;
-  const easeOutCubic = (t) => 1 - Math.pow(1 - t, 3);
-  const smoothstep = (edge0, edge1, x) => {
-    const t = clamp((x - edge0) / Math.max(0.0001, edge1 - edge0), 0, 1);
+  const clamp = (n, min, max) => Math.max(min, Math.min(max, n));
+  const lerp = (a, b, t) => a + (b - a) * t;
+  const smooth = (t) => {
+    t = clamp(t, 0, 1);
     return t * t * (3 - 2 * t);
   };
 
   const style = document.createElement('style');
-  style.id = 'expertise-3d-philosophy-style';
+  style.id = 'oy-safe-motion-style';
   style.textContent = `
-    #expertise.oy-3d-expertise {
-      transform-style: preserve-3d;
-      isolation: isolate;
-    }
-
-    #expertise.oy-3d-expertise > .grid {
-      perspective: 1200px;
+    #expertise.oy-expertise-3d { isolation: isolate; }
+    #expertise.oy-expertise-3d > .grid {
+      perspective: 1500px;
+      perspective-origin: 50% 46%;
       transform-style: preserve-3d;
       overflow: visible;
-      perspective-origin: 50% 42%;
     }
-
-    #expertise.oy-3d-expertise > .grid > div {
+    #expertise.oy-expertise-3d > .grid > div {
       position: relative;
       transform-style: preserve-3d;
-      will-change: transform, opacity, filter;
-      transition:
-        transform 380ms cubic-bezier(.2,.8,.2,1),
-        border-color 280ms ease,
-        background 280ms ease,
-        box-shadow 280ms ease,
-        filter 280ms ease;
       backface-visibility: hidden;
+      will-change: transform, opacity, filter;
+      transform-origin: center center;
+      transition: border-color 220ms ease, background 220ms ease, box-shadow 220ms ease, filter 220ms ease;
     }
-
-    #expertise.oy-3d-expertise.oy-scrolling > .grid > div:not(.oy-hovering) {
-      transition:
-        border-color 280ms ease,
-        background 280ms ease,
-        box-shadow 280ms ease,
-        filter 280ms ease;
+    #expertise.oy-expertise-3d > .grid > div.oy-hovering {
+      border-color: rgba(255,215,0,.38) !important;
+      background: radial-gradient(circle at 50% 0%, rgba(255,215,0,.11), transparent 62%), rgba(255,255,255,.058) !important;
+      box-shadow: 0 36px 105px -62px rgba(255,215,0,.75), inset 0 1px 0 rgba(255,255,255,.08) !important;
+      filter: brightness(1.1);
+      z-index: 8;
     }
-
-    #expertise.oy-3d-expertise > .grid > div::before {
+    #expertise.oy-expertise-3d > .grid > div::after {
       content: "";
       position: absolute;
       inset: 0;
-      opacity: 0;
       pointer-events: none;
-      background: linear-gradient(110deg, transparent 0%, rgba(255,255,255,0.085) 45%, transparent 62%);
-      transform: translateX(-120%);
-      transition: opacity 300ms ease;
+      opacity: var(--oy-card-sheen, 0);
+      background: linear-gradient(105deg, transparent 0%, rgba(255,255,255,.085) 45%, transparent 62%);
+      transform: translateX(var(--oy-card-sheen-x, -120%));
     }
-
-    #expertise.oy-3d-expertise.oy-3d-active > .grid > div::before {
-      opacity: 1;
-      animation: oyExpertiseSweep 1.2s ease forwards;
-      animation-delay: var(--oy-delay, 0ms);
-    }
-
-    #expertise.oy-3d-expertise > .grid > div.oy-hovering {
-      border-color: rgba(255, 215, 0, 0.35) !important;
-      background:
-        radial-gradient(circle at 50% 0%, rgba(255, 215, 0, 0.10), transparent 60%),
-        rgba(255, 255, 255, 0.058) !important;
-      box-shadow:
-        0 34px 100px -58px rgba(255, 215, 0, 0.72),
-        inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
-      filter: brightness(1.1);
-      z-index: 5;
-    }
-
-    @keyframes oyExpertiseSweep {
-      0% { transform: translateX(-120%); opacity: 0; }
-      30% { opacity: 0.8; }
-      100% { transform: translateX(120%); opacity: 0; }
-    }
-
-    .oy-philosophy-root {
-      position: relative !important;
-      min-height: 330vh !important;
-      height: auto !important;
-      display: block !important;
-      padding: 0 !important;
-      margin-top: clamp(5rem, 10vw, 9rem) !important;
-      margin-bottom: 0 !important;
+    .oy-philosophy-safe {
+      position: relative;
       isolation: isolate;
     }
-
-    .oy-philosophy-sticky {
-      position: sticky;
-      top: 0;
-      min-height: 100vh;
-      width: 100%;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      overflow: hidden;
-      transform: translate3d(0, var(--oy-stage-y, 0px), 0);
-      opacity: var(--oy-stage-opacity, 1);
-      will-change: transform, opacity;
+    .oy-philosophy-safe .oy-philosophy-line {
+      will-change: transform, opacity, filter;
+      transform-origin: center center;
+      transition: text-shadow 180ms ease;
     }
-
-    .oy-philosophy-sticky::before {
-      content: "";
-      position: absolute;
-      left: 50%;
-      top: 8vh;
-      bottom: 8vh;
-      width: 1px;
-      transform: translateX(-50%) scaleY(var(--oy-line-progress, 0));
-      transform-origin: top;
-      background: linear-gradient(180deg, transparent, rgba(255, 215, 0, 0.5), transparent);
-      box-shadow: 0 0 26px rgba(255, 215, 0, 0.3);
-      pointer-events: none;
-      opacity: 0.78;
-      z-index: 0;
+    .oy-philosophy-safe .oy-philosophy-over {
+      transition: color 180ms ease, text-shadow 180ms ease;
     }
-
-    .oy-philosophy-root .space-y-4,
-    .oy-philosophy-root .md\:space-y-8 {
-      position: relative;
-      z-index: 2;
+    .oy-philosophy-safe .oy-philosophy-line.oy-active .oy-philosophy-over,
+    .oy-philosophy-safe .oy-philosophy-line:hover .oy-philosophy-over {
+      color: #FFD700 !important;
+      text-shadow: 0 0 22px rgba(255,215,0,.65);
     }
-
-    .oy-philosophy-root .space-y-4 > div:first-child,
-    .oy-philosophy-root .md\:space-y-8 > div:first-child {
+    .oy-philosophy-safe .oy-taurus-backdrop {
       transform: translate(-50%, -50%) !important;
-      opacity: 1 !important;
       filter: none !important;
-      z-index: -1 !important;
+      opacity: 1 !important;
       pointer-events: none !important;
     }
-
-    .oy-philosophy-line {
-      position: relative;
-      z-index: 2;
-      margin: clamp(0.25rem, 1vh, 0.75rem) 0 !important;
-      transition: color 220ms ease, text-shadow 220ms ease;
-      will-change: transform, opacity, filter;
-      transform-origin: center;
-    }
-
-    .oy-philosophy-over {
-      transition: color 220ms ease, text-shadow 220ms ease;
-    }
-
-    .oy-philosophy-line.oy-philosophy-active .oy-philosophy-over,
-    .oy-philosophy-line:hover .oy-philosophy-over {
-      color: #FFD700 !important;
-      text-shadow: 0 0 24px rgba(255, 215, 0, 0.68);
-    }
-
-    .oy-philosophy-line.oy-philosophy-active {
-      z-index: 5;
-    }
-
-    .oy-philosophy-sticky > div:not(:first-child) {
-      position: relative;
-      z-index: 2;
-    }
-
-    .oy-philosophy-copy-active {
-      opacity: var(--oy-copy-opacity, 1) !important;
-      transform: translateY(var(--oy-copy-y, 0px));
-      transition: opacity 180ms ease;
-    }
-
-    @media (max-width: 767px) {
-      #expertise.oy-3d-expertise > .grid {
-        perspective: none;
-      }
-
-      #expertise.oy-3d-expertise > .grid > div {
-        transform: none !important;
-        opacity: 1 !important;
-      }
-
-      .oy-philosophy-root {
-        min-height: 300vh !important;
-      }
-    }
-
-    @media (prefers-reduced-motion: reduce) {
-      #expertise.oy-3d-expertise > .grid > div,
-      .oy-philosophy-line,
-      .oy-philosophy-sticky {
+    @media (max-width: 767px), (prefers-reduced-motion: reduce) {
+      #expertise.oy-expertise-3d > .grid > div,
+      .oy-philosophy-safe .oy-philosophy-line {
         transform: none !important;
         opacity: 1 !important;
         filter: none !important;
-        transition: none !important;
       }
     }
   `;
   document.head.appendChild(style);
+
+  function makeRafUpdater(callback) {
+    let ticking = false;
+    return () => {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(() => {
+        callback();
+        ticking = false;
+      });
+    };
+  }
 
   function initExpertise3D() {
     const section = document.getElementById('expertise');
     if (!section) return;
 
     const grid = section.querySelector(':scope > .grid');
-    const cards = Array.from(section.querySelectorAll(':scope > .grid > div'));
-    if (!grid || cards.length < 3) return;
+    const cards = Array.from(section.querySelectorAll(':scope > .grid > div')).slice(0, 3);
+    if (!grid || cards.length !== 3) return;
 
-    section.classList.add('oy-3d-expertise');
-    cards.forEach((card, index) => {
-      card.dataset.oyHover = 'false';
-      card.style.setProperty('--oy-delay', `${index * 130}ms`);
+    section.classList.add('oy-expertise-3d');
+
+    cards.forEach((card) => {
+      card.dataset.hover = 'false';
       card.addEventListener('mouseenter', () => {
-        card.dataset.oyHover = 'true';
+        card.dataset.hover = 'true';
         card.classList.add('oy-hovering');
-        applyExpertiseTransforms();
+        update();
       });
       card.addEventListener('mouseleave', () => {
-        card.dataset.oyHover = 'false';
+        card.dataset.hover = 'false';
         card.classList.remove('oy-hovering');
-        applyExpertiseTransforms();
+        update();
       });
+      card.style.setProperty('--oy-card-sheen', '0');
+      card.style.setProperty('--oy-card-sheen-x', '-120%');
     });
 
-    function scrollProgress() {
-      const rect = grid.getBoundingClientRect();
+    function progress() {
+      const rect = section.getBoundingClientRect();
       const viewport = window.innerHeight || 1;
-      const start = viewport * 0.98;
-      const end = viewport * 0.04;
+      const start = viewport * 0.92;
+      const end = viewport * 0.22;
       return clamp((start - rect.top) / (start - end), 0, 1);
     }
 
-    function transformCard(card, values) {
-      card.style.opacity = String(values.opacity);
-      card.style.transform = `translateX(${values.x}px) translateY(${values.y}px) translateZ(${values.z}px) rotateY(${values.rotateY}deg) scale(${values.scale})`;
+    function apply(card, values) {
+      card.style.opacity = values.opacity.toFixed(3);
+      card.style.transform = [
+        `translate3d(${values.x.toFixed(1)}px, ${values.y.toFixed(1)}px, ${values.z.toFixed(1)}px)`,
+        `rotateY(${values.ry.toFixed(1)}deg)`,
+        `rotateX(${values.rx.toFixed(1)}deg)`,
+        `scale(${values.scale.toFixed(3)})`
+      ].join(' ');
+      card.style.filter = `brightness(${values.brightness.toFixed(3)}) blur(${values.blur.toFixed(2)}px)`;
     }
 
-    function applyExpertiseTransforms() {
-      const raw = scrollProgress();
-      const progress = easeOutCubic(raw);
-      section.classList.toggle('oy-3d-active', raw > 0.08);
-      section.classList.toggle('oy-scrolling', raw > 0.02 && raw < 0.98);
+    function update() {
+      const raw = progress();
+      const p = smooth(raw);
+      const sheen = raw > 0.12 && raw < 0.82 ? 1 : 0;
+      const sheenX = `${lerp(-120, 120, raw)}%`;
 
-      const leftHover = cards[0].dataset.oyHover === 'true';
-      const centerHover = cards[1].dataset.oyHover === 'true';
-      const rightHover = cards[2].dataset.oyHover === 'true';
+      const values = [
+        {
+          x: lerp(-260, -18, p),
+          y: lerp(64, 0, p),
+          z: lerp(-520, -80, p),
+          ry: lerp(72, 18, p),
+          rx: lerp(5, 0, p),
+          scale: lerp(0.76, 0.98, p),
+          opacity: lerp(0.08, 1, p),
+          brightness: lerp(0.68, 1, p),
+          blur: lerp(4, 0, p)
+        },
+        {
+          x: 0,
+          y: lerp(150, 0, p),
+          z: lerp(-180, 80, p),
+          ry: 0,
+          rx: lerp(-4, 0, p),
+          scale: lerp(0.72, 1.055, p),
+          opacity: lerp(0.1, 1, p),
+          brightness: lerp(0.72, 1.04, p),
+          blur: lerp(3.5, 0, p)
+        },
+        {
+          x: lerp(260, 18, p),
+          y: lerp(64, 0, p),
+          z: lerp(-520, -80, p),
+          ry: lerp(-72, -18, p),
+          rx: lerp(5, 0, p),
+          scale: lerp(0.76, 0.98, p),
+          opacity: lerp(0.08, 1, p),
+          brightness: lerp(0.68, 1, p),
+          blur: lerp(4, 0, p)
+        }
+      ];
 
-      const left = {
-        x: lerp(-170, 0, progress),
-        y: lerp(44, 0, progress),
-        z: lerp(-360, -45, progress),
-        rotateY: lerp(58, 14, progress),
-        scale: lerp(0.82, 1, progress),
-        opacity: lerp(0.16, 1, progress)
-      };
-
-      const center = {
-        x: 0,
-        y: lerp(138, 0, progress),
-        z: lerp(-120, 58, progress),
-        rotateY: 0,
-        scale: lerp(0.72, 1.055, progress),
-        opacity: lerp(0.18, 1, progress)
-      };
-
-      const right = {
-        x: lerp(170, 0, progress),
-        y: lerp(44, 0, progress),
-        z: lerp(-360, -45, progress),
-        rotateY: lerp(-58, -14, progress),
-        scale: lerp(0.82, 1, progress),
-        opacity: lerp(0.16, 1, progress)
-      };
-
-      if (leftHover) {
-        left.z = 70;
-        left.rotateY = 0;
-        left.scale = 1.035;
-        left.opacity = 1;
-      }
-      if (centerHover) {
-        center.z = 110;
-        center.scale = 1.09;
-        center.opacity = 1;
-      }
-      if (rightHover) {
-        right.z = 70;
-        right.rotateY = 0;
-        right.scale = 1.035;
-        right.opacity = 1;
-      }
-
-      transformCard(cards[0], left);
-      transformCard(cards[1], center);
-      transformCard(cards[2], right);
-    }
-
-    let ticking = false;
-    const requestUpdate = () => {
-      if (ticking) return;
-      ticking = true;
-      requestAnimationFrame(() => {
-        applyExpertiseTransforms();
-        ticking = false;
+      cards.forEach((card, index) => {
+        card.style.setProperty('--oy-card-sheen', String(sheen));
+        card.style.setProperty('--oy-card-sheen-x', sheenX);
+        const hovered = card.dataset.hover === 'true';
+        const v = values[index];
+        if (hovered) {
+          v.x *= 0.35;
+          v.y -= 8;
+          v.z = 120;
+          v.ry = 0;
+          v.rx = 0;
+          v.scale = index === 1 ? 1.095 : 1.04;
+          v.opacity = 1;
+          v.brightness = 1.12;
+          v.blur = 0;
+        }
+        apply(card, v);
       });
-    };
+    }
 
-    applyExpertiseTransforms();
-    window.addEventListener('scroll', requestUpdate, { passive: true });
-    window.addEventListener('resize', requestUpdate, { passive: true });
+    const onUpdate = makeRafUpdater(update);
+    update();
+    window.addEventListener('scroll', onUpdate, { passive: true });
+    window.addEventListener('resize', onUpdate, { passive: true });
   }
 
-  function initPhilosophyScroll() {
-    const headings = Array.from(document.querySelectorAll('h2')).filter((heading) => {
+  function initPhilosophySafe() {
+    const allHeadings = Array.from(document.querySelectorAll('h2'));
+    const lines = allHeadings.filter((heading) => {
       const text = (heading.textContent || '').replace(/\s+/g, ' ').trim().toLowerCase();
       return text.includes('balance') || text.includes('symmetry') || text.includes('quality');
-    });
+    }).slice(0, 3);
 
-    if (headings.length < 3) return;
+    if (lines.length !== 3) return;
 
-    const lines = headings.slice(0, 3);
-    const originalLineGroup = lines[0].parentElement;
-    const root = originalLineGroup && originalLineGroup.parentElement ? originalLineGroup.parentElement : originalLineGroup;
-    if (!root) return;
+    const lineGroup = lines[0].parentElement;
+    const root = lineGroup && lineGroup.parentElement;
+    if (!lineGroup || !root) return;
 
-    root.classList.add('oy-philosophy-root');
+    root.classList.add('oy-philosophy-safe');
 
-    let sticky = root.querySelector(':scope > .oy-philosophy-sticky');
-    if (!sticky) {
-      sticky = document.createElement('div');
-      sticky.className = 'oy-philosophy-sticky';
-      const children = Array.from(root.childNodes);
-      children.forEach((child) => sticky.appendChild(child));
-      root.appendChild(sticky);
-    }
-
-    const lineGroup = sticky.contains(originalLineGroup) ? originalLineGroup : sticky.querySelector('div');
-    const copyBlock = Array.from(sticky.children).find((child) => child !== lineGroup && child.querySelector && child.querySelector('p'));
-    if (copyBlock) copyBlock.classList.add('oy-philosophy-copy-active');
+    const taurus = Array.from(lineGroup.children).find((el) => (el.textContent || '').trim() === 'TAURUS');
+    if (taurus) taurus.classList.add('oy-taurus-backdrop');
 
     lines.forEach((line) => {
       line.classList.add('oy-philosophy-line');
-      const spans = Array.from(line.querySelectorAll('span'));
-      const overSpan = spans.find((span) => (span.textContent || '').trim().toLowerCase() === 'over');
-      if (overSpan) overSpan.classList.add('oy-philosophy-over');
+      const over = Array.from(line.querySelectorAll('span')).find((span) => (span.textContent || '').trim().toLowerCase() === 'over');
+      if (over) over.classList.add('oy-philosophy-over');
     });
+
+    const copyBlock = Array.from(root.children).find((el) => el !== lineGroup && el.querySelector && el.querySelector('p'));
 
     function progress() {
       const rect = root.getBoundingClientRect();
       const viewport = window.innerHeight || 1;
-      return clamp(-rect.top / Math.max(1, rect.height - viewport), 0, 1);
+      const start = viewport * 0.78;
+      const end = -rect.height * 0.1;
+      return clamp((start - rect.top) / (start - end), 0, 1);
     }
 
-    function updateLines() {
+    function update() {
       const p = progress();
-      const exit = smoothstep(0.84, 0.98, p);
-      const activePosition = clamp(p / 0.72, 0, 1) * 2;
-      const copyProgress = smoothstep(0.56, 0.78, p) * (1 - exit);
-
-      root.style.setProperty('--oy-line-progress', String(clamp(p * 1.12, 0, 1)));
-      sticky.style.setProperty('--oy-stage-y', `${lerp(0, -85, exit)}px`);
-      sticky.style.setProperty('--oy-stage-opacity', String(lerp(1, 0, exit)));
-      sticky.style.setProperty('--oy-copy-opacity', String(copyProgress));
-      sticky.style.setProperty('--oy-copy-y', `${lerp(22, 0, copyProgress)}px`);
+      const active = p * 2.35;
 
       lines.forEach((line, index) => {
-        const distance = Math.abs(activePosition - index);
-        const strength = smoothstep(1.08, 0.05, distance) * (1 - exit);
-        const y = (index - activePosition) * 96 - exit * 120;
-        const scale = lerp(0.76, 1.08, strength);
-        const opacity = lerp(0.10, 1, strength) * (1 - exit);
-        const blur = lerp(3.2, 0, strength) + exit * 5;
-        const brightness = lerp(0.55, 1.13, strength);
-        const z = Math.round(lerp(-70, 120, strength));
+        const dist = Math.abs(active - index);
+        const strength = smooth(1 - clamp(dist / 0.82, 0, 1));
+        const y = (index - active) * 64;
+        const opacity = lerp(0.18, 1, strength);
+        const scale = lerp(0.86, 1.05, strength);
+        const blur = lerp(2.2, 0, strength);
+        const brightness = lerp(0.64, 1.1, strength);
 
-        line.classList.toggle('oy-philosophy-active', strength > 0.62);
-        line.style.opacity = String(opacity);
-        line.style.transform = `translate3d(0, ${y}px, ${z}px) scale(${scale})`;
-        line.style.letterSpacing = `${lerp(-0.075, -0.038, strength)}em`;
-        line.style.filter = `blur(${blur}px) brightness(${brightness})`;
+        line.classList.toggle('oy-active', strength > 0.58);
+        line.style.opacity = opacity.toFixed(3);
+        line.style.transform = `translate3d(0, ${y.toFixed(1)}px, 0) scale(${scale.toFixed(3)})`;
+        line.style.filter = `blur(${blur.toFixed(2)}px) brightness(${brightness.toFixed(3)})`;
       });
+
+      if (copyBlock) {
+        const showCopy = smooth((p - 0.58) / 0.24);
+        copyBlock.style.opacity = showCopy.toFixed(3);
+        copyBlock.style.transform = `translateY(${lerp(24, 0, showCopy).toFixed(1)}px)`;
+      }
     }
 
-    let ticking = false;
-    const requestUpdate = () => {
-      if (ticking) return;
-      ticking = true;
-      requestAnimationFrame(() => {
-        updateLines();
-        ticking = false;
-      });
-    };
-
-    updateLines();
-    window.addEventListener('scroll', requestUpdate, { passive: true });
-    window.addEventListener('resize', requestUpdate, { passive: true });
+    const onUpdate = makeRafUpdater(update);
+    update();
+    window.addEventListener('scroll', onUpdate, { passive: true });
+    window.addEventListener('resize', onUpdate, { passive: true });
   }
 
   function boot() {
     initExpertise3D();
-    initPhilosophyScroll();
+    initPhilosophySafe();
   }
 
   if (document.readyState === 'loading') {
