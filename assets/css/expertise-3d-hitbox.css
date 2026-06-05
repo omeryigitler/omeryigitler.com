@@ -1,0 +1,74 @@
+/* --- 3D EXPERTISE: HITBOX ARCHITECTURE --- */
+#expertise-3d-track {
+  --scroll-progress: 0;
+  perspective: 1200px;
+  perspective-origin: 50% 42%;
+  transform-style: preserve-3d;
+  overflow: visible;
+}
+
+.expertise-card-hit {
+  transform-style: preserve-3d;
+}
+
+.expertise-card-hit:hover {
+  z-index: 20;
+}
+
+.expertise-card-visual {
+  transform-style: preserve-3d;
+  will-change: transform;
+  backface-visibility: hidden;
+  transition: box-shadow 0.3s ease, border-color 0.3s ease, background-color 0.3s ease;
+}
+
+.card-left {
+  transform: translate3d(
+    calc(-100px * (1 - var(--scroll-progress, 0))),
+    0,
+    calc(-200px + (150px * var(--scroll-progress, 0)))
+  ) rotateY(calc(45deg - (30deg * var(--scroll-progress, 0))));
+}
+
+.card-center {
+  transform: translate3d(
+    0,
+    calc(100px * (1 - var(--scroll-progress, 0))),
+    calc(-50px + (100px * var(--scroll-progress, 0)))
+  ) scale(calc(0.8 + (0.25 * var(--scroll-progress, 0))));
+}
+
+.card-right {
+  transform: translate3d(
+    calc(100px * (1 - var(--scroll-progress, 0))),
+    0,
+    calc(-200px + (150px * var(--scroll-progress, 0)))
+  ) rotateY(calc(-45deg + (30deg * var(--scroll-progress, 0))));
+}
+
+.expertise-card-hit:hover .expertise-card-visual {
+  transition: transform 0.38s cubic-bezier(0.23, 1, 0.32, 1), box-shadow 0.3s ease, border-color 0.3s ease, background-color 0.3s ease;
+}
+
+.expertise-card-hit:hover .card-left,
+.expertise-card-hit:hover .card-right {
+  transform: translate3d(0, 0, 20px) rotateY(0deg) scale(1.02) !important;
+  box-shadow: 0 0 30px rgba(255, 215, 0, 0.1);
+}
+
+.expertise-card-hit:hover .card-center {
+  transform: translate3d(0, 0, 80px) scale(1.08) !important;
+  box-shadow: 0 0 40px rgba(59, 130, 246, 0.15);
+}
+
+@media (max-width: 767px), (prefers-reduced-motion: reduce) {
+  #expertise-3d-track {
+    perspective: none;
+  }
+
+  .expertise-card-visual,
+  .expertise-card-hit:hover .expertise-card-visual {
+    transform: none !important;
+    transition: none !important;
+  }
+}
