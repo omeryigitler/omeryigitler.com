@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>React Motion Lab — Omer Yigitler</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: { taurusGold: '#FFD700' },
+          fontFamily: {
+            display: ['Syncopate', 'sans-serif'],
+            body: ['Manrope', 'sans-serif']
+          }
+        }
+      }
+    };
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Syncopate:wght@400;700&display=swap" rel="stylesheet" />
+  <style>
+    html, body { margin: 0; min-height: 100%; background: #030303; color: white; font-family: Manrope, sans-serif; overflow-x: hidden; }
+    body {
+      background:
+        radial-gradient(circle at 50% 0%, rgba(26, 38, 54, .38), transparent 38rem),
+        radial-gradient(circle at 18% 38%, rgba(255, 215, 0, .07), transparent 26rem),
+        radial-gradient(circle at 84% 44%, rgba(56, 189, 248, .055), transparent 28rem),
+        #030303;
+    }
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: linear-gradient(rgba(255,255,255,.035) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.035) 1px, transparent 1px);
+      background-size: 64px 64px;
+      mask-image: radial-gradient(circle at 50% 35%, black, transparent 76%);
+      opacity: .35;
+      pointer-events: none;
+    }
+    .glass-card {
+      background: linear-gradient(145deg, rgba(255,255,255,.055), rgba(255,255,255,.014));
+      border: 1px solid rgba(255,255,255,.1);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.08), 0 60px 150px -110px #000;
+      backdrop-filter: blur(18px);
+    }
+    .glass-card:hover {
+      border-color: rgba(255,215,0,.42);
+      background: radial-gradient(circle at 50% 0%, rgba(255,215,0,.11), transparent 62%), rgba(255,255,255,.055);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.1), 0 36px 110px -72px rgba(255,215,0,.85);
+    }
+    .lab-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: .55rem;
+      border: 1px solid rgba(255,215,0,.28);
+      border-radius: 999px;
+      padding: .45rem .85rem;
+      background: rgba(255,215,0,.075);
+      color: #FFD700;
+      font: 800 .58rem Syncopate, sans-serif;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+    }
+    .lab-pill::before { content: ''; width: .42rem; height: .42rem; border-radius: 999px; background: #FFD700; box-shadow: 0 0 18px rgba(255,215,0,.7); }
+    .title-font { font-family: Syncopate, sans-serif; }
+    .gradient-text { color: transparent; background: linear-gradient(180deg, #fff, #7f858f); -webkit-background-clip: text; background-clip: text; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="module">
+    import React, { useRef, useState } from 'https://esm.sh/react@18.2.0';
+    import { createRoot } from 'https://esm.sh/react-dom@18.2.0/client';
+    import { motion, useScroll, useTransform } from 'https://esm.sh/framer-motion@11.18.2';
+
+    const iconStyle = { width: 24, height: 24, marginBottom: 28 };
+
+    function Card({ variant, style, hover, icon, title, body, items, accent }) {
+      return React.createElement(
+        motion.article,
+        {
+          style,
+          whileHover: hover,
+          transition: { duration: 0.4, ease: [0.22, 1, 0.36, 1] },
+          className: 'glass-card rounded-[1.7rem] p-8 min-h-[320px] relative overflow-hidden cursor-pointer'
+        },
+        React.createElement('div', { className: 'grid h-12 w-12 place-items-center rounded-2xl bg-white/7 border border-white/5 mb-8' }, icon),
+        React.createElement('h3', { className: 'title-font text-xl font-bold uppercase tracking-[-.04em] text-white' }, title),
+        React.createElement('p', { className: 'mt-5 text-sm leading-7 text-gray-400' }, body),
+        React.createElement('ul', { className: 'mt-7 space-y-3 text-[10px] font-black uppercase tracking-wider text-gray-400' },
+          items.map((item) => React.createElement('li', { key: item }, React.createElement('span', { style: { color: accent } }, '• '), item))
+        )
+      );
+    }
+
+    function Expertise() {
+      const containerRef = useRef(null);
+      const { scrollYProgress } = useScroll({
+        target: containerRef,
+        offset: ['start end', 'center center']
+      });
+
+      const leftX = useTransform(scrollYProgress, [0, 1], [-100, 0]);
+      const leftZ = useTransform(scrollYProgress, [0, 1], [-200, -50]);
+      const leftRotateY = useTransform(scrollYProgress, [0, 1], [45, 15]);
+      const leftOpacity = useTransform(scrollYProgress, [0, .35, 1], [.35, .7, 1]);
+
+      const centerY = useTransform(scrollYProgress, [0, 1], [100, 0]);
+      const centerScale = useTransform(scrollYProgress, [0, 1], [.8, 1.05]);
+      const centerZ = useTransform(scrollYProgress, [0, 1], [-50, 50]);
+      const centerOpacity = useTransform(scrollYProgress, [0, .35, 1], [.35, .75, 1]);
+
+      const rightX = useTransform(scrollYProgress, [0, 1], [100, 0]);
+      const rightZ = useTransform(scrollYProgress, [0, 1], [-200, -50]);
+      const rightRotateY = useTransform(scrollYProgress, [0, 1], [-45, -15]);
+      const rightOpacity = useTransform(scrollYProgress, [0, .35, 1], [.35, .7, 1]);
+
+      const penIcon = React.createElement('svg', { ...iconStyle, viewBox: '0 0 24 24', fill: 'none', stroke: '#FFD700', strokeWidth: 2 },
+        React.createElement('path', { d: 'M12 19l7-7 3 3-7 7-3-3z' }),
+        React.createElement('path', { d: 'M18 13l-1.5-7.5L2 2l3.5 14.5L13 18' }),
+        React.createElement('path', { d: 'M2 2l7.586 7.586' }),
+        React.createElement('circle', { cx: 11, cy: 11, r: 2 })
+      );
+      const codeIcon = React.createElement('svg', { ...iconStyle, viewBox: '0 0 24 24', fill: 'none', stroke: '#60A5FA', strokeWidth: 2 },
+        React.createElement('path', { d: 'm16 18 6-6-6-6' }),
+        React.createElement('path', { d: 'm8 6-6 6 6 6' }),
+        React.createElement('path', { d: 'm14.5 4-5 16' })
+      );
+      const chartIcon = React.createElement('svg', { ...iconStyle, viewBox: '0 0 24 24', fill: 'none', stroke: '#34D399', strokeWidth: 2 },
+        React.createElement('path', { d: 'M3 3v18h18' }),
+        React.createElement('path', { d: 'M18 17V9' }),
+        React.createElement('path', { d: 'M13 17V5' }),
+        React.createElement('path', { d: 'M8 17v-3' })
+      );
+
+      return React.createElement(
+        motion.section,
+        {
+          id: 'expertise-react',
+          ref: containerRef,
+          initial: { opacity: 0, y: 40 },
+          whileInView: { opacity: 1, y: 0 },
+          viewport: { once: true, amount: 0.2 },
+          transition: { duration: 0.8 },
+          className: 'w-full max-w-6xl mx-auto py-28 px-4'
+        },
+        React.createElement('div', { className: 'text-center mb-12' },
+          React.createElement('span', { className: 'lab-pill' }, 'React / Framer Motion'),
+          React.createElement('h2', { className: 'title-font mt-5 text-[clamp(2.2rem,5vw,4.8rem)] leading-[.92] tracking-[-.07em] uppercase' },
+            'Complete Digital ', React.createElement('span', { className: 'gradient-text block' }, 'Solutions')
+          ),
+          React.createElement('p', { className: 'mx-auto mt-5 max-w-2xl text-gray-400 leading-7' }, 'Bu sayfa senin verdiğin React + Framer Motion mantığını doğrudan test eder. GSAP benzetmesi değil.')
+        ),
+        React.createElement('div', { className: 'grid grid-cols-1 md:grid-cols-3 gap-6', style: { perspective: '1200px', transformStyle: 'preserve-3d' } },
+          React.createElement(Card, {
+            style: { x: leftX, z: leftZ, rotateY: leftRotateY, opacity: leftOpacity },
+            hover: { rotateY: 0, z: 70, scale: 1.05, y: -12 },
+            icon: penIcon,
+            title: 'UI/UX Design',
+            body: 'Crafting intuitive, user-centric interfaces that drive engagement and conversion.',
+            items: ['Figma & Prototyping', 'Design Systems', 'Mobile-first Layouts'],
+            accent: '#FFD700'
+          }),
+          React.createElement(Card, {
+            style: { y: centerY, scale: centerScale, z: centerZ, opacity: centerOpacity },
+            hover: { scale: 1.09, z: 95, y: -14 },
+            icon: codeIcon,
+            title: 'Engineering',
+            body: 'Building robust, scalable and high-performance applications using modern technologies.',
+            items: ['React / Next.js', 'Tailwind CSS', 'API Integration'],
+            accent: '#60A5FA'
+          }),
+          React.createElement(Card, {
+            style: { x: rightX, z: rightZ, rotateY: rightRotateY, opacity: rightOpacity },
+            hover: { rotateY: 0, z: 70, scale: 1.05, y: -12 },
+            icon: chartIcon,
+            title: 'Strategy & SEO',
+            body: 'Optimizing for visibility and performance so your digital product reaches and converts.',
+            items: ['Technical SEO', 'Performance Tuning', 'Analytics'],
+            accent: '#34D399'
+          })
+        )
+      );
+    }
+
+    function PhilosophyLine({ left, right, scrollYProgress, index, total }) {
+      const [isHovered, setIsHovered] = useState(false);
+      const sliceSize = 1 / total;
+      const start = index * sliceSize;
+      const peak = start + sliceSize / 2;
+      const end = start + sliceSize;
+      const activeStart = Math.max(0, peak - 0.15);
+      const activeEnd = Math.min(1, peak + 0.15);
+
+      const overColor = useTransform(scrollYProgress, [start, activeStart, activeEnd, end], ['#ffffff', '#FFD700', '#FFD700', '#ffffff']);
+      const scale = useTransform(scrollYProgress, [start, activeStart, activeEnd, end], [0.9, 1.05, 1.05, 0.9]);
+      const opacity = useTransform(scrollYProgress, [start, activeStart, activeEnd, end], [0.3, 1, 1, 0.3]);
+
+      return React.createElement(motion.h2, {
+          style: { scale, opacity },
+          onMouseEnter: () => setIsHovered(true),
+          onMouseLeave: () => setIsHovered(false),
+          className: 'title-font text-4xl md:text-6xl font-bold uppercase text-white my-3 cursor-default tracking-[-.06em]'
+        },
+        left,
+        React.createElement(motion.span, {
+          style: { color: isHovered ? '#FFD700' : overColor },
+          className: 'mx-4 font-body font-light text-2xl md:text-3xl italic lowercase transition-colors duration-300'
+        }, 'over'),
+        right,
+        React.createElement('span', { className: 'text-taurusGold' }, '.')
+      );
+    }
+
+    function PhilosophySection() {
+      const containerRef = useRef(null);
+      const { scrollYProgress } = useScroll({ target: containerRef, offset: ['start 75%', 'end 25%'] });
+      return React.createElement('section', { ref: containerRef, className: 'w-full flex flex-col items-center py-28 text-center relative overflow-hidden' },
+        React.createElement('div', { className: 'absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 title-font text-[min(18vw,220px)] font-bold tracking-[-.08em] text-white/[.045] pointer-events-none' }, 'TAURUS'),
+        React.createElement(PhilosophyLine, { left: 'Balance', right: 'Chaos', scrollYProgress, index: 0, total: 3 }),
+        React.createElement(PhilosophyLine, { left: 'Symmetry', right: 'Noise', scrollYProgress, index: 1, total: 3 }),
+        React.createElement(PhilosophyLine, { left: 'Quality', right: 'Shortcuts', scrollYProgress, index: 2, total: 3 }),
+        React.createElement('p', { className: 'relative z-10 mt-12 text-gray-400 leading-7' },
+          'I design websites that feel ', React.createElement('strong', { className: 'text-white' }, 'solid, intentional and timeless.'), React.createElement('br'), 'Not trends. Not templates.'
+        ),
+        React.createElement('div', { className: 'relative z-10 mt-8 pt-8 border-t border-white/10 title-font text-taurusGold text-sm md:text-lg font-bold tracking-[.28em] uppercase' }, 'Just work that lasts.')
+      );
+    }
+
+    function App() {
+      return React.createElement(React.Fragment, null,
+        React.createElement('header', { className: 'fixed top-5 left-1/2 -translate-x-1/2 z-50 w-[min(980px,calc(100vw-40px))] rounded-full border border-white/10 bg-black/60 backdrop-blur-xl px-5 py-3 flex items-center justify-between' },
+          React.createElement('a', { href: './', className: 'title-font text-xs tracking-[.22em] text-taurusGold' }, 'OY / REACT MOTION'),
+          React.createElement('a', { href: './motion-lab.html', className: 'rounded-full bg-taurusGold px-5 py-2 text-[10px] font-black uppercase tracking-widest text-black' }, 'Back to lab')
+        ),
+        React.createElement('section', { className: 'min-h-screen grid place-items-center px-5 pt-24 text-center' },
+          React.createElement('div', null,
+            React.createElement('span', { className: 'lab-pill' }, 'Original Logic Test'),
+            React.createElement('h1', { className: 'title-font mt-6 text-[clamp(2.4rem,7vw,6.5rem)] leading-[.9] tracking-[-.075em] uppercase' }, 'Framer ', React.createElement('span', { className: 'gradient-text block' }, 'Motion Lab')),
+            React.createElement('p', { className: 'mx-auto mt-6 max-w-2xl text-gray-400 leading-8' }, 'Bu sayfada scroll ve hover davranışı Framer Motion değerleriyle çalışıyor.')
+          )
+        ),
+        React.createElement(Expertise),
+        React.createElement(PhilosophySection),
+        React.createElement('div', { className: 'h-[40vh]' })
+      );
+    }
+
+    createRoot(document.getElementById('root')).render(React.createElement(App));
+  </script>
+</body>
+</html>
