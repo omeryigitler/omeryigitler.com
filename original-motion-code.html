@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Original Motion Code</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: { neutral: { 800: '#262626', 900: '#171717' } }
+        }
+      }
+    };
+  </script>
+  <style>
+    html, body { margin: 0; min-height: 100%; background: #000; color: #fff; overflow-x: hidden; }
+    #root { min-height: 100vh; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="module">
+    import React, { useRef, useState } from 'https://esm.sh/react@18.2.0';
+    import { createRoot } from 'https://esm.sh/react-dom@18.2.0/client';
+    import { motion, useScroll, useTransform } from 'https://esm.sh/framer-motion@11.18.2?deps=react@18.2.0';
+
+    const e = React.createElement;
+
+    function PenTool({ className }) {
+      return e('svg', { className, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 2, strokeLinecap: 'round', strokeLinejoin: 'round' },
+        e('path', { d: 'M12 19l7-7 3 3-7 7-3-3z' }),
+        e('path', { d: 'M18 13l-1.5-7.5L2 2l3.5 14.5L13 18' }),
+        e('path', { d: 'M2 2l7.586 7.586' }),
+        e('circle', { cx: 11, cy: 11, r: 2 })
+      );
+    }
+
+    function Code2({ className }) {
+      return e('svg', { className, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 2, strokeLinecap: 'round', strokeLinejoin: 'round' },
+        e('path', { d: 'm16 18 6-6-6-6' }),
+        e('path', { d: 'm8 6-6 6 6 6' }),
+        e('path', { d: 'm14.5 4-5 16' })
+      );
+    }
+
+    function BarChart3({ className }) {
+      return e('svg', { className, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 2, strokeLinecap: 'round', strokeLinejoin: 'round' },
+        e('path', { d: 'M3 3v18h18' }),
+        e('path', { d: 'M18 17V9' }),
+        e('path', { d: 'M13 17V5' }),
+        e('path', { d: 'M8 17v-3' })
+      );
+    }
+
+    // --- BÖLÜM 1: EXPERTISE KARTLARI ---
+    function Expertise() {
+      const containerRef = useRef(null);
+      const { scrollYProgress } = useScroll({
+        target: containerRef,
+        offset: ['start end', 'center center']
+      });
+
+      // Sol Kart Animasyonları
+      const leftX = useTransform(scrollYProgress, [0, 1], [-100, 0]);
+      const leftZ = useTransform(scrollYProgress, [0, 1], [-200, -50]);
+      const leftRotateY = useTransform(scrollYProgress, [0, 1], [45, 15]);
+
+      // Orta Kart Animasyonları
+      const centerY = useTransform(scrollYProgress, [0, 1], [100, 0]);
+      const centerScale = useTransform(scrollYProgress, [0, 1], [0.8, 1.05]);
+      const centerZ = useTransform(scrollYProgress, [0, 1], [-50, 50]);
+
+      // Sağ Kart Animasyonları
+      const rightX = useTransform(scrollYProgress, [0, 1], [100, 0]);
+      const rightZ = useTransform(scrollYProgress, [0, 1], [-200, -50]);
+      const rightRotateY = useTransform(scrollYProgress, [0, 1], [-45, -15]);
+
+      return e(motion.div, {
+          initial: { opacity: 0, y: 40 },
+          whileInView: { opacity: 1, y: 0 },
+          viewport: { once: true, amount: 0.2 },
+          transition: { duration: 0.8 },
+          className: 'w-full max-w-6xl mx-auto my-20 p-4',
+          ref: containerRef
+        },
+        e('div', { className: 'grid grid-cols-1 md:grid-cols-3 gap-6', style: { perspective: '1200px' } },
+          // SOL KART
+          e(motion.div, {
+              style: { x: leftX, z: leftZ, rotateY: leftRotateY },
+              whileHover: { rotateY: 0, z: 20, scale: 1.02 },
+              transition: { duration: 0.4 },
+              className: 'p-8 rounded-3xl bg-neutral-900 border border-white/10'
+            },
+            e(PenTool, { className: 'w-6 h-6 text-yellow-500 mb-4' }),
+            e('h3', { className: 'text-white text-xl font-bold' }, 'UI/UX Design')
+          ),
+
+          // ORTA KART
+          e(motion.div, {
+              style: { y: centerY, scale: centerScale, z: centerZ },
+              whileHover: { scale: 1.08, z: 80 },
+              transition: { duration: 0.4 },
+              className: 'p-8 rounded-3xl bg-neutral-800 border border-white/20 shadow-xl'
+            },
+            e(Code2, { className: 'w-6 h-6 text-blue-500 mb-4' }),
+            e('h3', { className: 'text-white text-xl font-bold' }, 'Engineering')
+          ),
+
+          // SAĞ KART
+          e(motion.div, {
+              style: { x: rightX, z: rightZ, rotateY: rightRotateY },
+              whileHover: { rotateY: 0, z: 20, scale: 1.02 },
+              transition: { duration: 0.4 },
+              className: 'p-8 rounded-3xl bg-neutral-900 border border-white/10'
+            },
+            e(BarChart3, { className: 'w-6 h-6 text-green-500 mb-4' }),
+            e('h3', { className: 'text-white text-xl font-bold' }, 'Strategy & SEO')
+          )
+        )
+      );
+    }
+
+    // --- BÖLÜM 2: SIRALI FELSEFE SATIRLARI ---
+    function PhilosophyLine({ left, right, scrollYProgress, index, total }) {
+      const [isHovered, setIsHovered] = useState(false);
+
+      // Her satıra scroll değerinden bir dilim ayır
+      const sliceSize = 1 / total;
+      const start = index * sliceSize;
+      const peak = start + sliceSize / 2;
+      const end = start + sliceSize;
+
+      const activeStart = Math.max(0, peak - 0.15);
+      const activeEnd = Math.min(1, peak + 0.15);
+
+      const overColor = useTransform(
+        scrollYProgress,
+        [start, activeStart, activeEnd, end],
+        ['#ffffff', '#FFD700', '#FFD700', '#ffffff']
+      );
+
+      const scale = useTransform(
+        scrollYProgress,
+        [start, activeStart, activeEnd, end],
+        [0.9, 1.05, 1.05, 0.9]
+      );
+
+      const opacity = useTransform(
+        scrollYProgress,
+        [start, activeStart, activeEnd, end],
+        [0.3, 1, 1, 0.3]
+      );
+
+      return e(motion.h2, {
+          style: { scale, opacity },
+          onMouseEnter: () => setIsHovered(true),
+          onMouseLeave: () => setIsHovered(false),
+          className: 'text-4xl md:text-6xl font-bold uppercase text-white my-2 cursor-default transition-all duration-300'
+        },
+        left,
+        e(motion.span, {
+          style: { color: isHovered ? '#FFD700' : overColor },
+          className: 'mx-4 font-light text-2xl md:text-3xl italic lowercase transition-colors duration-300'
+        }, 'over'),
+        right,
+        e('span', { className: 'text-yellow-400' }, '.')
+      );
+    }
+
+    function PhilosophySection() {
+      const containerRef = useRef(null);
+      const { scrollYProgress } = useScroll({
+        target: containerRef,
+        offset: ['start 75%', 'end 25%']
+      });
+
+      return e('div', { ref: containerRef, className: 'w-full flex flex-col items-center py-20 text-center' },
+        e(PhilosophyLine, { left: 'Balance', right: 'Chaos', scrollYProgress, index: 0, total: 3 }),
+        e(PhilosophyLine, { left: 'Symmetry', right: 'Noise', scrollYProgress, index: 1, total: 3 }),
+        e(PhilosophyLine, { left: 'Clarity', right: 'Jargon', scrollYProgress, index: 2, total: 3 })
+      );
+    }
+
+    function App() {
+      return e(React.Fragment, null,
+        e('div', { className: 'min-h-[65vh]' }),
+        e(Expertise),
+        e('div', { className: 'min-h-[35vh]' }),
+        e(PhilosophySection),
+        e('div', { className: 'min-h-[80vh]' })
+      );
+    }
+
+    createRoot(document.getElementById('root')).render(e(App));
+  </script>
+</body>
+</html>
