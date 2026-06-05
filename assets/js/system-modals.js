@@ -131,18 +131,11 @@ window.systemConfirm = (title, message, icon = 'help-circle') => {
     script.defer = true;
     script.dataset.experience = 'portfolio-build-system';
     script.onload = () => {
-        const optionsScript = document.createElement('script');
-        optionsScript.src = 'assets/js/expertise-options.js?v=1';
-        optionsScript.defer = true;
-        optionsScript.dataset.experience = 'expertise-options';
-        optionsScript.onload = () => {
-            const compareScript = document.createElement('script');
-            compareScript.src = 'assets/js/found-design-comparison.js?v=1';
-            compareScript.defer = true;
-            compareScript.dataset.experience = 'found-design-comparison';
-            document.head.appendChild(compareScript);
-        };
-        document.head.appendChild(optionsScript);
+        const effectsScript = document.createElement('script');
+        effectsScript.src = 'assets/js/expertise-3d-philosophy.js?v=1';
+        effectsScript.defer = true;
+        effectsScript.dataset.experience = 'expertise-3d-philosophy';
+        document.head.appendChild(effectsScript);
     };
     document.head.appendChild(script);
 })();
