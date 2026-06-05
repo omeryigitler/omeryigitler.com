@@ -1,6 +1,6 @@
 (function () {
   if (window.__OY_SAFE_MOTION__) return;
-  window.__OY_SAFE_MOTION__ = 'v1';
+  window.__OY_SAFE_MOTION__ = 'v2';
 
   const clamp = (n, min, max) => Math.max(min, Math.min(max, n));
   const lerp = (a, b, t) => a + (b - a) * t;
@@ -116,10 +116,10 @@
     });
 
     function progress() {
-      const rect = section.getBoundingClientRect();
+      const rect = grid.getBoundingClientRect();
       const viewport = window.innerHeight || 1;
-      const start = viewport * 0.92;
-      const end = viewport * 0.22;
+      const start = viewport * 1.02;
+      const end = viewport * 0.34;
       return clamp((start - rect.top) / (start - end), 0, 1);
     }
 
@@ -142,37 +142,37 @@
 
       const values = [
         {
-          x: lerp(-260, -18, p),
-          y: lerp(64, 0, p),
-          z: lerp(-520, -80, p),
-          ry: lerp(72, 18, p),
-          rx: lerp(5, 0, p),
-          scale: lerp(0.76, 0.98, p),
-          opacity: lerp(0.08, 1, p),
-          brightness: lerp(0.68, 1, p),
-          blur: lerp(4, 0, p)
+          x: lerp(-300, -22, p),
+          y: lerp(72, 0, p),
+          z: lerp(-620, -95, p),
+          ry: lerp(78, 16, p),
+          rx: lerp(6, 0, p),
+          scale: lerp(0.72, 0.985, p),
+          opacity: lerp(0.04, 1, p),
+          brightness: lerp(0.6, 1, p),
+          blur: lerp(4.5, 0, p)
         },
         {
           x: 0,
-          y: lerp(150, 0, p),
-          z: lerp(-180, 80, p),
+          y: lerp(158, 0, p),
+          z: lerp(-200, 90, p),
           ry: 0,
-          rx: lerp(-4, 0, p),
-          scale: lerp(0.72, 1.055, p),
-          opacity: lerp(0.1, 1, p),
-          brightness: lerp(0.72, 1.04, p),
+          rx: lerp(-5, 0, p),
+          scale: lerp(0.7, 1.055, p),
+          opacity: lerp(0.08, 1, p),
+          brightness: lerp(0.7, 1.04, p),
           blur: lerp(3.5, 0, p)
         },
         {
-          x: lerp(260, 18, p),
-          y: lerp(64, 0, p),
-          z: lerp(-520, -80, p),
-          ry: lerp(-72, -18, p),
-          rx: lerp(5, 0, p),
-          scale: lerp(0.76, 0.98, p),
-          opacity: lerp(0.08, 1, p),
-          brightness: lerp(0.68, 1, p),
-          blur: lerp(4, 0, p)
+          x: lerp(300, 22, p),
+          y: lerp(72, 0, p),
+          z: lerp(-620, -95, p),
+          ry: lerp(-78, -16, p),
+          rx: lerp(6, 0, p),
+          scale: lerp(0.72, 0.985, p),
+          opacity: lerp(0.04, 1, p),
+          brightness: lerp(0.6, 1, p),
+          blur: lerp(4.5, 0, p)
         }
       ];
 
@@ -182,12 +182,12 @@
         const hovered = card.dataset.hover === 'true';
         const v = values[index];
         if (hovered) {
-          v.x *= 0.35;
-          v.y -= 8;
-          v.z = 120;
+          v.x *= 0.28;
+          v.y -= 10;
+          v.z = 150;
           v.ry = 0;
           v.rx = 0;
-          v.scale = index === 1 ? 1.095 : 1.04;
+          v.scale = index === 1 ? 1.095 : 1.045;
           v.opacity = 1;
           v.brightness = 1.12;
           v.blur = 0;
@@ -231,23 +231,23 @@
     function progress() {
       const rect = root.getBoundingClientRect();
       const viewport = window.innerHeight || 1;
-      const start = viewport * 0.78;
-      const end = -rect.height * 0.1;
+      const start = viewport * 1.02;
+      const end = viewport * 0.12;
       return clamp((start - rect.top) / (start - end), 0, 1);
     }
 
     function update() {
       const p = progress();
-      const active = p * 2.35;
+      const active = p * 2.12;
 
       lines.forEach((line, index) => {
         const dist = Math.abs(active - index);
-        const strength = smooth(1 - clamp(dist / 0.82, 0, 1));
-        const y = (index - active) * 64;
-        const opacity = lerp(0.18, 1, strength);
-        const scale = lerp(0.86, 1.05, strength);
-        const blur = lerp(2.2, 0, strength);
-        const brightness = lerp(0.64, 1.1, strength);
+        const strength = smooth(1 - clamp(dist / 0.78, 0, 1));
+        const y = (index - active) * 42;
+        const opacity = lerp(0.28, 1, strength);
+        const scale = lerp(0.9, 1.045, strength);
+        const blur = lerp(1.4, 0, strength);
+        const brightness = lerp(0.72, 1.08, strength);
 
         line.classList.toggle('oy-active', strength > 0.58);
         line.style.opacity = opacity.toFixed(3);
@@ -256,9 +256,9 @@
       });
 
       if (copyBlock) {
-        const showCopy = smooth((p - 0.58) / 0.24);
+        const showCopy = smooth((p - 0.52) / 0.26);
         copyBlock.style.opacity = showCopy.toFixed(3);
-        copyBlock.style.transform = `translateY(${lerp(24, 0, showCopy).toFixed(1)}px)`;
+        copyBlock.style.transform = `translateY(${lerp(18, 0, showCopy).toFixed(1)}px)`;
       }
     }
 
