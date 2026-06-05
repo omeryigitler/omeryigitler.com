@@ -16,10 +16,75 @@
 }
 
 .expertise-card-visual {
+  position: relative;
+  isolation: isolate;
   transform-style: preserve-3d;
   will-change: transform;
   backface-visibility: hidden;
   transition: box-shadow 0.3s ease, border-color 0.3s ease, background-color 0.3s ease;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    0 18px 50px rgba(0, 0, 0, 0.28);
+}
+
+.expertise-card-visual > * {
+  position: relative;
+  z-index: 2;
+}
+
+.expertise-card-visual::before,
+.expertise-card-visual::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  border-radius: inherit;
+}
+
+/* Soft internal glass glow */
+.expertise-card-visual::before {
+  opacity: 0.32;
+  background:
+    radial-gradient(circle at 18% 12%, rgba(255, 255, 255, 0.14), transparent 28%),
+    radial-gradient(circle at 80% 105%, rgba(255, 215, 0, 0.08), transparent 34%),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.08), transparent 38%, rgba(255, 255, 255, 0.03));
+  transition: opacity 0.35s ease;
+}
+
+/* Diagonal premium light sweep */
+.expertise-card-visual::after {
+  width: 54%;
+  inset: -35% auto -35% -75%;
+  transform: skewX(-22deg) translateX(0);
+  opacity: 0;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.06),
+    rgba(255, 255, 255, 0.32),
+    rgba(255, 215, 0, 0.16),
+    transparent
+  );
+  filter: blur(1px);
+}
+
+.expertise-card-hit:hover .expertise-card-visual::before {
+  opacity: 0.58;
+}
+
+.expertise-card-hit:hover .expertise-card-visual::after {
+  opacity: 1;
+  animation: expertise-light-sweep 0.9s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+}
+
+@keyframes expertise-light-sweep {
+  from {
+    transform: skewX(-22deg) translateX(0);
+  }
+  to {
+    transform: skewX(-22deg) translateX(340%);
+  }
 }
 
 .card-left {
@@ -52,13 +117,19 @@
 
 .expertise-card-hit:hover .card-left,
 .expertise-card-hit:hover .card-right {
-  transform: translate3d(0, 0, 20px) rotateY(0deg) scale(1.02) !important;
-  box-shadow: 0 0 30px rgba(255, 215, 0, 0.1);
+  transform: translate3d(0, -8px, 48px) rotateY(0deg) scale(1.045) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    0 0 28px rgba(255, 215, 0, 0.12),
+    0 28px 70px rgba(0, 0, 0, 0.45);
 }
 
 .expertise-card-hit:hover .card-center {
-  transform: translate3d(0, 0, 80px) scale(1.08) !important;
-  box-shadow: 0 0 40px rgba(59, 130, 246, 0.15);
+  transform: translate3d(0, -12px, 90px) scale(1.09) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    0 0 40px rgba(59, 130, 246, 0.18),
+    0 34px 90px rgba(0, 0, 0, 0.48);
 }
 
 @media (max-width: 767px), (prefers-reduced-motion: reduce) {
@@ -70,5 +141,9 @@
   .expertise-card-hit:hover .expertise-card-visual {
     transform: none !important;
     transition: none !important;
+  }
+
+  .expertise-card-visual::after {
+    display: none;
   }
 }
