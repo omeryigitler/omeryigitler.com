@@ -46,7 +46,7 @@
     <link rel="dns-prefetch" href="https://www.googletagmanager.com">
     <link rel="dns-prefetch" href="https://firestore.googleapis.com">
 
-    <link href="assets/css/styles.css?v=V10" rel="stylesheet">
+    <link href="assets/css/styles.css?v=V44" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://unpkg.com/three@0.160.0/build/three.min.js"></script>
     <script src="https://unpkg.com/globe.gl@2.32.1/dist/globe.gl.min.js"></script>
@@ -143,10 +143,10 @@
 
         #intro-modal::before {
             background-image:
-                linear-gradient(rgba(255, 215, 0, 0.08) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(255, 215, 0, 0.08) 1px, transparent 1px);
-            background-size: 96px 96px;
-            opacity: 0.18;
+                linear-gradient(rgba(255, 215, 0, 0.045) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 215, 0, 0.045) 1px, transparent 1px);
+            background-size: 128px 128px;
+            opacity: 0.1;
             -webkit-mask-image: radial-gradient(circle at 50% 50%, #000 0%, #000 42%, transparent 76%);
             mask-image: radial-gradient(circle at 50% 50%, #000 0%, #000 42%, transparent 76%);
         }
@@ -281,7 +281,7 @@
 </head>
 
 <body
-    class="bg-obsidian text-white font-body min-h-screen flex flex-col items-center overflow-x-hidden selection:bg-taurusGold selection:text-black">
+    class="bg-obsidian text-white font-body min-h-screen flex flex-col items-center selection:bg-taurusGold selection:text-black">
 
     <div
         id="intro-modal"
@@ -299,7 +299,7 @@
 
 
     <div
-        class="fixed top-0 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-deepSpace rounded-full blur-[150px] -z-10 opacity-60">
+        class="fixed top-0 left-1/2 -translate-x-1/2 w-screen max-w-[600px] h-[600px] bg-deepSpace rounded-full blur-[150px] -z-10 opacity-60">
     </div>
 
     <!-- Mobile Scroll Gap Mask (Prevents 'half' text visibility) -->
@@ -422,139 +422,10 @@
         </div>
 
         <!-- EXPERTISE SECTION -->
-        <div id="expertise" class="w-full max-w-6xl mt-20 mb-40 relative z-10 scroll-mt-32">
+        <div id="expertise" class="w-full max-w-6xl mt-20 mb-40 relative z-10 scroll-mt-32"></div>
 
-            <!-- Section Header -->
-            <div class="text-center mb-16 relative">
-                <div class="w-[1px] h-20 bg-gradient-to-b from-transparent via-white/10 to-transparent mx-auto mb-8">
-                </div>
-                <span
-                    class="px-4 py-1.5 rounded-full bg-taurusGold/10 border border-taurusGold/20 text-taurusGold text-[10px] font-bold uppercase tracking-widest inline-block mb-4">
-                    What I Do
-                </span>
-                <h2 class="font-display text-3xl md:text-5xl font-bold text-white mb-4">
-                    Complete Digital <br><span
-                        class="text-transparent bg-clip-text bg-gradient-to-r from-gray-200 to-gray-500">Solutions</span>
-                </h2>
-                <p class="text-gray-400 text-sm max-w-xl mx-auto">
-                    A holistic approach to digital product creation, ensuring every layer from design to deployment is
-                    crafted to perfection.
-                </p>
-            </div>
-
-            <!-- 3 Column Grid -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 px-4">
-
-                <!-- Card 1: Design -->
-                <div
-                    class="group p-8 rounded-3xl bg-neutral-900/40 border border-white/5 backdrop-blur-sm hover:bg-neutral-900/60 hover:border-taurusGold/30 transition-all duration-300 relative overflow-hidden">
-                    <div
-                        class="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-white/10 to-transparent group-hover:via-taurusGold/50 transition-all duration-500">
-                    </div>
-
-                    <div
-                        class="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
-                        <i data-lucide="pen-tool"
-                            class="w-6 h-6 text-gray-400 group-hover:text-taurusGold transition-colors"></i>
-                    </div>
-
-                    <h3 class="text-white font-display text-xl font-bold mb-3">UI/UX Design</h3>
-                    <p class="text-gray-500 text-xs leading-relaxed mb-6">
-                        Crafting intuitive, user-centric interfaces that not only look stunning but drive engagement and
-                        conversion.
-                    </p>
-
-                    <ul class="space-y-2">
-                        <li
-                            class="flex items-center gap-2 text-[10px] text-gray-400 font-bold uppercase tracking-wider">
-                            <div class="w-1 h-1 rounded-full bg-taurusGold"></div> Figma & Prototyping
-                        </li>
-                        <li
-                            class="flex items-center gap-2 text-[10px] text-gray-400 font-bold uppercase tracking-wider">
-                            <div class="w-1 h-1 rounded-full bg-taurusGold"></div> Design Systems
-                        </li>
-                        <li
-                            class="flex items-center gap-2 text-[10px] text-gray-400 font-bold uppercase tracking-wider">
-                            <div class="w-1 h-1 rounded-full bg-taurusGold"></div> Mobile-First Layouts
-                        </li>
-                    </ul>
-                </div>
-
-                <!-- Card 2: Engineering (Featured) -->
-                <div
-                    class="group p-8 rounded-3xl bg-neutral-900/40 border border-white/5 backdrop-blur-sm hover:bg-neutral-900/60 hover:border-blue-500/30 transition-all duration-300 relative overflow-hidden md:-mt-8">
-                    <div
-                        class="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-white/10 to-transparent group-hover:via-blue-500/50 transition-all duration-500">
-                    </div>
-                    <div
-                        class="absolute bottom-0 right-0 w-32 h-32 bg-blue-500/5 rounded-full blur-3xl -z-10 group-hover:bg-blue-500/10 transition-colors">
-                    </div>
-
-                    <div
-                        class="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
-                        <i data-lucide="code-2"
-                            class="w-6 h-6 text-gray-400 group-hover:text-blue-400 transition-colors"></i>
-                    </div>
-
-                    <h3 class="text-white font-display text-xl font-bold mb-3">Engineering</h3>
-                    <p class="text-gray-500 text-xs leading-relaxed mb-6">
-                        Building robust, scalable, and high-performance web applications using modern technologies and
-                        clean code practices.
-                    </p>
-
-                    <ul class="space-y-2">
-                        <li
-                            class="flex items-center gap-2 text-[10px] text-gray-400 font-bold uppercase tracking-wider">
-                            <div class="w-1 h-1 rounded-full bg-blue-500"></div> React / Next.js
-                        </li>
-                        <li
-                            class="flex items-center gap-2 text-[10px] text-gray-400 font-bold uppercase tracking-wider">
-                            <div class="w-1 h-1 rounded-full bg-blue-500"></div> Tailwind CSS
-                        </li>
-                        <li
-                            class="flex items-center gap-2 text-[10px] text-gray-400 font-bold uppercase tracking-wider">
-                            <div class="w-1 h-1 rounded-full bg-blue-500"></div> API Integration
-                        </li>
-                    </ul>
-                </div>
-
-                <!-- Card 3: Strategy -->
-                <div
-                    class="group p-8 rounded-3xl bg-neutral-900/40 border border-white/5 backdrop-blur-sm hover:bg-neutral-900/60 hover:border-emerald-500/30 transition-all duration-300 relative overflow-hidden">
-                    <div
-                        class="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-white/10 to-transparent group-hover:via-emerald-500/50 transition-all duration-500">
-                    </div>
-
-                    <div
-                        class="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
-                        <i data-lucide="bar-chart-3"
-                            class="w-6 h-6 text-gray-400 group-hover:text-emerald-400 transition-colors"></i>
-                    </div>
-
-                    <h3 class="text-white font-display text-xl font-bold mb-3">Strategy & SEO</h3>
-                    <p class="text-gray-500 text-xs leading-relaxed mb-6">
-                        Optimizing for visibility and performance to ensure your digital product actually reaches and
-                        converts your target audience.
-                    </p>
-
-                    <ul class="space-y-2">
-                        <li
-                            class="flex items-center gap-2 text-[10px] text-gray-400 font-bold uppercase tracking-wider">
-                            <div class="w-1 h-1 rounded-full bg-emerald-500"></div> Technical SEO
-                        </li>
-                        <li
-                            class="flex items-center gap-2 text-[10px] text-gray-400 font-bold uppercase tracking-wider">
-                            <div class="w-1 h-1 rounded-full bg-emerald-500"></div> Performance Tuning
-                        </li>
-                        <li
-                            class="flex items-center gap-2 text-[10px] text-gray-400 font-bold uppercase tracking-wider">
-                            <div class="w-1 h-1 rounded-full bg-emerald-500"></div> Analytics
-                        </li>
-                    </ul>
-                </div>
-
-            </div>
-        </div>
+        <!-- BUILD PROCESS SECTION -->
+        <div id="build-process-react-root" class="w-full max-w-6xl mt-12 mb-24 relative z-10 scroll-mt-48"></div>
 
 
         <!-- PORTFOLIO SECTION -->
@@ -2335,7 +2206,9 @@ function turnstileSuccess(token) {
   const EARTH_BUMP = "https://unpkg.com/three-globe/example/img/earth-topology.png";
   const INITIAL_ALTITUDE = 3.2;
   const STANDARD_FOCUS_ALTITUDE = 1.35;
-  const MALTA_FOCUS_ALTITUDE = 0.12;
+  // Malta occupies only a tiny area on an 8K equirectangular texture.
+  // Keep the camera at a regional distance so the globe stays crisp instead of over-magnifying a few pixels.
+  const MALTA_FOCUS_ALTITUDE = 0.82;
   const GEO_CACHE_KEY = "taurus-globe-geo-v1";
   const GEO_CACHE_TTL_MS = 6 * 60 * 60 * 1000;
   const DEFAULT_LOCATION = {
@@ -2547,21 +2420,31 @@ function turnstileSuccess(token) {
 
     if (!material) return;
 
-    material.bumpScale = 3.8;
-    material.shininess = 16;
+    material.bumpScale = 1.6;
+    material.shininess = 8;
 
     if (material.specular) {
-      material.specular = new THREE.Color("#f0c040");
+      material.specular = new THREE.Color("#8a6f1a");
     }
 
     if (material.emissive) {
-      material.emissive = new THREE.Color("#120d00");
-      material.emissiveIntensity = 0.16;
+      material.emissive = new THREE.Color("#080600");
+      material.emissiveIntensity = 0.08;
     }
 
     [material.map, material.bumpMap, material.specularMap].forEach(function (texture) {
       if (!texture) return;
       texture.anisotropy = Math.min(maxAnisotropy, 16);
+      if (texture === material.map && THREE.SRGBColorSpace) {
+        texture.colorSpace = THREE.SRGBColorSpace;
+      }
+      if (THREE.LinearMipmapLinearFilter) {
+        texture.minFilter = THREE.LinearMipmapLinearFilter;
+      }
+      if (THREE.LinearFilter) {
+        texture.magFilter = THREE.LinearFilter;
+      }
+      texture.generateMipmaps = true;
       texture.needsUpdate = true;
     });
 
@@ -2573,12 +2456,12 @@ function turnstileSuccess(token) {
 
     world.lights().forEach(function (light) {
       if (light.type === "AmbientLight") {
-        light.intensity = 1.85;
+        light.intensity = 1.55;
       }
 
       if (light.type === "DirectionalLight") {
         light.color.set("#fff1a8");
-        light.intensity = 1.15;
+        light.intensity = 0.75;
         light.position.set(-1.2, 0.85, 1.25);
       }
     });
@@ -2746,7 +2629,7 @@ function turnstileSuccess(token) {
       // Phase 2: Fly-To Sequence - stop rotation and fly for exactly 2500ms.
       world.controls().autoRotate = false;
       if (typeof world.atmosphereAltitude === "function") {
-        world.atmosphereAltitude(isMaltaFocus ? 0.025 : 0.08);
+        world.atmosphereAltitude(isMaltaFocus ? 0.055 : 0.08);
       }
       world.pointOfView({
         lat: userLocation.lat,
@@ -2762,14 +2645,14 @@ function turnstileSuccess(token) {
           lat: userLocation.lat,
           lng: userLocation.lng,
           altitude: 0.026,
-          radius: isMaltaFocus ? 0.045 : 0.19,
+          radius: isMaltaFocus ? 0.09 : 0.19,
           color: ACCENT_COLOR
         };
         world
           .pointsData(getBaseNetworkPoints().concat(signalPoint))
           .arcsData(buildSignalArcs(userLocation))
-          .ringMaxRadius(isMaltaFocus ? 0.42 : 3)
-          .ringPropagationSpeed(isMaltaFocus ? 0.58 : 3)
+          .ringMaxRadius(isMaltaFocus ? 1.15 : 3)
+          .ringPropagationSpeed(isMaltaFocus ? 1.2 : 3)
           .ringsData([signalPoint]);
         signalOverlay.textContent = "[ SIGNAL ACQUIRED: " + String(userLocation.city).toUpperCase() + " ]";
         signalOverlay.classList.toggle("is-low-focus", isMaltaFocus);
@@ -2800,6 +2683,7 @@ function turnstileSuccess(token) {
         window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
         </script>
         <script defer src="/_vercel/insights/script.js"></script>
+        <script type="module" src="assets/react/interactive-sections.js?v=V44"></script>
 
 </body>
 </html>
