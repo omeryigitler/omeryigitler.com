@@ -180,7 +180,12 @@
             font-weight: 700;
             font-size: 14px;
             letter-spacing: 0.18em;
+            cursor: pointer;
+            -webkit-tap-highlight-color: transparent;
         }
+
+        .brand-logo { transition: transform 0.2s ease; }
+        .brand:hover .brand-logo { transform: scale(1.06); }
 
         .brand .dot { color: var(--gold); }
 
@@ -1572,6 +1577,125 @@
     <style>
         #intro-modal { position: fixed; inset: 0; z-index: 9999; background: #0a0a0a; }
     </style>
+    <style>
+        /* CookieYes — gold theme, bottom-left box */
+        :root {
+            --cky-primary-color: #FFD700 !important;
+            --cky-link-color: #FFD700 !important;
+        }
+
+        div.cky-consent-container {
+            left: 30px !important;
+            right: auto !important;
+            bottom: 30px !important;
+            max-width: 440px !important;
+        }
+
+        div.cky-consent-container .cky-consent-bar {
+            background-color: rgba(10, 10, 10, 0.98) !important;
+            border: 2px solid #FFD700 !important;
+            border-radius: 16px !important;
+        }
+
+        div.cky-consent-container .cky-title,
+        div.cky-consent-container .cky-notice-des,
+        div.cky-consent-container .cky-label,
+        div.cky-consent-container p {
+            color: #f1f1f1 !important;
+        }
+
+        div.cky-consent-container .cky-show-desc-btn,
+        div.cky-consent-container .cky-notice-des a {
+            color: #FFD700 !important;
+            text-decoration: underline !important;
+        }
+
+        div.cky-consent-container button.cky-btn-accept,
+        div.cky-consent-container button.cky-btn-preferences,
+        div.cky-consent-container button.cky-btn-customize {
+            background-color: #FFD700 !important;
+            border: 1px solid #FFD700 !important;
+            color: #000000 !important;
+            font-weight: 800 !important;
+        }
+
+        div.cky-consent-container button.cky-btn-reject {
+            background-color: #000000 !important;
+            color: #ffffff !important;
+            border: 1px solid rgba(255, 215, 0, 0.5) !important;
+        }
+
+        div.cky-consent-container input[id^="ckySwitch"] {
+            background-color: #2b2b2b !important;
+            background: #2b2b2b !important;
+            border-color: rgba(255, 215, 0, 0.35) !important;
+            box-shadow: none !important;
+        }
+
+        div.cky-consent-container input[id^="ckySwitch"]:checked {
+            background-color: #FFD700 !important;
+            background: #FFD700 !important;
+            border-color: #FFD700 !important;
+            box-shadow: none !important;
+        }
+
+        div.cky-consent-container input[id^="ckySwitch"]:focus {
+            outline: none !important;
+            box-shadow: 0 0 0 2px rgba(255, 215, 0, 0.35) !important;
+        }
+
+        div.cky-consent-container .cky-switch input:checked + .cky-slider {
+            background-color: #FFD700 !important;
+            background: #FFD700 !important;
+        }
+
+        div.cky-consent-container .cky-always-active {
+            color: #FFD700 !important;
+        }
+
+        .cky-btn-revisit-wrapper {
+            background-color: #000 !important;
+            border: 2px solid #FFD700 !important;
+        }
+
+        .cky-btn-revisit-wrapper img,
+        .cky-btn-revisit-wrapper svg {
+            filter: brightness(0) saturate(100%) invert(83%) sepia(63%) saturate(747%) hue-rotate(1deg) brightness(103%) contrast(101%) !important;
+        }
+
+        div.cky-consent-container button:hover { opacity: 0.85 !important; }
+
+        @media (max-width: 640px) {
+            div.cky-consent-container {
+                left: 0 !important;
+                right: 0 !important;
+                bottom: 0 !important;
+                width: 100% !important;
+                max-width: none !important;
+            }
+
+            div.cky-consent-container .cky-consent-bar {
+                width: 100% !important;
+                border-radius: 0 !important;
+                border-width: 2px 0 0 !important;
+                padding: 12px 16px calc(12px + env(safe-area-inset-bottom)) !important;
+            }
+
+            div.cky-consent-container .cky-notice-btn-wrapper {
+                display: grid !important;
+                grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+                gap: 6px !important;
+                margin-top: 8px !important;
+            }
+
+            div.cky-consent-container button.cky-btn {
+                width: 100% !important;
+                min-width: 0 !important;
+                min-height: 40px !important;
+                margin: 0 !important;
+            }
+        }
+    </style>
 </head>
 <body>
     <div
@@ -1596,7 +1720,7 @@
         <div class="bg-glow"></div>
 
         <nav>
-            <div class="brand"><img class="brand-logo" src="favicon_taurus.svg" alt="Ömer Yiğitler — Taurus logo"></div>
+            <a href="#" class="brand logo-container" aria-label="Ömer Yiğitler — home"><img class="brand-logo" src="favicon_taurus.svg" alt="Ömer Yiğitler — Taurus logo"></a>
             <div class="nav-links">
                 <a href="projects.html">Projects</a>
                 <a href="#expertise">Expertise</a>
@@ -2804,5 +2928,34 @@
 </script>
     <script src="assets/js/tracker/logo_data.js"></script>
     <script src="assets/js/tracker/taurus-tracker.js?v=V45"></script>
+    <script>
+    /* Logo: single tap = scroll to top, triple tap = admin gateway */
+    (function () {
+        const logo = document.querySelector(".logo-container");
+        if (!logo) return;
+
+        let clicks = 0;
+        let resetTimer;
+
+        logo.addEventListener("click", (e) => {
+            e.preventDefault();
+            clicks += 1;
+
+            if (clicks === 1) {
+                window.scrollTo({ top: 0, behavior: "smooth" });
+            }
+
+            if (clicks === 3) {
+                if (window.taurus_set_internal) window.taurus_set_internal();
+                window.location.href = "gateway.html";
+                clicks = 0;
+                return;
+            }
+
+            clearTimeout(resetTimer);
+            resetTimer = setTimeout(() => { clicks = 0; }, 600);
+        });
+    })();
+    </script>
 </body>
 </html>
