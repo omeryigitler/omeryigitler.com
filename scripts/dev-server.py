@@ -12,6 +12,19 @@ YAHOO = "https://query1.finance.yahoo.com/v8/finance/chart/{}?range=1d&interval=
 UA = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36"
 SYMBOL_RE = re.compile(r"^[A-Z0-9.^=-]{1,12}$")
 
+# In-memory ticker store for local dev (Vercel uses Firestore via api/ticker.js)
+_ticker_store = {
+    "symbols": [
+        {"sym": "SAP", "type": "stock"},
+        {"sym": "AAPL", "type": "stock"},
+        {"sym": "NVDA", "type": "stock"},
+        {"sym": "BTC", "type": "crypto"},
+        {"sym": "ETH", "type": "crypto"},
+        {"sym": "USD/TRY", "type": "fx"},
+        {"sym": "EUR/TRY", "type": "fx"},
+    ]
+}
+
 
 def fetch_quote(symbol):
     req = urllib.request.Request(YAHOO.format(symbol), headers={"User-Agent": UA})
@@ -26,8 +39,22 @@ def fetch_quote(symbol):
 
 
 class Handler(SimpleHTTPRequestHandler):
+    def _send_json(self, payload, status=200):
+        body = json.dumps(payload).encode()
+        self.send_response(status)
+        self.send_header("Content-Type", "application/json")
+        self.send_header("Access-Control-Allow-Origin", "*")
+        self.send_header("Access-Control-Allow-Headers", "Content-Type, x-ticker-token")
+        self.send_header("Content-Length", str(len(body)))
+        self.end_headers()
+        self.wfile.write(body)
+
     def do_GET(self):
         parsed = urlparse(self.path)
+
+        if parsed.path == "/api/ticker":
+            return self._send_json({"symbols": _ticker_store["symbols"]})
+
         if parsed.path != "/api/quotes":
             return super().do_GET()
 
@@ -46,13 +73,25 @@ class Handler(SimpleHTTPRequestHandler):
             except Exception:
                 pass
 
-        body = json.dumps(out).encode()
-        self.send_response(200)
-        self.send_header("Content-Type", "application/json")
-        self.send_header("Access-Control-Allow-Origin", "*")
-        self.send_header("Content-Length", str(len(body)))
-        self.end_headers()
-        self.wfile.write(body)
+        self._send_json(out)
+
+    def do_POST(self):
+        parsed = urlparse(self.path)
+        if parsed.path != "/api/ticker":
+            return self._send_json({"error": "not found"}, 404)
+
+        # Local dev: accept any token (real auth lives in api/ticker.js on Vercel)
+        length = int(self.headers.get("Content-Length", 0))
+        try:
+            data = json.loads(self.rfile.read(length) or b"{}")
+        except Exception:
+            data = {}
+
+        symbols = data.get("symbols")
+        if isinstance(symbols, list) and symbols:
+            _ticker_store["symbols"] = symbols
+            return self._send_json({"ok": True, "symbols": symbols})
+        return self._send_json({"error": "bad symbols"}, 400)
 
     def log_message(self, *args):
         pass

@@ -334,7 +334,6 @@
 
     <script>
         (function () {
-            const STORAGE_KEY = "concept-ticker-symbols";
             const DEFAULT_SYMBOLS = [
                 { sym: "SAP", type: "stock" },
                 { sym: "AAPL", type: "stock" },
@@ -378,22 +377,66 @@
                 ddTrigger.setAttribute("aria-expanded", "false");
             });
 
-            function load() {
-                try {
-                    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
-                    if (Array.isArray(saved) && saved.length) return saved;
-                } catch (e) {}
-                return DEFAULT_SYMBOLS.slice();
+            const TOKEN_KEY = "ticker-admin-token";
+            let symbols = DEFAULT_SYMBOLS.slice();
+
+            function getToken() {
+                let t = sessionStorage.getItem(TOKEN_KEY);
+                if (!t) {
+                    t = (window.prompt("Enter the ticker admin token to save changes:") || "").trim();
+                    if (t) sessionStorage.setItem(TOKEN_KEY, t);
+                }
+                return t;
             }
 
-            function save(symbols) {
-                localStorage.setItem(STORAGE_KEY, JSON.stringify(symbols));
+            function flashSaved(text, ok) {
+                flash.textContent = text || "saved ✓";
+                flash.style.color = ok === false ? "#ef4444" : "#34d399";
                 flash.style.opacity = "1";
-                setTimeout(() => { flash.style.opacity = "0"; }, 1400);
+                setTimeout(() => { flash.style.opacity = "0"; }, 1800);
+            }
+
+            async function loadFromApi() {
+                try {
+                    const res = await fetch("/api/ticker", { cache: "no-store" });
+                    if (res.ok) {
+                        const data = await res.json();
+                        if (Array.isArray(data.symbols) && data.symbols.length) symbols = data.symbols;
+                    }
+                } catch (e) {}
+                render();
+            }
+
+            async function saveToApi() {
+                const token = getToken();
+                if (!token) { flashSaved("token required ✕", false); return false; }
+
+                try {
+                    const res = await fetch("/api/ticker", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json", "x-ticker-token": token },
+                        body: JSON.stringify({ symbols })
+                    });
+
+                    if (res.status === 401) {
+                        sessionStorage.removeItem(TOKEN_KEY);
+                        flashSaved("wrong token ✕", false);
+                        return false;
+                    }
+                    if (!res.ok) { flashSaved("save failed ✕", false); return false; }
+
+                    const data = await res.json();
+                    if (Array.isArray(data.symbols)) symbols = data.symbols;
+                    flashSaved("saved — live for everyone ✓", true);
+                    render();
+                    return true;
+                } catch (e) {
+                    flashSaved("network error ✕", false);
+                    return false;
+                }
             }
 
             function render() {
-                const symbols = load();
                 list.innerHTML = "";
                 symbols.forEach((s, index) => {
                     const li = document.createElement("li");
@@ -404,10 +447,9 @@
                     btn.className = "remove";
                     btn.textContent = "remove";
                     btn.onclick = () => {
-                        const next = load();
-                        next.splice(index, 1);
-                        save(next);
+                        symbols.splice(index, 1);
                         render();
+                        saveToApi();
                     };
                     li.appendChild(btn);
                     list.appendChild(li);
@@ -418,15 +460,14 @@
                 e.preventDefault();
                 const sym = symInput.value.trim().toUpperCase();
                 if (!sym) return;
-                const symbols = load();
                 if (symbols.some((s) => s.sym === sym)) { symInput.value = ""; return; }
                 symbols.push({ sym: sym, type: selectedType });
-                save(symbols);
                 symInput.value = "";
                 render();
+                saveToApi();
             };
 
-            render();
+            loadFromApi();
         })();
 
         (function () {

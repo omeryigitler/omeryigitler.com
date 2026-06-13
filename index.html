@@ -1988,12 +1988,28 @@
                 MSFT: 441.16, TSLA: 312.7, AMZN: 218.3, META: 604.12
             };
 
-            function loadSymbols() {
+            const SYMBOL_CACHE_KEY = "ticker-symbols-cache";
+
+            function cachedSymbols() {
                 try {
-                    const saved = JSON.parse(localStorage.getItem("concept-ticker-symbols"));
+                    const saved = JSON.parse(localStorage.getItem(SYMBOL_CACHE_KEY));
                     if (Array.isArray(saved) && saved.length) return saved;
                 } catch (e) {}
                 return DEFAULT_SYMBOLS;
+            }
+
+            async function fetchSymbols() {
+                try {
+                    const res = await fetch("/api/ticker", { cache: "no-store" });
+                    if (res.ok) {
+                        const data = await res.json();
+                        if (Array.isArray(data.symbols) && data.symbols.length) {
+                            localStorage.setItem(SYMBOL_CACHE_KEY, JSON.stringify(data.symbols));
+                            return data.symbols;
+                        }
+                    }
+                } catch (e) {}
+                return cachedSymbols();
             }
 
             function formatPrice(value) {
@@ -2074,7 +2090,7 @@
 
             async function initTicker() {
                 const track = document.getElementById("tickerTrack");
-                const symbols = loadSymbols();
+                const symbols = await fetchSymbols();
                 const stocks = symbols.filter((s) => s.type === "stock");
                 const cryptos = symbols.filter((s) => s.type === "crypto");
                 const fxs = symbols.filter((s) => s.type === "fx");
