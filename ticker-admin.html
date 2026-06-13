@@ -91,7 +91,7 @@
             gap: 12px;
         }
 
-        input, select {
+        input {
             font-family: var(--mono);
             font-size: 13px;
             color: #fff;
@@ -100,42 +100,93 @@
             border-radius: 8px;
             padding: 12px 14px;
             outline: none;
-            accent-color: #FFD700;
+            flex: 1;
+            min-width: 160px;
         }
-
-        input { flex: 1; min-width: 160px; }
 
         #symInput { text-transform: uppercase; }
 
-        input:focus, select:focus {
+        input:focus {
             border-color: rgba(255, 215, 0, 0.6);
             box-shadow: 0 0 18px rgba(255, 215, 0, 0.12);
         }
 
-        select {
-            background-color: #111;
-            color: #FFD700;
+        /* custom dropdown — full control, no native blue */
+        .dd { position: relative; }
+
+        .dd-trigger {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-family: var(--mono);
+            font-size: 13px;
             font-weight: 700;
             letter-spacing: 0.05em;
-            border-color: rgba(255, 215, 0, 0.35);
-            -webkit-appearance: none;
-            appearance: none;
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23FFD700' d='M6 8 0 0h12z'/%3E%3C/svg%3E");
-            background-repeat: no-repeat;
-            background-position: right 14px center;
-            padding-right: 36px;
-        }
-
-        select option {
-            background: #111;
             color: #FFD700;
-            font-weight: 700;
+            background: #111;
+            border: 1px solid rgba(255, 215, 0, 0.35);
+            border-radius: 8px;
+            padding: 12px 16px;
+            cursor: pointer;
+            min-width: 130px;
+            justify-content: space-between;
+            transition: border-color 0.2s, box-shadow 0.2s;
         }
 
-        select option:checked {
-            background: #FFD700 !important;
-            color: #050505 !important;
+        .dd-trigger:hover { border-color: rgba(255, 215, 0, 0.7); }
+
+        .dd.open .dd-trigger {
+            border-color: #FFD700;
+            box-shadow: 0 0 18px rgba(255, 215, 0, 0.18);
         }
+
+        .dd-trigger svg {
+            width: 11px;
+            height: 8px;
+            fill: #FFD700;
+            transition: transform 0.2s;
+        }
+
+        .dd.open .dd-trigger svg { transform: rotate(180deg); }
+
+        .dd-menu {
+            position: absolute;
+            top: calc(100% + 6px);
+            left: 0;
+            right: 0;
+            list-style: none;
+            background: #0d0d0d;
+            border: 1px solid rgba(255, 215, 0, 0.35);
+            border-radius: 8px;
+            padding: 5px;
+            z-index: 20;
+            opacity: 0;
+            transform: translateY(-6px);
+            pointer-events: none;
+            transition: opacity 0.18s, transform 0.18s;
+            box-shadow: 0 18px 40px -20px rgba(0, 0, 0, 0.9);
+        }
+
+        .dd.open .dd-menu { opacity: 1; transform: none; pointer-events: auto; }
+
+        .dd-menu li {
+            font-family: var(--mono);
+            font-size: 13px;
+            font-weight: 700;
+            color: #d1d5db;
+            padding: 10px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            border: none;
+            background: transparent;
+            margin: 0;
+            display: block;
+            transition: background 0.15s, color 0.15s;
+        }
+
+        .dd-menu li:hover { background: rgba(255, 215, 0, 0.12); color: #FFD700; }
+
+        .dd-menu li.is-selected { background: #FFD700; color: #050505; }
 
         button {
             font-family: var(--mono);
@@ -253,11 +304,17 @@
             <h2>Add symbol</h2>
             <form id="addForm">
                 <input id="symInput" type="text" placeholder="SAP, BTC, USD/TRY..." required>
-                <select id="typeInput">
-                    <option value="stock">Stock</option>
-                    <option value="crypto">Crypto</option>
-                    <option value="fx">FX pair</option>
-                </select>
+                <div class="dd" id="typeDropdown">
+                    <button type="button" class="dd-trigger" id="ddTrigger" aria-haspopup="listbox" aria-expanded="false">
+                        <span id="ddLabel">Stock</span>
+                        <svg viewBox="0 0 12 8" aria-hidden="true"><path d="M6 8 0 0h12z"/></svg>
+                    </button>
+                    <ul class="dd-menu" id="ddMenu" role="listbox">
+                        <li role="option" data-value="stock" class="is-selected">Stock</li>
+                        <li role="option" data-value="crypto">Crypto</li>
+                        <li role="option" data-value="fx">FX pair</li>
+                    </ul>
+                </div>
                 <button type="submit">Add</button>
                 <p class="hint">
                     Everything is live, no keys needed: stocks come from Yahoo Finance through the site's own <code>/api/quotes</code> endpoint,
@@ -272,7 +329,7 @@
             <ul id="symbolList"></ul>
         </div>
 
-        <a class="back" href="concept-hero.html">← back to concept page</a>
+        <a class="back" href="/">← back to site</a>
     </div>
 
     <script>
@@ -291,8 +348,35 @@
             const list = document.getElementById("symbolList");
             const form = document.getElementById("addForm");
             const symInput = document.getElementById("symInput");
-            const typeInput = document.getElementById("typeInput");
             const flash = document.getElementById("savedFlash");
+
+            // custom dropdown
+            const dd = document.getElementById("typeDropdown");
+            const ddTrigger = document.getElementById("ddTrigger");
+            const ddLabel = document.getElementById("ddLabel");
+            const ddMenu = document.getElementById("ddMenu");
+            let selectedType = "stock";
+
+            ddTrigger.addEventListener("click", (e) => {
+                e.stopPropagation();
+                const open = dd.classList.toggle("open");
+                ddTrigger.setAttribute("aria-expanded", String(open));
+            });
+
+            ddMenu.querySelectorAll("li").forEach((li) => {
+                li.addEventListener("click", () => {
+                    selectedType = li.dataset.value;
+                    ddLabel.textContent = li.textContent;
+                    ddMenu.querySelectorAll("li").forEach((x) => x.classList.toggle("is-selected", x === li));
+                    dd.classList.remove("open");
+                    ddTrigger.setAttribute("aria-expanded", "false");
+                });
+            });
+
+            document.addEventListener("click", () => {
+                dd.classList.remove("open");
+                ddTrigger.setAttribute("aria-expanded", "false");
+            });
 
             function load() {
                 try {
@@ -336,7 +420,7 @@
                 if (!sym) return;
                 const symbols = load();
                 if (symbols.some((s) => s.sym === sym)) { symInput.value = ""; return; }
-                symbols.push({ sym: sym, type: typeInput.value });
+                symbols.push({ sym: sym, type: selectedType });
                 save(symbols);
                 symInput.value = "";
                 render();

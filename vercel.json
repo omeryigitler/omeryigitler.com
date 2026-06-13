@@ -26,11 +26,7 @@
             "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow, noarchive" }]
         },
         {
-            "source": "/concept-hero.html",
-            "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow, noarchive" }]
-        },
-        {
-            "source": "/concept-admin.html",
+            "source": "/ticker-admin.html",
             "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow, noarchive" }]
         },
         {
