@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ComponentType, type CSSProperties, type KeyboardEvent, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ComponentType, type CSSProperties, type KeyboardEvent, type MouseEvent, type ReactNode } from "react";
 import {
   animate,
   motion,
@@ -12,12 +12,8 @@ import {
 import {
   BarChart3,
   BadgeCheck,
-  CalendarCheck,
-  CheckCircle2,
-  ClipboardCheck,
   Code2,
   ExternalLink,
-  Gauge,
   GitBranch,
   Image,
   Layers3,
@@ -28,7 +24,6 @@ import {
   PhoneCall,
   Rocket,
   Search,
-  ShieldCheck,
   ShoppingBag,
   Star,
   Store
@@ -646,6 +641,11 @@ function StrategyVisual() {
 }
 
 function InterfaceVisual() {
+  const cardRef = useRef<HTMLDivElement>(null);
+  const rotX = useMotionValue(0);
+  const rotY = useMotionValue(0);
+  const prefersReducedMotion = useReducedMotion();
+
   const contentBlocks = [
     { label: "Services", icon: ShoppingBag },
     { label: "Photos", icon: Image },
@@ -659,76 +659,124 @@ function InterfaceVisual() {
     { label: "Get directions", icon: MapPin }
   ];
 
-  return (
-    <div className="group/interface relative min-h-[430px] overflow-hidden rounded-3xl border border-white/10 bg-neutral-950 p-4 transition-colors duration-500 hover:border-taurusGold/25 sm:min-h-[400px] lg:min-h-[380px]">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,215,0,0.08),transparent_42%)]" />
-      <div className="pointer-events-none absolute right-6 top-8 h-24 w-24 rounded-full bg-taurusGold/10 opacity-0 blur-3xl transition-opacity duration-700 group-hover/interface:opacity-100" />
+  const handleMouseMove = (e: MouseEvent<HTMLDivElement>) => {
+    if (prefersReducedMotion || !cardRef.current) return;
+    const rect = cardRef.current.getBoundingClientRect();
+    const cx = rect.left + rect.width / 2;
+    const cy = rect.top + rect.height / 2;
+    rotY.set(((e.clientX - cx) / (rect.width / 2)) * 14);
+    rotX.set(-((e.clientY - cy) / (rect.height / 2)) * 9);
+  };
 
-      <div className="relative h-full rounded-2xl border border-white/10 bg-black/35 p-3">
-        <div className="mb-3 flex h-8 items-center gap-2 rounded-xl border border-white/10 bg-white/[0.03] px-3">
-          <span className="h-2.5 w-2.5 rounded-full bg-red-500" />
-          <span className="h-2.5 w-2.5 rounded-full bg-yellow-500" />
-          <span className="h-2.5 w-2.5 rounded-full bg-green-500" />
-          <div className="ml-2 h-2.5 flex-1 rounded-full bg-white/[0.06]" />
+  const handleMouseLeave = () => {
+    animate(rotX, 0, { duration: 0.6, ease: [0.22, 1, 0.36, 1] });
+    animate(rotY, 0, { duration: 0.6, ease: [0.22, 1, 0.36, 1] });
+  };
+
+  const shadowX = useTransform(rotY, [-14, 14], ["-20px", "20px"]);
+  const shadowY = useTransform(rotX, [-9, 9], ["20px", "-20px"]);
+  const boxShadow = useTransform(
+    [shadowX, shadowY],
+    ([x, y]) => `${x} ${y} 60px -10px rgba(255,215,0,0.18), 0 40px 80px -20px rgba(0,0,0,0.9)`
+  );
+
+  return (
+    <div
+      ref={cardRef}
+      style={{ perspective: "800px" }}
+      className="relative min-h-[430px] sm:min-h-[400px] lg:min-h-[380px]"
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
+    >
+      <motion.div
+        style={{ rotateX: rotX, rotateY: rotY, transformStyle: "preserve-3d", boxShadow }}
+        className="relative h-full rounded-3xl border border-white/10 bg-neutral-950 p-4"
+      >
+        {/* Atmospheric background */}
+        <div className="absolute inset-0 rounded-3xl bg-[radial-gradient(ellipse_at_70%_10%,rgba(255,215,0,0.08),transparent_55%)]" />
+        <div className="absolute inset-0 rounded-3xl bg-[linear-gradient(155deg,rgba(255,255,255,0.03),transparent_45%)]" />
+
+        {/* Browser chrome */}
+        <div className="relative mb-3 flex h-8 items-center gap-2 rounded-xl border border-white/[0.07] bg-white/[0.025] px-3">
+          <span className="h-2 w-2 rounded-full bg-red-500/80 shadow-[0_0_6px_rgba(239,68,68,0.6)]" />
+          <span className="h-2 w-2 rounded-full bg-yellow-400/80 shadow-[0_0_6px_rgba(250,204,21,0.6)]" />
+          <span className="h-2 w-2 rounded-full bg-green-500/80 shadow-[0_0_6px_rgba(34,197,94,0.6)]" />
+          <div className="ml-2 h-2 flex-1 rounded-full bg-white/[0.05]" />
         </div>
 
-        <div className="relative grid gap-4 md:grid-cols-[1fr_0.74fr]">
-          <div className="rounded-2xl border border-taurusGold/20 bg-taurusGold/[0.035] p-4">
+        <div className="relative grid gap-3 md:grid-cols-[1fr_0.74fr]">
+          {/* Left panel */}
+          <div
+            style={{ transform: "translateZ(24px)" }}
+            className="rounded-2xl border border-taurusGold/20 bg-gradient-to-br from-taurusGold/[0.06] to-transparent p-4 shadow-[0_12px_40px_rgba(0,0,0,0.5)]"
+          >
             <div className="mb-4 flex items-start justify-between gap-3">
               <div>
-                <div className="mb-2 text-[9px] font-black uppercase tracking-widest text-taurusGold">Homepage first view</div>
-                <div className="h-5 w-52 max-w-full rounded bg-white/85" />
-                <div className="mt-2 h-2.5 w-36 rounded bg-white/20" />
+                <div className="mb-2 text-[9px] font-black uppercase tracking-widest text-taurusGold/80">Homepage first view</div>
+                <div className="h-5 w-48 max-w-full rounded-md bg-white/80" />
+                <div className="mt-2 h-2 w-32 rounded-md bg-white/15" />
               </div>
-              <div className="rounded-full border border-taurusGold/25 bg-black/40 px-3 py-1.5 text-[9px] font-black uppercase tracking-widest text-taurusGold">
+              <div className="rounded-full border border-taurusGold/25 bg-black/60 px-3 py-1.5 text-[9px] font-black uppercase tracking-widest text-taurusGold shadow-[0_0_16px_rgba(255,215,0,0.15)]">
                 Ready
               </div>
             </div>
-
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-2.5">
               {contentBlocks.map(({ label, icon: Icon }, index) => (
                 <div
                   key={label}
-                  className="group/content rounded-xl border border-white/10 bg-black/35 p-3 transition-colors duration-300 hover:border-taurusGold/35 hover:bg-black/55"
+                  className="group/content rounded-xl border border-white/[0.07] bg-black/40 p-3 transition-all duration-300 hover:border-taurusGold/35 hover:bg-black/55 hover:shadow-[0_4px_20px_rgba(255,215,0,0.08)]"
                 >
-                  <Icon className={`mb-3 h-4 w-4 transition-transform duration-300 group-hover/content:scale-125 ${index === 2 ? "fill-taurusGold text-taurusGold" : "text-taurusGold"}`} />
-                  <div className="mb-2 text-[9px] font-black uppercase tracking-widest text-white">{label}</div>
+                  <Icon className={`mb-2.5 h-4 w-4 transition-transform duration-300 group-hover/content:scale-110 ${index === 2 ? "fill-taurusGold text-taurusGold" : "text-taurusGold/70"}`} />
+                  <div className="mb-2 text-[9px] font-black uppercase tracking-widest text-white/80">{label}</div>
                   <div className="space-y-1.5">
-                    <div className="h-1.5 w-full rounded-full bg-white/15" />
-                    <div className="h-1.5 w-2/3 rounded-full bg-white/10" />
+                    <div className="h-1.5 w-full rounded-full bg-white/10" />
+                    <div className="h-1.5 w-2/3 rounded-full bg-white/[0.06]" />
                   </div>
                 </div>
               ))}
             </div>
           </div>
 
-          <div className="relative rounded-2xl border border-white/10 bg-white/[0.025] p-4">
-            <div className="pointer-events-none absolute left-0 top-1/2 hidden h-px w-10 -translate-x-8 bg-gradient-to-r from-transparent to-taurusGold/70 md:block" />
+          {/* Actions panel — floats higher */}
+          <div
+            style={{ transform: "translateZ(48px)" }}
+            className="relative rounded-2xl border border-white/[0.08] bg-white/[0.025] p-4 shadow-[0_20px_60px_rgba(0,0,0,0.7),0_0_0_1px_rgba(255,215,0,0.06)]"
+          >
+            <div className="pointer-events-none absolute left-0 top-1/2 hidden h-px w-8 -translate-x-6 bg-gradient-to-r from-transparent to-taurusGold/50 md:block" />
             <div className="mb-3 flex items-center justify-between">
               <div className="text-[9px] font-black uppercase tracking-widest text-gray-500">Actions collected</div>
-              <MousePointerClick className="h-4 w-4 text-taurusGold" />
+              <MousePointerClick className="h-3.5 w-3.5 text-taurusGold/60" />
             </div>
             <div className="space-y-2">
               {actions.map(({ label, icon: Icon }) => (
                 <div
                   key={label}
-                  className="group/customer flex items-center gap-3 rounded-xl border border-taurusGold/20 bg-taurusGold/[0.045] px-3 py-3 transition-colors duration-300 hover:border-taurusGold/60 hover:bg-taurusGold/10"
+                  className="group/action flex items-center gap-2.5 rounded-xl border border-taurusGold/15 bg-taurusGold/[0.04] px-3 py-2.5 transition-all duration-300 hover:border-taurusGold/55 hover:bg-taurusGold/[0.09] hover:shadow-[0_4px_20px_rgba(255,215,0,0.12)]"
                 >
-                  <Icon className="h-4 w-4 text-taurusGold transition-transform duration-300 group-hover/customer:scale-125" />
-                  <span className="text-[10px] font-black uppercase tracking-widest text-white">{label}</span>
+                  <Icon className="h-3.5 w-3.5 text-taurusGold transition-transform duration-300 group-hover/action:scale-110" />
+                  <span className="text-[9px] font-black uppercase tracking-widest text-white/80">{label}</span>
                 </div>
               ))}
             </div>
-            <div className="mt-3 grid grid-cols-3 gap-2">
+            <div className="mt-3 grid grid-cols-3 gap-1.5">
               {["4.9", "Open", "Local"].map((item, index) => (
-                <div key={item} className={`rounded-xl border px-2 py-3 text-center text-[10px] font-black uppercase tracking-widest ${index === 0 ? "border-taurusGold/35 bg-taurusGold/[0.05] text-taurusGold" : "border-white/10 bg-black/30 text-gray-500"}`}>
+                <div key={item} className={`rounded-xl border px-1.5 py-2.5 text-center text-[9px] font-black uppercase tracking-widest ${index === 0 ? "border-taurusGold/35 bg-taurusGold/[0.06] text-taurusGold shadow-[0_0_12px_rgba(255,215,0,0.12)]" : "border-white/[0.07] bg-black/25 text-gray-500"}`}>
                   {item}
                 </div>
               ))}
             </div>
           </div>
         </div>
-      </div>
+
+        {/* Top floating badge — highest layer */}
+        <div
+          style={{ transform: "translateZ(70px)" }}
+          className="absolute -top-4 left-1/2 -translate-x-1/2 flex items-center gap-2 rounded-full border border-taurusGold/30 bg-black/90 px-4 py-2 text-[9px] font-black uppercase tracking-widest text-taurusGold shadow-[0_8px_32px_rgba(0,0,0,0.8),0_0_24px_rgba(255,215,0,0.12)]"
+        >
+          <span className="h-1.5 w-1.5 rounded-full bg-taurusGold shadow-[0_0_8px_rgba(255,215,0,1)]" />
+          Interface layer
+        </div>
+      </motion.div>
     </div>
   );
 }
@@ -853,7 +901,7 @@ function AppleDeviceMockups({ project }: { project: ProjectMockup }) {
   );
 }
 
-function DeviceShowcase({ projectIndex }: { projectIndex: number }) {
+function DeviceShowcase({ projectIndex, onSelectProject }: { projectIndex: number; onSelectProject: (index: number) => void }) {
   const activeProject = projectMockups[projectIndex] ?? projectMockups[0];
   const caseStyle = {
     "--case-accent": activeProject.theme.accent,
@@ -898,10 +946,12 @@ function DeviceShowcase({ projectIndex }: { projectIndex: number }) {
 
       <div className="absolute bottom-5 left-1/2 z-40 flex -translate-x-1/2 gap-2">
         {projectMockups.map((project, index) => (
-          <span
+          <button
             key={project.id}
-            aria-label={project.name}
-            className={`h-1.5 rounded-full transition-all duration-300 ${index === projectIndex ? "w-9 bg-[color:var(--case-accent)] shadow-[0_0_14px_var(--case-accent)]" : "w-4 bg-white/15"}`}
+            type="button"
+            aria-label={`Show ${project.name}`}
+            onClick={() => onSelectProject(index)}
+            className={`h-1.5 rounded-full transition-all duration-300 ${index === projectIndex ? "w-9 bg-[color:var(--case-accent)] shadow-[0_0_14px_var(--case-accent)]" : "w-4 bg-white/15 hover:bg-white/30"}`}
           />
         ))}
       </div>
@@ -909,12 +959,12 @@ function DeviceShowcase({ projectIndex }: { projectIndex: number }) {
   );
 }
 
-function ProcessVisual({ stepId, projectIndex }: { stepId: ProcessStepId; projectIndex: number }) {
+function ProcessVisual({ stepId, projectIndex, onSelectProject }: { stepId: ProcessStepId; projectIndex: number; onSelectProject: (index: number) => void }) {
   const visuals: Record<ProcessStepId, ReactNode> = {
     strategy: <StrategyVisual />,
     interface: <InterfaceVisual />,
     development: <DevelopmentVisual />,
-    launch: <DeviceShowcase projectIndex={projectIndex} />
+    launch: <DeviceShowcase projectIndex={projectIndex} onSelectProject={onSelectProject} />
   };
 
   return (
@@ -974,22 +1024,35 @@ export function BuildProcessSection() {
     setActiveProjectIndex((currentIndex) => currentIndex === nextProjectIndex ? currentIndex : nextProjectIndex);
   });
 
-  const scrollToStep = (index: number) => {
-    if (!canPinSection) {
-      setActiveIndex(index);
-    }
-
-    if (!canPinSection || !scrollContainerRef.current) return;
+  const scrollToSegment = (segment: number) => {
+    if (!scrollContainerRef.current) return;
 
     const sectionTop = window.scrollY + scrollContainerRef.current.getBoundingClientRect().top;
     const scrollableDistance = scrollContainerRef.current.offsetHeight - window.innerHeight;
-    const targetSegment = index >= launchStepIndex ? launchStepIndex : index;
-    const targetProgress = Math.min(0.86, ((targetSegment + 0.5) / totalScrollSegments) * 0.88);
+    const targetProgress = Math.min(0.86, ((segment + 0.5) / totalScrollSegments) * 0.88);
 
     window.scrollTo({
       top: sectionTop + scrollableDistance * targetProgress,
       behavior: "auto"
     });
+  };
+
+  const scrollToStep = (index: number) => {
+    if (!canPinSection) {
+      setActiveIndex(index);
+      return;
+    }
+
+    scrollToSegment(index >= launchStepIndex ? launchStepIndex : index);
+  };
+
+  const handleSelectProject = (index: number) => {
+    if (!canPinSection) {
+      setActiveProjectIndex(index);
+      return;
+    }
+
+    scrollToSegment(launchStepIndex + index);
   };
 
   const handleTabKeyDown = (event: KeyboardEvent<HTMLButtonElement>, index: number) => {
@@ -1084,7 +1147,7 @@ export function BuildProcessSection() {
               <ProcessPills items={activeStep.pills} />
             </motion.div>
 
-            <ProcessVisual stepId={activeStep.id} projectIndex={activeProjectIndex} />
+            <ProcessVisual stepId={activeStep.id} projectIndex={activeProjectIndex} onSelectProject={handleSelectProject} />
           </div>
 
           <div className="relative z-10 mt-6 flex justify-center gap-2">
@@ -1100,114 +1163,6 @@ export function BuildProcessSection() {
           </div>
         </section>
       </div>
-    </section>
-  );
-}
-
-type PhilosophyLineProps = {
-  left: string;
-  right: string;
-  scrollYProgress: MotionValue<number>;
-  index: number;
-  total: number;
-};
-
-function buildLineRange(index: number, total: number) {
-  const slice = 1 / total;
-  const start = index * slice;
-  const end = index === total - 1 ? 1 : start + slice;
-  const fade = slice * 0.18;
-
-  if (index === 0) {
-    return {
-      input: [0, end, Math.min(1, end + fade)],
-      inactiveActiveInactive: false
-    };
-  }
-
-  if (index === total - 1) {
-    return {
-      input: [Math.max(0, start - fade), start, 1],
-      inactiveActiveInactive: false
-    };
-  }
-
-  return {
-    input: [Math.max(0, start - fade), start, end, Math.min(1, end + fade)],
-    inactiveActiveInactive: true
-  };
-}
-
-function PhilosophyLine({ left, right, scrollYProgress, index, total }: PhilosophyLineProps) {
-  const [isHovered, setIsHovered] = useState(false);
-  const { input, inactiveActiveInactive } = buildLineRange(index, total);
-
-  const scale = useTransform(
-    scrollYProgress,
-    input,
-    inactiveActiveInactive ? [0.9, 1.05, 1.05, 0.9] : index === 0 ? [1.05, 1.05, 0.9] : [0.9, 1.05, 1.05]
-  );
-
-  const opacity = useTransform(
-    scrollYProgress,
-    input,
-    inactiveActiveInactive ? [0.3, 1, 1, 0.3] : index === 0 ? [1, 1, 0.3] : [0.3, 1, 1]
-  );
-
-  const overColor = useTransform(
-    scrollYProgress,
-    input,
-    inactiveActiveInactive ? ["#737373", "#FFD700", "#FFD700", "#737373"] : index === 0 ? ["#FFD700", "#FFD700", "#737373"] : ["#737373", "#FFD700", "#FFD700"]
-  );
-
-  const overGlow = useTransform(
-    scrollYProgress,
-    input,
-    inactiveActiveInactive
-      ? ["0 0 0 rgba(255,215,0,0)", "0 0 18px rgba(255,215,0,0.5)", "0 0 18px rgba(255,215,0,0.5)", "0 0 0 rgba(255,215,0,0)"]
-      : index === 0
-        ? ["0 0 18px rgba(255,215,0,0.5)", "0 0 18px rgba(255,215,0,0.5)", "0 0 0 rgba(255,215,0,0)"]
-        : ["0 0 0 rgba(255,215,0,0)", "0 0 18px rgba(255,215,0,0.5)", "0 0 18px rgba(255,215,0,0.5)"]
-  );
-
-  return (
-    <motion.h2
-      aria-label={`${left} over ${right}.`}
-      style={{ scale, opacity }}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-      className="flex cursor-default flex-wrap items-baseline justify-center gap-x-3 gap-y-1 text-center font-display text-3xl font-bold uppercase leading-none text-white sm:text-4xl md:text-6xl"
-    >
-      <span className="whitespace-nowrap">{left}</span>
-      <motion.span
-        style={{
-          color: isHovered ? "#FFD700" : overColor,
-          textShadow: isHovered ? "0 0 18px rgba(255,215,0,0.65)" : overGlow
-        }}
-        className="whitespace-nowrap font-body text-xl font-light italic lowercase md:text-3xl"
-      >
-        over
-      </motion.span>
-      <span className="whitespace-nowrap">
-        {right}
-        <span className="text-taurusGold">.</span>
-      </span>
-    </motion.h2>
-  );
-}
-
-export function PhilosophySection() {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const { scrollYProgress } = useScroll({
-    target: containerRef,
-    offset: ["start 75%", "end 25%"]
-  });
-
-  return (
-    <section ref={containerRef} className="flex w-full flex-col items-center gap-6 px-4 py-20 text-center md:gap-8">
-      <PhilosophyLine left="Balance" right="Chaos" scrollYProgress={scrollYProgress} index={0} total={3} />
-      <PhilosophyLine left="Symmetry" right="Noise" scrollYProgress={scrollYProgress} index={1} total={3} />
-      <PhilosophyLine left="Clarity" right="Jargon" scrollYProgress={scrollYProgress} index={2} total={3} />
     </section>
   );
 }

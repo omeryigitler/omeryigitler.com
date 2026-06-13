@@ -58,3 +58,7 @@ __pycache__/
 
 # Allow pricing-tool dist
 !pricing-tool/dist/
+.env*.local
+
+# Claude local settings
+.claude/settings.local.json

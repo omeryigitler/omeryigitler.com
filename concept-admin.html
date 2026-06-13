@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Ticker Admin — Concept</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Syncopate:wght@700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --obsidian: #050505;
+            --gold: #FFD700;
+            --mono: "JetBrains Mono", ui-monospace, Menlo, monospace;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background: var(--obsidian);
+            color: #fff;
+            font-family: var(--mono);
+            min-height: 100vh;
+        }
+
+        .topbar {
+            background: var(--gold);
+            color: #050505;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.3em;
+            text-transform: uppercase;
+            text-align: center;
+            padding: 8px 16px;
+        }
+
+        .wrap {
+            max-width: 720px;
+            margin: 0 auto;
+            padding: 56px 24px 80px;
+        }
+
+        h1 {
+            font-family: "Syncopate", sans-serif;
+            font-size: 22px;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+        }
+
+        .prompt-line {
+            font-size: 13px;
+            color: #9ca3af;
+            margin-bottom: 40px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .prompt-line .prompt { color: var(--gold); font-weight: 700; }
+
+        .cursor {
+            display: inline-block;
+            width: 8px;
+            height: 1em;
+            background: var(--gold);
+            animation: blink 1.05s steps(1) infinite;
+        }
+
+        @keyframes blink { 50% { opacity: 0; } }
+
+        .panel {
+            border: 1px solid rgba(255, 255, 255, 0.09);
+            border-radius: 14px;
+            background: rgba(255, 255, 255, 0.022);
+            padding: 28px;
+            margin-bottom: 24px;
+        }
+
+        .panel h2 {
+            font-size: 12px;
+            letter-spacing: 0.24em;
+            text-transform: uppercase;
+            color: var(--gold);
+            margin-bottom: 20px;
+        }
+
+        form, .key-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        input, select {
+            font-family: var(--mono);
+            font-size: 13px;
+            color: #fff;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            border-radius: 8px;
+            padding: 12px 14px;
+            outline: none;
+        }
+
+        input { flex: 1; min-width: 160px; }
+
+        #symInput { text-transform: uppercase; }
+
+        input:focus, select:focus {
+            border-color: rgba(255, 215, 0, 0.6);
+            box-shadow: 0 0 18px rgba(255, 215, 0, 0.12);
+        }
+
+        select { background: #111; }
+
+        button {
+            font-family: var(--mono);
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            background: var(--gold);
+            color: #050505;
+            border: 1px solid var(--gold);
+            border-radius: 8px;
+            padding: 12px 22px;
+            cursor: pointer;
+            transition: box-shadow 0.25s, transform 0.2s;
+        }
+
+        button:hover {
+            box-shadow: 0 0 26px rgba(255, 215, 0, 0.4);
+            transform: translateY(-1px);
+        }
+
+        .hint {
+            width: 100%;
+            font-size: 11px;
+            color: #6b7280;
+            line-height: 1.7;
+            margin-top: 8px;
+        }
+
+        .hint a { color: var(--gold); }
+
+        .key-status {
+            font-size: 11px;
+            margin-top: 10px;
+        }
+
+        .key-status .ok { color: #34d399; }
+        .key-status .off { color: #6b7280; }
+
+        ul { list-style: none; }
+
+        li {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 10px;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 12px 16px;
+            margin-bottom: 10px;
+            font-size: 13px;
+        }
+
+        li .sym { font-weight: 700; letter-spacing: 0.08em; }
+
+        li .type {
+            font-size: 10px;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            color: var(--gold);
+            border: 1px solid rgba(255, 215, 0, 0.35);
+            border-radius: 999px;
+            padding: 3px 10px;
+            margin-left: auto;
+        }
+
+        li .remove {
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            color: #9ca3af;
+            border-radius: 8px;
+            padding: 6px 12px;
+        }
+
+        li .remove:hover {
+            border-color: #ef4444;
+            color: #ef4444;
+            box-shadow: none;
+        }
+
+        .back {
+            display: inline-block;
+            margin-top: 16px;
+            font-size: 12px;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            color: var(--gold);
+            text-decoration: none;
+        }
+
+        .back:hover { text-decoration: underline; }
+
+        .saved-flash {
+            font-size: 11px;
+            color: #34d399;
+            margin-left: 12px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .cursor { animation: none; }
+        }
+    </style>
+</head>
+<body>
+    <div class="topbar">Concept admin — market ticker management</div>
+
+    <div class="wrap">
+        <h1>Ticker Admin</h1>
+        <p class="prompt-line"><span class="prompt">$</span> <span id="typedLine"></span><span class="cursor"></span><span id="savedFlash" class="saved-flash">saved ✓</span></p>
+
+        <div class="panel">
+            <h2>Add symbol</h2>
+            <form id="addForm">
+                <input id="symInput" type="text" placeholder="SAP, BTC, USD/TRY..." required>
+                <select id="typeInput">
+                    <option value="stock">Stock</option>
+                    <option value="crypto">Crypto</option>
+                    <option value="fx">FX pair</option>
+                </select>
+                <button type="submit">Add</button>
+                <p class="hint">
+                    Everything is live, no keys needed: stocks come from Yahoo Finance through the site's own <code>/api/quotes</code> endpoint,
+                    crypto (BTC, ETH, SOL, DOGE, XRP, AVAX) from CoinGecko, FX pairs like USD/TRY from Frankfurter.
+                    Demo values only appear if a source is temporarily unreachable.
+                </p>
+            </form>
+        </div>
+
+        <div class="panel">
+            <h2>Active symbols</h2>
+            <ul id="symbolList"></ul>
+        </div>
+
+        <a class="back" href="concept-hero.html">← back to concept page</a>
+    </div>
+
+    <script>
+        (function () {
+            const STORAGE_KEY = "concept-ticker-symbols";
+            const DEFAULT_SYMBOLS = [
+                { sym: "SAP", type: "stock" },
+                { sym: "AAPL", type: "stock" },
+                { sym: "NVDA", type: "stock" },
+                { sym: "BTC", type: "crypto" },
+                { sym: "ETH", type: "crypto" },
+                { sym: "USD/TRY", type: "fx" },
+                { sym: "EUR/TRY", type: "fx" }
+            ];
+
+            const list = document.getElementById("symbolList");
+            const form = document.getElementById("addForm");
+            const symInput = document.getElementById("symInput");
+            const typeInput = document.getElementById("typeInput");
+            const flash = document.getElementById("savedFlash");
+
+            function load() {
+                try {
+                    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
+                    if (Array.isArray(saved) && saved.length) return saved;
+                } catch (e) {}
+                return DEFAULT_SYMBOLS.slice();
+            }
+
+            function save(symbols) {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(symbols));
+                flash.style.opacity = "1";
+                setTimeout(() => { flash.style.opacity = "0"; }, 1400);
+            }
+
+            function render() {
+                const symbols = load();
+                list.innerHTML = "";
+                symbols.forEach((s, index) => {
+                    const li = document.createElement("li");
+                    const typeLabel = { stock: "stock", crypto: "crypto", fx: "fx" }[s.type] || s.type;
+                    li.innerHTML = '<span class="sym">' + s.sym + '</span><span class="type">' + typeLabel + '</span>';
+                    const btn = document.createElement("button");
+                    btn.type = "button";
+                    btn.className = "remove";
+                    btn.textContent = "remove";
+                    btn.onclick = () => {
+                        const next = load();
+                        next.splice(index, 1);
+                        save(next);
+                        render();
+                    };
+                    li.appendChild(btn);
+                    list.appendChild(li);
+                });
+            }
+
+            form.onsubmit = (e) => {
+                e.preventDefault();
+                const sym = symInput.value.trim().toUpperCase();
+                if (!sym) return;
+                const symbols = load();
+                if (symbols.some((s) => s.sym === sym)) { symInput.value = ""; return; }
+                symbols.push({ sym: sym, type: typeInput.value });
+                save(symbols);
+                symInput.value = "";
+                render();
+            };
+
+            render();
+        })();
+
+        (function () {
+            const el = document.getElementById("typedLine");
+            const text = "manage --market-banner";
+            if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+                el.textContent = text;
+                return;
+            }
+
+            let index = 0;
+            let deleting = false;
+
+            (function step() {
+                el.textContent = text.slice(0, index);
+
+                if (!deleting) {
+                    if (index < text.length) { index += 1; setTimeout(step, 52 + Math.random() * 46); }
+                    else { deleting = true; setTimeout(step, 2600); }
+                } else {
+                    if (index > 0) { index -= 1; setTimeout(step, 38); }
+                    else { deleting = false; setTimeout(step, 600); }
+                }
+            })();
+        })();
+    </script>
+</body>
+</html>
