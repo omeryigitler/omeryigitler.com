@@ -54,9 +54,14 @@ function panel({ title, subtitle, rows = [], footer }) {
 function actionKeyboard(sessionID) {
   return {
     inline_keyboard: [
-      [{ text: "🚨 ALARM", callback_data: `alarm_${sessionID}` }],
-      [{ text: "⛔ BLOCK", callback_data: `block_${sessionID}` }],
-      [{ text: "🟢 CLEAR", callback_data: `clear_${sessionID}` }],
+      [
+        { text: "❄️ FREEZE", callback_data: `freeze_${sessionID}` },
+        { text: "🚨 ALARM", callback_data: `alarm_${sessionID}` },
+      ],
+      [
+        { text: "⛔ BLOCK", callback_data: `block_${sessionID}` },
+        { text: "🟢 CLEAR", callback_data: `clear_${sessionID}` },
+      ],
     ],
   };
 }

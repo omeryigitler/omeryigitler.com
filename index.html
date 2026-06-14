@@ -4,6 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="index, follow">
+    <script>
+        /* Hide CookieYes during the globe intro; safety-remove after 12s in case the intro never reveals */
+        document.documentElement.classList.add("intro-active");
+        setTimeout(function () { document.documentElement.classList.remove("intro-active"); }, 12000);
+    </script>
     <title>Ömer YİĞİTLER | Custom Web Design & Development Services</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -17,14 +22,15 @@
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
-        html { scroll-behavior: smooth; }
+        html { scroll-behavior: smooth; overflow-x: clip; }
 
         body {
             background: var(--obsidian);
             color: #fff;
             font-family: "Manrope", sans-serif;
             min-height: 100vh;
-            overflow-x: hidden;
+            overflow-x: clip;
+            max-width: 100%;
         }
 
         /* ---- gold market ticker ---- */
@@ -56,41 +62,14 @@
 
         .ticker-item {
             display: inline-flex;
-            align-items: baseline;
-            gap: 9px;
-            letter-spacing: 0.06em;
-        }
-
-        .ticker-item .sym { text-transform: uppercase; }
-        .ticker-item .price { font-weight: 400; }
-        .ticker-item .chg-up { color: #14532d; }
-        .ticker-item .chg-down { color: #7f1d1d; }
-        .ticker-item .tag-demo {
-            font-size: 9px;
-            font-weight: 400;
-            letter-spacing: 0.2em;
-            opacity: 0.55;
-        }
-
-        .ticker-admin {
-            position: absolute;
-            right: 0;
-            top: 0;
-            bottom: 0;
-            z-index: 2;
-            display: flex;
             align-items: center;
-            gap: 6px;
-            padding: 0 14px;
-            background: var(--gold);
-            color: #050505;
-            text-decoration: none;
-            font-size: 11px;
-            letter-spacing: 0.16em;
+            gap: 14px;
+            letter-spacing: 0.12em;
             text-transform: uppercase;
         }
 
-        .ticker-admin:hover { text-decoration: underline; }
+        .ticker-item .msg { font-weight: 700; }
+        .ticker-item .sep { color: rgba(5, 5, 5, 0.45); }
 
         @media (prefers-reduced-motion: reduce) {
             .ticker-track { animation: none; }
@@ -148,6 +127,7 @@
             left: 50%;
             top: 480px;
             width: 720px;
+            max-width: 100%;
             height: 480px;
             transform: translate(-50%, -50%);
             background: radial-gradient(ellipse at center, rgba(255, 215, 0, 0.07), transparent 65%);
@@ -851,17 +831,18 @@
             gap: 0.35em;
             font-family: "Syncopate", sans-serif;
             font-weight: 700;
-            font-size: clamp(26px, 4.6vw, 62px);
+            font-size: clamp(30px, 5.6vw, 72px);
+            letter-spacing: -0.03em;
             text-transform: uppercase;
-            line-height: 1.15;
-            margin: 22px 0;
-            opacity: 0.3;
+            line-height: 1.12;
+            margin: 26px 0;
+            opacity: 0.35;
             transform: scale(0.94);
             transition: opacity 0.5s ease, transform 0.5s ease;
         }
 
         .phil-line .w {
-            background: linear-gradient(to bottom, #f9fafb 35%, #6b7280);
+            background: linear-gradient(to bottom, #ffffff, #4b5563);
             -webkit-background-clip: text;
             background-clip: text;
             color: transparent;
@@ -874,8 +855,9 @@
             font-style: italic;
             font-weight: 300;
             text-transform: lowercase;
-            font-size: 0.52em;
-            color: #6b7280;
+            letter-spacing: normal;
+            font-size: 0.5em;
+            color: #374151;
             transition: color 0.5s ease, text-shadow 0.5s ease;
         }
 
@@ -1015,6 +997,18 @@
             box-shadow: 0 0 44px rgba(255, 215, 0, 0.5);
         }
 
+        .send-btn:disabled { opacity: 0.6; cursor: default; transform: none; box-shadow: none; }
+
+        .form-status {
+            min-height: 1.2em;
+            margin-top: 12px;
+            font-family: var(--mono);
+            font-size: 12px;
+            letter-spacing: 0.04em;
+        }
+        .form-status.ok { color: #34d399; }
+        .form-status.err { color: #f87171; }
+
         .status-head {
             display: flex;
             align-items: center;
@@ -1055,6 +1049,35 @@
             animation: blink 1.8s steps(1) infinite;
         }
 
+        /* ---- 3D System Status card ---- */
+        .status-card {
+            perspective: 1000px;
+            overflow: visible;
+        }
+
+        .status-3d {
+            position: relative;
+            transform-style: preserve-3d;
+            transform: rotateX(0deg) rotateY(0deg);
+            transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+            will-change: transform;
+        }
+
+        .status-3d > * { transform-style: preserve-3d; }
+
+        .status-grid {
+            position: absolute;
+            inset: -24px;
+            transform: translateZ(-40px);
+            background:
+                linear-gradient(rgba(255, 215, 0, 0.06) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 215, 0, 0.06) 1px, transparent 1px);
+            background-size: 26px 26px;
+            -webkit-mask-image: radial-gradient(ellipse at center, #000 35%, transparent 75%);
+            mask-image: radial-gradient(ellipse at center, #000 35%, transparent 75%);
+            pointer-events: none;
+        }
+
         .bars {
             position: relative;
             display: flex;
@@ -1062,25 +1085,57 @@
             gap: 10px;
             height: 150px;
             margin-bottom: 22px;
-            overflow: hidden;
+            transform-style: preserve-3d;
+            /* keep vertical glow, clip the horizontal scan at the card edges */
+            clip-path: inset(-44px 0px -16px 0px);
         }
 
         .bars span {
+            position: relative;
             flex: 1;
-            border-radius: 6px 6px 0 0;
-            background: linear-gradient(to top, rgba(255, 215, 0, 0.16), rgba(255, 215, 0, 0.5));
+            border-radius: 5px 5px 0 0;
+            background: linear-gradient(to top, rgba(255, 215, 0, 0.22), #FFD700);
             transition: height 1s cubic-bezier(0.22, 1, 0.36, 1);
+            box-shadow: 0 0 18px -4px rgba(255, 215, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.5);
+            transform-style: preserve-3d;
         }
 
-        .bars::after {
+        /* extruded side face for 3D depth */
+        .bars span::before {
             content: "";
             position: absolute;
             top: 0;
-            bottom: 0;
+            right: -5px;
+            width: 5px;
+            height: 100%;
+            background: linear-gradient(to top, rgba(140, 110, 0, 0.5), rgba(190, 150, 0, 0.85));
+            transform: skewY(-45deg);
+            transform-origin: top;
+            border-radius: 0 2px 0 0;
+        }
+
+        /* glossy top cap */
+        .bars span::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            border-radius: 5px 5px 0 0;
+            background: rgba(255, 255, 255, 0.7);
+        }
+
+        .bars-scan {
+            position: absolute;
+            top: -6px;
+            bottom: -6px;
             left: -90px;
             width: 70px;
-            background: linear-gradient(to right, transparent, rgba(255, 215, 0, 0.1), transparent);
+            transform: translateZ(8px);
+            background: linear-gradient(to right, transparent, rgba(255, 215, 0, 0.18), transparent);
             animation: scanX 3.6s linear infinite;
+            pointer-events: none;
         }
 
         @keyframes scanX {
@@ -1310,6 +1365,221 @@
 
         .foot-copy { color: #4b5563; }
 
+        /* ---- project configurator modal ---- */
+        .cfg-overlay, .ok-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 200;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            background: rgba(3, 3, 3, 0.86);
+            backdrop-filter: blur(10px);
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s;
+        }
+        .cfg-overlay.open, .ok-overlay.open { opacity: 1; visibility: visible; }
+
+        .cfg-panel {
+            width: 100%;
+            max-width: 640px;
+            max-height: 88vh;
+            display: flex;
+            flex-direction: column;
+            border: 1px solid rgba(255, 215, 0, 0.25);
+            border-radius: 20px;
+            background: #0a0a0c;
+            box-shadow: 0 40px 100px -40px rgba(0, 0, 0, 0.95), 0 0 60px -30px rgba(255, 215, 0, 0.3);
+            transform: scale(0.96) translateY(10px);
+            transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+            overflow: hidden;
+        }
+        .cfg-overlay.open .cfg-panel { transform: none; }
+
+        .cfg-head {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 16px;
+            padding: 22px 26px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+            background: rgba(255, 255, 255, 0.02);
+        }
+        .cfg-step { font-family: var(--mono); font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--gold); margin-bottom: 6px; }
+        .cfg-title { font-family: "Syncopate", sans-serif; font-size: 18px; font-weight: 700; text-transform: uppercase; }
+        .cfg-x {
+            width: 34px; height: 34px;
+            flex-shrink: 0;
+            border-radius: 50%;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            background: rgba(255, 255, 255, 0.04);
+            color: #9ca3af;
+            cursor: pointer;
+            font-size: 13px;
+            transition: color 0.2s, border-color 0.2s;
+        }
+        .cfg-x:hover { color: var(--gold); border-color: rgba(255, 215, 0, 0.5); }
+
+        .cfg-body {
+            padding: 24px 26px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 26px;
+        }
+        .cfg-body::-webkit-scrollbar { width: 0; }
+        .cfg-body { scrollbar-width: none; }
+
+        /* neutralize the global `section { padding: 110px 24px }` rule inside the modal */
+        .cfg-sec { padding: 0; margin: 0; max-width: none; }
+
+        .cfg-seclabel {
+            font-family: var(--mono);
+            font-size: 10px;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            color: var(--gold);
+            padding-bottom: 10px;
+            margin-bottom: 16px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            min-height: 1.2em;
+        }
+        .cfg-field { margin-bottom: 16px; }
+        .cfg-field:last-child { margin-bottom: 0; }
+        .cfg-flabel { display: block; font-family: var(--mono); font-size: 10px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; color: #9ca3af; margin-bottom: 10px; }
+        .cfg-flabel-row { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 10px; }
+        .cfg-flabel-row .cfg-flabel { margin-bottom: 0; }
+        .cfg-rangeval { font-family: var(--mono); font-size: 11px; font-weight: 700; color: var(--gold); }
+
+        .chip-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+        .chip-grid.two { grid-template-columns: repeat(2, 1fr); }
+        .chip, .check {
+            font-family: var(--mono);
+            font-size: 11px;
+            font-weight: 700;
+            color: #d1d5db;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 10px;
+            padding: 12px 10px;
+            cursor: pointer;
+            text-align: center;
+            transition: background 0.2s, border-color 0.2s, color 0.2s;
+        }
+        .chip:hover, .check:hover { background: rgba(255, 255, 255, 0.07); }
+        .chip.is-on { background: rgba(255, 215, 0, 0.12); border-color: var(--gold); color: var(--gold); }
+
+        .check-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+        .check { display: flex; align-items: center; gap: 10px; text-align: left; }
+        .check::before {
+            content: "";
+            width: 16px; height: 16px;
+            flex-shrink: 0;
+            border-radius: 4px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: rgba(0, 0, 0, 0.4);
+            transition: background 0.2s, border-color 0.2s;
+        }
+        .check.is-on { border-color: rgba(255, 215, 0, 0.5); color: var(--gold); }
+        .check.is-on::before {
+            background: var(--gold);
+            border-color: var(--gold);
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23050505' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: center;
+        }
+
+        .cfg-range { width: 100%; accent-color: #FFD700; height: 4px; }
+        .cfg-rangeticks { display: flex; justify-content: space-between; font-family: var(--mono); font-size: 9px; color: #4b5563; margin-top: 6px; }
+
+        .cfg-two { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+        /* modal dropdown (reuses ticker-admin pattern) */
+        .cfg-panel .dd { position: relative; }
+        .cfg-panel .dd-trigger {
+            width: 100%;
+            display: flex; align-items: center; justify-content: space-between; gap: 10px;
+            font-family: var(--mono); font-size: 12px; font-weight: 700; color: var(--gold);
+            background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255, 215, 0, 0.3);
+            border-radius: 10px; padding: 12px 14px; cursor: pointer;
+        }
+        .cfg-panel .dd-trigger svg { width: 11px; height: 8px; fill: var(--gold); transition: transform 0.2s; }
+        .cfg-panel .dd.open .dd-trigger svg { transform: rotate(180deg); }
+        .cfg-panel .dd-menu {
+            position: absolute; top: calc(100% + 6px); left: 0; right: 0;
+            list-style: none; background: #0d0d0d; border: 1px solid rgba(255, 215, 0, 0.3);
+            border-radius: 10px; padding: 5px; z-index: 5;
+            opacity: 0; transform: translateY(-6px); pointer-events: none;
+            transition: opacity 0.18s, transform 0.18s;
+            box-shadow: 0 18px 40px -20px rgba(0, 0, 0, 0.9);
+        }
+        .cfg-panel .dd.open .dd-menu { opacity: 1; transform: none; pointer-events: auto; }
+        .cfg-panel .dd-menu li {
+            font-family: var(--mono); font-size: 12px; font-weight: 700; color: #d1d5db;
+            padding: 10px 12px; border-radius: 6px; cursor: pointer; transition: background 0.15s, color 0.15s;
+        }
+        .cfg-panel .dd-menu li:hover { background: rgba(255, 215, 0, 0.12); color: var(--gold); }
+        .cfg-panel .dd-menu li.is-selected { background: var(--gold); color: #050505; }
+
+        .cfg-foot {
+            display: flex; align-items: center; justify-content: space-between;
+            gap: 14px;
+            padding: 18px 26px;
+            border-top: 1px solid rgba(255, 255, 255, 0.07);
+            background: rgba(0, 0, 0, 0.4);
+            flex-wrap: wrap;
+        }
+        .cfg-foot-right { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; justify-content: flex-end; }
+        .cfg-foot-right .cf-turnstile { transform: scale(0.85); transform-origin: center; }
+        .cfg-back { font-family: var(--mono); font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: #6b7280; background: none; border: none; cursor: pointer; transition: color 0.2s; }
+        .cfg-back:hover { color: #fff; }
+        .cfg-submit {
+            font-family: var(--mono); font-size: 11px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase;
+            color: #050505; background: var(--gold); border: none; border-radius: 999px; padding: 14px 26px; cursor: pointer;
+            transition: box-shadow 0.3s, transform 0.2s;
+        }
+        .cfg-submit:hover { transform: translateY(-1px); box-shadow: 0 0 30px rgba(255, 215, 0, 0.45); }
+        .cfg-submit:disabled { opacity: 0.6; cursor: default; transform: none; box-shadow: none; }
+
+        /* success modal */
+        .ok-panel {
+            width: 100%; max-width: 420px;
+            text-align: center;
+            border: 1px solid rgba(52, 211, 153, 0.3);
+            border-radius: 20px;
+            background: #0a0a0c;
+            padding: 44px 34px;
+            box-shadow: 0 40px 100px -40px rgba(0, 0, 0, 0.95), 0 0 60px -30px rgba(52, 211, 153, 0.35);
+            transform: scale(0.96) translateY(10px);
+            transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+        .ok-overlay.open .ok-panel { transform: none; }
+        .ok-ring {
+            width: 64px; height: 64px; margin: 0 auto 22px;
+            display: flex; align-items: center; justify-content: center;
+            border-radius: 50%;
+            border: 1px solid rgba(52, 211, 153, 0.4);
+            color: #34d399;
+            box-shadow: 0 0 30px -8px rgba(52, 211, 153, 0.5);
+        }
+        .ok-ring svg { width: 28px; height: 28px; }
+        .ok-tag { font-family: var(--mono); font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: #34d399; margin-bottom: 12px; }
+        .ok-title { font-family: "Syncopate", sans-serif; font-size: 20px; font-weight: 700; text-transform: uppercase; margin-bottom: 12px; }
+        .ok-text { font-family: var(--mono); font-size: 12.5px; line-height: 1.7; color: #9ca3af; margin-bottom: 28px; }
+        .ok-close {
+            font-family: var(--mono); font-size: 11px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase;
+            color: #050505; background: var(--gold); border: none; border-radius: 999px; padding: 13px 32px; cursor: pointer;
+            transition: box-shadow 0.3s, transform 0.2s;
+        }
+        .ok-close:hover { transform: translateY(-1px); box-shadow: 0 0 30px rgba(255, 215, 0, 0.45); }
+
+        @media (max-width: 600px) {
+            .chip-grid { grid-template-columns: repeat(2, 1fr); }
+            .check-grid, .cfg-two { grid-template-columns: 1fr; }
+        }
+
         @media (max-width: 900px) {
             .contact-grid { grid-template-columns: 1fr; }
         }
@@ -1361,7 +1631,21 @@
     gtag('js', new Date());
     gtag('config', 'G-KXDXVM2MY5');
   </script>
-    
+
+    <!-- EmailJS — email notifications for the contact / project form -->
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+    <script type="text/javascript">
+        (function () { if (typeof emailjs !== "undefined") emailjs.init("V1YT-CYD1Y7eX0BIE"); })();
+    </script>
+
+    <!-- Cloudflare Turnstile — bot protection for the project form -->
+    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+    <script>
+        window.__tsToken = "";
+        window.onTurnstileOk = function (token) { window.__tsToken = token; };
+        window.onTurnstileExpired = function () { window.__tsToken = ""; };
+    </script>
+
     <link rel="icon" href="assets/favicon_transparent.svg" type="image/svg+xml">
     <!-- SEO Meta Tags -->
     <meta name="keywords"
@@ -1461,8 +1745,8 @@
         #globe-container {
             position: absolute;
             inset: 0;
-            width: 100vw;
-            height: 100vh;
+            width: 100%;
+            height: 100%;
             opacity: 1;
             transition: opacity 500ms ease;
             will-change: opacity;
@@ -1474,6 +1758,49 @@
             cursor: default;
         }
 
+        /* intro theme: gold grid + corner HUD + boot log */
+        .intro-grid {
+            position: absolute;
+            inset: 0;
+            background:
+                linear-gradient(rgba(255, 215, 0, 0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 215, 0, 0.05) 1px, transparent 1px);
+            background-size: 46px 46px;
+            -webkit-mask-image: radial-gradient(ellipse at center, transparent 8%, #000 80%);
+            mask-image: radial-gradient(ellipse at center, transparent 8%, #000 80%);
+            opacity: 0.7;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .intro-corners span {
+            position: absolute;
+            width: 26px;
+            height: 26px;
+            border: 1px solid rgba(255, 215, 0, 0.55);
+            z-index: 3;
+            pointer-events: none;
+        }
+        .intro-corners span:nth-child(1) { top: 22px; left: 22px; border-right: 0; border-bottom: 0; }
+        .intro-corners span:nth-child(2) { top: 22px; right: 22px; border-left: 0; border-bottom: 0; }
+        .intro-corners span:nth-child(3) { bottom: 22px; left: 22px; border-right: 0; border-top: 0; }
+        .intro-corners span:nth-child(4) { bottom: 22px; right: 22px; border-left: 0; border-top: 0; }
+
+        @keyframes blink { 50% { opacity: 0; } }
+
+        .globe-preloader-status .prompt { color: #FFD700; font-weight: 700; }
+        .globe-preloader-status .dim { color: #9ca3af; text-transform: lowercase; }
+        .globe-preloader-status .arrow { color: #4b5563; }
+        .globe-preloader-status .sval { color: #e5e7eb; text-transform: lowercase; }
+        .globe-preloader-status .scur {
+            display: inline-block;
+            width: 8px;
+            height: 1em;
+            background: #FFD700;
+            vertical-align: -2px;
+            animation: blink 1s steps(1) infinite;
+        }
+
         #signal-overlay {
             position: absolute;
             left: 50%;
@@ -1483,9 +1810,10 @@
             transform: translate(-50%, -50%);
             text-align: center;
             color: #FFD700;
+            font-family: "JetBrains Mono", ui-monospace, Menlo, monospace;
             font-size: clamp(0.8rem, 2vw, 1.125rem);
             font-weight: 700;
-            letter-spacing: 0;
+            letter-spacing: 0.04em;
             line-height: 1.6;
             text-transform: uppercase;
             text-shadow: 0 0 10px rgba(255, 215, 0, 0.9), 0 0 28px rgba(255, 215, 0, 0.35);
@@ -1510,24 +1838,16 @@
             top: 2rem;
             left: 50%;
             display: flex;
-            width: min(90vw, 64rem);
             align-items: center;
-            gap: 1rem;
+            gap: 0.6rem;
             transform: translateX(-50%);
-            color: rgba(255, 215, 0, 0.78);
-            font-size: clamp(0.625rem, 1.4vw, 0.75rem);
+            font-family: "JetBrains Mono", ui-monospace, Menlo, monospace;
+            font-size: clamp(0.75rem, 1.6vw, 0.9rem);
             line-height: 1;
-            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            white-space: nowrap;
             pointer-events: none;
             z-index: 3;
-        }
-
-        .globe-preloader-status::before,
-        .globe-preloader-status::after {
-            content: "";
-            height: 1px;
-            flex: 1;
-            background: rgba(255, 215, 0, 0.32);
         }
 
         .globe-preloader-scan {
@@ -1648,6 +1968,32 @@
         .cky-btn-revisit-wrapper {
             background-color: #000 !important;
             border: 2px solid #FFD700 !important;
+            left: auto !important;
+            right: 20px !important;
+        }
+
+        /* consent banner/box anchored to the bottom-right */
+        div.cky-consent-container {
+            left: auto !important;
+            right: 30px !important;
+        }
+
+        /* button order: Accept, Reject, then Customise (like before) */
+        div.cky-consent-container .cky-notice-btn-wrapper {
+            display: flex !important;
+            flex-wrap: wrap !important;
+            gap: 8px !important;
+        }
+        div.cky-consent-container button.cky-btn-accept { order: 1 !important; }
+        div.cky-consent-container button.cky-btn-reject { order: 2 !important; }
+        div.cky-consent-container button.cky-btn-customize,
+        div.cky-consent-container button.cky-btn-preferences { order: 3 !important; }
+
+        /* hide CookieYes while the 3D globe intro is playing */
+        html.intro-active .cky-consent-container,
+        html.intro-active .cky-overlay,
+        html.intro-active .cky-btn-revisit-wrapper {
+            display: none !important;
         }
 
         .cky-btn-revisit-wrapper img,
@@ -1695,15 +2041,16 @@
         class="fixed inset-0 z-[9999] bg-[#0a0a0a]"
         aria-live="polite"
         aria-label="Initializing location signal">
+        <div class="intro-grid" aria-hidden="true"></div>
         <div id="globe-container" aria-hidden="true"></div>
-        <div class="globe-preloader-status">ORBITAL NODE SCAN</div>
+        <div class="intro-corners" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
+        <div class="globe-preloader-status"><span class="prompt">$</span><span class="dim">status</span><span class="arrow">→</span><span class="sval" id="introStatusVal">scanning orbital nodes</span><span class="scur"></span></div>
         <div class="globe-preloader-scan"></div>
         <div id="signal-overlay">[ SIGNAL ACQUIRED: UNKNOWN NODE ]</div>
     </div>
 
-    <div class="ticker" aria-label="Live market data ticker">
+    <div class="ticker" aria-label="System status band">
         <div class="ticker-track" id="tickerTrack"></div>
-        <a class="ticker-admin" href="ticker-admin.html">⚙ admin</a>
     </div>
 
     <div class="stage">
@@ -1889,38 +2236,45 @@
                     <div class="contact-card">
                         <h3>Start a Project</h3>
                         <p class="lede">Ready to build? Fill out the form below.</p>
-                        <form action="mailto:info@omeryigitler.com" method="post" enctype="text/plain">
+                        <form id="contactForm" novalidate>
                             <div class="form-grid">
                                 <input type="text" name="name" placeholder="Your Name" required>
                                 <input type="email" name="email" placeholder="Email Address" required>
                             </div>
                             <textarea name="message" id="projectMessage" placeholder="Tell us about the project..." required></textarea>
+                            <!-- honeypot: hidden from humans, bots fill it -->
+                            <input type="text" name="website" id="hpField" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0;pointer-events:none;">
                             <button class="send-btn" type="submit">Configure Project &amp; Request Quote</button>
+                            <p class="form-status" id="contactStatus" role="status" aria-live="polite"></p>
                         </form>
                     </div>
 
-                    <div class="contact-card">
-                        <div class="status-head">
-                            <span class="label">System Status</span>
-                            <span class="nominal">Nominal</span>
-                        </div>
-                        <div class="bars" aria-hidden="true">
-                            <span style="height: 34%;"></span>
-                            <span style="height: 62%;"></span>
-                            <span style="height: 48%;"></span>
-                            <span style="height: 88%;"></span>
-                            <span style="height: 58%;"></span>
-                            <span style="height: 42%;"></span>
-                            <span style="height: 76%;"></span>
-                        </div>
-                        <div class="metrics">
-                            <div class="metric"><span class="m-val" id="pingVal">36ms</span><span class="m-label">Response</span></div>
-                            <div class="metric"><span class="m-val">99.98%</span><span class="m-label">Uptime</span></div>
-                            <div class="metric"><span class="m-val" id="reqVal">1,204</span><span class="m-label">Requests</span></div>
-                        </div>
-                        <div class="uptime">
-                            <span class="big">24/7</span>
-                            <span class="label">Uptime monitor</span>
+                    <div class="contact-card status-card" id="statusCard">
+                        <div class="status-3d" id="status3d">
+                            <div class="status-grid" aria-hidden="true"></div>
+                            <div class="status-head" style="transform: translateZ(22px);">
+                                <span class="label">System Status</span>
+                                <span class="nominal">Nominal</span>
+                            </div>
+                            <div class="bars" aria-hidden="true" style="transform: translateZ(46px);">
+                                <span style="height: 34%;"></span>
+                                <span style="height: 62%;"></span>
+                                <span style="height: 48%;"></span>
+                                <span style="height: 88%;"></span>
+                                <span style="height: 58%;"></span>
+                                <span style="height: 42%;"></span>
+                                <span style="height: 76%;"></span>
+                                <div class="bars-scan"></div>
+                            </div>
+                            <div class="metrics" style="transform: translateZ(30px);">
+                                <div class="metric"><span class="m-val" id="pingVal">36ms</span><span class="m-label">Response</span></div>
+                                <div class="metric"><span class="m-val">99.98%</span><span class="m-label">Uptime</span></div>
+                                <div class="metric"><span class="m-val" id="reqVal">1,204</span><span class="m-label">Requests</span></div>
+                            </div>
+                            <div class="uptime" style="transform: translateZ(16px);">
+                                <span class="big">24/7</span>
+                                <span class="label">Uptime monitor</span>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -1934,13 +2288,13 @@
                         </div>
                     </div>
                     <div class="connect">
-                        <a class="icon-btn" href="#" aria-label="Instagram">
+                        <a class="icon-btn" href="https://instagram.com/yigitleromer" target="_blank" rel="noreferrer" aria-label="Instagram">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4.2"/><circle cx="17.3" cy="6.7" r="1.1" fill="currentColor" stroke="none"/></svg>
                         </a>
-                        <a class="icon-btn" href="#" aria-label="X">
+                        <a class="icon-btn" href="https://twitter.com/omeryigitler" target="_blank" rel="noreferrer" aria-label="X">
                             <svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24h-6.657l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25h6.826l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
                         </a>
-                        <a class="icon-btn" href="#" aria-label="LinkedIn">
+                        <a class="icon-btn" href="https://linkedin.com/in/omeryigitler" target="_blank" rel="noreferrer" aria-label="LinkedIn">
                             <svg viewBox="0 0 24 24" fill="currentColor"><path d="M4.98 3.5C4.98 4.88 3.87 6 2.5 6S.02 4.88.02 3.5 1.13 1 2.5 1s2.48 1.12 2.48 2.5zM.5 8h4v15.5h-4zM8.5 8h3.8v2.2h.05c.53-1 1.83-2.2 3.77-2.2 4.03 0 4.78 2.65 4.78 6.1v9.4h-4V15c0-2.03-.04-4.64-2.83-4.64-2.83 0-3.26 2.21-3.26 4.5v8.64h-4z"/></svg>
                         </a>
                         <a class="icon-btn" href="https://github.com/omeryigitler" target="_blank" rel="noreferrer" aria-label="GitHub">
@@ -1966,159 +2320,147 @@
         </footer>
     </div>
 
+    <!-- Project configurator modal -->
+    <div class="cfg-overlay" id="cfgModal" aria-hidden="true">
+        <div class="cfg-panel" role="dialog" aria-modal="true" aria-label="Project configuration">
+            <div class="cfg-head">
+                <div>
+                    <div class="cfg-step">$ configure --project · step 2 / 2</div>
+                    <h3 class="cfg-title">Project Configuration</h3>
+                </div>
+                <button type="button" class="cfg-x" id="cfgClose" aria-label="Close">✕</button>
+            </div>
+
+            <div class="cfg-body">
+                <section class="cfg-sec">
+                    <div class="cfg-seclabel">01 / Scope &amp; Design</div>
+                    <div class="cfg-field">
+                        <label class="cfg-flabel">Site Type</label>
+                        <div class="chip-grid" data-group="siteType">
+                            <button type="button" class="chip is-on" data-value="LANDING">Landing Page</button>
+                            <button type="button" class="chip" data-value="CORPORATE">Corporate</button>
+                            <button type="button" class="chip" data-value="ECOMMERCE">E-Commerce</button>
+                            <button type="button" class="chip" data-value="PROMO">Promotion</button>
+                            <button type="button" class="chip" data-value="PORTAL">Custom Portal</button>
+                        </div>
+                    </div>
+                    <div class="cfg-field">
+                        <label class="cfg-flabel">Design Preference</label>
+                        <div class="chip-grid two" data-group="designType">
+                            <button type="button" class="chip is-on" data-value="TEMPLATE">Template Based</button>
+                            <button type="button" class="chip" data-value="CUSTOM">Custom Design</button>
+                        </div>
+                    </div>
+                    <div class="cfg-field">
+                        <div class="cfg-flabel-row"><label class="cfg-flabel">Page Count</label><span class="cfg-rangeval" id="pageCountVal">10 pages</span></div>
+                        <input type="range" id="pageCount" min="1" max="50" value="10" class="cfg-range">
+                        <div class="cfg-rangeticks"><span>1</span><span>25</span><span>50+</span></div>
+                    </div>
+                </section>
+
+                <section class="cfg-sec">
+                    <div class="cfg-seclabel">02 / Features</div>
+                    <div class="check-grid" data-group="features">
+                        <button type="button" class="check" data-value="seo">SEO Optimization</button>
+                        <button type="button" class="check" data-value="multilang">Multi-Language</button>
+                        <button type="button" class="check" data-value="graphics">Custom Graphics</button>
+                        <button type="button" class="check" data-value="ux">Advanced UX Design</button>
+                        <button type="button" class="check" data-value="crm">CRM Integration</button>
+                    </div>
+                </section>
+
+                <section class="cfg-sec">
+                    <div class="cfg-seclabel">03 / Add-on Services</div>
+                    <div class="check-grid" data-group="addons">
+                        <button type="button" class="check" data-value="logo_design">Logo Design</button>
+                        <button type="button" class="check" data-value="content_writing">Content Writing</button>
+                        <button type="button" class="check" data-value="social_media">Social Media Setup</button>
+                        <button type="button" class="check" data-value="google_maps">Google Maps Registration</button>
+                    </div>
+                </section>
+
+                <section class="cfg-sec">
+                    <div class="cfg-seclabel">04 / Delivery &amp; Support</div>
+                    <div class="cfg-two">
+                        <div class="cfg-field">
+                            <label class="cfg-flabel">Timeline</label>
+                            <div class="dd" data-group="deliverySpeed">
+                                <button type="button" class="dd-trigger"><span class="dd-label">Standard Delivery</span><svg viewBox="0 0 12 8" aria-hidden="true"><path d="M6 8 0 0h12z"/></svg></button>
+                                <ul class="dd-menu" role="listbox">
+                                    <li class="is-selected" data-value="STANDARD">Standard Delivery</li>
+                                    <li data-value="FAST">Fast Track (1.5x)</li>
+                                    <li data-value="URGENT">Urgent (2.0x)</li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="cfg-field">
+                            <label class="cfg-flabel">Monthly Maintenance</label>
+                            <div class="dd" data-group="maintenanceLevel">
+                                <button type="button" class="dd-trigger"><span class="dd-label">None</span><svg viewBox="0 0 12 8" aria-hidden="true"><path d="M6 8 0 0h12z"/></svg></button>
+                                <ul class="dd-menu" role="listbox">
+                                    <li class="is-selected" data-value="NONE">None</li>
+                                    <li data-value="BASIC">Basic Support</li>
+                                    <li data-value="MID">Pro Support</li>
+                                    <li data-value="PREMIUM">Enterprise Support</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <div class="cfg-foot">
+                <button type="button" class="cfg-back" id="cfgBack">← Back</button>
+                <div class="cfg-foot-right">
+                    <div class="cf-turnstile" data-sitekey="0x4AAAAAACbHCrGU00_mYxPM" data-theme="dark" data-callback="onTurnstileOk" data-expired-callback="onTurnstileExpired" data-error-callback="onTurnstileExpired" data-appearance="interaction-only"></div>
+                    <button type="button" class="cfg-submit" id="cfgSubmit">Submit Final Request</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Success modal -->
+    <div class="ok-overlay" id="okModal" aria-hidden="true">
+        <div class="ok-panel" role="dialog" aria-modal="true" aria-label="Request received">
+            <div class="ok-ring"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></div>
+            <div class="ok-tag">$ request → transmitted</div>
+            <h3 class="ok-title">Request Received</h3>
+            <p class="ok-text">Your project brief landed in the studio. I'll review it and get back to you shortly.</p>
+            <button type="button" class="ok-close" id="okClose">Close</button>
+        </div>
+    </div>
+
     <script>
         (function () {
-            const DEFAULT_SYMBOLS = [
-                { sym: "SAP", type: "stock" },
-                { sym: "AAPL", type: "stock" },
-                { sym: "NVDA", type: "stock" },
-                { sym: "BTC", type: "crypto" },
-                { sym: "ETH", type: "crypto" },
-                { sym: "USD/TRY", type: "fx" },
-                { sym: "EUR/TRY", type: "fx" }
+            const MESSAGES = [
+                "[SYSTEM INIT] LOADING CORE MODULES...",
+                "[STATUS] 200 OK",
+                "[NETWORK] SECURE CONNECTION ESTABLISHED",
+                "[DEPLOYMENT] SUCCESS",
+                "[PERFORMANCE] LCP 0.8s : FID 2ms : CLS 0.01",
+                "[OPTIMIZATION] ASSETS MINIFIED",
+                "[CACHE] HIT RATE 98%",
+                "[SEO] SCHEMA VALIDATED",
+                "[CRAWLER] INDEXING ENABLED",
+                "[SECURITY] SSL/TLS 1.3 ACTIVE",
+                "[ROUTING] GLOBAL CDN ENGAGED"
             ];
 
-            const COINGECKO_IDS = {
-                BTC: "bitcoin", ETH: "ethereum", SOL: "solana",
-                DOGE: "dogecoin", XRP: "ripple", AVAX: "avalanche-2"
-            };
-
-            const DEMO_STOCKS = {
-                SAP: 243.18, AAPL: 228.4, NVDA: 138.92, GOOGL: 192.55,
-                MSFT: 441.16, TSLA: 312.7, AMZN: 218.3, META: 604.12
-            };
-
-            const SYMBOL_CACHE_KEY = "ticker-symbols-cache";
-
-            function cachedSymbols() {
-                try {
-                    const saved = JSON.parse(localStorage.getItem(SYMBOL_CACHE_KEY));
-                    if (Array.isArray(saved) && saved.length) return saved;
-                } catch (e) {}
-                return DEFAULT_SYMBOLS;
-            }
-
-            async function fetchSymbols() {
-                try {
-                    const res = await fetch("/api/ticker", { cache: "no-store" });
-                    if (res.ok) {
-                        const data = await res.json();
-                        if (Array.isArray(data.symbols) && data.symbols.length) {
-                            localStorage.setItem(SYMBOL_CACHE_KEY, JSON.stringify(data.symbols));
-                            return data.symbols;
-                        }
-                    }
-                } catch (e) {}
-                return cachedSymbols();
-            }
-
-            function formatPrice(value) {
-                return value >= 1000
-                    ? value.toLocaleString("en-US", { maximumFractionDigits: 0 })
-                    : value.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-            }
-
-            async function fetchCrypto(symbols) {
-                const ids = symbols.map((s) => COINGECKO_IDS[s.sym]).filter(Boolean);
-                if (!ids.length) return {};
-                const res = await fetch("https://api.coingecko.com/api/v3/simple/price?ids=" + ids.join(",") + "&vs_currencies=usd&include_24hr_change=true");
-                const data = await res.json();
-                const out = {};
-                symbols.forEach((s) => {
-                    const row = data[COINGECKO_IDS[s.sym]];
-                    if (row) out[s.sym] = { price: row.usd, change: row.usd_24h_change, live: true };
-                });
-                return out;
-            }
-
-            async function fetchFx(symbols) {
-                const out = {};
-                await Promise.all(symbols.map(async (s) => {
-                    const [from, to] = s.sym.split("/");
-                    if (!from || !to) return;
-                    const res = await fetch("https://api.frankfurter.dev/v1/latest?from=" + from + "&to=" + to);
-                    const data = await res.json();
-                    if (data.rates && data.rates[to]) out[s.sym] = { price: data.rates[to], change: null, live: true };
-                }));
-                return out;
-            }
-
-            function demoStocks(symbols) {
-                const out = {};
-                symbols.forEach((s) => {
-                    const base = DEMO_STOCKS[s.sym] || 100 + (s.sym.charCodeAt(0) % 40) * 3.7;
-                    const drift = (Math.sin(Date.now() / 86400000 + s.sym.length) * 1.6);
-                    out[s.sym] = { price: base * (1 + drift / 100), change: drift, live: false };
-                });
-                return out;
-            }
-
-            async function fetchStocks(symbols) {
-                if (!symbols.length) return {};
-
-                const out = {};
-                try {
-                    const list = symbols.map((s) => encodeURIComponent(s.sym)).join(",");
-                    const res = await fetch("/api/quotes?symbols=" + list);
-                    if (res.ok) {
-                        const data = await res.json();
-                        symbols.forEach((s) => {
-                            const row = data[s.sym];
-                            if (row && typeof row.price === "number") {
-                                out[s.sym] = { price: row.price, change: row.change, live: true };
-                            }
-                        });
-                    }
-                } catch (e) {}
-
-                const missing = symbols.filter((s) => !out[s.sym]);
-                return Object.assign(demoStocks(missing), out);
-            }
-
-            function buildItem(sym, quote) {
-                const wrap = document.createElement("span");
-                wrap.className = "ticker-item";
-                let html = '<span class="sym">' + sym + '</span><span class="price">' + formatPrice(quote.price) + '</span>';
-                if (typeof quote.change === "number") {
-                    const up = quote.change >= 0;
-                    html += '<span class="' + (up ? "chg-up" : "chg-down") + '">' + (up ? "▲" : "▼") + " " + Math.abs(quote.change).toFixed(2) + "%</span>";
-                }
-                if (!quote.live) html += '<span class="tag-demo">demo</span>';
-                wrap.innerHTML = html;
-                return wrap;
-            }
-
-            async function initTicker() {
-                const track = document.getElementById("tickerTrack");
-                const symbols = await fetchSymbols();
-                const stocks = symbols.filter((s) => s.type === "stock");
-                const cryptos = symbols.filter((s) => s.type === "crypto");
-                const fxs = symbols.filter((s) => s.type === "fx");
-
-                const [stockRes, cryptoRes, fxRes] = await Promise.allSettled([fetchStocks(stocks), fetchCrypto(cryptos), fetchFx(fxs)]);
-                const quotes = Object.assign(
-                    {},
-                    stockRes.status === "fulfilled" ? stockRes.value : demoStocks(stocks),
-                    cryptoRes.status === "fulfilled" ? cryptoRes.value : {},
-                    fxRes.status === "fulfilled" ? fxRes.value : {}
-                );
-
-                track.innerHTML = "";
+            const track = document.getElementById("tickerTrack");
+            if (track) {
                 for (let copy = 0; copy < 2; copy += 1) {
-                    symbols.forEach((s) => {
-                        if (quotes[s.sym]) track.appendChild(buildItem(s.sym, quotes[s.sym]));
+                    MESSAGES.forEach((msg) => {
+                        const item = document.createElement("span");
+                        item.className = "ticker-item";
+                        item.innerHTML = '<span class="msg">' + msg + '</span><span class="sep">\u2588</span>';
+                        track.appendChild(item);
                     });
                 }
-
-                const pxPerSecond = 40;
                 requestAnimationFrame(() => {
                     const distance = track.scrollWidth / 2;
-                    track.style.animationDuration = Math.max(18, distance / pxPerSecond) + "s";
+                    track.style.animationDuration = Math.max(40, distance / 60) + "s";
                 });
             }
-
-            initTicker();
-            setInterval(initTicker, 120000);
         })();
 
         (function () {
@@ -2286,6 +2628,245 @@
                 requests += Math.floor(Math.random() * 4);
                 if (reqEl) reqEl.textContent = requests.toLocaleString("en-US");
             }, 1500);
+        })();
+
+        (function () {
+            const card = document.getElementById("statusCard");
+            const inner = document.getElementById("status3d");
+            if (!card || !inner) return;
+            if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+            if (!window.matchMedia("(min-width: 768px)").matches) return;
+
+            const MAX = 9;
+            card.addEventListener("pointermove", (e) => {
+                const rect = card.getBoundingClientRect();
+                const px = (e.clientX - rect.left) / rect.width - 0.5;
+                const py = (e.clientY - rect.top) / rect.height - 0.5;
+                inner.style.transition = "transform 0.12s ease-out";
+                inner.style.transform = "rotateX(" + (-py * MAX).toFixed(2) + "deg) rotateY(" + (px * MAX).toFixed(2) + "deg)";
+            });
+            card.addEventListener("pointerleave", () => {
+                inner.style.transition = "transform 0.6s cubic-bezier(0.22, 1, 0.36, 1)";
+                inner.style.transform = "rotateX(0deg) rotateY(0deg)";
+            });
+        })();
+
+        (function () {
+            const form = document.getElementById("contactForm");
+            const statusEl = document.getElementById("contactStatus");
+            const cfg = document.getElementById("cfgModal");
+            const ok = document.getElementById("okModal");
+            if (!form || !cfg) return;
+
+            const submitBtn = document.getElementById("cfgSubmit");
+            const config = { siteType: "LANDING", designType: "TEMPLATE", pageCount: 10, features: [], addons: [], deliverySpeed: "STANDARD", maintenanceLevel: "NONE" };
+
+            function setStatus(msg, cls) {
+                statusEl.textContent = msg;
+                statusEl.className = "form-status" + (cls ? " " + cls : "");
+            }
+            function openModal(el) { el.classList.add("open"); el.setAttribute("aria-hidden", "false"); document.body.style.overflow = "hidden"; }
+            function closeModal(el) { el.classList.remove("open"); el.setAttribute("aria-hidden", "true"); document.body.style.overflow = ""; }
+
+            // type the section labels each time the configurator opens
+            const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+            const secLabels = [...cfg.querySelectorAll(".cfg-seclabel")];
+            secLabels.forEach((el) => { el.dataset.text = el.dataset.text || el.textContent; });
+            function typeSecLabels() {
+                if (reducedMotion) { secLabels.forEach((el) => { el.textContent = el.dataset.text; }); return; }
+                secLabels.forEach((el, idx) => {
+                    const text = el.dataset.text;
+                    let i = 0;
+                    el.textContent = "";
+                    // start after the modal-open animation so the typing is clearly visible, stagger each line
+                    setTimeout(function step() {
+                        el.textContent = text.slice(0, i);
+                        if (i < text.length) { i += 1; setTimeout(step, 45 + Math.random() * 35); }
+                    }, 360 + idx * 520);
+                });
+            }
+
+            // client-side rate limit (3 submissions / hour) — mirrors the old site
+            const RATE_LIMIT = 3, WINDOW_MS = 60 * 60 * 1000;
+            function rateBlockedMinutes() {
+                const now = Date.now();
+                let subs = [];
+                try { subs = JSON.parse(localStorage.getItem("formSubmissions") || "[]"); } catch (e) {}
+                subs = subs.filter((t) => now - t < WINDOW_MS);
+                localStorage.setItem("formSubmissions", JSON.stringify(subs));
+                if (subs.length >= RATE_LIMIT) return Math.ceil((WINDOW_MS - (now - Math.min(...subs))) / 60000);
+                return 0;
+            }
+            function recordSubmission() {
+                let subs = [];
+                try { subs = JSON.parse(localStorage.getItem("formSubmissions") || "[]"); } catch (e) {}
+                subs.push(Date.now());
+                localStorage.setItem("formSubmissions", JSON.stringify(subs));
+            }
+
+            // step 1 → open configurator (validate basics first)
+            form.addEventListener("submit", (e) => {
+                e.preventDefault();
+                // honeypot: a filled hidden field means a bot — fake success, drop silently
+                if (form.website && form.website.value) {
+                    setStatus("✓ Message sent — I'll get back to you soon.", "ok");
+                    form.reset();
+                    return;
+                }
+                if (!form.name.value.trim() || !form.email.value.trim() || !form.message.value.trim()) {
+                    setStatus("Please fill in name, email and project details first.", "err");
+                    return;
+                }
+                const waitMin = rateBlockedMinutes();
+                if (waitMin > 0) {
+                    setStatus("Security limit reached — please try again in " + waitMin + " min.", "err");
+                    return;
+                }
+                setStatus("", "");
+                openModal(cfg);
+                typeSecLabels();
+            });
+
+            // single-select chips (siteType, designType)
+            cfg.querySelectorAll('.chip-grid[data-group]').forEach((grid) => {
+                const group = grid.dataset.group;
+                grid.querySelectorAll(".chip").forEach((chip) => {
+                    chip.addEventListener("click", () => {
+                        grid.querySelectorAll(".chip").forEach((c) => c.classList.remove("is-on"));
+                        chip.classList.add("is-on");
+                        config[group] = chip.dataset.value;
+                    });
+                });
+            });
+
+            // multi-select checks (features, addons)
+            cfg.querySelectorAll('.check-grid[data-group]').forEach((grid) => {
+                const group = grid.dataset.group;
+                grid.querySelectorAll(".check").forEach((chk) => {
+                    chk.addEventListener("click", () => {
+                        chk.classList.toggle("is-on");
+                        config[group] = [...grid.querySelectorAll(".check.is-on")].map((c) => c.dataset.value);
+                    });
+                });
+            });
+
+            // range
+            const range = document.getElementById("pageCount");
+            const rangeVal = document.getElementById("pageCountVal");
+            range.addEventListener("input", () => {
+                config.pageCount = Number(range.value);
+                rangeVal.textContent = range.value + (range.value >= 50 ? "+ pages" : " pages");
+            });
+
+            // custom dropdowns (deliverySpeed, maintenanceLevel)
+            cfg.querySelectorAll(".dd[data-group]").forEach((dd) => {
+                const group = dd.dataset.group;
+                const trigger = dd.querySelector(".dd-trigger");
+                const label = dd.querySelector(".dd-label");
+                trigger.addEventListener("click", (e) => {
+                    e.stopPropagation();
+                    const open = dd.classList.toggle("open");
+                    cfg.querySelectorAll(".dd.open").forEach((other) => { if (other !== dd) other.classList.remove("open"); });
+                    void open;
+                });
+                dd.querySelectorAll("li").forEach((li) => {
+                    li.addEventListener("click", () => {
+                        config[group] = li.dataset.value;
+                        label.textContent = li.textContent;
+                        dd.querySelectorAll("li").forEach((x) => x.classList.toggle("is-selected", x === li));
+                        dd.classList.remove("open");
+                    });
+                });
+            });
+            cfg.addEventListener("click", () => cfg.querySelectorAll(".dd.open").forEach((d) => d.classList.remove("open")));
+
+            // close controls
+            document.getElementById("cfgClose").addEventListener("click", () => closeModal(cfg));
+            document.getElementById("cfgBack").addEventListener("click", () => closeModal(cfg));
+            cfg.addEventListener("click", (e) => { if (e.target === cfg) closeModal(cfg); });
+
+            // final submit
+            submitBtn.addEventListener("click", async () => {
+                const tsLoaded = typeof window.turnstile !== "undefined";
+                const token = window.__tsToken || (tsLoaded && typeof turnstile.getResponse === "function" ? turnstile.getResponse() : "");
+                // If Turnstile is loaded it must issue a token; if it never loaded (blocked), let the server gate it.
+                if (tsLoaded && !token) {
+                    submitBtn.textContent = "Verifying — one moment";
+                    setTimeout(() => { submitBtn.textContent = "Submit Final Request"; }, 2200);
+                    return;
+                }
+                const payload = {
+                    name: form.name.value.trim(),
+                    email: form.email.value.trim(),
+                    message: form.message.value.trim(),
+                    website: form.website ? form.website.value : "",
+                    config: config,
+                    turnstileToken: token
+                };
+                submitBtn.disabled = true;
+                const orig = submitBtn.textContent;
+                submitBtn.textContent = "Processing...";
+                try {
+                    const res = await fetch("/api/contact", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify(payload)
+                    });
+                    const out = await res.json().catch(() => ({}));
+                    if (res.ok && out.ok) {
+                        if (window.taurus_set_internal) window.taurus_set_internal();
+                        // Email notification via EmailJS (best-effort, mirrors the old flow)
+                        try {
+                            if (typeof emailjs !== "undefined") {
+                                const c = payload.config;
+                                const featuresTxt = c.features.length ? c.features.join(", ") : "none";
+                                const addonsTxt = c.addons.length ? c.addons.join(", ") : "none";
+                                emailjs.send("service_z24kvj8", "template_frpxeef", {
+                                    from_name: payload.name,
+                                    reply_to: payload.email,
+                                    from_email: payload.email,
+                                    email: payload.email,
+                                    to_email: payload.email,
+                                    project_type: c.siteType,
+                                    is_auto_receipt: true,
+                                    message: payload.message +
+                                        "\n\n--- PROJECT CONFIGURATION ---\n" +
+                                        "Site: " + c.siteType + " · " + c.designType + " · " + c.pageCount + " pages\n" +
+                                        "Features: " + featuresTxt + "\n" +
+                                        "Add-ons: " + addonsTxt + "\n" +
+                                        "Timeline: " + c.deliverySpeed + " · Maintenance: " + c.maintenanceLevel
+                                });
+                            }
+                        } catch (mailErr) { /* email is best-effort */ }
+                        recordSubmission();
+                        closeModal(cfg);
+                        form.reset();
+                        rangeVal.textContent = "10 pages";
+                        window.__tsToken = "";
+                        if (window.turnstile && typeof turnstile.reset === "function") { try { turnstile.reset(); } catch (e) {} }
+                        if (ok) openModal(ok);
+                    } else {
+                        submitBtn.textContent = out.error ? "Error — retry" : "Error — retry";
+                    }
+                } catch (err) {
+                    submitBtn.textContent = "Network error — retry";
+                } finally {
+                    submitBtn.disabled = false;
+                    if (submitBtn.textContent === "Processing...") submitBtn.textContent = orig;
+                    setTimeout(() => { submitBtn.textContent = orig; }, 2600);
+                }
+            });
+
+            if (ok) {
+                document.getElementById("okClose").addEventListener("click", () => closeModal(ok));
+                ok.addEventListener("click", (e) => { if (e.target === ok) closeModal(ok); });
+            }
+
+            document.addEventListener("keydown", (e) => {
+                if (e.key !== "Escape") return;
+                if (cfg.classList.contains("open")) closeModal(cfg);
+                if (ok && ok.classList.contains("open")) closeModal(ok);
+            });
         })();
 
         (function () {
@@ -2491,6 +3072,29 @@
 
   if (!introModal || !globeContainer || !signalOverlay) return;
 
+  // Top status line — type the value like the site's "$ status → ..." prompts
+  (function () {
+    const val = document.getElementById("introStatusVal");
+    if (!val) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+    const phrases = ["scanning orbital nodes", "triangulating signal", "locking position"];
+    let pi = 0, i = 0, deleting = false;
+    val.textContent = "";
+
+    (function step() {
+      const text = phrases[pi];
+      val.textContent = text.slice(0, i);
+      if (!deleting) {
+        if (i < text.length) { i += 1; setTimeout(step, 45 + Math.random() * 40); }
+        else { deleting = true; setTimeout(step, 1600); }
+      } else {
+        if (i > 0) { i -= 1; setTimeout(step, 28); }
+        else { deleting = false; pi = (pi + 1) % phrases.length; setTimeout(step, 400); }
+      }
+    })();
+  })();
+
   const previousBodyOverflow = document.body.style.overflow;
   let world = null;
   let hasRevealedSite = false;
@@ -2520,6 +3124,7 @@
     signalOverlay.classList.remove("is-low-focus");
     globeContainer.classList.add("is-fading");
     introModal.classList.add("is-fading");
+    document.documentElement.classList.remove("intro-active");
 
     window.setTimeout(function () {
       introModal.remove();
@@ -2781,7 +3386,7 @@
       throw new Error("Globe.gl library is unavailable");
     }
 
-    world = Globe()(globeContainer)
+    world = Globe({ rendererConfig: { antialias: true, alpha: false, powerPreference: "high-performance" } })(globeContainer)
       .backgroundColor(SPACE_COLOR)
       .globeImageUrl(EARTH_NIGHT)
       .bumpImageUrl(EARTH_BUMP)
@@ -2934,6 +3539,11 @@
   runSignalSequence();
 })();
 </script>
+    <!-- Firebase client (visitor tracker entry registration needs window.db + anonymous auth) -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="assets/js/firebase-config.js"></script>
     <script src="assets/js/tracker/logo_data.js"></script>
     <script src="assets/js/tracker/taurus-tracker.js?v=V45"></script>
     <script>
