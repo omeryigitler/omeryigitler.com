@@ -11,7 +11,8 @@
     "build:react": "vite build",
     "build:css": "npx tailwindcss -i ./src/input.css -o ./assets/css/styles.css --minify",
     "watch:css": "npx tailwindcss -i ./src/input.css -o ./assets/css/styles.css --watch",
-    "build": "npm run build:react && npm run build:css",
+    "prepare:instagram": "node scripts/wire-instagram.js",
+    "build": "npm run prepare:instagram && npm run build:react && npm run build:css",
     "deploy": "vercel --prod",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
