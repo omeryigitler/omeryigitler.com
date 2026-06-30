@@ -1,0 +1,128 @@
+/* CookieYes compact final override — loaded after instagram-feed.css */
+
+html body div.cky-consent-container {
+  position: fixed !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  width: 100vw !important;
+  max-width: none !important;
+  height: auto !important;
+  min-height: 0 !important;
+  margin: 0 !important;
+  z-index: 2147482999 !important;
+}
+
+html body div.cky-consent-container .cky-consent-bar {
+  width: 100% !important;
+  max-width: none !important;
+  height: 52px !important;
+  min-height: 0 !important;
+  max-height: 52px !important;
+  margin: 0 !important;
+  padding: 0 clamp(14px, 2vw, 28px) !important;
+  border-radius: 0 !important;
+  border-right: 0 !important;
+  border-left: 0 !important;
+  overflow: hidden !important;
+}
+
+html body div.cky-consent-container .cky-notice,
+html body div.cky-consent-container .cky-notice-group {
+  width: 100% !important;
+  max-width: 1440px !important;
+  height: 52px !important;
+  min-height: 0 !important;
+  margin: 0 auto !important;
+  padding: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: clamp(12px, 2vw, 28px) !important;
+}
+
+html body div.cky-consent-container .cky-title,
+html body div.cky-consent-container .cky-powered-by,
+html body div.cky-consent-container .cky-footer-wrapper {
+  display: none !important;
+}
+
+html body div.cky-consent-container .cky-notice-des {
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+}
+
+html body div.cky-consent-container .cky-notice-des,
+html body div.cky-consent-container .cky-notice-des p {
+  margin: 0 !important;
+  color: #f1f1f1 !important;
+  font-size: 12px !important;
+  line-height: 1.25 !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+html body div.cky-consent-container .cky-notice-btn-wrapper {
+  flex: 0 0 auto !important;
+  width: auto !important;
+  min-width: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+  gap: 8px !important;
+}
+
+html body div.cky-consent-container button.cky-btn {
+  width: auto !important;
+  min-width: 82px !important;
+  min-height: 30px !important;
+  height: 30px !important;
+  margin: 0 !important;
+  padding: 0 13px !important;
+  border-radius: 2px !important;
+  font-size: 11px !important;
+  line-height: 1 !important;
+}
+
+@media (max-width: 680px) {
+  html body div.cky-consent-container .cky-consent-bar {
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    padding: 9px 14px calc(9px + env(safe-area-inset-bottom)) !important;
+  }
+
+  html body div.cky-consent-container .cky-notice,
+  html body div.cky-consent-container .cky-notice-group {
+    height: auto !important;
+    display: block !important;
+  }
+
+  html body div.cky-consent-container .cky-notice-des,
+  html body div.cky-consent-container .cky-notice-des p {
+    font-size: 12px !important;
+    line-height: 1.35 !important;
+    white-space: normal !important;
+  }
+
+  html body div.cky-consent-container .cky-notice-btn-wrapper {
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 6px !important;
+    margin-top: 7px !important;
+  }
+
+  html body div.cky-consent-container button.cky-btn {
+    width: 100% !important;
+    min-width: 0 !important;
+    height: 32px !important;
+    min-height: 32px !important;
+    padding: 0 8px !important;
+  }
+}
