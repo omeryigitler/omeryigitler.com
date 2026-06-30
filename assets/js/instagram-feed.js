@@ -8,19 +8,19 @@
   const fallback = [
     {
       id: 'fallback-1',
-      media_url: '/assets/images/instagram-01.jpg',
+      media_url: '/favicon_taurus.svg',
       permalink: 'https://www.instagram.com/yigitleromer/',
       caption: 'Design details, systems and digital moments.'
     },
     {
       id: 'fallback-2',
-      media_url: '/assets/images/instagram-02.jpg',
+      media_url: '/favicon_taurus.svg',
       permalink: 'https://www.instagram.com/yigitleromer/',
       caption: 'Building modern web experiences.'
     },
     {
       id: 'fallback-3',
-      media_url: '/assets/images/instagram-03.jpg',
+      media_url: '/favicon_taurus.svg',
       permalink: 'https://www.instagram.com/yigitleromer/',
       caption: 'Projects, process and inspiration.'
     }
