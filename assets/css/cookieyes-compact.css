@@ -14,24 +14,28 @@ html body div.cky-consent-container {
 }
 
 html body div.cky-consent-container .cky-consent-bar {
+  box-sizing: border-box !important;
   width: 100% !important;
   max-width: none !important;
-  height: 52px !important;
-  min-height: 0 !important;
-  max-height: 52px !important;
+  height: 64px !important;
+  min-height: 64px !important;
+  max-height: 64px !important;
   margin: 0 !important;
-  padding: 0 clamp(14px, 2vw, 28px) !important;
+  padding: 8px clamp(14px, 2vw, 28px) 10px !important;
   border-radius: 0 !important;
   border-right: 0 !important;
   border-left: 0 !important;
   overflow: hidden !important;
+  display: flex !important;
+  align-items: center !important;
 }
 
 html body div.cky-consent-container .cky-notice,
 html body div.cky-consent-container .cky-notice-group {
+  box-sizing: border-box !important;
   width: 100% !important;
   max-width: 1440px !important;
-  height: 52px !important;
+  height: 46px !important;
   min-height: 0 !important;
   margin: 0 auto !important;
   padding: 0 !important;
@@ -60,7 +64,7 @@ html body div.cky-consent-container .cky-notice-des p {
   margin: 0 !important;
   color: #f1f1f1 !important;
   font-size: 12px !important;
-  line-height: 1.25 !important;
+  line-height: 1.28 !important;
   white-space: nowrap !important;
   overflow: hidden !important;
   text-overflow: ellipsis !important;
@@ -95,7 +99,7 @@ html body div.cky-consent-container button.cky-btn {
     height: auto !important;
     min-height: 0 !important;
     max-height: none !important;
-    padding: 9px 14px calc(9px + env(safe-area-inset-bottom)) !important;
+    padding: 10px 14px calc(12px + env(safe-area-inset-bottom)) !important;
   }
 
   html body div.cky-consent-container .cky-notice,
@@ -115,7 +119,7 @@ html body div.cky-consent-container button.cky-btn {
     display: grid !important;
     grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
     gap: 6px !important;
-    margin-top: 7px !important;
+    margin-top: 8px !important;
   }
 
   html body div.cky-consent-container button.cky-btn {
