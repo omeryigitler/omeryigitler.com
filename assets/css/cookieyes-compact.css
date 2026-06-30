@@ -17,42 +17,45 @@ html body div.cky-consent-container .cky-consent-bar {
   box-sizing: border-box !important;
   width: 100% !important;
   max-width: none !important;
-  height: 64px !important;
-  min-height: 64px !important;
-  max-height: 64px !important;
+  min-height: 82px !important;
   margin: 0 !important;
-  padding: 8px clamp(14px, 2vw, 28px) 10px !important;
+  padding: 14px clamp(18px, 3vw, 44px) calc(14px + env(safe-area-inset-bottom)) !important;
   border-radius: 0 !important;
   border-right: 0 !important;
   border-left: 0 !important;
   overflow: hidden !important;
-  display: flex !important;
-  align-items: center !important;
 }
 
-html body div.cky-consent-container .cky-notice,
-html body div.cky-consent-container .cky-notice-group {
+html body div.cky-consent-container .cky-notice {
   box-sizing: border-box !important;
   width: 100% !important;
-  max-width: 1440px !important;
-  height: 46px !important;
+  max-width: 1280px !important;
   min-height: 0 !important;
   margin: 0 auto !important;
   padding: 0 !important;
-  display: flex !important;
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) auto !important;
   align-items: center !important;
-  justify-content: space-between !important;
-  gap: clamp(12px, 2vw, 28px) !important;
+  column-gap: clamp(22px, 4vw, 56px) !important;
 }
 
-html body div.cky-consent-container .cky-title,
-html body div.cky-consent-container .cky-powered-by,
-html body div.cky-consent-container .cky-footer-wrapper {
-  display: none !important;
+html body div.cky-consent-container .cky-title {
+  display: block !important;
+  margin: 0 0 4px !important;
+  color: #fff !important;
+  font-size: 15px !important;
+  font-weight: 800 !important;
+  line-height: 1.15 !important;
+}
+
+html body div.cky-consent-container .cky-notice-group {
+  min-width: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  display: contents !important;
 }
 
 html body div.cky-consent-container .cky-notice-des {
-  flex: 1 1 auto !important;
   min-width: 0 !important;
   margin: 0 !important;
   padding: 0 !important;
@@ -64,14 +67,12 @@ html body div.cky-consent-container .cky-notice-des p {
   margin: 0 !important;
   color: #f1f1f1 !important;
   font-size: 12px !important;
-  line-height: 1.28 !important;
-  white-space: nowrap !important;
-  overflow: hidden !important;
-  text-overflow: ellipsis !important;
+  line-height: 1.35 !important;
 }
 
 html body div.cky-consent-container .cky-notice-btn-wrapper {
-  flex: 0 0 auto !important;
+  grid-column: 2 !important;
+  grid-row: 1 / span 2 !important;
   width: auto !important;
   min-width: 0 !important;
   margin: 0 !important;
@@ -79,47 +80,52 @@ html body div.cky-consent-container .cky-notice-btn-wrapper {
   display: flex !important;
   align-items: center !important;
   justify-content: flex-end !important;
-  gap: 8px !important;
+  gap: 9px !important;
 }
 
 html body div.cky-consent-container button.cky-btn {
   width: auto !important;
-  min-width: 82px !important;
-  min-height: 30px !important;
-  height: 30px !important;
+  min-width: 86px !important;
+  min-height: 34px !important;
+  height: 34px !important;
   margin: 0 !important;
-  padding: 0 13px !important;
-  border-radius: 2px !important;
+  padding: 0 15px !important;
+  border-radius: 3px !important;
   font-size: 11px !important;
   line-height: 1 !important;
 }
 
+html body div.cky-consent-container .cky-powered-by,
+html body div.cky-consent-container .cky-footer-wrapper {
+  display: none !important;
+}
+
 @media (max-width: 680px) {
   html body div.cky-consent-container .cky-consent-bar {
-    height: auto !important;
     min-height: 0 !important;
-    max-height: none !important;
-    padding: 10px 14px calc(12px + env(safe-area-inset-bottom)) !important;
+    padding: 12px 14px calc(12px + env(safe-area-inset-bottom)) !important;
   }
 
-  html body div.cky-consent-container .cky-notice,
-  html body div.cky-consent-container .cky-notice-group {
-    height: auto !important;
+  html body div.cky-consent-container .cky-notice {
     display: block !important;
+  }
+
+  html body div.cky-consent-container .cky-title {
+    margin-bottom: 4px !important;
+    font-size: 14px !important;
   }
 
   html body div.cky-consent-container .cky-notice-des,
   html body div.cky-consent-container .cky-notice-des p {
     font-size: 12px !important;
     line-height: 1.35 !important;
-    white-space: normal !important;
   }
 
   html body div.cky-consent-container .cky-notice-btn-wrapper {
     display: grid !important;
     grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
     gap: 6px !important;
-    margin-top: 8px !important;
+    margin-top: 9px !important;
   }
 
   html body div.cky-consent-container button.cky-btn {
