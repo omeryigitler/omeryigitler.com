@@ -25,7 +25,7 @@ const instagramSection = `
                         <h2 class="instagram-feed-title">Latest from Instagram</h2>
                         <p class="instagram-feed-copy">A live glimpse into the projects, ideas and moments shaping the studio — placed right before the contact flow.</p>
                         <div class="instagram-feed-actions">
-                            <a class="instagram-feed-button" href="https://instagram.com/yigitleromer" target="_blank" rel="noopener noreferrer">Follow Instagram ↗</a>
+                            <a class="instagram-feed-button" href="https://www.instagram.com/omeryigitler.web/" target="_blank" rel="noopener noreferrer">Follow Instagram ↗</a>
                         </div>
                     </div>
                     <div class="instagram-feed-grid" data-instagram-grid>
