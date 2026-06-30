@@ -1,4 +1,80 @@
 /* Instagram feed section — near Contact */
+
+/* Global page-line overrides loaded after index.html inline styles.
+   Keeps the gold divider fixed in the viewport so the falling beam remains
+   visible and active while scrolling through the full page. */
+body .bg-centerline {
+  position: fixed;
+  left: 50%;
+  top: 0;
+  bottom: 0;
+  height: auto;
+  width: 1px;
+  transform: translateX(-50%);
+  background: linear-gradient(
+    to bottom,
+    transparent,
+    rgba(255, 215, 0, 0.14) 7%,
+    rgba(255, 215, 0, 0.14) 93%,
+    transparent
+  );
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 1;
+}
+
+body .bg-centerline::after {
+  height: min(32vh, 260px);
+  background: linear-gradient(to bottom, transparent, rgba(255, 215, 0, 0.96), transparent);
+  filter: drop-shadow(0 0 10px rgba(255, 215, 0, 0.95));
+  animation: beamFlowViewport 4.8s linear infinite;
+}
+
+@keyframes beamFlowViewport {
+  0% { transform: translateY(-34vh); }
+  100% { transform: translateY(112vh); }
+}
+
+/* CookieYes — always full-width bottom banner.
+   The banner was previously anchored from the right on desktop, which made it
+   look shifted on wide screens. Keep the accept/reject/customize bar full bleed. */
+div.cky-consent-container {
+  position: fixed !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  width: 100vw !important;
+  max-width: none !important;
+  margin: 0 !important;
+  z-index: 2147482999 !important;
+}
+
+div.cky-consent-container .cky-consent-bar {
+  width: 100% !important;
+  max-width: none !important;
+  margin: 0 !important;
+  border-radius: 0 !important;
+  border-right: 0 !important;
+  border-left: 0 !important;
+  padding: 22px clamp(16px, 3vw, 34px) calc(22px + env(safe-area-inset-bottom)) !important;
+}
+
+div.cky-consent-container .cky-notice {
+  width: 100% !important;
+  max-width: 1440px !important;
+  margin: 0 auto !important;
+}
+
+div.cky-consent-container .cky-notice-btn-wrapper {
+  justify-content: flex-end !important;
+  align-items: center !important;
+}
+
+.cky-btn-revisit-wrapper {
+  right: 20px !important;
+  bottom: 20px !important;
+}
+
 .instagram-feed-section {
   position: relative;
   isolation: isolate;
@@ -24,17 +100,19 @@
 }
 
 .instagram-feed-shell {
-  width: min(1080px, 100%);
+  --instagram-feed-gap: clamp(3.4rem, 7vw, 6.25rem);
+  width: min(1180px, 100%);
   margin: 0 auto;
   display: grid;
-  grid-template-columns: minmax(240px, 0.72fr) minmax(360px, 1fr);
-  gap: clamp(3.4rem, 7vw, 6.25rem);
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: var(--instagram-feed-gap);
   align-items: center;
 }
 
 .instagram-feed-copy-column {
   position: relative;
   z-index: 2;
+  max-width: 30rem;
 }
 
 .instagram-feed-status {
@@ -127,10 +205,11 @@
 
 .instagram-feed-grid {
   align-self: center;
+  justify-self: stretch;
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: .9rem;
-  padding-top: clamp(1.4rem, 3.2vw, 3.2rem);
+  padding-top: 0;
 }
 
 .instagram-card {
@@ -227,9 +306,17 @@
 }
 
 @media (max-width: 980px) {
+  body .bg-centerline {
+    display: none;
+  }
+
   .instagram-feed-shell {
     grid-template-columns: 1fr;
     gap: 2.25rem;
+  }
+
+  .instagram-feed-copy-column {
+    max-width: 38rem;
   }
 
   .instagram-feed-title {
@@ -242,6 +329,25 @@
 }
 
 @media (max-width: 680px) {
+  div.cky-consent-container .cky-consent-bar {
+    padding: 12px 16px calc(12px + env(safe-area-inset-bottom)) !important;
+  }
+
+  div.cky-consent-container .cky-notice-btn-wrapper {
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    justify-content: stretch !important;
+    gap: 6px !important;
+    margin-top: 8px !important;
+  }
+
+  div.cky-consent-container button.cky-btn {
+    width: 100% !important;
+    min-width: 0 !important;
+    min-height: 40px !important;
+    margin: 0 !important;
+  }
+
   .instagram-feed-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .instagram-feed-section { padding-left: 1rem; padding-right: 1rem; }
 }
