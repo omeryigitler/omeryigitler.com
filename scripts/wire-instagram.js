@@ -31,6 +31,7 @@ const instagramSection = `
 
 addBefore('</head>', '    <link rel="stylesheet" href="/assets/css/instagram-feed.css">\n');
 addBefore('            <section id="contact">', instagramSection);
+addBefore('</body>', '    <script src="/assets/js/instagram-feed.js" defer></script>\n');
 
 fs.writeFileSync(indexPath, html);
-console.log('Instagram feed section connected.');
+console.log('Instagram feed connected.');
