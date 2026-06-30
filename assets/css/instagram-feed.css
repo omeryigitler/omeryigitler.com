@@ -35,7 +35,7 @@ body .bg-centerline::after {
   100% { transform: translateY(112vh); }
 }
 
-/* CookieYes — full-width but compact bottom banner. */
+/* CookieYes — full-width but slim bottom banner. */
 div.cky-consent-container {
   position: fixed !important;
   left: 0 !important;
@@ -48,48 +48,73 @@ div.cky-consent-container {
 }
 
 div.cky-consent-container .cky-consent-bar {
+  position: relative !important;
   width: 100% !important;
   max-width: none !important;
   min-height: 0 !important;
+  max-height: 72px !important;
   margin: 0 !important;
   border-radius: 0 !important;
   border-right: 0 !important;
   border-left: 0 !important;
-  padding: 12px clamp(16px, 2.2vw, 28px) calc(12px + env(safe-area-inset-bottom)) !important;
+  overflow: hidden !important;
+  padding: 8px clamp(16px, 2vw, 28px) calc(8px + env(safe-area-inset-bottom)) !important;
 }
 
 div.cky-consent-container .cky-notice {
   width: 100% !important;
   max-width: 1440px !important;
+  min-height: 0 !important;
   margin: 0 auto !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: clamp(14px, 2.2vw, 32px) !important;
+}
+
+div.cky-consent-container .cky-notice-group {
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
 }
 
 div.cky-consent-container .cky-title {
-  margin: 0 0 4px !important;
-  font-size: 16px !important;
-  line-height: 1.2 !important;
+  display: none !important;
 }
 
 div.cky-consent-container .cky-notice-des,
 div.cky-consent-container .cky-notice-des p {
-  font-size: 13px !important;
-  line-height: 1.45 !important;
+  margin: 0 !important;
+  font-size: 12px !important;
+  line-height: 1.35 !important;
 }
 
 div.cky-consent-container .cky-notice-btn-wrapper {
+  flex: 0 0 auto !important;
+  display: flex !important;
   justify-content: flex-end !important;
   align-items: center !important;
   gap: 8px !important;
-  margin-top: 0 !important;
+  margin: 0 !important;
 }
 
 div.cky-consent-container button.cky-btn {
-  min-height: 38px !important;
-  min-width: 92px !important;
-  padding: 8px 18px !important;
+  min-height: 32px !important;
+  min-width: 86px !important;
+  padding: 7px 14px !important;
   margin: 0 !important;
-  font-size: 12px !important;
+  font-size: 11px !important;
   line-height: 1 !important;
+}
+
+div.cky-consent-container .cky-powered-by,
+div.cky-consent-container .cky-footer-wrapper {
+  position: absolute !important;
+  right: clamp(16px, 2vw, 28px) !important;
+  bottom: 3px !important;
+  margin: 0 !important;
+  font-size: 9px !important;
+  line-height: 1 !important;
+  opacity: .72 !important;
 }
 
 .cky-btn-revisit-wrapper {
@@ -352,17 +377,18 @@ div.cky-consent-container button.cky-btn {
 
 @media (max-width: 680px) {
   div.cky-consent-container .cky-consent-bar {
-    padding: 10px 14px calc(10px + env(safe-area-inset-bottom)) !important;
+    max-height: none !important;
+    padding: 9px 14px calc(9px + env(safe-area-inset-bottom)) !important;
   }
 
-  div.cky-consent-container .cky-title {
-    font-size: 15px !important;
+  div.cky-consent-container .cky-notice {
+    display: block !important;
   }
 
   div.cky-consent-container .cky-notice-des,
   div.cky-consent-container .cky-notice-des p {
     font-size: 12px !important;
-    line-height: 1.4 !important;
+    line-height: 1.35 !important;
   }
 
   div.cky-consent-container .cky-notice-btn-wrapper {
@@ -370,16 +396,21 @@ div.cky-consent-container button.cky-btn {
     grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
     justify-content: stretch !important;
     gap: 6px !important;
-    margin-top: 8px !important;
+    margin-top: 7px !important;
   }
 
   div.cky-consent-container button.cky-btn {
     width: 100% !important;
     min-width: 0 !important;
-    min-height: 34px !important;
-    padding: 7px 10px !important;
+    min-height: 32px !important;
+    padding: 6px 9px !important;
     font-size: 11px !important;
     margin: 0 !important;
+  }
+
+  div.cky-consent-container .cky-powered-by,
+  div.cky-consent-container .cky-footer-wrapper {
+    display: none !important;
   }
 
   .instagram-feed-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
