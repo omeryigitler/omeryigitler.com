@@ -1,0 +1,217 @@
+/* Instagram feed section — drop in near Contact */
+.instagram-feed-section {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  background:
+    radial-gradient(circle at 18% 8%, rgba(162, 139, 255, 0.1), transparent 32rem),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.018), rgba(255, 255, 255, 0));
+  padding: clamp(5rem, 9vw, 8rem) clamp(1.25rem, 5vw, 5rem);
+}
+
+.instagram-feed-section::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0.2;
+  background-image: linear-gradient(rgba(255,255,255,.08) 1px, transparent 1px);
+  background-size: 100% 6px;
+  mix-blend-mode: soft-light;
+}
+
+.instagram-feed-shell {
+  width: min(1180px, 100%);
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: minmax(0, 0.78fr) minmax(0, 1.5fr);
+  gap: clamp(2.75rem, 6vw, 5rem);
+  align-items: start;
+}
+
+.instagram-feed-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: .625rem;
+  margin: 0 0 1.25rem;
+  color: rgba(255, 215, 0, 0.92);
+  font-family: var(--mono);
+  font-size: .72rem;
+  letter-spacing: .34em;
+  text-transform: uppercase;
+}
+
+.instagram-feed-kicker::before {
+  content: '$';
+  color: rgba(255,255,255,.48);
+}
+
+.instagram-feed-title {
+  margin: 0;
+  max-width: 12ch;
+  font-family: "Syncopate", sans-serif;
+  color: #f8f8fb;
+  font-size: clamp(2rem, 4vw, 3.85rem);
+  font-weight: 700;
+  line-height: 1.08;
+  letter-spacing: -0.035em;
+  text-transform: uppercase;
+}
+
+.instagram-feed-copy {
+  max-width: 31rem;
+  margin: 1.5rem 0 0;
+  color: rgba(255, 255, 255, 0.58);
+  font-size: clamp(1rem, 1.6vw, 1.08rem);
+  line-height: 1.8;
+}
+
+.instagram-feed-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .875rem;
+  margin-top: 2.25rem;
+}
+
+.instagram-feed-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: .7rem;
+  min-height: 3.25rem;
+  border: 1px solid rgba(255, 215, 0, .35);
+  border-radius: 999px;
+  padding: 0 1.15rem;
+  color: rgba(255,255,255,.86);
+  background: rgba(255, 215, 0, .04);
+  text-decoration: none;
+  font-family: var(--mono);
+  font-size: .72rem;
+  font-weight: 700;
+  letter-spacing: .22em;
+  text-transform: uppercase;
+  transition: border-color .25s ease, background .25s ease, transform .25s ease, box-shadow .25s ease;
+}
+
+.instagram-feed-button:hover {
+  transform: translateY(-2px);
+  border-color: rgba(255, 215, 0, .7);
+  background: rgba(255, 215, 0, .08);
+  box-shadow: 0 0 24px rgba(255, 215, 0, .14);
+}
+
+.instagram-feed-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: .875rem;
+}
+
+.instagram-card {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,.09);
+  border-radius: 1.25rem;
+  background: rgba(255,255,255,.035);
+  color: #fff;
+  text-decoration: none;
+  transform: translateZ(0);
+}
+
+.instagram-card img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  opacity: .84;
+  filter: saturate(.92) contrast(1.02);
+  transition: transform .55s ease, opacity .35s ease, filter .35s ease;
+}
+
+.instagram-card:hover img {
+  opacity: 1;
+  transform: scale(1.055);
+  filter: saturate(1) contrast(1.05);
+}
+
+.instagram-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, transparent 38%, rgba(0,0,0,.78));
+  opacity: 0;
+  transition: opacity .3s ease;
+}
+
+.instagram-card:hover::after { opacity: 1; }
+
+.instagram-card-badge {
+  position: absolute;
+  top: .85rem;
+  right: .85rem;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border: 1px solid rgba(255,255,255,.14);
+  border-radius: 999px;
+  background: rgba(0,0,0,.34);
+  backdrop-filter: blur(12px);
+  color: rgba(255,255,255,.9);
+  font-size: .75rem;
+}
+
+.instagram-card-caption {
+  position: absolute;
+  left: 1rem;
+  right: 1rem;
+  bottom: 1rem;
+  z-index: 2;
+  margin: 0;
+  color: rgba(255,255,255,.9);
+  font-size: .9rem;
+  line-height: 1.45;
+  opacity: 0;
+  transform: translateY(.65rem);
+  transition: opacity .3s ease, transform .3s ease;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.instagram-card:hover .instagram-card-caption {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.instagram-feed-empty {
+  grid-column: 1 / -1;
+  min-height: 15rem;
+  display: grid;
+  place-items: center;
+  border: 1px dashed rgba(255,255,255,.14);
+  border-radius: 1.25rem;
+  color: rgba(255,255,255,.54);
+  text-align: center;
+  padding: 2rem;
+}
+
+@media (max-width: 920px) {
+  .instagram-feed-shell { grid-template-columns: 1fr; }
+  .instagram-feed-title { max-width: 14ch; }
+}
+
+@media (max-width: 680px) {
+  .instagram-feed-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .instagram-feed-section { padding-left: 1rem; padding-right: 1rem; }
+}
+
+@media (max-width: 430px) {
+  .instagram-feed-grid { grid-template-columns: 1fr; }
+}
