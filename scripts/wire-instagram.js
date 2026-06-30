@@ -20,7 +20,8 @@ const instagramSection = `
                             <span>status</span>
                             <span class="status-label">INSTAGRAM</span>
                             <span class="arrow">→</span>
-                            <span class="value">omeryigitler.web</span>
+                            <span class="value type-target" data-text="omeryigitler.web"></span>
+                            <span class="cursor" style="height: 0.95em;"></span>
                         </div>
                         <h2 class="instagram-feed-title">Latest from Instagram</h2>
                         <p class="instagram-feed-copy">A live glimpse into the projects, ideas and moments shaping the studio — placed right before the contact flow.</p>
