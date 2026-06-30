@@ -1,24 +1,24 @@
 const GRAPH_VERSION = process.env.INSTAGRAM_GRAPH_VERSION || 'v23.0';
 const DEFAULT_LIMIT = Number(process.env.INSTAGRAM_FEED_LIMIT || 6);
 
-function json(res, status, body, cache = 'no-store') {
+function sendJson(res, status, body, cache = 'no-store') {
   res.statusCode = status;
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
   res.setHeader('Cache-Control', cache);
   res.end(JSON.stringify(body));
 }
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   if (req.method !== 'GET') {
     res.setHeader('Allow', 'GET');
-    return json(res, 405, { error: 'Method not allowed' });
+    return sendJson(res, 405, { error: 'Method not allowed' });
   }
 
   const token = process.env.INSTAGRAM_ACCESS_TOKEN;
   const limit = Math.min(Math.max(Number(req.query.limit || DEFAULT_LIMIT), 1), 12);
 
   if (!token) {
-    return json(res, 500, {
+    return sendJson(res, 500, {
       error: 'Missing INSTAGRAM_ACCESS_TOKEN',
       data: []
     });
@@ -47,14 +47,14 @@ export default async function handler(req, res) {
     const data = await response.json();
 
     if (!response.ok) {
-      return json(res, response.status, {
+      return sendJson(res, response.status, {
         error: 'Instagram request failed',
         details: data,
         data: []
       });
     }
 
-    return json(
+    return sendJson(
       res,
       200,
       {
@@ -64,10 +64,10 @@ export default async function handler(req, res) {
       's-maxage=3600, stale-while-revalidate=86400'
     );
   } catch (error) {
-    return json(res, 502, {
+    return sendJson(res, 502, {
       error: 'Instagram fetch failed',
       message: error instanceof Error ? error.message : 'Unknown error',
       data: []
     });
   }
-}
+};
