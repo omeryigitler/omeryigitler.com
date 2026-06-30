@@ -9,19 +9,19 @@
     {
       id: 'fallback-1',
       media_url: '/favicon_taurus.svg',
-      permalink: 'https://www.instagram.com/yigitleromer/',
+      permalink: 'https://www.instagram.com/omeryigitler.web/',
       caption: 'Design details, systems and digital moments.'
     },
     {
       id: 'fallback-2',
       media_url: '/favicon_taurus.svg',
-      permalink: 'https://www.instagram.com/yigitleromer/',
+      permalink: 'https://www.instagram.com/omeryigitler.web/',
       caption: 'Building modern web experiences.'
     },
     {
       id: 'fallback-3',
       media_url: '/favicon_taurus.svg',
-      permalink: 'https://www.instagram.com/yigitleromer/',
+      permalink: 'https://www.instagram.com/omeryigitler.web/',
       caption: 'Projects, process and inspiration.'
     }
   ];
