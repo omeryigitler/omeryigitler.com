@@ -35,9 +35,7 @@ body .bg-centerline::after {
   100% { transform: translateY(112vh); }
 }
 
-/* CookieYes — always full-width bottom banner.
-   The banner was previously anchored from the right on desktop, which made it
-   look shifted on wide screens. Keep the accept/reject/customize bar full bleed. */
+/* CookieYes — full-width but compact bottom banner. */
 div.cky-consent-container {
   position: fixed !important;
   left: 0 !important;
@@ -52,11 +50,12 @@ div.cky-consent-container {
 div.cky-consent-container .cky-consent-bar {
   width: 100% !important;
   max-width: none !important;
+  min-height: 0 !important;
   margin: 0 !important;
   border-radius: 0 !important;
   border-right: 0 !important;
   border-left: 0 !important;
-  padding: 22px clamp(16px, 3vw, 34px) calc(22px + env(safe-area-inset-bottom)) !important;
+  padding: 12px clamp(16px, 2.2vw, 28px) calc(12px + env(safe-area-inset-bottom)) !important;
 }
 
 div.cky-consent-container .cky-notice {
@@ -65,9 +64,32 @@ div.cky-consent-container .cky-notice {
   margin: 0 auto !important;
 }
 
+div.cky-consent-container .cky-title {
+  margin: 0 0 4px !important;
+  font-size: 16px !important;
+  line-height: 1.2 !important;
+}
+
+div.cky-consent-container .cky-notice-des,
+div.cky-consent-container .cky-notice-des p {
+  font-size: 13px !important;
+  line-height: 1.45 !important;
+}
+
 div.cky-consent-container .cky-notice-btn-wrapper {
   justify-content: flex-end !important;
   align-items: center !important;
+  gap: 8px !important;
+  margin-top: 0 !important;
+}
+
+div.cky-consent-container button.cky-btn {
+  min-height: 38px !important;
+  min-width: 92px !important;
+  padding: 8px 18px !important;
+  margin: 0 !important;
+  font-size: 12px !important;
+  line-height: 1 !important;
 }
 
 .cky-btn-revisit-wrapper {
@@ -330,7 +352,17 @@ div.cky-consent-container .cky-notice-btn-wrapper {
 
 @media (max-width: 680px) {
   div.cky-consent-container .cky-consent-bar {
-    padding: 12px 16px calc(12px + env(safe-area-inset-bottom)) !important;
+    padding: 10px 14px calc(10px + env(safe-area-inset-bottom)) !important;
+  }
+
+  div.cky-consent-container .cky-title {
+    font-size: 15px !important;
+  }
+
+  div.cky-consent-container .cky-notice-des,
+  div.cky-consent-container .cky-notice-des p {
+    font-size: 12px !important;
+    line-height: 1.4 !important;
   }
 
   div.cky-consent-container .cky-notice-btn-wrapper {
@@ -344,7 +376,9 @@ div.cky-consent-container .cky-notice-btn-wrapper {
   div.cky-consent-container button.cky-btn {
     width: 100% !important;
     min-width: 0 !important;
-    min-height: 40px !important;
+    min-height: 34px !important;
+    padding: 7px 10px !important;
+    font-size: 11px !important;
     margin: 0 !important;
   }
 
