@@ -1,4 +1,48 @@
 /* Instagram feed section — near Contact */
+
+/* Global page-line overrides loaded after index.html inline styles.
+   Keeps the gold divider fixed in the viewport so the falling beam remains
+   visible and active while scrolling through the full page. */
+body .bg-centerline {
+  position: fixed;
+  left: 50%;
+  top: 0;
+  bottom: 0;
+  height: auto;
+  width: 1px;
+  transform: translateX(-50%);
+  background: linear-gradient(
+    to bottom,
+    transparent,
+    rgba(255, 215, 0, 0.14) 7%,
+    rgba(255, 215, 0, 0.14) 93%,
+    transparent
+  );
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 1;
+}
+
+body .bg-centerline::after {
+  height: min(32vh, 260px);
+  background: linear-gradient(to bottom, transparent, rgba(255, 215, 0, 0.96), transparent);
+  filter: drop-shadow(0 0 10px rgba(255, 215, 0, 0.95));
+  animation: beamFlowViewport 4.8s linear infinite;
+}
+
+@keyframes beamFlowViewport {
+  0% { transform: translateY(-34vh); }
+  100% { transform: translateY(112vh); }
+}
+
+/* CookieYes revisit button stays bottom-right; the Acrobat/Adobe browser
+   overlay is injected by the extension, so site CSS should only keep our
+   CookieYes control in a predictable low position. */
+.cky-btn-revisit-wrapper {
+  right: 20px !important;
+  bottom: 20px !important;
+}
+
 .instagram-feed-section {
   position: relative;
   isolation: isolate;
@@ -24,17 +68,19 @@
 }
 
 .instagram-feed-shell {
-  width: min(1080px, 100%);
+  --instagram-feed-gap: clamp(3.4rem, 7vw, 6.25rem);
+  width: min(1180px, 100%);
   margin: 0 auto;
   display: grid;
-  grid-template-columns: minmax(240px, 0.72fr) minmax(360px, 1fr);
-  gap: clamp(3.4rem, 7vw, 6.25rem);
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: var(--instagram-feed-gap);
   align-items: center;
 }
 
 .instagram-feed-copy-column {
   position: relative;
   z-index: 2;
+  max-width: 30rem;
 }
 
 .instagram-feed-status {
@@ -127,10 +173,11 @@
 
 .instagram-feed-grid {
   align-self: center;
+  justify-self: stretch;
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: .9rem;
-  padding-top: clamp(1.4rem, 3.2vw, 3.2rem);
+  padding-top: 0;
 }
 
 .instagram-card {
@@ -227,9 +274,17 @@
 }
 
 @media (max-width: 980px) {
+  body .bg-centerline {
+    display: none;
+  }
+
   .instagram-feed-shell {
     grid-template-columns: 1fr;
     gap: 2.25rem;
+  }
+
+  .instagram-feed-copy-column {
+    max-width: 38rem;
   }
 
   .instagram-feed-title {
