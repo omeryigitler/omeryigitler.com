@@ -1,182 +1,285 @@
-// Contact form handler — writes to Firestore `messages` (admin inbox) and
-// sends an optional Telegram notification. Replaces the old mailto form so
-// submissions actually reach the dashboard.
-
-const { admin, db } = require("./_firebaseAdmin");
+const crypto = require("node:crypto");
 
 const MAX = { name: 120, email: 160, message: 4000 };
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
 const SITE_TYPES = ["LANDING", "CORPORATE", "ECOMMERCE", "PROMO", "PORTAL"];
 const DESIGN_TYPES = ["TEMPLATE", "CUSTOM"];
 const SPEEDS = ["STANDARD", "FAST", "URGENT"];
-const MAINT = ["NONE", "BASIC", "MID", "PREMIUM"];
+const MAINTENANCE = ["NONE", "BASIC", "MID", "PREMIUM"];
 const FEATURES = ["seo", "multilang", "graphics", "ux", "crm"];
 const ADDONS = ["logo_design", "content_writing", "social_media", "google_maps"];
+const COUNTRIES = ["TR", "MT"];
+const RATE_LIMIT_MAX = 3;
+const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000;
+let firebaseRuntime = null;
+
+function loadFirebaseRuntime() {
+  if (firebaseRuntime) return firebaseRuntime;
+  try {
+    firebaseRuntime = require("./_firebaseAdmin");
+    return firebaseRuntime;
+  } catch (error) {
+    console.error("[contact] Firebase Admin initialization failed");
+    return null;
+  }
+}
 
 function clean(value, max) {
-    return String(value == null ? "" : value).trim().slice(0, max);
+  return String(value == null ? "" : value).trim().slice(0, max);
 }
 
 function pick(value, allowed, fallback) {
-    return allowed.includes(value) ? value : fallback;
+  return allowed.includes(value) ? value : fallback;
 }
 
-function sanitizeConfig(c) {
-    if (!c || typeof c !== "object") return null;
-    const features = Array.isArray(c.features) ? c.features.filter((f) => FEATURES.includes(f)) : [];
-    const addons = Array.isArray(c.addons) ? c.addons.filter((a) => ADDONS.includes(a)) : [];
-    let pageCount = parseInt(c.pageCount, 10);
-    if (!Number.isFinite(pageCount)) pageCount = 1;
-    pageCount = Math.min(50, Math.max(1, pageCount));
-    return {
-        siteType: pick(c.siteType, SITE_TYPES, "LANDING"),
-        designType: pick(c.designType, DESIGN_TYPES, "TEMPLATE"),
-        pageCount,
-        features,
-        addons,
-        deliverySpeed: pick(c.deliverySpeed, SPEEDS, "STANDARD"),
-        maintenanceLevel: pick(c.maintenanceLevel, MAINT, "NONE")
-    };
+function sanitizeConfig(input) {
+  if (!input || typeof input !== "object") return null;
+  const features = Array.isArray(input.features) ? [...new Set(input.features.filter((value) => FEATURES.includes(value)))] : [];
+  const addons = Array.isArray(input.addons) ? [...new Set(input.addons.filter((value) => ADDONS.includes(value)))] : [];
+  let pageCount = Number.parseInt(input.pageCount, 10);
+  if (!Number.isFinite(pageCount)) pageCount = 1;
+  pageCount = Math.min(50, Math.max(1, pageCount));
+
+  return {
+    country: pick(input.country, COUNTRIES, "TR"),
+    siteType: pick(input.siteType, SITE_TYPES, "LANDING"),
+    designType: pick(input.designType, DESIGN_TYPES, "TEMPLATE"),
+    pageCount,
+    features,
+    addons,
+    deliverySpeed: pick(input.deliverySpeed, SPEEDS, "STANDARD"),
+    maintenanceLevel: pick(input.maintenanceLevel, MAINTENANCE, "NONE")
+  };
 }
 
-function configSummary(cfg) {
-    if (!cfg) return "";
-    const lines = [
-        "Site: " + cfg.siteType + " · " + cfg.designType + " · " + cfg.pageCount + " pages",
-        "Features: " + (cfg.features.length ? cfg.features.join(", ") : "none"),
-        "Add-ons: " + (cfg.addons.length ? cfg.addons.join(", ") : "none"),
-        "Timeline: " + cfg.deliverySpeed + " · Maintenance: " + cfg.maintenanceLevel
-    ];
-    return lines.join("\n");
+function configSummary(config) {
+  if (!config) return "";
+  return [
+    `Site: ${config.siteType} · ${config.designType} · ${config.pageCount} pages`,
+    `Features: ${config.features.length ? config.features.join(", ") : "none"}`,
+    `Add-ons: ${config.addons.length ? config.addons.join(", ") : "none"}`,
+    `Timeline: ${config.deliverySpeed} · Maintenance: ${config.maintenanceLevel}`
+  ].join("\n");
 }
 
 function readBody(req) {
-    if (!req.body) return {};
-    if (typeof req.body === "string") {
-        try { return JSON.parse(req.body); } catch (e) { return {}; }
-    }
-    return req.body;
-}
-
-// Cloudflare Turnstile verification. Returns { ok: true } when valid,
-// { ok: false } when the token is invalid. If no secret is configured yet,
-// returns { ok: true, skipped: true } so the form keeps working until the
-// TURNSTILE_SECRET env var is added (then enforcement is automatic).
-async function verifyTurnstile(token, ip) {
-    const secret = process.env.TURNSTILE_SECRET;
-    if (!secret) {
-        console.warn("[contact] TURNSTILE_SECRET not set — skipping bot verification");
-        return { ok: true, skipped: true };
-    }
-    if (!token) return { ok: false };
-
+  if (!req.body) return {};
+  if (typeof req.body === "string") {
     try {
-        const form = new URLSearchParams();
-        form.append("secret", secret);
-        form.append("response", token);
-        if (ip) form.append("remoteip", ip);
-
-        const res = await fetch("https://challenges.cloudflare.com/turnstile/v0/siteverify", {
-            method: "POST",
-            headers: { "Content-Type": "application/x-www-form-urlencoded" },
-            body: form.toString()
-        });
-        const data = await res.json();
-        return { ok: !!data.success };
-    } catch (e) {
-        // network failure verifying — fail closed
-        return { ok: false };
+      return JSON.parse(req.body);
+    } catch (error) {
+      return {};
     }
+  }
+  return req.body;
 }
 
-async function notifyTelegram(name, email, message, cfg) {
-    const token = process.env.TELEGRAM_BOT_TOKEN;
-    const chatId = process.env.TELEGRAM_CHAT_ID;
-    if (!token || !chatId) return;
+function envList(name) {
+  return String(process.env[name] || "")
+    .split(",")
+    .map((value) => value.trim().toLowerCase())
+    .filter(Boolean);
+}
 
-    let text =
-        "📨 New project request\n\n" +
-        "Name: " + name + "\n" +
-        "Email: " + email + "\n\n" +
-        message;
-    if (cfg) text += "\n\n— Project config —\n" + configSummary(cfg);
+function allowedTurnstileHosts() {
+  const hosts = new Set([
+    "omeryigitler.com",
+    "www.omeryigitler.com",
+    ...envList("TURNSTILE_ALLOWED_HOSTS")
+  ]);
+  if (process.env.VERCEL_URL) hosts.add(String(process.env.VERCEL_URL).toLowerCase());
+  return hosts;
+}
 
-    await fetch("https://api.telegram.org/bot" + token + "/sendMessage", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ chat_id: chatId, text })
+async function verifyTurnstile(token, ip, fetchImpl = fetch) {
+  const secret = process.env.TURNSTILE_SECRET;
+  if (!secret) {
+    if (process.env.VERCEL_ENV === "production") return { ok: false, reason: "misconfigured" };
+    return { ok: true, skipped: true };
+  }
+  if (!token) return { ok: false, reason: "missing_token" };
+
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 5000);
+  try {
+    const form = new URLSearchParams();
+    form.append("secret", secret);
+    form.append("response", token);
+    if (ip) form.append("remoteip", ip);
+
+    const response = await fetchImpl("https://challenges.cloudflare.com/turnstile/v0/siteverify", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: form.toString(),
+      signal: controller.signal
     });
+    if (!response.ok) return { ok: false, reason: "verification_unavailable" };
+
+    const data = await response.json();
+    if (!data.success) {
+      return {
+        ok: false,
+        reason: "invalid_token",
+        errorCodes: Array.isArray(data["error-codes"]) ? data["error-codes"].slice(0, 5) : []
+      };
+    }
+    if (data.action !== "contact") return { ok: false, reason: "action_mismatch" };
+    const hostname = String(data.hostname || "").toLowerCase();
+    if (!hostname || !allowedTurnstileHosts().has(hostname)) {
+      return { ok: false, reason: "hostname_mismatch" };
+    }
+
+    return { ok: true };
+  } catch (error) {
+    return { ok: false, reason: "verification_unavailable" };
+  } finally {
+    clearTimeout(timeout);
+  }
 }
 
-module.exports = async (req, res) => {
-    res.setHeader("Access-Control-Allow-Origin", "*");
-    res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
-    res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+function rateLimitKey(ip) {
+  const secret = process.env.RATE_LIMIT_HASH_SECRET || process.env.TURNSTILE_SECRET;
+  if (secret) return crypto.createHmac("sha256", secret).update(ip).digest("hex");
+  return crypto.createHash("sha256").update(ip).digest("hex");
+}
 
-    if (req.method === "OPTIONS") return res.status(200).end();
-    if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed." });
+async function enforceRateLimit(ip, database, adminSdk, now = Date.now()) {
+  if (!ip) return { allowed: true };
+  const ref = database.collection("rate_limits").doc(`contact_${rateLimitKey(ip)}`);
 
-    const body = readBody(req);
+  return database.runTransaction(async (transaction) => {
+    const snapshot = await transaction.get(ref);
+    const stored = snapshot.exists && Array.isArray(snapshot.data()?.hits) ? snapshot.data().hits : [];
+    const hits = stored.filter((timestamp) => now - timestamp < RATE_LIMIT_WINDOW_MS);
+    if (hits.length >= RATE_LIMIT_MAX) return { allowed: false };
 
-    // Honeypot: a filled hidden field = bot. Pretend success without saving.
-    if (body.website && String(body.website).trim() !== "") {
-        return res.status(200).json({ ok: true });
+    hits.push(now);
+    transaction.set(ref, {
+      hits,
+      updatedAt: adminSdk.firestore.FieldValue.serverTimestamp(),
+      expiresAt: adminSdk.firestore.Timestamp.fromMillis(now + RATE_LIMIT_WINDOW_MS)
+    }, { merge: true });
+    return { allowed: true };
+  });
+}
+
+async function notifyTelegram(name, email, message, config) {
+  const token = process.env.TELEGRAM_BOT_TOKEN;
+  const chatId = process.env.TELEGRAM_CHAT_ID;
+  if (!token || !chatId) return;
+
+  let text = `📨 New project request\n\nName: ${name}\nEmail: ${email}\n\n${message}`;
+  if (config) text += `\n\n— Project config —\n${configSummary(config)}`;
+  const response = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ chat_id: chatId, text }),
+    signal: AbortSignal.timeout(5000)
+  });
+  if (!response.ok) throw new Error("Telegram notification failed.");
+}
+
+function sendError(res, status, code, error) {
+  return res.status(status).json({ ok: false, code, error });
+}
+
+async function contactHandler(req, res) {
+  res.setHeader("Cache-Control", "no-store");
+  res.setHeader("X-Content-Type-Options", "nosniff");
+  if (req.method === "OPTIONS") {
+    res.setHeader("Allow", "POST, OPTIONS");
+    return res.status(204).end();
+  }
+  if (req.method !== "POST") {
+    res.setHeader("Allow", "POST, OPTIONS");
+    return sendError(res, 405, "method_not_allowed", "Method not allowed.");
+  }
+
+  const requestId = crypto.randomUUID();
+  const body = readBody(req);
+  if (body.website && String(body.website).trim() !== "") return res.status(200).json({ ok: true });
+
+  const name = clean(body.name, MAX.name);
+  const email = clean(body.email, MAX.email);
+  const message = clean(body.message, MAX.message);
+  if (!name || !email || !message) {
+    return sendError(res, 400, "required_fields_missing", "Name, email and project details are required.");
+  }
+  if (!EMAIL_RE.test(email)) {
+    return sendError(res, 400, "invalid_email", "Please provide a valid email address.");
+  }
+
+  const ip = String(req.headers["x-forwarded-for"] || "").split(",")[0].trim();
+  const verification = await verifyTurnstile(body.turnstileToken, ip);
+  if (!verification.ok) {
+    console.warn("[contact] verification rejected", {
+      requestId,
+      reason: verification.reason,
+      errorCodes: verification.errorCodes || []
+    });
+    if (verification.reason === "verification_unavailable" || verification.reason === "misconfigured") {
+      return sendError(res, 503, "verification_unavailable", "Security verification is temporarily unavailable. Please try again shortly.");
     }
+    return sendError(res, 403, "verification_failed", "Security verification failed. Please retry the check.");
+  }
 
-    const name = clean(body.name, MAX.name);
-    const email = clean(body.email, MAX.email);
-    const message = clean(body.message, MAX.message);
+  const firebase = loadFirebaseRuntime();
+  if (!firebase) {
+    return sendError(res, 503, "contact_backend_unavailable", "Contact service is not configured for this environment.");
+  }
+  const { admin, db } = firebase;
 
-    if (!name || !email || !message) {
-        return res.status(400).json({ error: "Name, email and message are required." });
+  try {
+    const rateLimit = await enforceRateLimit(ip, db, admin);
+    if (!rateLimit.allowed) {
+      return sendError(res, 429, "rate_limited", "Too many requests. Please try again later.");
     }
-    if (!EMAIL_RE.test(email)) {
-        return res.status(400).json({ error: "Please provide a valid email address." });
-    }
+  } catch (error) {
+    console.warn("[contact] rate limit storage unavailable", { requestId });
+  }
 
-    const ip = (req.headers["x-forwarded-for"] || "").split(",")[0].trim();
+  const config = sanitizeConfig(body.config);
+  const serverTimestamp = admin.firestore.FieldValue.serverTimestamp();
+  try {
+    await db.collection("messages").add({
+      name,
+      email,
+      message,
+      config: config || null,
+      country: config?.country || "TR",
+      siteType: config?.siteType || null,
+      projectType: config?.siteType || null,
+      designType: config?.designType || null,
+      pageCount: config?.pageCount || null,
+      features: config?.features || [],
+      selectedAddons: config?.addons || [],
+      deliverySpeed: config?.deliverySpeed || null,
+      maintenanceLevel: config?.maintenanceLevel || null,
+      source: config ? "project-configurator" : "contact-form",
+      status: "new",
+      read: false,
+      requestId,
+      createdAt: serverTimestamp,
+      timestamp: serverTimestamp
+    });
+  } catch (error) {
+    console.error("[contact] message write failed", { requestId });
+    return sendError(res, 500, "message_write_failed", "Your request could not be saved. Please try again.");
+  }
 
-    const verify = await verifyTurnstile(body.turnstileToken, ip);
-    if (!verify.ok) {
-        return res.status(403).json({ error: "Verification failed. Please refresh and try again." });
-    }
+  try {
+    await notifyTelegram(name, email, message, config);
+  } catch (error) {
+    console.warn("[contact] Telegram notification failed", { requestId });
+  }
 
-    // Per-IP rate limit: max 3 submissions / hour (server-side, via Firestore)
-    if (ip) {
-        try {
-            const RL_MAX = 3, RL_WINDOW = 60 * 60 * 1000, now = Date.now();
-            const ref = db.collection("rate_limits").doc(ip.replace(/[^0-9a-fA-F.:]/g, "_") || "unknown");
-            const snap = await ref.get();
-            let hits = (snap.exists && Array.isArray(snap.data().hits) ? snap.data().hits : []).filter((t) => now - t < RL_WINDOW);
-            if (hits.length >= RL_MAX) {
-                return res.status(429).json({ error: "Too many requests. Please try again later." });
-            }
-            hits.push(now);
-            await ref.set({ hits, updatedAt: now }, { merge: true });
-        } catch (e) {
-            // rate-limit store failure should not block a genuine message
-        }
-    }
+  return res.status(200).json({ ok: true, requestId });
+}
 
-    const config = sanitizeConfig(body.config);
-
-    try {
-        await db.collection("messages").add({
-            name,
-            email,
-            message,
-            config: config || null,
-            source: config ? "project-configurator" : "contact-form",
-            read: false,
-            createdAt: admin.firestore.FieldValue.serverTimestamp()
-        });
-    } catch (e) {
-        return res.status(500).json({ error: "Could not save your message. Please try again." });
-    }
-
-    // Telegram is best-effort — never block the success response on it.
-    try { await notifyTelegram(name, email, message, config); } catch (e) {}
-
-    return res.status(200).json({ ok: true });
+module.exports = contactHandler;
+module.exports._test = {
+  allowedTurnstileHosts,
+  rateLimitKey,
+  sanitizeConfig,
+  verifyTurnstile
 };
