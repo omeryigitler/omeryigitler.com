@@ -75,6 +75,15 @@ function authKeyboard(reqId, options) {
   };
 }
 
+function agentApprovalKeyboard(approvalId) {
+  return {
+    inline_keyboard: [[
+      { text: "✅ APPROVE", callback_data: `agentapprove_${approvalId}` },
+      { text: "❌ REJECT", callback_data: `agentreject_${approvalId}` },
+    ]],
+  };
+}
+
 function commandLabel(command) {
   return {
     FREEZE: "Freeze visitor screen",
@@ -87,6 +96,7 @@ function commandLabel(command) {
 module.exports = {
   SEPARATOR,
   actionKeyboard,
+  agentApprovalKeyboard,
   authKeyboard,
   cleanValue,
   commandLabel,

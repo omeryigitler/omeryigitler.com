@@ -130,3 +130,51 @@ test("approval execution is atomic and idempotent for repeated requests", async 
   assert.equal(store.get("clients/dGVzdEBleGFtcGxlLmNvbQ__").totalQuotes, 1);
   assert.equal(store.get("agent_approvals/approval_123").status, "approved");
 });
+
+test("visitor commands remain pending until an explicit approval transaction", async () => {
+  const future = FakeTimestamp.fromMillis(Date.now() + 60_000);
+  const { db, store } = createFakeFirestore([
+    ["agent_approvals/visitor_approval", {
+      status: "pending",
+      requestedAction: "visitor_command",
+      commandId: "command_visitor",
+      runId: "run_visitor",
+      source: "telegram",
+      risk: "high",
+      expiresAt: future,
+      payloadPreview: {
+        sessionId: "sess_TEST123",
+        command: "FREEZE",
+        message: "bakımdayız"
+      }
+    }],
+    ["agent_commands/command_visitor", { status: "waiting_approval" }],
+    ["agent_runs/run_visitor", { status: "waiting_approval", toolCalls: [] }],
+    ["visitors_v1/sess_TEST123", { action: null, message: null }]
+  ]);
+  const fakeAdmin = { firestore: { FieldValue, Timestamp: FakeTimestamp } };
+  const originalLoad = Module._load;
+  Module._load = function patchedLoad(request, parent, isMain) {
+    if (request === "../api/_firebaseAdmin" && parent?.filename?.endsWith("/lib/agent.js")) {
+      return { admin: fakeAdmin, db };
+    }
+    return originalLoad.call(this, request, parent, isMain);
+  };
+  delete require.cache[require.resolve("../lib/agent")];
+  const agent = require("../lib/agent");
+  Module._load = originalLoad;
+
+  assert.equal(store.get("visitors_v1/sess_TEST123").action, null);
+  const result = await agent.decideApproval({
+    approvalId: "visitor_approval",
+    decision: "approve",
+    actor: { id: "telegram:1", source: "telegram" }
+  });
+
+  assert.equal(result.status, "approved");
+  assert.deepEqual(result.result, { sessionId: "sess_TEST123", command: "FREEZE", message: "bakımdayız" });
+  assert.equal(store.get("visitors_v1/sess_TEST123").action, "freeze");
+  assert.equal(store.get("visitors_v1/sess_TEST123").message, "bakımdayız");
+  assert.equal(store.get("agent_commands/command_visitor").status, "completed");
+  assert.equal(store.get("agent_approvals/visitor_approval").status, "approved");
+});

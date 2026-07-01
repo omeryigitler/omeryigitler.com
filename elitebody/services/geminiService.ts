@@ -1,8 +1,10 @@
 import { GoogleGenAI } from "@google/genai";
 
 const getAIClient = () => {
-  // Try environment first, then fallback to a default key to ensure it "just works"
-  const apiKey = import.meta.env.VITE_GEMINI_API_KEY || 'AIzaSyDlH6dieznFWfZtLSL4tHcfV6bgiJoVA6M';
+  const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+  if (!apiKey) {
+    throw new Error("VITE_GEMINI_API_KEY is not configured.");
+  }
   return new GoogleGenAI({ apiKey });
 };
 

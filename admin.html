@@ -3986,10 +3986,9 @@
         window.sendFreeze = sendFreeze;
 
         async function sendRemoteCommand(visitorId, action, message) {
-            if (!db) return;
             try {
                 // Visual feedback
-                const btn = event && event.currentTarget;
+                const btn = typeof event !== 'undefined' && event ? event.currentTarget : null;
                 let originalContent = '';
                 if (btn) {
                     originalContent = btn.innerHTML;
@@ -3997,14 +3996,14 @@
                     lucide.createIcons();
                 }
 
-                const update = {
-                    action: action,
-                    action_timestamp: firebase.firestore.FieldValue.serverTimestamp()
-                };
-                // include the custom message for freeze (verbatim), clear it otherwise
-                update.message = (action === 'freeze' && typeof message === 'string') ? message : null;
-
-                await db.collection('visitors_v1').doc(visitorId).update(update);
+                if (!window.TaurusAgent || typeof window.TaurusAgent.requestVisitorCommand !== 'function') {
+                    throw new Error('Agent güvenlik katmanı henüz hazır değil.');
+                }
+                const result = await window.TaurusAgent.requestVisitorCommand({
+                    sessionId: visitorId,
+                    command: action,
+                    message: (action === 'freeze' && typeof message === 'string') ? message : null
+                });
 
                 // Toast or Temp Success
                 if (btn) {
@@ -4016,7 +4015,8 @@
                     }, 1500);
                 }
 
-                console.log(`📡 Command SENT: ${action} -> ${visitorId}`);
+                systemAlert('AGENT ONAYI', `${action.toUpperCase()} komutu doğrudan gönderilmedi. Onay kaydı oluşturuldu: ${result.approvalId}`, 'shield-check');
+                console.log(`🛡️ Command queued for approval: ${action} -> ${visitorId}`);
             } catch (e) {
                 console.error("Command Failed", e);
                 alert("Command Transmission Failed: " + e.message);
@@ -5557,6 +5557,7 @@
             });
         })();
     </script>
+    <script src="/assets/js/admin-agent.js?v=V2" defer></script>
 </body>
 
 </html>

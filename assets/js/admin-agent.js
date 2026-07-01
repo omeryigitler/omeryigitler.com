@@ -5,6 +5,8 @@
     mounted: false,
     busy: false,
     approvals: [],
+    runs: [],
+    capabilities: [],
     lastFocus: null
   };
 
@@ -43,8 +45,13 @@
       .agent-box h4 { color: #FFD700; font: 900 11px JetBrains Mono, monospace; letter-spacing: .14em; text-transform: uppercase; margin: 0 0 10px; }
       .agent-box pre { white-space: pre-wrap; word-break: break-word; color: #d4d4d4; font: 500 12px JetBrains Mono, monospace; margin: 0; }
       .agent-approval { border: 1px solid rgba(255,215,0,.18); border-radius: 18px; padding: 14px; background: rgba(255,215,0,.05); display: grid; gap: 12px; }
+      .agent-run { border-top: 1px solid rgba(255,255,255,.07); padding: 11px 0; display: grid; gap: 5px; }
+      .agent-run:first-child { border-top: 0; padding-top: 0; }
+      .agent-run-status { color: #FFD700; font: 800 10px JetBrains Mono, monospace; text-transform: uppercase; letter-spacing: .1em; }
       .agent-meta { color: #c7c7c7; font: 600 12px Manrope, sans-serif; line-height: 1.65; }
       .agent-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+      .agent-quick { border: 1px solid rgba(255,255,255,.1); background: rgba(255,255,255,.04); color: #bbb; border-radius: 999px; padding: 8px 11px; font: 700 10px Manrope, sans-serif; cursor: pointer; }
+      .agent-quick:hover { color: #FFD700; border-color: rgba(255,215,0,.35); }
     `;
     document.head.appendChild(el("style", { id: "agent-styles", text: css }));
   }
@@ -103,7 +110,7 @@
     if (!text) return setOutput("Komut gerekli", "Önce desteklenen bir komut yazın.");
 
     setBusy(true);
-    setOutput("Çalışıyor", "Son lead okunuyor ve onay taslağı hazırlanıyor...");
+    setOutput("Çalışıyor", "Komut güvenli araç yönlendiricisinde işleniyor...");
     try {
       const result = await api("command", {
         method: "POST",
@@ -111,11 +118,13 @@
       });
       setOutput("Agent sonucu", {
         status: result.status,
+        intent: result.intent,
         summary: result.summary,
+        data: result.data,
         draft: result.draft,
         approvalId: result.approvalId
       });
-      await loadApprovals();
+      await loadStatus();
     } catch (error) {
       setOutput("Agent hatası", error.message);
     } finally {
@@ -123,22 +132,33 @@
     }
   }
 
-  async function loadApprovals() {
+  async function loadStatus() {
     const list = document.getElementById("agent-approvals");
-    if (!list) return;
+    const runs = document.getElementById("agent-runs");
+    if (!list || !runs) return;
     list.replaceChildren(el("div", { class: "agent-box" }, [el("pre", { text: "Onaylar yükleniyor..." })]));
+    runs.replaceChildren(el("div", { class: "agent-run" }, [el("div", { class: "agent-meta", text: "Geçmiş yükleniyor..." })]));
     try {
       const result = await api("status", { method: "GET" });
       state.approvals = result.approvals || [];
+      state.runs = result.runs || [];
+      state.capabilities = result.capabilities || [];
       list.replaceChildren();
       if (!state.approvals.length) {
         list.appendChild(el("div", { class: "agent-box" }, [el("pre", { text: "Bekleyen onay yok." })]));
-        return;
+      } else {
+        state.approvals.forEach((approval) => renderApproval(list, approval));
       }
-      state.approvals.forEach((approval) => renderApproval(list, approval));
+      runs.replaceChildren();
+      if (!state.runs.length) {
+        runs.appendChild(el("div", { class: "agent-run" }, [el("div", { class: "agent-meta", text: "Henüz Agent çalıştırması yok." })]));
+      } else {
+        state.runs.forEach((run) => renderRun(runs, run));
+      }
       setBusy(state.busy);
     } catch (error) {
       list.replaceChildren(el("div", { class: "agent-box" }, [el("pre", { text: error.message })]));
+      runs.replaceChildren(el("div", { class: "agent-run" }, [el("div", { class: "agent-meta", text: error.message })]));
     }
   }
 
@@ -149,15 +169,21 @@
       class: "agent-title",
       text: `${approval.requestedAction || "ACTION"} // ${approval.risk || "medium"}`
     }));
-    card.appendChild(el("div", {
-      class: "agent-meta",
-      text: [
+    const details = approval.requestedAction === "visitor_command"
+      ? [
+        `Oturum: ${payload.sessionId || "—"}`,
+        `Komut: ${payload.command || "—"}`,
+        `Konum / cihaz: ${payload.location || "—"} · ${payload.device || "—"}`,
+        `Ekran mesajı: ${payload.message || "yok"}`
+      ]
+      : [
         `Müşteri: ${payload.clientName || "—"} (${payload.clientEmailMasked || "e-posta yok"})`,
         `Kapsam: ${payload.siteType || "—"} · ${payload.designType || "—"} · ${payload.pageCount || "—"} sayfa`,
-        `Teklif: ${currency(payload.totalPrice, payload.currency)} · fiyat sürümü ${payload.pricingVersion || "—"}`,
-        `Süre sonu: ${approval.expiresAt ? new Date(approval.expiresAt).toLocaleString("tr-TR") : "—"}`
-      ].join("\n")
-    }));
+        `Teklif: ${currency(payload.totalPrice, payload.currency)} · fiyat sürümü ${payload.pricingVersion || "—"}`
+      ];
+    details.push(`Kaynak: ${approval.source || "admin_panel"}`);
+    details.push(`Süre sonu: ${approval.expiresAt ? new Date(approval.expiresAt).toLocaleString("tr-TR") : "—"}`);
+    card.appendChild(el("div", { class: "agent-meta", text: details.join("\n") }));
     const actions = el("div", { class: "agent-actions" });
     actions.appendChild(el("button", {
       type: "button",
@@ -177,6 +203,35 @@
     list.appendChild(card);
   }
 
+  function renderRun(list, run) {
+    const date = run.startedAt ? new Date(run.startedAt).toLocaleString("tr-TR") : "—";
+    list.appendChild(el("article", { class: "agent-run" }, [
+      el("div", { class: "agent-run-status", text: `${run.status || "unknown"} // ${run.intent || "legacy"}` }),
+      el("div", { class: "agent-meta", text: `${run.summary || run.error || "Çıktı yok."}\n${run.source || "admin_panel"} · ${date}` })
+    ]));
+  }
+
+  async function requestVisitorCommand({ sessionId, command, message }) {
+    if (state.busy) throw new Error("Agent başka bir işlem yürütüyor.");
+    setBusy(true);
+    try {
+      const result = await api("visitor", {
+        method: "POST",
+        body: JSON.stringify({ sessionId, command, message })
+      });
+      setOutput("Ziyaretçi komutu", {
+        status: result.status,
+        summary: result.summary,
+        approvalId: result.approvalId,
+        draft: result.draft
+      });
+      await loadStatus();
+      return result;
+    } finally {
+      setBusy(false);
+    }
+  }
+
   async function decide(approvalId, decision) {
     if (state.busy) return;
     const message = decision === "approve"
@@ -194,7 +249,7 @@
         body: JSON.stringify({ approvalId, decision })
       });
       setOutput("Onay sonucu", result);
-      await loadApprovals();
+      await loadStatus();
     } catch (error) {
       setOutput("Onay hatası", error.message);
     } finally {
@@ -217,7 +272,7 @@
     panel.classList.add("open");
     panel.setAttribute("aria-hidden", "false");
     document.getElementById("agent-command-input")?.focus();
-    loadApprovals();
+    loadStatus();
   }
 
   function mount() {
@@ -245,14 +300,34 @@
           maxlength: "2000",
           placeholder: "Son gelen mesajı özetle ve teklif taslağı hazırla"
         }),
+        el("div", { class: "agent-actions", "aria-label": "Hızlı komutlar" }, [
+          ...[
+            "Bugünkü mesajları özetle",
+            "Aktif projeleri listele",
+            "Son ziyaretçileri özetle",
+            "Son gelen mesajı özetle ve teklif taslağı hazırla"
+          ].map((text) => el("button", {
+            type: "button",
+            class: "agent-quick",
+            text,
+            onclick: () => {
+              const input = document.getElementById("agent-command-input");
+              if (input) input.value = text;
+            }
+          }))
+        ]),
         el("div", { class: "agent-actions" }, [
           el("button", { type: "button", class: "agent-button primary", text: "Agent'ı çalıştır", "data-agent-action": "command", onclick: sendCommand }),
-          el("button", { type: "button", class: "agent-button", text: "Onayları yenile", "data-agent-action": "refresh", onclick: loadApprovals })
+          el("button", { type: "button", class: "agent-button", text: "Durumu yenile", "data-agent-action": "refresh", onclick: loadStatus })
         ]),
         el("div", { id: "agent-output", class: "agent-box" }, [el("h4", { text: "Çıktı" }), el("pre", { text: "Agent hazır." })]),
         el("section", { class: "agent-box", "aria-labelledby": "agent-approvals-title" }, [
           el("h4", { id: "agent-approvals-title", text: "Bekleyen onaylar" }),
           el("div", { id: "agent-approvals" })
+        ]),
+        el("section", { class: "agent-box", "aria-labelledby": "agent-runs-title" }, [
+          el("h4", { id: "agent-runs-title", text: "Son 10 çalıştırma" }),
+          el("div", { id: "agent-runs" })
         ])
       ])
     ]));
@@ -272,6 +347,8 @@
     }
     if (attempt < 40) setTimeout(() => waitForAuthenticatedAdmin(attempt + 1), 250);
   }
+
+  window.TaurusAgent = Object.freeze({ requestVisitorCommand });
 
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", () => waitForAuthenticatedAdmin(), { once: true });
