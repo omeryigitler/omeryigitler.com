@@ -40,6 +40,10 @@
     ],
     "rewrites": [
         {
+            "source": "/api/agent",
+            "destination": "/api/instagram"
+        },
+        {
             "source": "/webhook",
             "destination": "/api/webhook"
         }
