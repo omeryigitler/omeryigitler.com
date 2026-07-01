@@ -1,3 +1,5 @@
+const { admin } = require("../../_firebaseAdmin");
+
 const PRICE_TABLE = {
   TR: { currency: "TRY", base: 15000, page: 1000 },
   MT: { currency: "EUR", base: 1500, page: 100 }
@@ -45,6 +47,42 @@ function buildProposalDraft(input) {
   };
 }
 
+function cleanDraft(draft) {
+  const output = { ...(draft || {}) };
+  delete output.action;
+  delete output.sourceMessagePreview;
+  return output;
+}
+
+async function createApprovedProposal(db, draft, meta = {}) {
+  const payload = cleanDraft(draft);
+  const doc = {
+    ...payload,
+    status: "draft",
+    createdAt: admin.firestore.FieldValue.serverTimestamp(),
+    sentAt: null,
+    pdfUrl: null,
+    agentApprovalId: meta.approvalId || null,
+    agentCommandId: meta.commandId || null,
+    createdByAgent: true
+  };
+
+  const ref = await db.collection("quotes").add(doc);
+
+  if (payload.messageId) {
+    await db.collection("messages").doc(payload.messageId).set({
+      quoteId: ref.id,
+      status: "quoted"
+    }, { merge: true });
+  }
+
+  return {
+    id: ref.id,
+    collection: "quotes"
+  };
+}
+
 module.exports = {
-  buildProposalDraft
+  buildProposalDraft,
+  createApprovedProposal
 };
