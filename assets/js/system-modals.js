@@ -121,3 +121,13 @@ window.systemConfirm = (title, message, icon = 'help-circle') => {
         };
     });
 };
+
+(function loadAdminAgentBridge() {
+    if (!/admin\.html$/.test(window.location.pathname)) return;
+    window.addEventListener('load', function () {
+        var script = document.createElement('script');
+        script.src = 'assets/js/admin-agent.js?v=V1';
+        script.defer = true;
+        document.body.appendChild(script);
+    });
+})();
