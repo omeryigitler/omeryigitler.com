@@ -25,6 +25,11 @@ test("enforces the action-specific HTTP method before authentication", async () 
   await handler({ method: "GET", query: { action: "approve" }, headers: {} }, response);
   assert.equal(response.statusCode, 405);
   assert.equal(response.headers.allow, "POST");
+
+  const visitorResponse = responseRecorder();
+  await handler({ method: "GET", query: { action: "visitor" }, headers: {} }, visitorResponse);
+  assert.equal(visitorResponse.statusCode, 405);
+  assert.equal(visitorResponse.headers.allow, "POST");
 });
 
 test("enforces the body limit even when Vercel already parsed JSON", async () => {

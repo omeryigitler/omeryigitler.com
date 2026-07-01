@@ -1,4 +1,12 @@
 const MAX_BODY_BYTES = 64 * 1024;
+const CAPABILITIES = [
+  "latest_lead_summary",
+  "messages_summary",
+  "active_projects_summary",
+  "latest_visitors_summary",
+  "latest_message_proposal",
+  "visitor_control_with_approval"
+];
 
 function sendJson(res, status, body) {
   res.statusCode = status;
@@ -83,7 +91,7 @@ function publicError(error) {
 
 module.exports = async function handler(req, res) {
   const action = String(req.query?.action || "").trim().toLowerCase();
-  const allowed = new Set(["status", "command", "approve"]);
+  const allowed = new Set(["status", "command", "approve", "visitor"]);
   if (!allowed.has(action)) {
     return sendJson(res, 404, { ok: false, code: "unknown_action", error: "Unknown agent action." });
   }
@@ -96,13 +104,28 @@ module.exports = async function handler(req, res) {
     const actor = await agent.verifyAgentRequest(req);
 
     if (action === "status") {
-      const approvals = await agent.listPendingApprovals();
-      return sendJson(res, 200, { ok: true, approvals });
+      const [approvals, runs] = await Promise.all([
+        agent.listPendingApprovals(),
+        agent.listRecentRuns()
+      ]);
+      return sendJson(res, 200, { ok: true, capabilities: CAPABILITIES, approvals, runs });
     }
 
     const body = await readJson(req);
     if (action === "command") {
-      const result = await agent.handleCommand({ text: body.text || body.command, actor });
+      const result = await agent.handleCommand({ text: body.text || body.command, actor, source: actor.source === "api_secret" ? "api" : "admin_panel" });
+      return sendJson(res, 200, { ok: true, ...result });
+    }
+
+    if (action === "visitor") {
+      const result = await agent.requestVisitorCommand({
+        sessionId: body.sessionId,
+        command: body.command || body.action,
+        message: body.message,
+        text: body.text,
+        actor,
+        source: actor.source === "api_secret" ? "api" : "admin_panel"
+      });
       return sendJson(res, 200, { ok: true, ...result });
     }
 
