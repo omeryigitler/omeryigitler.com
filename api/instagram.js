@@ -1,3 +1,5 @@
+const { verifyAgentRequest, handleCommand, listPendingApprovals, decideApproval } = require('../lib/agent');
+
 const GRAPH_VERSION = process.env.INSTAGRAM_GRAPH_VERSION || 'v23.0';
 const DEFAULT_LIMIT = Number(process.env.INSTAGRAM_FEED_LIMIT || 6);
 
@@ -8,7 +10,72 @@ function sendJson(res, status, body, cache = 'no-store') {
   res.end(JSON.stringify(body));
 }
 
+async function readJson(req) {
+  if (req.body && typeof req.body === 'object') return req.body;
+  const chunks = [];
+  for await (const chunk of req) chunks.push(chunk);
+  if (!chunks.length) return {};
+  const raw = Buffer.concat(chunks).toString('utf8');
+  if (!raw) return {};
+  return JSON.parse(raw);
+}
+
+function methodNotAllowed(res, allowedMethods) {
+  res.setHeader('Allow', allowedMethods.join(', '));
+  return sendJson(res, 405, { ok: false, error: 'Method not allowed', allowedMethods });
+}
+
+function errorResponse(error) {
+  const status = Number(error?.statusCode || error?.status || 500);
+  return {
+    status,
+    body: {
+      error: status >= 500 ? 'Internal server error' : error.message || 'Request failed'
+    }
+  };
+}
+
+async function handleAgentRoute(req, res) {
+  const action = String(req.query?.agent || '').toLowerCase();
+
+  try {
+    const actor = await verifyAgentRequest(req);
+
+    if (action === 'status') {
+      if (req.method !== 'GET') return methodNotAllowed(res, ['GET']);
+      const approvals = await listPendingApprovals();
+      return sendJson(res, 200, { ok: true, approvals });
+    }
+
+    if (req.method !== 'POST') return methodNotAllowed(res, ['POST']);
+    const body = await readJson(req);
+
+    if (action === 'approve') {
+      const result = await decideApproval({
+        approvalId: body.approvalId,
+        decision: body.decision,
+        actor
+      });
+      return sendJson(res, 200, { ok: true, ...result });
+    }
+
+    const result = await handleCommand({
+      text: body.text || body.command,
+      source: body.source || 'admin_panel',
+      actor
+    });
+    return sendJson(res, 200, { ok: true, ...result });
+  } catch (error) {
+    const { status, body } = errorResponse(error);
+    return sendJson(res, status, { ok: false, ...body });
+  }
+}
+
 module.exports = async function handler(req, res) {
+  if (req.query?.agent) {
+    return handleAgentRoute(req, res);
+  }
+
   if (req.method !== 'GET') {
     res.setHeader('Allow', 'GET');
     return sendJson(res, 405, { error: 'Method not allowed' });
