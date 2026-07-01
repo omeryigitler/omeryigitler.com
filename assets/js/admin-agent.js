@@ -80,7 +80,7 @@
     state.busy = true;
     setOutput("Running", "Reading latest lead and preparing an approval draft...");
     try {
-      const result = await api("/api/agent/command", {
+      const result = await api("/api/agent?action=command", {
         method: "POST",
         body: JSON.stringify({ text, source: "admin_panel" })
       });
@@ -98,7 +98,7 @@
     if (!list) return;
     list.innerHTML = "";
     try {
-      const result = await api("/api/agent/status", { method: "GET" });
+      const result = await api("/api/agent?action=status", { method: "GET" });
       state.approvals = result.approvals || [];
       if (!state.approvals.length) {
         list.appendChild(el("div", { class: "agent-box" }, [el("pre", { text: "No pending approvals." })]));
@@ -126,7 +126,7 @@
     try {
       const confirmed = await window.systemConfirm?.("AGENT APPROVAL", `${decision.toUpperCase()} this pending agent action?`, "shield-check");
       if (confirmed === false) return;
-      const result = await api("/api/agent/approve", {
+      const result = await api("/api/agent?action=approve", {
         method: "POST",
         body: JSON.stringify({ approvalId, decision })
       });
