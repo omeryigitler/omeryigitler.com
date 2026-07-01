@@ -36,7 +36,7 @@ function errorResponse(error) {
 }
 
 async function handleAgentRoute(req, res) {
-  const action = String(req.query?.agent || '').toLowerCase();
+  const action = String(req.query?.agent || req.query?.action || '').toLowerCase();
 
   try {
     const actor = await verifyAgentRequest(req);
@@ -72,7 +72,7 @@ async function handleAgentRoute(req, res) {
 }
 
 module.exports = async function handler(req, res) {
-  if (req.query?.agent) {
+  if (req.query?.agent || req.query?.action) {
     return handleAgentRoute(req, res);
   }
 
