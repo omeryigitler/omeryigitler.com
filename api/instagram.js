@@ -1,92 +1,45 @@
-const { verifyAgentRequest, handleCommand, listPendingApprovals, decideApproval } = require('../lib/agent');
-
 const GRAPH_VERSION = process.env.INSTAGRAM_GRAPH_VERSION || 'v23.0';
-const DEFAULT_LIMIT = Number(process.env.INSTAGRAM_FEED_LIMIT || 6);
+const configuredLimit = Number.parseInt(process.env.INSTAGRAM_FEED_LIMIT || '6', 10);
+const DEFAULT_LIMIT = Number.isFinite(configuredLimit) ? Math.min(Math.max(configuredLimit, 1), 12) : 6;
+
+function normalizeLimit(value) {
+  const parsed = Number.parseInt(value, 10);
+  return Number.isFinite(parsed) ? Math.min(Math.max(parsed, 1), 12) : DEFAULT_LIMIT;
+}
+
+function sanitizeMedia(item) {
+  if (!item || typeof item !== 'object') return null;
+  return {
+    id: item.id || null,
+    caption: item.caption || '',
+    media_type: item.media_type || null,
+    media_url: item.media_url || null,
+    thumbnail_url: item.thumbnail_url || null,
+    permalink: item.permalink || null,
+    timestamp: item.timestamp || null
+  };
+}
 
 function sendJson(res, status, body, cache = 'no-store') {
   res.statusCode = status;
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
   res.setHeader('Cache-Control', cache);
+  res.setHeader('X-Content-Type-Options', 'nosniff');
   res.end(JSON.stringify(body));
 }
 
-async function readJson(req) {
-  if (req.body && typeof req.body === 'object') return req.body;
-  const chunks = [];
-  for await (const chunk of req) chunks.push(chunk);
-  if (!chunks.length) return {};
-  const raw = Buffer.concat(chunks).toString('utf8');
-  if (!raw) return {};
-  return JSON.parse(raw);
-}
-
-function methodNotAllowed(res, allowedMethods) {
-  res.setHeader('Allow', allowedMethods.join(', '));
-  return sendJson(res, 405, { ok: false, error: 'Method not allowed', allowedMethods });
-}
-
-function errorResponse(error) {
-  const status = Number(error?.statusCode || error?.status || 500);
-  return {
-    status,
-    body: {
-      error: status >= 500 ? 'Internal server error' : error.message || 'Request failed'
-    }
-  };
-}
-
-async function handleAgentRoute(req, res) {
-  const action = String(req.query?.agent || req.query?.action || '').toLowerCase();
-
-  try {
-    const actor = await verifyAgentRequest(req);
-
-    if (action === 'status') {
-      if (req.method !== 'GET') return methodNotAllowed(res, ['GET']);
-      const approvals = await listPendingApprovals();
-      return sendJson(res, 200, { ok: true, approvals });
-    }
-
-    if (req.method !== 'POST') return methodNotAllowed(res, ['POST']);
-    const body = await readJson(req);
-
-    if (action === 'approve') {
-      const result = await decideApproval({
-        approvalId: body.approvalId,
-        decision: body.decision,
-        actor
-      });
-      return sendJson(res, 200, { ok: true, ...result });
-    }
-
-    const result = await handleCommand({
-      text: body.text || body.command,
-      source: body.source || 'admin_panel',
-      actor
-    });
-    return sendJson(res, 200, { ok: true, ...result });
-  } catch (error) {
-    const { status, body } = errorResponse(error);
-    return sendJson(res, status, { ok: false, ...body });
-  }
-}
-
 module.exports = async function handler(req, res) {
-  if (req.query?.agent || req.query?.action) {
-    return handleAgentRoute(req, res);
-  }
-
   if (req.method !== 'GET') {
     res.setHeader('Allow', 'GET');
     return sendJson(res, 405, { error: 'Method not allowed' });
   }
 
   const token = process.env.INSTAGRAM_ACCESS_TOKEN;
-  const limit = Math.min(Math.max(Number(req.query.limit || DEFAULT_LIMIT), 1), 12);
+  const limit = normalizeLimit(req.query.limit);
 
   if (!token) {
-    return sendJson(res, 500, {
-      error: 'Missing INSTAGRAM_ACCESS_TOKEN',
+    return sendJson(res, 503, {
+      error: 'Instagram feed unavailable',
       data: []
     });
   }
@@ -108,33 +61,44 @@ module.exports = async function handler(req, res) {
 
   try {
     const response = await fetch(endpoint.toString(), {
-      headers: { Accept: 'application/json' }
+      headers: { Accept: 'application/json' },
+      signal: AbortSignal.timeout(5000)
     });
 
     const data = await response.json();
 
     if (!response.ok) {
+      console.warn('[instagram] Graph API request failed:', response.status);
       return sendJson(res, response.status, {
         error: 'Instagram request failed',
-        details: data,
         data: []
       });
     }
+
+    const cursors = data.paging?.cursors
+      ? {
+          before: data.paging.cursors.before || null,
+          after: data.paging.cursors.after || null
+        }
+      : null;
 
     return sendJson(
       res,
       200,
       {
-        data: Array.isArray(data.data) ? data.data : [],
-        paging: data.paging || null
+        data: Array.isArray(data.data) ? data.data.map(sanitizeMedia).filter(Boolean) : [],
+        // Never return Graph API next/previous URLs; they contain the access token.
+        paging: cursors ? { cursors } : null
       },
       's-maxage=3600, stale-while-revalidate=86400'
     );
   } catch (error) {
+    console.warn('[instagram] Graph API request unavailable');
     return sendJson(res, 502, {
       error: 'Instagram fetch failed',
-      message: error instanceof Error ? error.message : 'Unknown error',
       data: []
     });
   }
 };
+
+module.exports._test = { normalizeLimit, sanitizeMedia };

@@ -1,0 +1,63 @@
+{
+  "version": "2026-07-01",
+  "countries": {
+    "TR": {
+      "currency": "TRY",
+      "basePrices": {
+        "LANDING": 8000,
+        "PROMO": 8000,
+        "CORPORATE": 15000,
+        "ECOMMERCE": 40000,
+        "PORTAL": 50000
+      },
+      "pageRate": 1000,
+      "maintenanceRates": {
+        "NONE": { "value": 0, "type": "FIXED" },
+        "BASIC": { "value": 2000, "type": "FIXED" },
+        "MID": { "value": 5000, "type": "FIXED" },
+        "PREMIUM": { "value": 10000, "type": "FIXED" }
+      },
+      "factors": {
+        "seo": { "value": 5000, "type": "FIXED" },
+        "design": { "value": 30, "type": "PERCENTAGE" },
+        "multilang": { "value": 20, "type": "PERCENTAGE" },
+        "graphics": { "value": 10, "type": "PERCENTAGE" },
+        "ux": { "value": 10, "type": "PERCENTAGE" },
+        "crm": { "value": 20, "type": "PERCENTAGE" }
+      },
+      "speedMultipliers": { "STANDARD": 1, "FAST": 1.5, "URGENT": 2 }
+    },
+    "MT": {
+      "currency": "EUR",
+      "basePrices": {
+        "LANDING": 800,
+        "PROMO": 800,
+        "CORPORATE": 1500,
+        "ECOMMERCE": 4000,
+        "PORTAL": 5000
+      },
+      "pageRate": 100,
+      "maintenanceRates": {
+        "NONE": { "value": 0, "type": "FIXED" },
+        "BASIC": { "value": 200, "type": "FIXED" },
+        "MID": { "value": 500, "type": "FIXED" },
+        "PREMIUM": { "value": 1000, "type": "FIXED" }
+      },
+      "factors": {
+        "seo": { "value": 500, "type": "FIXED" },
+        "design": { "value": 30, "type": "PERCENTAGE" },
+        "multilang": { "value": 20, "type": "PERCENTAGE" },
+        "graphics": { "value": 10, "type": "PERCENTAGE" },
+        "ux": { "value": 10, "type": "PERCENTAGE" },
+        "crm": { "value": 20, "type": "PERCENTAGE" }
+      },
+      "speedMultipliers": { "STANDARD": 1, "FAST": 1.5, "URGENT": 2 }
+    }
+  },
+  "addons": {
+    "logo_design": { "TR": 5000, "MT": 500 },
+    "content_writing": { "TR": 7500, "MT": 750 },
+    "social_media": { "TR": 3000, "MT": 300 },
+    "google_maps": { "TR": 1500, "MT": 150 }
+  }
+}

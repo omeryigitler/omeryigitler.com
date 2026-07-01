@@ -1533,6 +1533,11 @@
         }
         .cfg-foot-right { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; justify-content: flex-end; }
         .cfg-foot-right .cf-turnstile { transform: scale(0.85); transform-origin: center; }
+        .cfg-security {
+            flex-basis: 100%; margin: 0; text-align: right;
+            color: #9ca3af; font-family: var(--mono); font-size: 10px; line-height: 1.5;
+        }
+        .cfg-security.is-error { color: #fca5a5; }
         .cfg-back { font-family: var(--mono); font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: #6b7280; background: none; border: none; cursor: pointer; transition: color 0.2s; }
         .cfg-back:hover { color: #fff; }
         .cfg-submit {
@@ -1636,14 +1641,6 @@
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
     <script type="text/javascript">
         (function () { if (typeof emailjs !== "undefined") emailjs.init("V1YT-CYD1Y7eX0BIE"); })();
-    </script>
-
-    <!-- Cloudflare Turnstile — bot protection for the project form -->
-    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
-    <script>
-        window.__tsToken = "";
-        window.onTurnstileOk = function (token) { window.__tsToken = token; };
-        window.onTurnstileExpired = function () { window.__tsToken = ""; };
     </script>
 
     <link rel="icon" href="assets/favicon_transparent.svg" type="image/svg+xml">
@@ -2412,8 +2409,9 @@
             <div class="cfg-foot">
                 <button type="button" class="cfg-back" id="cfgBack">← Back</button>
                 <div class="cfg-foot-right">
-                    <div class="cf-turnstile" data-sitekey="0x4AAAAAACbHCrGU00_mYxPM" data-theme="dark" data-callback="onTurnstileOk" data-expired-callback="onTurnstileExpired" data-error-callback="onTurnstileExpired" data-appearance="interaction-only"></div>
+                    <div class="cf-turnstile" id="turnstileMount" aria-label="Security verification"></div>
                     <button type="button" class="cfg-submit" id="cfgSubmit">Submit Final Request</button>
+                    <p class="cfg-security" id="cfgSecurityStatus" role="status" aria-live="polite">Security check loads when this step opens.</p>
                 </div>
             </div>
         </div>
@@ -2659,13 +2657,90 @@
             if (!form || !cfg) return;
 
             const submitBtn = document.getElementById("cfgSubmit");
+            const securityStatus = document.getElementById("cfgSecurityStatus");
+            const turnstileMount = document.getElementById("turnstileMount");
             const config = { siteType: "LANDING", designType: "TEMPLATE", pageCount: 10, features: [], addons: [], deliverySpeed: "STANDARD", maintenanceLevel: "NONE" };
+            const submitLabel = "Submit Final Request";
+            let turnstileWidgetId = null;
+            let turnstileLoader = null;
+            window.__tsToken = "";
 
             function setStatus(msg, cls) {
                 statusEl.textContent = msg;
                 statusEl.className = "form-status" + (cls ? " " + cls : "");
             }
-            function openModal(el) { el.classList.add("open"); el.setAttribute("aria-hidden", "false"); document.body.style.overflow = "hidden"; }
+            function setSecurityStatus(message, isError) {
+                if (!securityStatus) return;
+                securityStatus.textContent = message;
+                securityStatus.classList.toggle("is-error", !!isError);
+            }
+            function setTurnstileToken(token) {
+                window.__tsToken = String(token || "");
+                submitBtn.disabled = !window.__tsToken;
+                submitBtn.textContent = window.__tsToken ? submitLabel : "Complete Security Check";
+                setSecurityStatus(window.__tsToken ? "Security check complete." : "Complete the security check to continue.", false);
+            }
+            function invalidateTurnstile(message) {
+                window.__tsToken = "";
+                submitBtn.disabled = true;
+                submitBtn.textContent = "Retry Security Check";
+                setSecurityStatus(message || "Security check must be completed again.", true);
+            }
+            function resetTurnstile(message) {
+                invalidateTurnstile(message);
+                if (window.turnstile && turnstileWidgetId !== null) {
+                    try { window.turnstile.reset(turnstileWidgetId); } catch (error) {}
+                }
+            }
+            function renderTurnstile() {
+                if (!turnstileMount || !window.turnstile || turnstileWidgetId !== null) return;
+                try {
+                    turnstileWidgetId = window.turnstile.render(turnstileMount, {
+                        sitekey: "0x4AAAAAACbHCrGU00_mYxPM",
+                        theme: "dark",
+                        appearance: "interaction-only",
+                        action: "contact",
+                        callback: (token) => setTurnstileToken(token),
+                        "expired-callback": () => invalidateTurnstile("Security check expired. Please verify again."),
+                        "error-callback": () => invalidateTurnstile("Security check could not complete. Please retry.")
+                    });
+                    setSecurityStatus("Verifying secure connection...", false);
+                } catch (error) {
+                    setSecurityStatus("Security check could not start. Disable blockers for this site and retry.", true);
+                    submitBtn.disabled = true;
+                    submitBtn.textContent = "Security Check Unavailable";
+                }
+            }
+            function ensureTurnstile() {
+                submitBtn.disabled = true;
+                submitBtn.textContent = "Loading Security Check...";
+                setSecurityStatus("Loading Cloudflare security verification...", false);
+                if (window.turnstile) { renderTurnstile(); return Promise.resolve(); }
+                if (turnstileLoader) return turnstileLoader;
+
+                turnstileLoader = new Promise((resolve, reject) => {
+                    const script = document.createElement("script");
+                    const timeout = setTimeout(() => reject(new Error("turnstile_timeout")), 8000);
+                    script.src = "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
+                    script.async = true;
+                    script.defer = true;
+                    script.onload = () => { clearTimeout(timeout); renderTurnstile(); resolve(); };
+                    script.onerror = () => { clearTimeout(timeout); reject(new Error("turnstile_load_failed")); };
+                    document.head.appendChild(script);
+                }).catch(() => {
+                    turnstileLoader = null;
+                    submitBtn.disabled = true;
+                    submitBtn.textContent = "Security Check Unavailable";
+                    setSecurityStatus("Security verification was blocked. Allow challenges.cloudflare.com or contact info@omeryigitler.com.", true);
+                });
+                return turnstileLoader;
+            }
+            function openModal(el) {
+                el.classList.add("open");
+                el.setAttribute("aria-hidden", "false");
+                document.body.style.overflow = "hidden";
+                if (el === cfg) ensureTurnstile();
+            }
             function closeModal(el) { el.classList.remove("open"); el.setAttribute("aria-hidden", "true"); document.body.style.overflow = ""; }
 
             // type the section labels each time the configurator opens
@@ -2787,12 +2862,10 @@
 
             // final submit
             submitBtn.addEventListener("click", async () => {
-                const tsLoaded = typeof window.turnstile !== "undefined";
-                const token = window.__tsToken || (tsLoaded && typeof turnstile.getResponse === "function" ? turnstile.getResponse() : "");
-                // If Turnstile is loaded it must issue a token; if it never loaded (blocked), let the server gate it.
-                if (tsLoaded && !token) {
-                    submitBtn.textContent = "Verifying — one moment";
-                    setTimeout(() => { submitBtn.textContent = "Submit Final Request"; }, 2200);
+                const token = window.__tsToken || "";
+                if (!token) {
+                    setSecurityStatus("Complete the security check before sending your request.", true);
+                    ensureTurnstile();
                     return;
                 }
                 const payload = {
@@ -2804,8 +2877,8 @@
                     turnstileToken: token
                 };
                 submitBtn.disabled = true;
-                const orig = submitBtn.textContent;
                 submitBtn.textContent = "Processing...";
+                setSecurityStatus("Sending your request securely...", false);
                 try {
                     const res = await fetch("/api/contact", {
                         method: "POST",
@@ -2843,17 +2916,22 @@
                         form.reset();
                         rangeVal.textContent = "10 pages";
                         window.__tsToken = "";
-                        if (window.turnstile && typeof turnstile.reset === "function") { try { turnstile.reset(); } catch (e) {} }
+                        if (window.turnstile && turnstileWidgetId !== null) { try { window.turnstile.reset(turnstileWidgetId); } catch (error) {} }
+                        submitBtn.textContent = submitLabel;
+                        setSecurityStatus("Security check loads when this step opens.", false);
                         if (ok) openModal(ok);
                     } else {
-                        submitBtn.textContent = out.error ? "Error — retry" : "Error — retry";
+                        resetTurnstile(out.error || "The request could not be sent. Please retry.");
+                        submitBtn.textContent = "Retry Security Check";
                     }
                 } catch (err) {
-                    submitBtn.textContent = "Network error — retry";
+                    resetTurnstile("Network connection failed. Please check your connection and retry.");
+                    submitBtn.textContent = "Retry Security Check";
                 } finally {
-                    submitBtn.disabled = false;
-                    if (submitBtn.textContent === "Processing...") submitBtn.textContent = orig;
-                    setTimeout(() => { submitBtn.textContent = orig; }, 2600);
+                    if (submitBtn.textContent === "Processing...") {
+                        submitBtn.textContent = submitLabel;
+                        submitBtn.disabled = false;
+                    }
                 }
             });
 

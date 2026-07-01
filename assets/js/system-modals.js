@@ -124,10 +124,16 @@ window.systemConfirm = (title, message, icon = 'help-circle') => {
 
 (function loadAdminAgentBridge() {
     if (!/admin\.html$/.test(window.location.pathname)) return;
-    window.addEventListener('load', function () {
+    function load() {
+        if (document.querySelector('script[data-admin-agent]')) return;
         var script = document.createElement('script');
-        script.src = 'assets/js/admin-agent.js?v=V2';
-        script.defer = true;
+        script.src = 'assets/js/admin-agent.js?v=V3';
+        script.dataset.adminAgent = 'true';
         document.body.appendChild(script);
-    });
+    }
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', load, { once: true });
+    } else {
+        load();
+    }
 })();

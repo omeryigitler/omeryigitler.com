@@ -11,8 +11,13 @@ export default async function middleware(request) {
     pathname.includes('favicon.ico') ||
     pathname.includes('.php')
   ) {
-    return; // ✅ Kapanış parantezi eklendi
+    return;
   }
+
+  // The previous anonymous Firestore query was denied by the production rules
+  // on every public request. Keep the edge blocklist explicitly disabled until
+  // it is backed by an authenticated, hashed lookup service.
+  if (process.env.EDGE_BLOCKLIST_ENABLED !== 'true') return;
 
   // 2. Get Visitor IP (Vercel standard)
   const ip = request.headers.get('x-forwarded-for') || '127.0.0.1';
@@ -20,8 +25,9 @@ export default async function middleware(request) {
 
   try {
     // 3. Query Firestore via REST API (Edge Compatible)
-    const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || "omeryigitler-5abfb";
-    const apiKey = process.env.NEXT_PUBLIC_FIREBASE_API_KEY || "AIzaSyC0DAIT0cVPD4WFpfgqrn0lfb-kyFRsnWM";
+    const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
+    const apiKey = process.env.NEXT_PUBLIC_FIREBASE_API_KEY;
+    if (!projectId || !apiKey) return;
     const firestoreUrl = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents:runQuery?key=${apiKey}`;
 
     // ✅ filters dizisi düzeltildi — her fieldFilter { } içine sarıldı
@@ -66,16 +72,15 @@ export default async function middleware(request) {
       const isBlocked = results && results.length > 0 && results[0].document;
 
       if (isBlocked) {
-        console.log(`🛑 Middleware: Blocking IP ${clientIP}`);
+        console.warn('Middleware blocked a configured visitor.');
         return Response.redirect(new URL('/gateway.html', request.url));
       }
     } else {
-      const err = await response.text();
-      console.error("Firestore REST Error:", response.status, err);
+      console.warn("Firestore blocklist lookup unavailable:", response.status);
     }
 
   } catch (e) {
-    console.error("Middleware Runtime Error:", e);
+    console.warn("Middleware blocklist check failed.");
   }
 
   return;
