@@ -91,6 +91,21 @@ function allowedTurnstileHosts() {
   return hosts;
 }
 
+async function siteverifyRequest(form, fetchImpl, timeoutMs) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetchImpl("https://challenges.cloudflare.com/turnstile/v0/siteverify", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: form.toString(),
+      signal: controller.signal
+    });
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
 async function verifyTurnstile(token, ip, fetchImpl = fetch) {
   const secret = process.env.TURNSTILE_SECRET;
   if (!secret) {
@@ -99,22 +114,32 @@ async function verifyTurnstile(token, ip, fetchImpl = fetch) {
   }
   if (!token) return { ok: false, reason: "missing_token" };
 
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 5000);
+  const form = new URLSearchParams();
+  form.append("secret", secret);
+  form.append("response", token);
+  if (ip) form.append("remoteip", ip);
+
+  // Cloudflare siteverify can be transiently slow/unreachable; retry once with a
+  // longer timeout before telling the customer verification is unavailable.
+  let response = null;
+  for (let attempt = 1; attempt <= 2 && !response; attempt += 1) {
+    try {
+      const candidate = await siteverifyRequest(form, fetchImpl, attempt === 1 ? 5000 : 8000);
+      if (candidate.ok) {
+        response = candidate;
+      } else {
+        console.warn("[contact] turnstile siteverify non-ok response", { attempt, status: candidate.status });
+      }
+    } catch (error) {
+      console.warn("[contact] turnstile siteverify request failed", {
+        attempt,
+        error: error?.name === "AbortError" ? "timeout" : error?.message
+      });
+    }
+  }
+  if (!response) return { ok: false, reason: "verification_unavailable" };
+
   try {
-    const form = new URLSearchParams();
-    form.append("secret", secret);
-    form.append("response", token);
-    if (ip) form.append("remoteip", ip);
-
-    const response = await fetchImpl("https://challenges.cloudflare.com/turnstile/v0/siteverify", {
-      method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: form.toString(),
-      signal: controller.signal
-    });
-    if (!response.ok) return { ok: false, reason: "verification_unavailable" };
-
     const data = await response.json();
     if (!data.success) {
       return {
@@ -131,9 +156,8 @@ async function verifyTurnstile(token, ip, fetchImpl = fetch) {
 
     return { ok: true };
   } catch (error) {
+    console.warn("[contact] turnstile siteverify body unreadable", { error: error?.message });
     return { ok: false, reason: "verification_unavailable" };
-  } finally {
-    clearTimeout(timeout);
   }
 }
 
