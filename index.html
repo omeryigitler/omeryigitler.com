@@ -2808,7 +2808,9 @@
             }
             function invalidateTurnstile(message) {
                 window.__tsToken = "";
-                submitBtn.disabled = true;
+                // keep the button clickable: without a token a click only restarts
+                // the security check, it can never submit the form
+                submitBtn.disabled = false;
                 submitBtn.textContent = "Retry Security Check";
                 setSecurityStatus(message || "Security check must be completed again.", true);
             }
@@ -2833,8 +2835,8 @@
                     setSecurityStatus("Verifying secure connection...", false);
                 } catch (error) {
                     setSecurityStatus("Security check could not start. Disable blockers for this site and retry.", true);
-                    submitBtn.disabled = true;
-                    submitBtn.textContent = "Security Check Unavailable";
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = "Retry Security Check";
                 }
             }
             function ensureTurnstile() {
@@ -2855,8 +2857,8 @@
                     document.head.appendChild(script);
                 }).catch(() => {
                     turnstileLoader = null;
-                    submitBtn.disabled = true;
-                    submitBtn.textContent = "Security Check Unavailable";
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = "Retry Security Check";
                     setSecurityStatus("Security verification was blocked. Allow challenges.cloudflare.com or contact info@omeryigitler.com.", true);
                 });
                 return turnstileLoader;
@@ -2990,8 +2992,11 @@
             submitBtn.addEventListener("click", async () => {
                 const token = window.__tsToken || "";
                 if (!token) {
-                    setSecurityStatus("Complete the security check before sending your request.", true);
-                    ensureTurnstile();
+                    setSecurityStatus("Restarting the security check...", false);
+                    if (window.turnstile && turnstileWidgetId !== null) {
+                        try { window.turnstile.reset(turnstileWidgetId); } catch (error) { turnstileWidgetId = null; }
+                    }
+                    if (turnstileWidgetId === null) ensureTurnstile();
                     return;
                 }
                 const payload = {

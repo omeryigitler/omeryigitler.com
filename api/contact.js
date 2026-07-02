@@ -128,7 +128,9 @@ async function verifyTurnstile(token, ip, fetchImpl = fetch) {
       if (candidate.ok) {
         response = candidate;
       } else {
-        console.warn("[contact] turnstile siteverify non-ok response", { attempt, status: candidate.status });
+        let body = "";
+        try { body = String(await candidate.text()).slice(0, 300); } catch (readError) {}
+        console.warn("[contact] turnstile siteverify non-ok response", { attempt, status: candidate.status, body });
       }
     } catch (error) {
       console.warn("[contact] turnstile siteverify request failed", {
