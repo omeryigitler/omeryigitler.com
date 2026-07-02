@@ -54,6 +54,10 @@
       .agent-input { flex: 1 1 180px; border-radius: 12px; border: 1px solid rgba(255,255,255,.1); background: rgba(255,255,255,.04); color: #fff; padding: 10px 12px; outline: 0; font: 500 12.5px Manrope, sans-serif; }
       .agent-input:focus { border-color: rgba(255,215,0,.55); }
       .agent-input[type="date"], .agent-input[type="time"] { flex: 0 1 140px; color-scheme: dark; }
+      /* 16px inputs on mobile stop iOS Safari from auto-zooming on focus */
+      @media (max-width: 640px) {
+        .agent-textarea, .agent-input { font-size: 16px !important; }
+      }
     `;
     document.head.appendChild(el("style", { id: "agent-styles", text: css }));
   }

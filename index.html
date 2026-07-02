@@ -976,6 +976,19 @@
             box-shadow: 0 0 22px rgba(255, 215, 0, 0.12);
         }
 
+        /* iOS Safari auto-zooms the page when a focused field's font is under
+           16px — keep every text field at 16px on mobile so the layout never
+           jumps or overflows while typing */
+        @media (max-width: 640px) {
+            .contact-card input,
+            .contact-card textarea,
+            .cfg-panel input,
+            .cfg-panel textarea,
+            .cfg-panel select {
+                font-size: 16px !important;
+            }
+        }
+
         .send-btn {
             width: 100%;
             font-family: var(--mono);
