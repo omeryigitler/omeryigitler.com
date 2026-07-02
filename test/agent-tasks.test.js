@@ -20,6 +20,7 @@ const NOW = new Date("2026-07-01T12:00:00Z");
 const TZ = "Europe/Istanbul";
 
 test("classifies todo, agenda and chat intents from Turkish commands", () => {
+  assert.equal(classifyIntent("son gelen mesajın referansına Ahmet ismini ekle"), "lead_note");
   assert.equal(classifyIntent("todo ekle: müşteriye dön"), "todo_add");
   assert.equal(classifyIntent("görev: siteyi yayınla"), "todo_add");
   assert.equal(classifyIntent("yapılacakları listele"), "todo_list");
@@ -50,4 +51,10 @@ test("parses relative Turkish dates and clock times", () => {
 test("extracts clean titles from natural commands", () => {
   assert.equal(stripKeywords("todo ekle: müşteriye geri dön"), "müşteriye geri dön");
   assert.equal(stripKeywords("yarın 14:00 lansman provası takvime ekle"), "lansman provası");
+});
+
+test("extracts the note body from a lead-note command", () => {
+  const { extractNoteText } = tasks._test;
+  assert.equal(extractNoteText("son gelen mesajın referansına Ahmet ismini ekle"), "Ahmet");
+  assert.equal(extractNoteText("lead'e not ekle: fiyat onaylandı"), "fiyat onaylandı");
 });
