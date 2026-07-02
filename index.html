@@ -1548,6 +1548,34 @@
         .cfg-submit:hover { transform: translateY(-1px); box-shadow: 0 0 30px rgba(255, 215, 0, 0.45); }
         .cfg-submit:disabled { opacity: 0.6; cursor: default; transform: none; box-shadow: none; }
 
+        /* mobile: keep the modal footer inside the viewport — full-width button,
+           centered widget and wrapped status text instead of right-edge overflow */
+        @media (max-width: 640px) {
+            .cfg-foot {
+                padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
+                gap: 10px;
+            }
+            .cfg-foot-right {
+                width: 100%;
+                justify-content: center;
+                gap: 10px;
+            }
+            .cfg-foot-right .cf-turnstile {
+                max-width: 100%;
+                overflow: hidden;
+                margin: 0 auto;
+                transform: scale(0.8);
+            }
+            .cfg-submit {
+                width: 100%;
+                padding: 14px 18px;
+            }
+            .cfg-security {
+                text-align: center;
+                overflow-wrap: break-word;
+            }
+        }
+
         /* success modal */
         .ok-panel {
             width: 100%; max-width: 420px;
@@ -2543,7 +2571,7 @@
                 <div class="cfg-foot-right">
                     <div class="cf-turnstile" id="turnstileMount" aria-label="Security verification"></div>
                     <button type="button" class="cfg-submit" id="cfgSubmit">Submit Final Request</button>
-                    <p class="cfg-security" id="cfgSecurityStatus" role="status" aria-live="polite">Security check loads when this step opens.</p>
+                    <p class="cfg-security" id="cfgSecurityStatus" role="status" aria-live="polite"></p>
                 </div>
             </div>
         </div>
@@ -2803,7 +2831,8 @@
             }
             function setSecurityStatus(message, isError) {
                 if (!securityStatus) return;
-                securityStatus.textContent = message;
+                // the button label already narrates progress; reserve this line for errors
+                securityStatus.textContent = isError ? message : "";
                 securityStatus.classList.toggle("is-error", !!isError);
             }
             function setTurnstileToken(token) {
