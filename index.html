@@ -2083,6 +2083,12 @@
             display: none !important;
         }
 
+        /* hide the floating cookie-settings circle while a form modal is open —
+           it overlaps the submit button on mobile */
+        body.cfg-modal-open .cky-btn-revisit-wrapper {
+            display: none !important;
+        }
+
         .cky-btn-revisit-wrapper img,
         .cky-btn-revisit-wrapper svg {
             filter: brightness(0) saturate(100%) invert(83%) sepia(63%) saturate(747%) hue-rotate(1deg) brightness(103%) contrast(101%) !important;
@@ -2361,8 +2367,8 @@
                         <p class="lede">Ready to build? Fill out the form below.</p>
                         <form id="contactForm" novalidate>
                             <div class="form-grid">
-                                <input type="text" name="name" placeholder="Your Name" required>
-                                <input type="email" name="email" placeholder="Email Address" required>
+                                <input type="text" name="name" placeholder="Your Name" required autocomplete="name">
+                                <input type="email" name="email" placeholder="Email Address" required autocomplete="email" autocapitalize="none" autocorrect="off" spellcheck="false" inputmode="email">
                             </div>
                             <textarea name="message" id="projectMessage" placeholder="Tell us about the project..." required></textarea>
                             <!-- honeypot: hidden from humans, bots fill it -->
@@ -2804,7 +2810,8 @@
                 window.__tsToken = String(token || "");
                 submitBtn.disabled = !window.__tsToken;
                 submitBtn.textContent = window.__tsToken ? submitLabel : "Complete Security Check";
-                setSecurityStatus(window.__tsToken ? "Security check complete." : "Complete the security check to continue.", false);
+                // once verified, the enabled button says it all — no extra status line
+                setSecurityStatus(window.__tsToken ? "" : "Complete the security check to continue.", false);
             }
             function invalidateTurnstile(message) {
                 window.__tsToken = "";
@@ -2867,9 +2874,15 @@
                 el.classList.add("open");
                 el.setAttribute("aria-hidden", "false");
                 document.body.style.overflow = "hidden";
+                document.body.classList.add("cfg-modal-open");
                 if (el === cfg) ensureTurnstile();
             }
-            function closeModal(el) { el.classList.remove("open"); el.setAttribute("aria-hidden", "true"); document.body.style.overflow = ""; }
+            function closeModal(el) {
+                el.classList.remove("open");
+                el.setAttribute("aria-hidden", "true");
+                document.body.style.overflow = "";
+                document.body.classList.remove("cfg-modal-open");
+            }
 
             // type the section labels each time the configurator opens
             const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -2928,6 +2941,13 @@
                 }
                 if (!form.name.value.trim() || !form.email.value.trim() || !form.message.value.trim()) {
                     setStatus("Please fill in name, email and project details first.", "err");
+                    return;
+                }
+                // mobile keyboards can sneak spaces/autocorrect into the address;
+                // strip all whitespace, then validate the format before step 2
+                form.email.value = form.email.value.replace(/\s+/g, "");
+                if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.value)) {
+                    setStatus("Please enter a valid email address (e.g. name@example.com).", "err");
                     return;
                 }
                 const waitMin = rateBlockedMinutes();
@@ -3011,7 +3031,7 @@
                 }
                 const payload = {
                     name: form.name.value.trim(),
-                    email: form.email.value.trim(),
+                    email: form.email.value.replace(/\s+/g, ""),
                     message: form.message.value.trim(),
                     website: form.website ? form.website.value : "",
                     config: config,

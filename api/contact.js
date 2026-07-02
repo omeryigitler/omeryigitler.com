@@ -255,7 +255,9 @@ async function contactHandler(req, res) {
   if (body.website && String(body.website).trim() !== "") return res.status(200).json({ ok: true });
 
   const name = clean(body.name, MAX.name);
-  const email = clean(body.email, MAX.email);
+  // mobile autocorrect can inject spaces into the address; spaces are never
+  // valid in an email, so strip them all before validating
+  const email = clean(body.email, MAX.email).replace(/\s+/g, "");
   const message = clean(body.message, MAX.message);
   if (!name || !email || !message) {
     return sendError(res, 400, "required_fields_missing", "Name, email and project details are required.");
