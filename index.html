@@ -2166,7 +2166,7 @@
                 <a href="#process">Process</a>
                 <a href="#contact">Contact</a>
             </div>
-            <button class="nav-cta" type="button">Start Project ↗</button>
+            <button class="nav-cta" type="button" id="navStartProject">Start Project ↗</button>
         </nav>
 
         <main>
@@ -2905,6 +2905,16 @@
                 try { subs = JSON.parse(localStorage.getItem("formSubmissions") || "[]"); } catch (e) {}
                 subs.push(Date.now());
                 localStorage.setItem("formSubmissions", JSON.stringify(subs));
+            }
+
+            // nav CTA → jump to the contact form and focus the first field
+            const navStart = document.getElementById("navStartProject");
+            if (navStart) {
+                navStart.addEventListener("click", () => {
+                    const contact = document.getElementById("contact");
+                    if (contact) contact.scrollIntoView({ behavior: "smooth", block: "start" });
+                    setTimeout(() => { try { form.name.focus({ preventScroll: true }); } catch (error) {} }, 650);
+                });
             }
 
             // step 1 → open configurator (validate basics first)
