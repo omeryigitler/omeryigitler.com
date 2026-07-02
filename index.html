@@ -1969,10 +1969,29 @@
             right: 20px !important;
         }
 
-        /* consent banner/box anchored to the bottom-right */
+        /* consent banner/box anchored to the bottom-right, capped so it never covers the page */
         div.cky-consent-container {
             left: auto !important;
             right: 30px !important;
+            width: min(440px, calc(100vw - 40px)) !important;
+            max-width: 440px !important;
+        }
+
+        div.cky-consent-container .cky-consent-bar {
+            padding: 18px 20px !important;
+            border-radius: 14px !important;
+        }
+
+        /* normalize typography so the box never balloons */
+        div.cky-consent-container .cky-title {
+            font-size: 15px !important;
+            line-height: 1.35 !important;
+            margin-bottom: 6px !important;
+        }
+        div.cky-consent-container .cky-notice-des,
+        div.cky-consent-container .cky-notice-des p {
+            font-size: 12.5px !important;
+            line-height: 1.55 !important;
         }
 
         /* button order: Accept, Reject, then Customise (like before) */
@@ -1980,11 +1999,31 @@
             display: flex !important;
             flex-wrap: wrap !important;
             gap: 8px !important;
+            align-items: stretch !important;
+            margin-top: 12px !important;
         }
         div.cky-consent-container button.cky-btn-accept { order: 1 !important; }
         div.cky-consent-container button.cky-btn-reject { order: 2 !important; }
         div.cky-consent-container button.cky-btn-customize,
         div.cky-consent-container button.cky-btn-preferences { order: 3 !important; }
+
+        /* symmetric buttons: identical height, padding, radius and font on every button */
+        div.cky-consent-container .cky-notice-btn-wrapper .cky-btn,
+        div.cky-consent-container .cky-prefrence-btn-wrapper .cky-btn,
+        div.cky-consent-container button.cky-btn {
+            flex: 1 1 0 !important;
+            min-width: 110px !important;
+            margin: 0 !important;
+            padding: 10px 14px !important;
+            min-height: 42px !important;
+            font-size: 12px !important;
+            line-height: 1.2 !important;
+            letter-spacing: .02em !important;
+            text-align: center !important;
+            border-radius: 10px !important;
+            white-space: nowrap !important;
+            box-sizing: border-box !important;
+        }
 
         /* hide CookieYes while the 3D globe intro is playing */
         html.intro-active .cky-consent-container,
@@ -2026,11 +2065,14 @@
             div.cky-consent-container button.cky-btn {
                 width: 100% !important;
                 min-width: 0 !important;
-                min-height: 40px !important;
+                min-height: 42px !important;
                 margin: 0 !important;
+                padding: 8px 6px !important;
+                font-size: 11px !important;
             }
         }
     </style>
+    <link rel="stylesheet" href="/assets/css/instagram-feed.css">
 </head>
 <body>
     <div
@@ -2225,6 +2267,29 @@
                 <div class="phil-cta">Just work that lasts.</div>
             </section>
 
+
+            <section id="instagram" class="instagram-feed-section" data-instagram-feed data-limit="6">
+                <div class="instagram-feed-shell">
+                    <div class="instagram-feed-copy-column">
+                        <div class="instagram-feed-status">
+                            <span class="prompt">$</span>
+                            <span>status</span>
+                            <span class="status-label">INSTAGRAM</span>
+                            <span class="arrow">→</span>
+                            <span class="value type-target" data-text="omeryigitler.web"></span>
+                            <span class="cursor" style="height: 0.95em;"></span>
+                        </div>
+                        <h2 class="instagram-feed-title">Latest from Instagram</h2>
+                        <p class="instagram-feed-copy">A live glimpse into the projects, ideas and moments shaping the studio — placed right before the contact flow.</p>
+                        <div class="instagram-feed-actions">
+                            <a class="instagram-feed-button" href="https://www.instagram.com/omeryigitler.web/" target="_blank" rel="noopener noreferrer">Follow Instagram ↗</a>
+                        </div>
+                    </div>
+                    <div class="instagram-feed-grid" data-instagram-grid>
+                        <div class="instagram-feed-empty">Loading Instagram feed…</div>
+                    </div>
+                </div>
+            </section>
             <section id="contact">
                 <div class="status-line section-status"><span class="prompt">$</span><span>status</span><span class="arrow">→</span><span class="status-value type-target" data-text="ready for new projects"></span><span class="cursor" style="height: 0.95em;"></span></div>
                 <h2><span class="soft">Ready when you are</span></h2>
@@ -2908,6 +2973,8 @@
                                         "Features: " + featuresTxt + "\n" +
                                         "Add-ons: " + addonsTxt + "\n" +
                                         "Timeline: " + c.deliverySpeed + " · Maintenance: " + c.maintenanceLevel
+                                }).catch(function (mailErr) {
+                                    console.warn("EmailJS receipt failed:", mailErr && (mailErr.text || mailErr.message || mailErr));
                                 });
                             }
                         } catch (mailErr) { /* email is best-effort */ }
@@ -3653,5 +3720,6 @@
         });
     })();
     </script>
+    <script src="/assets/js/instagram-feed.js" defer></script>
 </body>
 </html>

@@ -302,6 +302,60 @@ Every meaningful action should be auditable.
 }
 ```
 
+### 6.5 `agent_todos`
+
+General todo list the agent tracks (implemented in `lib/agent-tasks.js`).
+
+```js
+{
+  title: string,
+  status: "open" | "done",
+  dueDateKey: "YYYY-MM-DD" | null,   // wall date in AGENT_TIMEZONE (default Europe/Istanbul)
+  createdAt: Timestamp,
+  completedAt: Timestamp | null,
+  createdBy: string,
+  source: "admin_panel"
+}
+```
+
+### 6.6 `agent_events`
+
+Agenda/calendar entries the agent adds and follows.
+
+```js
+{
+  title: string,
+  dateKey: "YYYY-MM-DD",             // wall date in AGENT_TIMEZONE
+  time: "HH:MM" | null,
+  status: "scheduled" | "cancelled",
+  createdAt: Timestamp,
+  createdBy: string,
+  source: "admin_panel"
+}
+```
+
+### 6.7 `agent_chats`
+
+Daily conversation log. One user + one assistant record per exchange, grouped by
+`dateKey` so each day's conversation is retrievable as context. Replies use
+Gemini when `GEMINI_API_KEY` is configured, otherwise a deterministic briefing
+built from open todos, today's agenda and pending approvals.
+
+```js
+{
+  role: "user" | "assistant",
+  text: string,
+  dateKey: "YYYY-MM-DD",
+  actorId: string,
+  createdAt: Timestamp
+}
+```
+
+These three collections are only written server-side via the Admin SDK through
+`/api/agent` actions: `command` (natural language, intents: `todo_add`,
+`todo_complete`, `todo_list`, `event_add`, `agenda_list`, `daily_chat`),
+`todos`/`agenda` (GET), and `todo`/`event` (structured POST).
+
 ---
 
 ## 7. Tool risk policy
