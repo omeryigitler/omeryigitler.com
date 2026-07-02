@@ -166,7 +166,7 @@ async function enforceRateLimit(ip, database, adminSdk, now = Date.now()) {
 async function notifyTelegram(name, email, message, config) {
   const token = process.env.TELEGRAM_BOT_TOKEN;
   const chatId = process.env.TELEGRAM_CHAT_ID;
-  if (!token || !chatId) return;
+  if (!token || !chatId) return { sent: false, reason: "not_configured" };
 
   let text = `📨 New project request\n\nName: ${name}\nEmail: ${email}\n\n${message}`;
   if (config) text += `\n\n— Project config —\n${configSummary(config)}`;
@@ -177,6 +177,35 @@ async function notifyTelegram(name, email, message, config) {
     signal: AbortSignal.timeout(5000)
   });
   if (!response.ok) throw new Error("Telegram notification failed.");
+  return { sent: true };
+}
+
+async function notifyEmail(name, email, message, config) {
+  const apiKey = process.env.RESEND_API_KEY;
+  if (!apiKey) return { sent: false, reason: "not_configured" };
+
+  const to = String(process.env.CONTACT_EMAIL_TO || "info@omeryigitler.com").trim();
+  const from = String(process.env.CONTACT_EMAIL_FROM || "Taurus Contact <contact@omeryigitler.com>").trim();
+  let text = `New project request\n\nName: ${name}\nEmail: ${email}\n\n${message}`;
+  if (config) text += `\n\n— Project config —\n${configSummary(config)}`;
+
+  const response = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${apiKey}`
+    },
+    body: JSON.stringify({
+      from,
+      to: [to],
+      reply_to: email,
+      subject: `📨 New project request — ${name}`,
+      text
+    }),
+    signal: AbortSignal.timeout(8000)
+  });
+  if (!response.ok) throw new Error(`Email notification failed (${response.status}).`);
+  return { sent: true };
 }
 
 function sendError(res, status, code, error) {
@@ -223,57 +252,73 @@ async function contactHandler(req, res) {
     return sendError(res, 403, "verification_failed", "Security verification failed. Please retry the check.");
   }
 
-  const firebase = loadFirebaseRuntime();
-  if (!firebase) {
-    return sendError(res, 503, "contact_backend_unavailable", "Contact service is not configured for this environment.");
-  }
-  const { admin, db } = firebase;
-
-  try {
-    const rateLimit = await enforceRateLimit(ip, db, admin);
-    if (!rateLimit.allowed) {
-      return sendError(res, 429, "rate_limited", "Too many requests. Please try again later.");
-    }
-  } catch (error) {
-    console.warn("[contact] rate limit storage unavailable", { requestId });
-  }
-
   const config = sanitizeConfig(body.config);
-  const serverTimestamp = admin.firestore.FieldValue.serverTimestamp();
-  try {
-    await db.collection("messages").add({
-      name,
-      email,
-      message,
-      config: config || null,
-      country: config?.country || "TR",
-      siteType: config?.siteType || null,
-      projectType: config?.siteType || null,
-      designType: config?.designType || null,
-      pageCount: config?.pageCount || null,
-      features: config?.features || [],
-      selectedAddons: config?.addons || [],
-      deliverySpeed: config?.deliverySpeed || null,
-      maintenanceLevel: config?.maintenanceLevel || null,
-      source: config ? "project-configurator" : "contact-form",
-      status: "new",
-      read: false,
-      requestId,
-      createdAt: serverTimestamp,
-      timestamp: serverTimestamp
-    });
-  } catch (error) {
-    console.error("[contact] message write failed", { requestId });
-    return sendError(res, 500, "message_write_failed", "Your request could not be saved. Please try again.");
+  const firebase = loadFirebaseRuntime();
+  let stored = false;
+
+  if (firebase) {
+    const { admin, db } = firebase;
+    try {
+      const rateLimit = await enforceRateLimit(ip, db, admin);
+      if (!rateLimit.allowed) {
+        return sendError(res, 429, "rate_limited", "Too many requests. Please try again later.");
+      }
+    } catch (error) {
+      console.warn("[contact] rate limit storage unavailable", { requestId, error: error?.message });
+    }
+
+    const serverTimestamp = admin.firestore.FieldValue.serverTimestamp();
+    try {
+      await db.collection("messages").add({
+        name,
+        email,
+        message,
+        config: config || null,
+        country: config?.country || "TR",
+        siteType: config?.siteType || null,
+        projectType: config?.siteType || null,
+        designType: config?.designType || null,
+        pageCount: config?.pageCount || null,
+        features: config?.features || [],
+        selectedAddons: config?.addons || [],
+        deliverySpeed: config?.deliverySpeed || null,
+        maintenanceLevel: config?.maintenanceLevel || null,
+        source: config ? "project-configurator" : "contact-form",
+        status: "new",
+        read: false,
+        requestId,
+        createdAt: serverTimestamp,
+        timestamp: serverTimestamp
+      });
+      stored = true;
+    } catch (error) {
+      console.error("[contact] message write failed", { requestId, error: error?.message });
+    }
+  } else {
+    console.error("[contact] Firestore unavailable, falling back to notifications only", { requestId });
   }
 
-  try {
-    await notifyTelegram(name, email, message, config);
-  } catch (error) {
-    console.warn("[contact] Telegram notification failed", { requestId });
+  // Even if Firestore is down, the request must still reach the owner —
+  // never show the customer an error while a notification channel can deliver it.
+  const [telegramResult, emailResult] = await Promise.allSettled([
+    notifyTelegram(name, email, message, config),
+    notifyEmail(name, email, message, config)
+  ]);
+  const telegramSent = telegramResult.status === "fulfilled" && telegramResult.value?.sent === true;
+  const emailSent = emailResult.status === "fulfilled" && emailResult.value?.sent === true;
+  if (telegramResult.status === "rejected") {
+    console.warn("[contact] Telegram notification failed", { requestId, error: telegramResult.reason?.message });
+  }
+  if (emailResult.status === "rejected") {
+    console.warn("[contact] email notification failed", { requestId, error: emailResult.reason?.message });
   }
 
-  return res.status(200).json({ ok: true, requestId });
+  if (!stored && !telegramSent && !emailSent) {
+    console.error("[contact] request could not be delivered on any channel", { requestId });
+    return sendError(res, 503, "contact_backend_unavailable", "Your request could not be delivered right now. Please email info@omeryigitler.com directly.");
+  }
+
+  return res.status(200).json({ ok: true, requestId, stored });
 }
 
 module.exports = contactHandler;

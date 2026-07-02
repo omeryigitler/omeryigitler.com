@@ -45,6 +45,15 @@
       .agent-approval { border: 1px solid rgba(255,215,0,.18); border-radius: 18px; padding: 14px; background: rgba(255,215,0,.05); display: grid; gap: 12px; }
       .agent-meta { color: #c7c7c7; font: 600 12px Manrope, sans-serif; line-height: 1.65; }
       .agent-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+      .agent-item { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,.06); }
+      .agent-item:last-child { border-bottom: 0; }
+      .agent-item-text { color: #d4d4d4; font: 600 12.5px Manrope, sans-serif; line-height: 1.5; word-break: break-word; }
+      .agent-item-sub { color: #8b8b8b; font: 700 10px JetBrains Mono, monospace; letter-spacing: .08em; }
+      .agent-item button { flex: 0 0 auto; }
+      .agent-inline-form { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+      .agent-input { flex: 1 1 180px; border-radius: 12px; border: 1px solid rgba(255,255,255,.1); background: rgba(255,255,255,.04); color: #fff; padding: 10px 12px; outline: 0; font: 500 12.5px Manrope, sans-serif; }
+      .agent-input:focus { border-color: rgba(255,215,0,.55); }
+      .agent-input[type="date"], .agent-input[type="time"] { flex: 0 1 140px; color-scheme: dark; }
     `;
     document.head.appendChild(el("style", { id: "agent-styles", text: css }));
   }
@@ -103,19 +112,25 @@
     if (!text) return setOutput("Komut gerekli", "Önce desteklenen bir komut yazın.");
 
     setBusy(true);
-    setOutput("Çalışıyor", "Son lead okunuyor ve onay taslağı hazırlanıyor...");
+    setOutput("Çalışıyor", "Komut işleniyor...");
     try {
       const result = await api("command", {
         method: "POST",
         body: JSON.stringify({ text })
       });
-      setOutput("Agent sonucu", {
-        status: result.status,
-        summary: result.summary,
-        draft: result.draft,
-        approvalId: result.approvalId
-      });
+      if (typeof result.message === "string" && result.message) {
+        setOutput("Agent sonucu", result.message);
+      } else {
+        setOutput("Agent sonucu", {
+          status: result.status,
+          summary: result.summary,
+          draft: result.draft,
+          approvalId: result.approvalId
+        });
+      }
       await loadApprovals();
+      if (/^todo/.test(result.intent || "")) await loadTodos();
+      if (result.intent === "event_add" || result.intent === "agenda_list") await loadAgenda();
     } catch (error) {
       setOutput("Agent hatası", error.message);
     } finally {
@@ -202,6 +217,111 @@
     }
   }
 
+  async function loadTodos() {
+    const list = document.getElementById("agent-todos");
+    if (!list) return;
+    list.replaceChildren(el("div", { class: "agent-item-sub", text: "Yükleniyor..." }));
+    try {
+      const result = await api("todos", { method: "GET" });
+      const todos = result.todos || [];
+      list.replaceChildren();
+      if (!todos.length) {
+        list.appendChild(el("div", { class: "agent-item-sub", text: "Açık yapılacak iş yok." }));
+        return;
+      }
+      todos.forEach((todo) => {
+        list.appendChild(el("div", { class: "agent-item" }, [
+          el("div", {}, [
+            el("div", { class: "agent-item-text", text: todo.title }),
+            el("div", { class: "agent-item-sub", text: todo.dueDateKey ? `SON: ${todo.dueDateKey}` : "" })
+          ]),
+          el("button", {
+            type: "button",
+            class: "agent-button",
+            text: "Tamamla",
+            "data-agent-action": "todo-done",
+            onclick: () => completeTodoItem(todo.id)
+          })
+        ]));
+      });
+    } catch (error) {
+      list.replaceChildren(el("div", { class: "agent-item-sub", text: error.message }));
+    }
+  }
+
+  async function completeTodoItem(id) {
+    if (state.busy) return;
+    setBusy(true);
+    try {
+      await api("todo", { method: "POST", body: JSON.stringify({ op: "complete", id }) });
+      await loadTodos();
+    } catch (error) {
+      setOutput("Todo hatası", error.message);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function addTodoItem() {
+    if (state.busy) return;
+    const input = document.getElementById("agent-todo-input");
+    const title = input?.value?.trim();
+    if (!title) return;
+    setBusy(true);
+    try {
+      await api("todo", { method: "POST", body: JSON.stringify({ op: "add", title }) });
+      input.value = "";
+      await loadTodos();
+    } catch (error) {
+      setOutput("Todo hatası", error.message);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function loadAgenda() {
+    const list = document.getElementById("agent-agenda");
+    if (!list) return;
+    list.replaceChildren(el("div", { class: "agent-item-sub", text: "Yükleniyor..." }));
+    try {
+      const result = await api("agenda", { method: "GET" });
+      const events = result.events || [];
+      list.replaceChildren();
+      if (!events.length) {
+        list.appendChild(el("div", { class: "agent-item-sub", text: "Önümüzdeki 14 günde etkinlik yok." }));
+        return;
+      }
+      events.forEach((event) => {
+        list.appendChild(el("div", { class: "agent-item" }, [
+          el("div", {}, [
+            el("div", { class: "agent-item-text", text: event.title }),
+            el("div", { class: "agent-item-sub", text: `${event.dateKey}${event.time ? ` · ${event.time}` : ""}` })
+          ])
+        ]));
+      });
+    } catch (error) {
+      list.replaceChildren(el("div", { class: "agent-item-sub", text: error.message }));
+    }
+  }
+
+  async function addAgendaItem() {
+    if (state.busy) return;
+    const title = document.getElementById("agent-event-title")?.value?.trim();
+    const dateKey = document.getElementById("agent-event-date")?.value;
+    const time = document.getElementById("agent-event-time")?.value || null;
+    if (!title || !dateKey) return setOutput("Ajanda", "Etkinlik başlığı ve tarihi gereklidir.");
+    setBusy(true);
+    try {
+      await api("event", { method: "POST", body: JSON.stringify({ title, dateKey, time }) });
+      document.getElementById("agent-event-title").value = "";
+      await loadAgenda();
+    } catch (error) {
+      setOutput("Ajanda hatası", error.message);
+    } finally {
+      setBusy(false);
+    }
+  }
+
   function closePanel() {
     const panel = document.getElementById("agent-panel");
     if (!panel) return;
@@ -218,6 +338,8 @@
     panel.setAttribute("aria-hidden", "false");
     document.getElementById("agent-command-input")?.focus();
     loadApprovals();
+    loadTodos();
+    loadAgenda();
   }
 
   function mount() {
@@ -243,7 +365,7 @@
           id: "agent-command-input",
           class: "agent-textarea",
           maxlength: "2000",
-          placeholder: "Son gelen mesajı özetle ve teklif taslağı hazırla"
+          placeholder: "Örn: 'Son gelen mesajı özetle ve teklif taslağı hazırla', 'todo ekle: müşteriye dön', 'yarın 14:00 toplantı ekle', 'bugün ajandada ne var'"
         }),
         el("div", { class: "agent-actions" }, [
           el("button", { type: "button", class: "agent-button primary", text: "Agent'ı çalıştır", "data-agent-action": "command", onclick: sendCommand }),
@@ -253,6 +375,24 @@
         el("section", { class: "agent-box", "aria-labelledby": "agent-approvals-title" }, [
           el("h4", { id: "agent-approvals-title", text: "Bekleyen onaylar" }),
           el("div", { id: "agent-approvals" })
+        ]),
+        el("section", { class: "agent-box", "aria-labelledby": "agent-todos-title" }, [
+          el("h4", { id: "agent-todos-title", text: "Yapılacaklar" }),
+          el("div", { id: "agent-todos" }),
+          el("div", { class: "agent-inline-form" }, [
+            el("input", { id: "agent-todo-input", class: "agent-input", type: "text", maxlength: "240", placeholder: "Yeni yapılacak iş..." }),
+            el("button", { type: "button", class: "agent-button primary", text: "Ekle", "data-agent-action": "todo-add", onclick: addTodoItem })
+          ])
+        ]),
+        el("section", { class: "agent-box", "aria-labelledby": "agent-agenda-title" }, [
+          el("h4", { id: "agent-agenda-title", text: "Ajanda (14 gün)" }),
+          el("div", { id: "agent-agenda" }),
+          el("div", { class: "agent-inline-form" }, [
+            el("input", { id: "agent-event-title", class: "agent-input", type: "text", maxlength: "240", placeholder: "Etkinlik başlığı..." }),
+            el("input", { id: "agent-event-date", class: "agent-input", type: "date" }),
+            el("input", { id: "agent-event-time", class: "agent-input", type: "time" }),
+            el("button", { type: "button", class: "agent-button primary", text: "Ekle", "data-agent-action": "event-add", onclick: addAgendaItem })
+          ])
         ])
       ])
     ]));

@@ -61,8 +61,20 @@ function loadAgent() {
   try {
     return require("../lib/agent");
   } catch (error) {
-    console.error("[agent] backend initialization failed");
+    console.error("[agent] backend initialization failed:", error?.message);
     const unavailable = new Error("Agent backend is not configured for this environment.");
+    unavailable.statusCode = 503;
+    unavailable.code = "agent_not_configured";
+    throw unavailable;
+  }
+}
+
+function loadTasks() {
+  try {
+    return require("../lib/agent-tasks");
+  } catch (error) {
+    console.error("[agent] task backend initialization failed:", error?.message);
+    const unavailable = new Error("Agent task backend is not configured for this environment.");
     unavailable.statusCode = 503;
     unavailable.code = "agent_not_configured";
     throw unavailable;
@@ -83,13 +95,14 @@ function publicError(error) {
 
 module.exports = async function handler(req, res) {
   const action = String(req.query?.action || "").trim().toLowerCase();
-  const allowed = new Set(["status", "command", "approve"]);
-  if (!allowed.has(action)) {
+  const getActions = new Set(["status", "todos", "agenda"]);
+  const postActions = new Set(["command", "approve", "todo", "event"]);
+  if (!getActions.has(action) && !postActions.has(action)) {
     return sendJson(res, 404, { ok: false, code: "unknown_action", error: "Unknown agent action." });
   }
 
-  if (action === "status" && req.method !== "GET") return methodNotAllowed(res, ["GET"]);
-  if (action !== "status" && req.method !== "POST") return methodNotAllowed(res, ["POST"]);
+  if (getActions.has(action) && req.method !== "GET") return methodNotAllowed(res, ["GET"]);
+  if (postActions.has(action) && req.method !== "POST") return methodNotAllowed(res, ["POST"]);
 
   try {
     const agent = loadAgent();
@@ -99,11 +112,38 @@ module.exports = async function handler(req, res) {
       const approvals = await agent.listPendingApprovals();
       return sendJson(res, 200, { ok: true, approvals });
     }
+    if (action === "todos") {
+      const todos = await loadTasks().listTodos({ includeDone: req.query?.all === "1" });
+      return sendJson(res, 200, { ok: true, todos });
+    }
+    if (action === "agenda") {
+      const events = await loadTasks().listAgenda({});
+      return sendJson(res, 200, { ok: true, events });
+    }
 
     const body = await readJson(req);
     if (action === "command") {
       const result = await agent.handleCommand({ text: body.text || body.command, actor });
       return sendJson(res, 200, { ok: true, ...result });
+    }
+    if (action === "todo") {
+      const tasks = loadTasks();
+      const op = String(body.op || "add").toLowerCase();
+      if (op === "complete") {
+        const todo = await tasks.completeTodo({ todoId: body.id, matchText: body.title, actorId: actor.id });
+        return sendJson(res, 200, { ok: true, todo });
+      }
+      const todo = await tasks.addTodo({ title: body.title, dueDateKey: body.dueDateKey || null, actorId: actor.id });
+      return sendJson(res, 200, { ok: true, todo });
+    }
+    if (action === "event") {
+      const event = await loadTasks().addEvent({
+        title: body.title,
+        dateKey: body.dateKey,
+        time: body.time || null,
+        actorId: actor.id
+      });
+      return sendJson(res, 200, { ok: true, event });
     }
 
     const result = await agent.decideApproval({
