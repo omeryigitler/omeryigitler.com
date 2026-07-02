@@ -185,7 +185,7 @@ async function notifyEmail(name, email, message, config) {
   if (!apiKey) return { sent: false, reason: "not_configured" };
 
   const to = String(process.env.CONTACT_EMAIL_TO || "info@omeryigitler.com").trim();
-  const from = String(process.env.CONTACT_EMAIL_FROM || "Taurus Contact <onboarding@resend.dev>").trim();
+  const from = String(process.env.CONTACT_EMAIL_FROM || "Taurus Contact <contact@omeryigitler.com>").trim();
   let text = `New project request\n\nName: ${name}\nEmail: ${email}\n\n${message}`;
   if (config) text += `\n\n— Project config —\n${configSummary(config)}`;
 
