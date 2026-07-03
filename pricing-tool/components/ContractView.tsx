@@ -77,7 +77,7 @@ const ContractView: React.FC<Props> = ({ config, addons, request, onBack, langua
   const renderTurkishContract = () => (
     <div className="space-y-6">
       <section>
-        <h3 className="font-bold text-lg mb-2 font-poppins text-black">1. {t.parties}</h3>
+        <h3 className="text-sm font-bold text-black uppercase tracking-widest mb-3 pb-2 border-b border-zinc-200">1. {t.parties}</h3>
         <p>
           <strong>Hizmet Veren (Ajans):</strong> Ömer Yiğitler (Bundan sonra "Ajans" olarak anılacaktır).<br />
           <strong>Hizmet Alan (Müşteri):</strong> {request.customerName || "................................................"} (Bundan sonra "Müşteri" olarak anılacaktır).
@@ -85,14 +85,14 @@ const ContractView: React.FC<Props> = ({ config, addons, request, onBack, langua
       </section>
 
       <section>
-        <h3 className="font-bold text-lg mb-2 font-poppins text-black">2. {t.serviceDef}</h3>
+        <h3 className="text-sm font-bold text-black uppercase tracking-widest mb-3 pb-2 border-b border-zinc-200">2. {t.serviceDef}</h3>
         <p>
           İşbu sözleşme, Ajans'ın Müşteri'ye ait web sitesinin tasarlanması, kodlanması, yayınlanması ve ilgili bakım hizmetlerini kapsar. Proje kapsamı, Müşteri tarafından onaylanan teklif formunda belirtilen detaylarla (Sayfa sayısı: {request.pageCount}, Tasarım Tipi: {designLabel}) sınırlıdır.
         </p>
       </section>
 
       <section>
-        <h3 className="font-bold text-lg mb-2 font-poppins text-black">3. {t.delivery}</h3>
+        <h3 className="text-sm font-bold text-black uppercase tracking-widest mb-3 pb-2 border-b border-zinc-200">3. {t.delivery}</h3>
         <p>
           Proje teslim süresi, tüm materyallerin (logo, metin, görsel vb.) Müşteri tarafından Ajans'a teslim edilmesinden itibaren başlar.
           Öngörülen süre: <strong>{deliveryLabel}</strong> planına uygundur. Mücbir sebepler (doğal afet, yasal engeller vb.) saklıdır.
@@ -100,7 +100,7 @@ const ContractView: React.FC<Props> = ({ config, addons, request, onBack, langua
       </section>
 
       <section>
-        <h3 className="font-bold text-lg mb-2 font-poppins text-black">4. {t.price}</h3>
+        <h3 className="text-sm font-bold text-black uppercase tracking-widest mb-3 pb-2 border-b border-zinc-200">4. {t.price}</h3>
         <p>
           Toplam hizmet bedeli teklif formunda belirtilen tutardır. Ödemeler aksi kararlaştırılmadıkça:
           <br />- %50 İş başlangıcında avans.
@@ -124,42 +124,42 @@ const ContractView: React.FC<Props> = ({ config, addons, request, onBack, langua
       </section>
 
       <section>
-        <h3 className="font-bold text-lg mb-2 font-poppins text-black">5. {t.revision}</h3>
+        <h3 className="text-sm font-bold text-black uppercase tracking-widest mb-3 pb-2 border-b border-zinc-200">5. {t.revision}</h3>
         <p>
           Müşteri, ana tasarım şablonu üzerinde onay verdikten sonra, içerik yerleşimi konusunda pakete dahil olarak 2 (iki) tur revizyon hakkına sahiptir. Tasarımın tamamen değiştirilmesi veya kodlama yapısı değişikliği gerektiren talepler ek ücretlendirilir.
         </p>
       </section>
 
       <section>
-        <h3 className="font-bold text-lg mb-2 font-poppins text-black">6. {t.ip}</h3>
+        <h3 className="text-sm font-bold text-black uppercase tracking-widest mb-3 pb-2 border-b border-zinc-200">6. {t.ip}</h3>
         <p>
           5846 sayılı Fikir ve Sanat Eserleri Kanunu uyarınca; proje bedelinin tamamı ödendiğinde, web sitesinin tasarımı ve varsa özel yazılımın kullanım hakları Müşteri'ye devredilir. Ajans, projeyi kendi portfolyosunda referans olarak kullanma hakkını saklı tutar.
         </p>
       </section>
 
       <section>
-        <h3 className="font-bold text-lg mb-2 font-poppins text-black">7. {t.confidentiality}</h3>
+        <h3 className="text-sm font-bold text-black uppercase tracking-widest mb-3 pb-2 border-b border-zinc-200">7. {t.confidentiality}</h3>
         <p>
           Taraflar, proje sürecinde edindikleri birbirlerine ait ticari sırları, müşteri bilgilerini ve teknik verileri (KVKK kapsamındaki kişisel veriler dahil) yasal zorunluluklar dışında üçüncü şahıslarla paylaşmamayı taahhüt eder.
         </p>
       </section>
 
       <section>
-        <h3 className="font-bold text-lg mb-2 font-poppins text-black">8. {t.cancellation}</h3>
+        <h3 className="text-sm font-bold text-black uppercase tracking-widest mb-3 pb-2 border-b border-zinc-200">8. {t.cancellation}</h3>
         <p>
           Müşteri projeyi tek taraflı iptal ederse, o ana kadar yapılan çalışmaların bedeli hesaplanır. Başlangıç avansı iade edilmez. Ajans taahhütlerini yerine getirmezse (mücbir sebepler hariç), avansı iade etmekle yükümlüdür.
         </p>
       </section>
 
       <section>
-        <h3 className="font-bold text-lg mb-2 font-poppins text-black">9. {t.warranty}</h3>
+        <h3 className="text-sm font-bold text-black uppercase tracking-widest mb-3 pb-2 border-b border-zinc-200">9. {t.warranty}</h3>
         <p>
           Teslimattan sonra 30 gün boyunca yazılımdan kaynaklı hatalar (bug) Ajans tarafından ücretsiz düzeltilir. Bu süre sonrasındaki bakım ve güncellemeler, seçilen Bakım Paketi ({request.maintenanceLevel}) kapsamında yürütülür.
         </p>
       </section>
 
       <section>
-        <h3 className="font-bold text-lg mb-2 font-poppins text-black">10. {t.dispute}</h3>
+        <h3 className="text-sm font-bold text-black uppercase tracking-widest mb-3 pb-2 border-b border-zinc-200">10. {t.dispute}</h3>
         <p>
           İşbu sözleşmeden doğacak ihtilaflarda <strong>İstanbul Mahkemeleri ve İcra Daireleri</strong> yetkilidir. Sözleşme Türk Hukuku'na tabidir.
         </p>
@@ -170,7 +170,7 @@ const ContractView: React.FC<Props> = ({ config, addons, request, onBack, langua
   const renderEnglishContract = () => (
     <div className="space-y-6">
       <section>
-        <h3 className="font-bold text-lg mb-2 font-poppins text-black">1. {t.parties}</h3>
+        <h3 className="text-sm font-bold text-black uppercase tracking-widest mb-3 pb-2 border-b border-zinc-200">1. {t.parties}</h3>
         <p>
           <strong>Service Provider:</strong> Ömer Yiğitler (hereinafter referred to as the "Agency").<br />
           <strong>Client:</strong> {request.customerName || "................................................"} (hereinafter referred to as the "Client").
@@ -178,14 +178,14 @@ const ContractView: React.FC<Props> = ({ config, addons, request, onBack, langua
       </section>
 
       <section>
-        <h3 className="font-bold text-lg mb-2 font-poppins text-black">2. {t.serviceDef}</h3>
+        <h3 className="text-sm font-bold text-black uppercase tracking-widest mb-3 pb-2 border-b border-zinc-200">2. {t.serviceDef}</h3>
         <p>
           This Agreement covers the design, development, deployment, and related maintenance services of the Client's website by the Agency. The scope is strictly limited to the details specified in the proposal form approved by the Client (Page Count: {request.pageCount}, Design Type: {designLabel}).
         </p>
       </section>
 
       <section>
-        <h3 className="font-bold text-lg mb-2 font-poppins text-black">3. {t.delivery}</h3>
+        <h3 className="text-sm font-bold text-black uppercase tracking-widest mb-3 pb-2 border-b border-zinc-200">3. {t.delivery}</h3>
         <p>
           The project delivery timeline commences once all necessary materials (logo, text, images, etc.) are provided by the Client to the Agency.
           The estimated duration aligns with the <strong>{deliveryLabel}</strong> plan. Force Majeure events are excluded.
@@ -193,7 +193,7 @@ const ContractView: React.FC<Props> = ({ config, addons, request, onBack, langua
       </section>
 
       <section>
-        <h3 className="font-bold text-lg mb-2 font-poppins text-black">4. {t.price}</h3>
+        <h3 className="text-sm font-bold text-black uppercase tracking-widest mb-3 pb-2 border-b border-zinc-200">4. {t.price}</h3>
         <p>
           The total service fee is the amount specified in the proposal. Unless agreed otherwise:
           <br />- 50% Upfront deposit upon commencement.
@@ -217,42 +217,42 @@ const ContractView: React.FC<Props> = ({ config, addons, request, onBack, langua
       </section>
 
       <section>
-        <h3 className="font-bold text-lg mb-2 font-poppins text-black">5. {t.revision}</h3>
+        <h3 className="text-sm font-bold text-black uppercase tracking-widest mb-3 pb-2 border-b border-zinc-200">5. {t.revision}</h3>
         <p>
           Upon approval of the main design template, the Client is entitled to 2 (two) rounds of revisions regarding content placement included in the package. Requests requiring a complete design overhaul or structural coding changes will incur additional fees.
         </p>
       </section>
 
       <section>
-        <h3 className="font-bold text-lg mb-2 font-poppins text-black">6. {t.ip}</h3>
+        <h3 className="text-sm font-bold text-black uppercase tracking-widest mb-3 pb-2 border-b border-zinc-200">6. {t.ip}</h3>
         <p>
           Upon full payment of the project fees, the intellectual property rights for the website design and any custom code are transferred to the Client. The Agency retains the right to use the project as a reference in its portfolio. This transfer is subject to the provisions of the <strong>Copyright Act (Chapter 415 of the Laws of Malta)</strong>.
         </p>
       </section>
 
       <section>
-        <h3 className="font-bold text-lg mb-2 font-poppins text-black">7. {t.confidentiality} & GDPR</h3>
+        <h3 className="text-sm font-bold text-black uppercase tracking-widest mb-3 pb-2 border-b border-zinc-200">7. {t.confidentiality} & GDPR</h3>
         <p>
           Both parties agree to keep all commercial secrets, client data, and technical information confidential. The Agency agrees to process any personal data in accordance with the <strong>General Data Protection Regulation (GDPR)</strong> and the Data Protection Act of Malta.
         </p>
       </section>
 
       <section>
-        <h3 className="font-bold text-lg mb-2 font-poppins text-black">8. {t.cancellation}</h3>
+        <h3 className="text-sm font-bold text-black uppercase tracking-widest mb-3 pb-2 border-b border-zinc-200">8. {t.cancellation}</h3>
         <p>
           If the Client cancels the project unilaterally, the fee for work completed up to that point shall be calculated. The initial deposit is non-refundable. If the Agency fails to fulfill its obligations (excluding Force Majeure), the deposit shall be refunded.
         </p>
       </section>
 
       <section>
-        <h3 className="font-bold text-lg mb-2 font-poppins text-black">9. {t.warranty}</h3>
+        <h3 className="text-sm font-bold text-black uppercase tracking-widest mb-3 pb-2 border-b border-zinc-200">9. {t.warranty}</h3>
         <p>
           Any software bugs identified within 30 days after delivery will be fixed by the Agency free of charge. Maintenance and updates after this period are subject to the selected Maintenance Package ({request.maintenanceLevel}).
         </p>
       </section>
 
       <section>
-        <h3 className="font-bold text-lg mb-2 font-poppins text-black">10. {t.dispute}</h3>
+        <h3 className="text-sm font-bold text-black uppercase tracking-widest mb-3 pb-2 border-b border-zinc-200">10. {t.dispute}</h3>
         <p>
           This Agreement shall be governed by and construed in accordance with the <strong>Laws of Malta</strong>. Any disputes arising out of or in connection with this Agreement shall be subject to the exclusive jurisdiction of the <strong>Courts of Malta</strong>.
         </p>
@@ -347,20 +347,45 @@ const ContractView: React.FC<Props> = ({ config, addons, request, onBack, langua
         </div>
       </div>
 
-      {/* Main Contract Content Wrapper - ID ADDED HERE */}
-      <div id="contract-content" className="bg-white shadow-xl p-12 text-justify leading-relaxed text-zinc-800 text-sm sm:text-base print:shadow-none print:p-0">
-        <h1 className="text-2xl font-bold text-center mb-8 uppercase font-poppins text-black">{t.title}</h1>
+      {/* Main Contract Content Wrapper - styled to match the proposal document */}
+      <div id="contract-content" className="bg-white shadow-2xl rounded-none sm:rounded-md p-16 text-justify leading-relaxed text-zinc-700 text-sm sm:text-base print:shadow-none print:p-0">
+
+        {/* Header — same identity block as the proposal */}
+        <div className="flex justify-between items-start border-b-4 border-black pb-8 mb-12">
+          <div>
+            <h1 className="text-5xl font-extrabold text-black tracking-tighter font-poppins leading-none">ÖMER<br />YİĞİTLER</h1>
+            <p className="text-black mt-2 font-bold tracking-[0.2em] text-sm uppercase bg-[#FFD700] inline-block px-2 py-1">
+              {TRANSLATIONS[language].proposal.agency}
+            </p>
+          </div>
+          <div className="text-right">
+            <h2 className="text-2xl font-bold text-black mb-1 font-poppins uppercase">{t.title}</h2>
+            <p className="text-zinc-500 text-sm">{TRANSLATIONS[language].proposal.refNo}: #CT-{Math.floor(Math.random() * 10000)}</p>
+            <p className="text-zinc-500 text-sm">{TRANSLATIONS[language].proposal.date}: {new Date().toLocaleDateString(language === Language.TR ? 'tr-TR' : 'en-GB')}</p>
+          </div>
+        </div>
+
+        {/* Parties summary card — mirrors the proposal's client block */}
+        <div className="mb-14 bg-zinc-50 p-10 rounded-2xl border border-zinc-100 text-left">
+          <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-widest mb-4">{t.parties}</h3>
+          <p className="text-3xl font-bold text-black font-poppins mb-2">{request.customerName || '—'}</p>
+          <p className="text-zinc-600">
+            {language === Language.TR
+              ? 'Ömer Yiğitler (Ajans) ile yukarıda adı geçen Müşteri arasında aşağıdaki şartlarla akdedilmiştir.'
+              : 'Entered into between Ömer Yiğitler (the Agency) and the Client named above, under the terms below.'}
+          </p>
+        </div>
 
         {language === Language.TR ? renderTurkishContract() : renderEnglishContract()}
 
-        <div className="mt-16 grid grid-cols-2 gap-16">
+        <div className="mt-16 pt-10 border-t border-zinc-200 grid grid-cols-2 gap-16">
           <div>
-            <p className="font-bold mb-8 text-black">{common.agencySign}</p>
-            <div className="h-0 border-b border-zinc-900 w-3/4"></div>
+            <p className="text-xs font-bold text-zinc-400 uppercase tracking-widest mb-10">{common.agencySign}</p>
+            <div className="h-0 border-b-2 border-zinc-900 w-3/4"></div>
           </div>
           <div>
-            <p className="font-bold mb-8 text-black">{common.clientSign}</p>
-            <div className="h-0 border-b border-zinc-900 w-3/4"></div>
+            <p className="text-xs font-bold text-zinc-400 uppercase tracking-widest mb-10">{common.clientSign}</p>
+            <div className="h-0 border-b-2 border-zinc-900 w-3/4"></div>
           </div>
         </div>
       </div>
