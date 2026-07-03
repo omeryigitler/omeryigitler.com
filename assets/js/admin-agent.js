@@ -51,30 +51,15 @@
       .agent-close:hover { border-color: #FFD700; color: #FFD700; }
 
       .agent-hero { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 6px 16px 2px; transition: all .35s ease; }
-      .agent-halo { --lvl: 0; position: relative; width: min(64vw, 280px); aspect-ratio: 1; display: grid; place-items: center; transition: width .35s ease; }
-      #agent-panel.compact .agent-halo { width: min(32vw, 132px); }
-      .agent-ring { position: absolute; border-radius: 50%; pointer-events: none; will-change: transform; }
-      .agent-ring.r1 { inset: 4%;   border: 1.5px solid rgba(255,215,0,.55); box-shadow: 0 0 14px rgba(255,215,0,.18), inset 0 0 14px rgba(255,215,0,.10); }
-      .agent-ring.r2 { inset: -9%;  border: 1.5px solid rgba(255,215,0,.30); box-shadow: 0 0 10px rgba(255,215,0,.10); }
-      .agent-ring.r3 { inset: -22%; border: 1px solid rgba(255,215,0,.16); }
-      /* the rings are always alive: a constant fine vibration + slow breath */
-      #agent-panel.idle .agent-ring.r1 { animation: agentVibe 1.6s ease-in-out infinite; }
-      #agent-panel.idle .agent-ring.r2 { animation: agentVibe 1.6s ease-in-out infinite .22s; }
-      #agent-panel.idle .agent-ring.r3 { animation: agentVibe 1.6s ease-in-out infinite .44s; }
-      @keyframes agentVibe {
-        0%, 100% { transform: scale(1); }
-        20% { transform: scale(1.014); }
-        40% { transform: scale(0.995); }
-        60% { transform: scale(1.022); }
-        80% { transform: scale(1.004); }
-      }
-      #agent-panel.listening .agent-ring { animation: none; }
-      #agent-panel.listening .agent-ring.r1 { transform: scale(calc(1 + var(--lvl) * .18)); }
-      #agent-panel.listening .agent-ring.r2 { transform: scale(calc(1 + var(--lvl) * .34)); }
-      #agent-panel.listening .agent-ring.r3 { transform: scale(calc(1 + var(--lvl) * .50)); }
-      #agent-panel.thinking .agent-ring { animation: agentSpinPulse 1.1s ease-in-out infinite; }
-      @keyframes agentSpinPulse { 0%,100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.07); opacity: .5; } }
-      .agent-core { width: 78%; aspect-ratio: 1; border-radius: 50%; background: #0b0a05; border: 2.5px solid #FFD700; display: grid; place-items: center; box-shadow: 0 0 48px rgba(255,215,0,.30), 0 0 130px rgba(255,215,0,.12); transition: box-shadow .15s; }
+      .agent-halo { --lvl: 0; position: relative; width: min(64vw, 300px); aspect-ratio: 1; display: grid; place-items: center; transition: width .35s ease; }
+      #agent-panel.compact .agent-halo { width: min(32vw, 140px); }
+      /* single waveform ring: a smooth circle at rest, an audio-driven wave while speaking */
+      .agent-wave-wrap { position: absolute; inset: -6%; pointer-events: none; }
+      .agent-wave-wrap svg { width: 100%; height: 100%; display: block; filter: drop-shadow(0 0 6px rgba(255,215,0,.5)) drop-shadow(0 0 18px rgba(255,215,0,.18)); }
+      #agent-wave { fill: none; stroke: #FFD700; stroke-width: 1.8; stroke-linejoin: round; stroke-linecap: round; }
+      #agent-panel.thinking .agent-wave-wrap { animation: agentSpinPulse 1.1s ease-in-out infinite; }
+      @keyframes agentSpinPulse { 0%,100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.05); opacity: .5; } }
+      .agent-core { width: 66%; aspect-ratio: 1; border-radius: 50%; background: #0b0a05; border: 2.5px solid #FFD700; display: grid; place-items: center; box-shadow: 0 0 48px rgba(255,215,0,.30), 0 0 130px rgba(255,215,0,.12); transition: box-shadow .15s; }
       #agent-panel.listening .agent-core { box-shadow: 0 0 calc(40px + var(--lvl) * 100px) rgba(255,215,0,calc(.3 + var(--lvl) * .35)), 0 0 140px rgba(255,215,0,.14); }
       .agent-core img { width: 66%; height: 66%; object-fit: contain; }
       .agent-status { min-height: 16px; color: #FFD700; font: 700 10.5px "JetBrains Mono", monospace; letter-spacing: .2em; text-transform: uppercase; visibility: hidden; }
@@ -266,20 +251,48 @@
     return window.SpeechRecognition || window.webkitSpeechRecognition || null;
   }
 
+  // The halo ring is one SVG path: a perfect circle at rest, deformed
+  // radially by microphone frequency data while listening.
+  const WAVE_POINTS = 120;
+  const WAVE_R = 86;
+
+  function setWavePath(levels) {
+    const path = document.getElementById("agent-wave");
+    if (!path) return;
+    let d = "";
+    for (let i = 0; i < WAVE_POINTS; i += 1) {
+      const angle = (i / WAVE_POINTS) * Math.PI * 2 - Math.PI / 2;
+      const radius = WAVE_R + (levels ? levels[i] : 0);
+      const x = 100 + Math.cos(angle) * radius;
+      const y = 100 + Math.sin(angle) * radius;
+      d += (i ? "L" : "M") + x.toFixed(2) + "," + y.toFixed(2);
+    }
+    path.setAttribute("d", d + "Z");
+  }
+
   function animateHalo() {
     const halo = document.getElementById("agent-halo");
     if (!halo || !state.analyser) return;
-    const data = new Uint8Array(state.analyser.frequencyBinCount);
+    const bins = new Uint8Array(state.analyser.frequencyBinCount);
+    const levels = new Array(WAVE_POINTS).fill(0);
+    const half = WAVE_POINTS / 2;
     const loop = () => {
       if (!state.listening || !state.analyser) return;
-      state.analyser.getByteTimeDomainData(data);
+      state.analyser.getByteFrequencyData(bins);
+
       let sum = 0;
-      for (let i = 0; i < data.length; i += 1) {
-        const v = (data[i] - 128) / 128;
-        sum += v * v;
-      }
-      const level = Math.min(1, Math.sqrt(sum / data.length) * 4.5);
+      for (let k = 4; k < 80 && k < bins.length; k += 1) sum += bins[k];
+      const level = Math.min(1, (sum / (76 * 255)) * 2.6);
       halo.style.setProperty("--lvl", level.toFixed(3));
+
+      // mirror the spectrum around the vertical axis so the wave stays symmetric
+      for (let i = 0; i < WAVE_POINTS; i += 1) {
+        const mirrored = Math.min(i, WAVE_POINTS - i);
+        const bin = 3 + Math.floor((mirrored / half) * 64);
+        const v = (bins[bin] || 0) / 255;
+        levels[i] = v * v * 15 * (0.4 + level);
+      }
+      setWavePath(levels);
       state.raf = requestAnimationFrame(loop);
     };
     state.raf = requestAnimationFrame(loop);
@@ -293,6 +306,7 @@
     if (state.audioCtx) { state.audioCtx.close().catch(() => {}); state.audioCtx = null; }
     state.analyser = null;
     document.getElementById("agent-halo")?.style.setProperty("--lvl", "0");
+    setWavePath(null); // back to a smooth circle
     const mic = document.getElementById("agent-mic");
     if (mic) { mic.classList.remove("rec"); mic.innerHTML = MIC_ICON; }
     const panel = document.getElementById("agent-panel");
@@ -330,7 +344,8 @@
         state.audioCtx = new AudioCtx();
         const source = state.audioCtx.createMediaStreamSource(state.stream);
         state.analyser = state.audioCtx.createAnalyser();
-        state.analyser.fftSize = 512;
+        state.analyser.fftSize = 256;
+        state.analyser.smoothingTimeConstant = 0.75;
         source.connect(state.analyser);
       } catch (error) { /* halo stays idle; recognition still works */ }
     } else if (micErrorName === "NotFoundError" || micErrorName === "DevicesNotFoundError" || micErrorName === "NotReadableError" || micErrorName === "TrackStartError") {
@@ -596,13 +611,15 @@
 
     panel.appendChild(el("div", { class: "agent-hero" }, [
       el("div", { id: "agent-halo", class: "agent-halo" }, [
-        el("div", { class: "agent-ring r3" }),
-        el("div", { class: "agent-ring r2" }),
-        el("div", { class: "agent-ring r1" }),
+        el("div", {
+          class: "agent-wave-wrap",
+          html: '<svg viewBox="0 0 200 200" preserveAspectRatio="xMidYMid meet" aria-hidden="true"><path id="agent-wave"/></svg>'
+        }),
         el("div", { class: "agent-core" }, [el("img", { src: LOGO_SRC, alt: "Taurus" })])
       ]),
       el("div", { id: "agent-status", class: "agent-status", text: "Hazır" })
     ]));
+    setTimeout(() => setWavePath(null), 0); // draw the resting circle once mounted
 
     const chatPane = el("div", { class: "agent-pane active", "data-pane": "chat" }, [
       el("div", { id: "agent-chat-log", class: "agent-chat-log" }),
