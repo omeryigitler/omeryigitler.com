@@ -3283,6 +3283,50 @@
             updateQuotesBulkUI();
         }
 
+        async function setQuoteStatus(id, status) {
+            try {
+                const update = { status, lastUpdated: firebase.firestore.FieldValue.serverTimestamp() };
+                if (status === 'sent') update.sentAt = firebase.firestore.FieldValue.serverTimestamp();
+                if (status === 'accepted') update.acceptedAt = firebase.firestore.FieldValue.serverTimestamp();
+                await db.collection('quotes').doc(id).update(update);
+            } catch (e) {
+                systemAlert('ERROR', 'Status update failed: ' + e.message, 'x-circle');
+            }
+        }
+
+        async function downloadQuotePdf(id) {
+            try {
+                const snap = await db.collection('quotes').doc(id).get();
+                const q = snap.data();
+                if (!q?.breakdown?.finalTotal) {
+                    systemAlert('ERROR', 'This quote has no financial breakdown. Recreate it via the Pricing tool.', 'x-circle');
+                    return;
+                }
+                systemAlert('DOC GENERATION', 'Generating proposal PDF...', 'loader-2');
+                await generatePdfOnServer({
+                    docType: 'quote',
+                    projectId: q.projectId || null,
+                    request: {
+                        customerName: q.clientName,
+                        customerEmail: q.clientEmail,
+                        country: q.country || 'TR',
+                        siteType: q.siteType,
+                        pageCount: q.pageCount,
+                        designType: q.designType,
+                        deliverySpeed: q.deliverySpeed,
+                        maintenanceLevel: q.maintenanceLevel || 'NONE',
+                        selectedAddons: q.selectedAddons || [],
+                        breakdown: q.breakdown
+                    },
+                    breakdown: q.breakdown,
+                    download: true,
+                    fileName: `${q.quoteNumber || 'Quote'}.pdf`
+                });
+            } catch (e) {
+                systemAlert('ERROR', 'PDF generation failed: ' + e.message, 'x-circle');
+            }
+        }
+
         async function deleteQuote(id) {
             const confirmed = await systemConfirm('DELETE QUOTE', 'Delete this quote permanently?', 'trash-2');
             if (!confirmed) return;
@@ -3386,6 +3430,20 @@
                                 
                                 <!-- Linked Project Badge -->
                                 ${quote.projectId ? '<div class="mt-3 flex items-center gap-2"><i data-lucide="rocket" class="w-3 h-3 text-green-400"></i><span class="text-xs text-green-400 font-bold">PROJECT CREATED</span></div>' : ''}
+
+                                <!-- Actions -->
+                                <div class="mt-4 pt-4 border-t border-white/5 flex flex-wrap gap-2">
+                                    <button onclick="downloadQuotePdf('${quote.id}'); event.stopPropagation()"
+                                        class="px-3 py-2 rounded-lg bg-taurusGold/10 text-taurusGold border border-taurusGold/25 hover:bg-taurusGold hover:text-black text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-1.5">
+                                        <i data-lucide="file-down" class="w-3.5 h-3.5"></i> PDF
+                                    </button>
+                                    ${quote.status === 'draft' ? `<button onclick="setQuoteStatus('${quote.id}','sent'); event.stopPropagation()"
+                                        class="px-3 py-2 rounded-lg bg-blue-500/10 text-blue-400 border border-blue-500/25 hover:bg-blue-500 hover:text-white text-[10px] font-black uppercase tracking-widest transition-all">Mark Sent</button>` : ''}
+                                    ${quote.status === 'sent' ? `<button onclick="setQuoteStatus('${quote.id}','accepted'); event.stopPropagation()"
+                                        class="px-3 py-2 rounded-lg bg-green-500/10 text-green-400 border border-green-500/25 hover:bg-green-500 hover:text-white text-[10px] font-black uppercase tracking-widest transition-all">Mark Accepted</button>` : ''}
+                                    ${quote.status === 'accepted' && !quote.projectId ? `<button onclick="createProjectFromQuote('${quote.id}'); event.stopPropagation()"
+                                        class="px-3 py-2 rounded-lg bg-green-500/10 text-green-400 border border-green-500/25 hover:bg-green-500 hover:text-white text-[10px] font-black uppercase tracking-widest transition-all">Create Project</button>` : ''}
+                                </div>
                             </div>
                         `;
 
@@ -5218,7 +5276,7 @@
 
                 <!-- TAB 1.5: BRIEF -->
                 <div id="tab-studio" class="project-tab-content hidden animate-fade-in">
-                    <div class="space-y-8 max-w-5xl">
+                    <div class="space-y-8">
                         <div class="space-y-4">
                             <h4 class="text-taurusGold text-[10px] font-black uppercase tracking-[0.2em] border-b border-white/5 pb-2">Brief</h4>
                             <textarea id="studio-brief" class="w-full min-h-[180px] bg-white/5 border border-white/10 rounded-xl p-4 text-sm text-gray-200 focus:outline-none focus:border-taurusGold transition-colors resize-y" placeholder="Everything about this project in one place: scope, goals, audience, brand tone, constraints..."></textarea>
@@ -5270,7 +5328,7 @@
 
                 <!-- TAB 2: FINANCIALS -->
                 <div id="tab-financials" class="project-tab-content hidden animate-fade-in">
-                    <div class="max-w-2xl mx-auto">
+                    <div class="max-w-4xl">
                         <div class="bg-white/5 rounded-2xl border border-white/10 overflow-hidden">
                             <div class="p-6 border-b border-white/10 bg-white/5 flex justify-between items-center">
                                 <h4 class="text-lg font-bold text-white">Cost Breakdown</h4>
