@@ -1082,7 +1082,7 @@
     <script src="assets/js/tracker/taurus-tracker.js?v=V44"></script>
     <script src="https://cdn.jsdelivr.net/npm/globe.gl"></script>
     <script src="assets/js/tracker/taurus-globe.js?v=V1"></script>
-    <script src="assets/js/admin-agent.js?v=V4"></script>
+    <script src="assets/js/admin-agent.js?v=V5"></script>
 
     <script>
         lucide.createIcons();
@@ -5163,25 +5163,25 @@
             </div>
 
             <!-- TAB NAVIGATION -->
-            <div class="flex items-center gap-6 px-6 border-b border-white/5 overflow-x-auto no-scrollbar bg-black/20">
+            <div class="flex items-center justify-center gap-6 px-6 border-b border-white/5 overflow-x-auto no-scrollbar bg-black/20">
                 <button id="tab-btn-overview" onclick="switchProjectTab('overview')"
-                    class="project-tab-btn py-4 text-[10px] font-bold uppercase tracking-widest border-b-2 border-taurusGold text-taurusGold  transition-all whitespace-nowrap">
+                    class="project-tab-btn focus:outline-none py-4 text-[10px] font-bold uppercase tracking-widest border-b-2 border-taurusGold text-taurusGold  transition-all whitespace-nowrap">
                     Overview
                 </button>
                 <button id="tab-btn-studio" onclick="switchProjectTab('studio')"
-                    class="project-tab-btn py-4 text-[10px] font-bold uppercase tracking-widest border-b-2 border-transparent text-gray-500 hover:text-white transition-all whitespace-nowrap">
+                    class="project-tab-btn focus:outline-none py-4 text-[10px] font-bold uppercase tracking-widest border-b-2 border-transparent text-gray-500 hover:text-white transition-all whitespace-nowrap">
                     Brief
                 </button>
                 <button id="tab-btn-financials" onclick="switchProjectTab('financials')"
-                    class="project-tab-btn py-4 text-[10px] font-bold uppercase tracking-widest border-b-2 border-transparent text-gray-500 hover:text-white transition-all whitespace-nowrap">
+                    class="project-tab-btn focus:outline-none py-4 text-[10px] font-bold uppercase tracking-widest border-b-2 border-transparent text-gray-500 hover:text-white transition-all whitespace-nowrap">
                     Budget
                 </button>
                 <button id="tab-btn-roadmap" onclick="switchProjectTab('roadmap')"
-                    class="project-tab-btn py-4 text-[10px] font-bold uppercase tracking-widest border-b-2 border-transparent text-gray-500 hover:text-white transition-all whitespace-nowrap">
+                    class="project-tab-btn focus:outline-none py-4 text-[10px] font-bold uppercase tracking-widest border-b-2 border-transparent text-gray-500 hover:text-white transition-all whitespace-nowrap">
                     Roadmap
                 </button>
                 <button id="tab-btn-documents" onclick="switchProjectTab('documents')"
-                    class="project-tab-btn py-4 text-[10px] font-bold uppercase tracking-widest border-b-2 border-transparent text-gray-500 hover:text-white transition-all whitespace-nowrap">
+                    class="project-tab-btn focus:outline-none py-4 text-[10px] font-bold uppercase tracking-widest border-b-2 border-transparent text-gray-500 hover:text-white transition-all whitespace-nowrap">
                     Files
                 </button>
             </div>
@@ -5328,7 +5328,7 @@
 
                 <!-- TAB 2: FINANCIALS -->
                 <div id="tab-financials" class="project-tab-content hidden animate-fade-in">
-                    <div class="max-w-4xl">
+                    <div class="max-w-3xl mx-auto text-base">
                         <div class="bg-white/5 rounded-2xl border border-white/10 overflow-hidden">
                             <div class="p-6 border-b border-white/10 bg-white/5 flex justify-between items-center">
                                 <h4 class="text-lg font-bold text-white">Cost Breakdown</h4>
@@ -5343,7 +5343,7 @@
                                 class="p-6 bg-[#FFD700]/10 border-t border-[#FFD700]/20 flex justify-between items-center">
                                 <span class="text-[#FFD700] uppercase text-xs font-black tracking-widest">Total
                                     Estimated Budget</span>
-                                <span id="finance-total-display" class="text-2xl font-black text-[#FFD700]">$0.00</span>
+                                <span id="finance-total-display" class="text-3xl font-black text-[#FFD700]">$0.00</span>
                             </div>
                         </div>
                         <p class="text-center text-[10px] text-gray-600 mt-4 uppercase tracking-widest">Data
