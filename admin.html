@@ -4600,14 +4600,18 @@
                         const el = document.getElementById(id);
                         if (el) el.checked = !!val;
                     };
-                    setVal('studio-brief', studio.brief);
-                    setVal('studio-goals', studio.goals);
-                    setVal('studio-audience', studio.audience);
-                    setVal('studio-tone', studio.tone);
-                    setVal('studio-keywords', studio.keywords);
+                    // Fold legacy studio fields into the single Brief box; saving
+                    // migrates them there permanently.
+                    const legacyParts = [
+                        studio.goals && `Goals: ${studio.goals}`,
+                        studio.audience && `Audience: ${studio.audience}`,
+                        studio.tone && `Tone: ${studio.tone}`,
+                        studio.keywords && `Keywords: ${studio.keywords}`,
+                        studio.content && `Content: ${studio.content}`
+                    ].filter(Boolean);
+                    setVal('studio-brief', [studio.brief, ...legacyParts].filter(Boolean).join('\n\n'));
                     setVal('studio-references', studio.references);
                     setVal('studio-sitemap', studio.sitemap);
-                    setVal('studio-content', studio.content);
                     setVal('studio-notes', studio.notes);
                     setCheck('studio-asset-logo', assets.logo);
                     setCheck('studio-asset-brand', assets.brandbook);
@@ -4940,16 +4944,17 @@
         }
 
         async function saveProject() {
+            // Spread the loaded studio first so legacy fields (goals, audience,
+            // tone, keywords, content) survive even though the simplified Brief
+            // tab no longer edits them.
             const studio = {
+                ...((currentProjectData && currentProjectData.studio) || {}),
                 brief: document.getElementById('studio-brief')?.value || '',
-                goals: document.getElementById('studio-goals')?.value || '',
-                audience: document.getElementById('studio-audience')?.value || '',
-                tone: document.getElementById('studio-tone')?.value || '',
-                keywords: document.getElementById('studio-keywords')?.value || '',
                 references: document.getElementById('studio-references')?.value || '',
                 sitemap: document.getElementById('studio-sitemap')?.value || '',
-                content: document.getElementById('studio-content')?.value || '',
                 notes: document.getElementById('studio-notes')?.value || '',
+                // migrated into brief on load; cleared so they don't duplicate
+                goals: '', audience: '', tone: '', keywords: '', content: '',
                 assets: {
                     logo: document.getElementById('studio-asset-logo')?.checked || false,
                     brandbook: document.getElementById('studio-asset-brand')?.checked || false,
@@ -5077,9 +5082,9 @@
 
     <!-- Project Modal -->
     <div id="project-modal"
-        class="fixed inset-0 z-[110] hidden flex items-center justify-center lg:p-4 bg-black/90 lg:bg-black/80 backdrop-blur-md transition-opacity duration-300">
+        class="fixed inset-0 z-[110] hidden bg-black/90 backdrop-blur-md transition-opacity duration-300">
         <div
-            class="glass-card w-full h-full lg:h-[90vh] lg:max-w-5xl lg:rounded-3xl border-y lg:border border-glassBorder bg-[#0a0a0a] shadow-2xl overflow-hidden animate-fade-in-up flex flex-col">
+            class="w-full h-full bg-[#0a0a0a] overflow-hidden animate-fade-in-up flex flex-col">
 
             <!-- Header -->
             <div class="p-6 border-b border-white/5 flex justify-between items-start bg-white/5 flex-shrink-0">
@@ -5211,43 +5216,28 @@
                     </form>
                 </div>
 
-                <!-- TAB 1.5: STUDIO -->
+                <!-- TAB 1.5: BRIEF -->
                 <div id="tab-studio" class="project-tab-content hidden animate-fade-in">
-                    <div class="space-y-8">
-                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                            <div class="space-y-4">
-                                <h4 class="text-blue-400 text-[10px] font-black uppercase tracking-[0.2em] border-b border-white/5 pb-2">Brief & Goals</h4>
-                                <textarea id="studio-brief" class="w-full min-h-[140px] bg-white/5 border border-white/10 rounded-xl p-4 text-sm text-gray-200 focus:outline-none focus:border-taurusGold transition-colors resize-none" placeholder="Project brief, scope, constraints..."></textarea>
-                                <textarea id="studio-goals" class="w-full min-h-[100px] bg-white/5 border border-white/10 rounded-xl p-4 text-sm text-gray-200 focus:outline-none focus:border-taurusGold transition-colors resize-none" placeholder="Business goals, KPIs, success criteria..."></textarea>
-                            </div>
-                            <div class="space-y-4">
-                                <h4 class="text-blue-400 text-[10px] font-black uppercase tracking-[0.2em] border-b border-white/5 pb-2">Audience & Tone</h4>
-                                <textarea id="studio-audience" class="w-full min-h-[100px] bg-white/5 border border-white/10 rounded-xl p-4 text-sm text-gray-200 focus:outline-none focus:border-taurusGold transition-colors resize-none" placeholder="Target audience, personas, geography..."></textarea>
-                                <input id="studio-tone" type="text" class="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-sm text-gray-200 focus:outline-none focus:border-taurusGold transition-colors" placeholder="Brand tone (e.g., premium, minimal, bold)">
-                                <input id="studio-keywords" type="text" class="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-sm text-gray-200 focus:outline-none focus:border-taurusGold transition-colors" placeholder="Keywords / style cues (comma separated)">
-                            </div>
+                    <div class="space-y-8 max-w-5xl">
+                        <div class="space-y-4">
+                            <h4 class="text-taurusGold text-[10px] font-black uppercase tracking-[0.2em] border-b border-white/5 pb-2">Brief</h4>
+                            <textarea id="studio-brief" class="w-full min-h-[180px] bg-white/5 border border-white/10 rounded-xl p-4 text-sm text-gray-200 focus:outline-none focus:border-taurusGold transition-colors resize-y" placeholder="Everything about this project in one place: scope, goals, audience, brand tone, constraints..."></textarea>
                         </div>
 
                         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
                             <div class="space-y-4">
-                                <h4 class="text-purple-400 text-[10px] font-black uppercase tracking-[0.2em] border-b border-white/5 pb-2">References</h4>
-                                <textarea id="studio-references" class="w-full min-h-[140px] bg-white/5 border border-white/10 rounded-xl p-4 text-sm text-gray-200 focus:outline-none focus:border-taurusGold transition-colors resize-none" placeholder="Reference URLs, competitor sites, inspiration..."></textarea>
+                                <h4 class="text-taurusGold text-[10px] font-black uppercase tracking-[0.2em] border-b border-white/5 pb-2">References</h4>
+                                <textarea id="studio-references" class="w-full min-h-[130px] bg-white/5 border border-white/10 rounded-xl p-4 text-sm text-gray-200 focus:outline-none focus:border-taurusGold transition-colors resize-y" placeholder="Reference URLs, competitor sites, inspiration..."></textarea>
                             </div>
                             <div class="space-y-4">
-                                <h4 class="text-purple-400 text-[10px] font-black uppercase tracking-[0.2em] border-b border-white/5 pb-2">Sitemap / Structure</h4>
-                                <textarea id="studio-sitemap" class="w-full min-h-[140px] bg-white/5 border border-white/10 rounded-xl p-4 text-sm text-gray-200 focus:outline-none focus:border-taurusGold transition-colors resize-none" placeholder="Home, About, Services, Contact..."></textarea>
+                                <h4 class="text-taurusGold text-[10px] font-black uppercase tracking-[0.2em] border-b border-white/5 pb-2">Pages / Structure</h4>
+                                <textarea id="studio-sitemap" class="w-full min-h-[130px] bg-white/5 border border-white/10 rounded-xl p-4 text-sm text-gray-200 focus:outline-none focus:border-taurusGold transition-colors resize-y" placeholder="Home, About, Services, Contact..."></textarea>
                             </div>
                         </div>
 
-                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                            <div class="space-y-4">
-                                <h4 class="text-taurusGold text-[10px] font-black uppercase tracking-[0.2em] border-b border-white/5 pb-2">Content Notes</h4>
-                                <textarea id="studio-content" class="w-full min-h-[140px] bg-white/5 border border-white/10 rounded-xl p-4 text-sm text-gray-200 focus:outline-none focus:border-taurusGold transition-colors resize-none" placeholder="Content status, copy needs, SEO notes..."></textarea>
-                            </div>
-                            <div class="space-y-4">
-                                <h4 class="text-taurusGold text-[10px] font-black uppercase tracking-[0.2em] border-b border-white/5 pb-2">Design Notes</h4>
-                                <textarea id="studio-notes" class="w-full min-h-[140px] bg-white/5 border border-white/10 rounded-xl p-4 text-sm text-gray-200 focus:outline-none focus:border-taurusGold transition-colors resize-none" placeholder="Design decisions, UI patterns, components..."></textarea>
-                            </div>
+                        <div class="space-y-4">
+                            <h4 class="text-taurusGold text-[10px] font-black uppercase tracking-[0.2em] border-b border-white/5 pb-2">Work Notes</h4>
+                            <textarea id="studio-notes" class="w-full min-h-[130px] bg-white/5 border border-white/10 rounded-xl p-4 text-sm text-gray-200 focus:outline-none focus:border-taurusGold transition-colors resize-y" placeholder="Design/content decisions, open questions, next steps..."></textarea>
                         </div>
 
                         <div class="space-y-4">
