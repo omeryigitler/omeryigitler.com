@@ -50,34 +50,42 @@
       .agent-close { width: 38px; height: 38px; border-radius: 50%; border: 1px solid rgba(255,255,255,.18); background: rgba(255,255,255,.05); color: #fff; font: 700 15px/1 sans-serif; cursor: pointer; }
       .agent-close:hover { border-color: #FFD700; color: #FFD700; }
 
-      .agent-hero { display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 6px 16px 2px; transition: all .35s ease; }
-      .agent-halo { --lvl: 0; position: relative; width: min(52vw, 210px); aspect-ratio: 1; display: grid; place-items: center; transition: width .35s ease; }
-      #agent-panel.compact .agent-halo { width: min(26vw, 96px); }
-      .agent-ring { position: absolute; border-radius: 50%; pointer-events: none; transition: opacity .3s; }
-      .agent-ring.r1 { inset: 6%;  border: 1px solid rgba(255,215,0,.30); }
-      .agent-ring.r2 { inset: -8%; border: 1px solid rgba(255,215,0,.16); }
-      .agent-ring.r3 { inset: -22%; border: 1px solid rgba(255,215,0,.08); }
-      #agent-panel.idle .agent-ring { animation: agentBreathe 3.2s ease-in-out infinite; }
-      #agent-panel.idle .agent-ring.r2 { animation-delay: .35s; }
-      #agent-panel.idle .agent-ring.r3 { animation-delay: .7s; }
-      @keyframes agentBreathe { 0%,100% { transform: scale(1); } 50% { transform: scale(1.035); } }
+      .agent-hero { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 6px 16px 2px; transition: all .35s ease; }
+      .agent-halo { --lvl: 0; position: relative; width: min(64vw, 280px); aspect-ratio: 1; display: grid; place-items: center; transition: width .35s ease; }
+      #agent-panel.compact .agent-halo { width: min(32vw, 132px); }
+      .agent-ring { position: absolute; border-radius: 50%; pointer-events: none; will-change: transform; }
+      .agent-ring.r1 { inset: 4%;   border: 1.5px solid rgba(255,215,0,.55); box-shadow: 0 0 14px rgba(255,215,0,.18), inset 0 0 14px rgba(255,215,0,.10); }
+      .agent-ring.r2 { inset: -9%;  border: 1.5px solid rgba(255,215,0,.30); box-shadow: 0 0 10px rgba(255,215,0,.10); }
+      .agent-ring.r3 { inset: -22%; border: 1px solid rgba(255,215,0,.16); }
+      /* the rings are always alive: a constant fine vibration + slow breath */
+      #agent-panel.idle .agent-ring.r1 { animation: agentVibe 1.6s ease-in-out infinite; }
+      #agent-panel.idle .agent-ring.r2 { animation: agentVibe 1.6s ease-in-out infinite .22s; }
+      #agent-panel.idle .agent-ring.r3 { animation: agentVibe 1.6s ease-in-out infinite .44s; }
+      @keyframes agentVibe {
+        0%, 100% { transform: scale(1); }
+        20% { transform: scale(1.014); }
+        40% { transform: scale(0.995); }
+        60% { transform: scale(1.022); }
+        80% { transform: scale(1.004); }
+      }
       #agent-panel.listening .agent-ring { animation: none; }
-      #agent-panel.listening .agent-ring.r1 { transform: scale(calc(1 + var(--lvl) * .16)); }
-      #agent-panel.listening .agent-ring.r2 { transform: scale(calc(1 + var(--lvl) * .30)); }
-      #agent-panel.listening .agent-ring.r3 { transform: scale(calc(1 + var(--lvl) * .46)); }
+      #agent-panel.listening .agent-ring.r1 { transform: scale(calc(1 + var(--lvl) * .18)); }
+      #agent-panel.listening .agent-ring.r2 { transform: scale(calc(1 + var(--lvl) * .34)); }
+      #agent-panel.listening .agent-ring.r3 { transform: scale(calc(1 + var(--lvl) * .50)); }
       #agent-panel.thinking .agent-ring { animation: agentSpinPulse 1.1s ease-in-out infinite; }
-      @keyframes agentSpinPulse { 0%,100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.06); opacity: .55; } }
-      .agent-core { width: 62%; aspect-ratio: 1; border-radius: 50%; background: #0b0a05; border: 2px solid #FFD700; display: grid; place-items: center; box-shadow: 0 0 42px rgba(255,215,0,.28), 0 0 120px rgba(255,215,0,.10); transition: box-shadow .15s; }
-      #agent-panel.listening .agent-core { box-shadow: 0 0 calc(36px + var(--lvl) * 90px) rgba(255,215,0,calc(.28 + var(--lvl) * .3)), 0 0 130px rgba(255,215,0,.12); }
-      .agent-core img { width: 58%; height: 58%; object-fit: contain; }
-      .agent-status { min-height: 16px; color: #9a9a92; font: 700 10.5px "JetBrains Mono", monospace; letter-spacing: .2em; text-transform: uppercase; }
-      #agent-panel.listening .agent-status { color: #FFD700; }
+      @keyframes agentSpinPulse { 0%,100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.07); opacity: .5; } }
+      .agent-core { width: 78%; aspect-ratio: 1; border-radius: 50%; background: #0b0a05; border: 2.5px solid #FFD700; display: grid; place-items: center; box-shadow: 0 0 48px rgba(255,215,0,.30), 0 0 130px rgba(255,215,0,.12); transition: box-shadow .15s; }
+      #agent-panel.listening .agent-core { box-shadow: 0 0 calc(40px + var(--lvl) * 100px) rgba(255,215,0,calc(.3 + var(--lvl) * .35)), 0 0 140px rgba(255,215,0,.14); }
+      .agent-core img { width: 66%; height: 66%; object-fit: contain; }
+      .agent-status { min-height: 16px; color: #FFD700; font: 700 10.5px "JetBrains Mono", monospace; letter-spacing: .2em; text-transform: uppercase; visibility: hidden; }
+      #agent-panel.listening .agent-status, #agent-panel.thinking .agent-status { visibility: visible; }
 
       .agent-main { flex: 1; min-height: 0; display: flex; flex-direction: column; width: min(720px, 100%); margin: 0 auto; }
       .agent-tabs { display: flex; justify-content: center; gap: 2px; padding: 4px 10px 0; }
       .agent-tab { background: none; border: 0; border-bottom: 2px solid transparent; color: #86867e; padding: 10px 12px; font: 800 10px "JetBrains Mono", monospace; letter-spacing: .16em; cursor: pointer; }
       .agent-tab.active { color: #FFD700; border-color: #FFD700; }
-      .agent-content { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; padding: 14px 18px; }
+      .agent-content { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; padding: 14px 18px; scrollbar-width: none; -ms-overflow-style: none; }
+      .agent-content::-webkit-scrollbar { display: none; width: 0; height: 0; }
       .agent-pane { display: none; }
       .agent-pane.active { display: block; }
 
