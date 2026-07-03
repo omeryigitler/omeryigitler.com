@@ -122,7 +122,7 @@
       .agent-input:focus { border-color: rgba(255,215,0,.55); }
       .agent-input[type="date"], .agent-input[type="time"] { flex: 0 1 135px; color-scheme: dark; }
 
-      #agent-toast { position: fixed; left: 50%; bottom: calc(96px + env(safe-area-inset-bottom)); transform: translateX(-50%); z-index: 240; background: #14120a; border: 1px solid rgba(255,215,0,.4); color: #FFD700; border-radius: 999px; padding: 11px 18px; font: 700 11px "JetBrains Mono", monospace; letter-spacing: .06em; opacity: 0; pointer-events: none; transition: opacity .25s; max-width: 88vw; text-align: center; }
+      #agent-toast { position: fixed; left: 50%; bottom: calc(96px + env(safe-area-inset-bottom)); transform: translateX(-50%); z-index: 240; background: #14120a; border: 1px solid rgba(255,215,0,.4); color: #FFD700; border-radius: 16px; padding: 12px 18px; font: 700 11px "JetBrains Mono", monospace; letter-spacing: .04em; line-height: 1.7; opacity: 0; pointer-events: none; transition: opacity .25s; max-width: min(88vw, 520px); text-align: center; }
       #agent-toast.show { opacity: 1; }
 
       /* 16px fields stop iOS Safari from auto-zooming on focus */
@@ -165,7 +165,8 @@
     node.textContent = message;
     node.classList.add("show");
     clearTimeout(state.toastTimer);
-    state.toastTimer = setTimeout(() => node.classList.remove("show"), 3200);
+    // long hints (e.g. mic permission steps) need more reading time
+    state.toastTimer = setTimeout(() => node.classList.remove("show"), Math.max(3200, message.length * 55));
   }
 
   function setBusy(value) {
@@ -290,25 +291,46 @@
     if (panel?.classList.contains("listening")) { setMode("idle"); setStatus("Hazır"); }
   }
 
+  const MIC_DENIED_HINT = "Mikrofon engelli görünüyor. Adres çubuğundaki kilit simgesi → Mikrofon → İzin ver deyip sayfayı YENİLEYİN. macOS kullanıyorsanız Sistem Ayarları → Gizlilik ve Güvenlik → Mikrofon'da Chrome'un açık olduğundan emin olun.";
+
+  function micErrorMessage(name) {
+    if (name === "NotAllowedError" || name === "PermissionDeniedError" || name === "SecurityError") return MIC_DENIED_HINT;
+    if (name === "NotFoundError" || name === "DevicesNotFoundError") return "Mikrofon bulunamadı. Bir mikrofonun bağlı olduğundan emin olun.";
+    if (name === "NotReadableError" || name === "TrackStartError") return "Mikrofona erişilemiyor — başka bir uygulama kullanıyor olabilir. Diğer uygulamaları kapatıp tekrar deneyin.";
+    return null;
+  }
+
   async function startVoice() {
     if (state.listening) { stopVoice(); return; }
     const Ctor = speechCtor();
     if (!Ctor) return toast("Bu tarayıcı sesli girişi desteklemiyor.");
 
+    // The analyser stream only drives the halo animation; speech recognition
+    // manages its own mic access, so a failure here must not block voice input.
+    let micErrorName = null;
     try {
       state.stream = await navigator.mediaDevices.getUserMedia({ audio: true });
     } catch (error) {
-      return toast("Mikrofon izni verilmedi.");
+      state.stream = null;
+      micErrorName = error?.name || "unknown";
+      console.warn("[agent] getUserMedia failed:", micErrorName, error?.message);
     }
 
-    try {
-      const AudioCtx = window.AudioContext || window.webkitAudioContext;
-      state.audioCtx = new AudioCtx();
-      const source = state.audioCtx.createMediaStreamSource(state.stream);
-      state.analyser = state.audioCtx.createAnalyser();
-      state.analyser.fftSize = 512;
-      source.connect(state.analyser);
-    } catch (error) { /* halo stays idle; recognition still works */ }
+    if (state.stream) {
+      try {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        state.audioCtx = new AudioCtx();
+        const source = state.audioCtx.createMediaStreamSource(state.stream);
+        state.analyser = state.audioCtx.createAnalyser();
+        state.analyser.fftSize = 512;
+        source.connect(state.analyser);
+      } catch (error) { /* halo stays idle; recognition still works */ }
+    } else if (micErrorName === "NotFoundError" || micErrorName === "DevicesNotFoundError" || micErrorName === "NotReadableError" || micErrorName === "TrackStartError") {
+      // no device / device busy: recognition cannot work either, stop here
+      return toast(micErrorMessage(micErrorName));
+    }
+    // for permission-type failures still TRY recognition: some setups grant it
+    // even when getUserMedia is blocked; its onerror gives the final verdict
 
     const recog = new Ctor();
     recog.lang = "tr-TR";
@@ -333,9 +355,11 @@
     recog.onerror = (event) => {
       const code = event?.error;
       stopVoice();
-      if (code === "not-allowed" || code === "service-not-allowed") toast("Mikrofon izni reddedildi.");
-      else if (code && code !== "aborted" && code !== "no-speech") toast(`Ses tanıma hatası: ${code}`);
+      if (code === "not-allowed" || code === "service-not-allowed") toast(MIC_DENIED_HINT);
+      else if (code === "audio-capture") toast("Mikrofon bulunamadı veya erişilemiyor.");
+      else if (code === "network") toast("Ses tanıma servisine ulaşılamadı (ağ hatası). Tekrar deneyin.");
       else if (code === "no-speech") toast("Ses algılanamadı, tekrar deneyin.");
+      else if (code && code !== "aborted") toast(`Ses tanıma hatası: ${code}`);
     };
 
     state.recog = recog;
