@@ -134,12 +134,9 @@ function usePortfolioProjects() {
 
   useEffect(() => {
     let cancelled = false;
-
     async function load() {
       try {
-        const response = await fetch("/api/portfolio", {
-          headers: { "Accept": "application/json" }
-        });
+        const response = await fetch("/api/portfolio", { headers: { Accept: "application/json" } });
         if (!response.ok) throw new Error(`Portfolio API returned ${response.status}`);
         const payload = await response.json();
         const loaded = Array.isArray(payload.projects)
@@ -148,7 +145,6 @@ function usePortfolioProjects() {
               .filter((project: PortfolioProject) => project.published)
               .sort((a: PortfolioProject, b: PortfolioProject) => a.sortOrder - b.sortOrder)
           : [];
-
         if (!cancelled && loaded.length > 0) {
           setProjects(loaded);
           setSource("firestore");
@@ -157,11 +153,8 @@ function usePortfolioProjects() {
         console.warn("Portfolio data fallback active:", error);
       }
     }
-
     load();
-    return () => {
-      cancelled = true;
-    };
+    return () => { cancelled = true; };
   }, []);
 
   return { projects, source };
@@ -169,96 +162,66 @@ function usePortfolioProjects() {
 
 function Typewriter({ text, delay = 0 }: { text: string; delay?: number }) {
   const [visible, setVisible] = useState("");
-
   useEffect(() => {
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (reduced) {
-      setVisible(text);
-      return;
-    }
-
+    if (reduced) { setVisible(text); return; }
     let timer = 0;
     let index = 0;
     let deleting = false;
     let stopped = false;
-
     const step = () => {
       if (stopped) return;
       setVisible(text.slice(0, index));
       if (!deleting) {
-        if (index < text.length) {
-          index += 1;
-          timer = window.setTimeout(step, 48 + Math.random() * 44);
-        } else {
-          deleting = true;
-          timer = window.setTimeout(step, 2400);
-        }
-      } else if (index > 0) {
-        index -= 1;
-        timer = window.setTimeout(step, 34);
-      } else {
-        deleting = false;
-        timer = window.setTimeout(step, 600);
-      }
+        if (index < text.length) { index += 1; timer = window.setTimeout(step, 48 + Math.random() * 44); }
+        else { deleting = true; timer = window.setTimeout(step, 2400); }
+      } else if (index > 0) { index -= 1; timer = window.setTimeout(step, 34); }
+      else { deleting = false; timer = window.setTimeout(step, 600); }
     };
-
     timer = window.setTimeout(step, delay);
-    return () => {
-      stopped = true;
-      window.clearTimeout(timer);
-    };
+    return () => { stopped = true; window.clearTimeout(timer); };
   }, [delay, text]);
-
   return <span className="type-eyebrow">{visible}</span>;
 }
 
 function getDisplayUrl(url: string): string {
-  try {
-    return new URL(url).hostname.replace(/^www\./, "");
-  } catch {
-    return "live-project.local";
-  }
+  try { return new URL(url).hostname.replace(/^www\./, ""); }
+  catch { return "project-preview"; }
 }
 
-function MacBookPreview({ project }: { project: PortfolioProject }) {
+function DesktopPreview({ project }: { project: PortfolioProject }) {
   const swap = project.displayType === "desktop-swap" && project.alternateDesktopImage;
   return (
-    <div className="macbook" aria-label={`${project.title} desktop preview`}>
-      <div className="macbook-lid">
-        <div className="macbook-camera" aria-hidden="true"><span /></div>
-        <div className="macbook-screen">
-          <div className="browser-toolbar" aria-hidden="true">
-            <span className="traffic red" />
-            <span className="traffic yellow" />
-            <span className="traffic green" />
-            <span className="browser-address">{getDisplayUrl(project.liveUrl)}</span>
-            <span className="browser-action">↗</span>
-          </div>
-          {swap ? (
-            <div className="swap">
-              <img className="swap-a" src={project.desktopImage} alt={`${project.title} ${project.alternateLabelA || "primary"} desktop view`} loading="lazy" />
-              <img className="swap-b" src={project.alternateDesktopImage} alt={`${project.title} ${project.alternateLabelB || "alternate"} desktop view`} loading="lazy" />
-            </div>
-          ) : (
-            <img className="desktop-shot" src={project.desktopImage} alt={`${project.title} desktop view`} loading="lazy" />
-          )}
-        </div>
+    <div className="desktop-preview" aria-label={`${project.title} desktop preview`}>
+      <div className="desktop-toolbar" aria-hidden="true">
+        <span className="traffic red" /><span className="traffic yellow" /><span className="traffic green" />
+        <span className="browser-address">{getDisplayUrl(project.liveUrl)}</span>
+        <span className="browser-action">↗</span>
       </div>
-      <div className="macbook-base" aria-hidden="true"><span /></div>
+      <div className="desktop-viewport">
+        {swap ? (
+          <div className="swap">
+            <img className="swap-a" src={project.desktopImage} alt={`${project.title} ${project.alternateLabelA || "primary"} desktop view`} loading="lazy" />
+            <img className="swap-b" src={project.alternateDesktopImage} alt={`${project.title} ${project.alternateLabelB || "alternate"} desktop view`} loading="lazy" />
+          </div>
+        ) : (
+          <img className="desktop-shot" src={project.desktopImage} alt={`${project.title} desktop view`} loading="lazy" />
+        )}
+      </div>
     </div>
   );
 }
 
-function IPhonePreview({ project }: { project: PortfolioProject }) {
-  if (!project.mobileImage) return null;
+function MobilePreview({ project }: { project: PortfolioProject }) {
+  if (!project.mobileImage || project.displayType === "desktop-swap") return null;
   return (
-    <div className="iphone" aria-label={`${project.title} mobile preview`}>
-      <span className="iphone-button iphone-silent" aria-hidden="true" />
-      <span className="iphone-button iphone-volume-up" aria-hidden="true" />
-      <span className="iphone-button iphone-volume-down" aria-hidden="true" />
-      <span className="iphone-button iphone-power" aria-hidden="true" />
-      <div className="iphone-screen">
-        <span className="dynamic-island" aria-hidden="true"><i /></span>
+    <div className="mobile-device" aria-label={`${project.title} mobile preview`}>
+      <span className="mobile-button mobile-silent" aria-hidden="true" />
+      <span className="mobile-button mobile-volume-up" aria-hidden="true" />
+      <span className="mobile-button mobile-volume-down" aria-hidden="true" />
+      <span className="mobile-button mobile-power" aria-hidden="true" />
+      <div className="mobile-screen">
+        <span className="dynamic-island" aria-hidden="true" />
         <img src={project.mobileImage} alt={`${project.title} mobile view`} loading="lazy" />
       </div>
     </div>
@@ -268,11 +231,7 @@ function IPhonePreview({ project }: { project: PortfolioProject }) {
 function ProjectSection({ project, index }: { project: PortfolioProject; index: number }) {
   const flipped = index % 2 === 1;
   return (
-    <section
-      className={`project reveal${flipped ? " flip" : ""}`}
-      style={{ "--accent": project.accent } as CSSProperties}
-      data-project-id={project.id}
-    >
+    <section className={`project reveal${flipped ? " flip" : ""}`} style={{ "--accent": project.accent } as CSSProperties} data-project-id={project.id}>
       <div className="project-eyebrow">
         <span className="num">{String(index + 1).padStart(2, "0")} /</span>
         <Typewriter text={project.category} delay={400 + index * 260} />
@@ -288,20 +247,15 @@ function ProjectSection({ project, index }: { project: PortfolioProject; index: 
             <div className="csr-row"><h4>Result</h4><p>{project.result}</p></div>
           </div>
           <a className="visit" href={project.liveUrl} target="_blank" rel="noreferrer">
-            Visit live site
+            Open project
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M7 17 17 7M7 7h10v10" /></svg>
           </a>
         </div>
         <div className={`devices${project.displayType === "desktop-swap" ? " elite-swap" : ""}`}>
-          <span className="live-pill">Live</span>
-          <MacBookPreview project={project} />
-          <IPhonePreview project={project} />
+          <DesktopPreview project={project} />
+          <MobilePreview project={project} />
           {project.displayType === "desktop-swap" && project.alternateDesktopImage ? (
-            <span className="swap-hint">
-              <span className="dot-a" />{project.alternateLabelA || "Primary"}
-              <span className="arr">⇄</span>
-              {project.alternateLabelB || "Alternate"}<span className="dot-b" /> · hover
-            </span>
+            <span className="swap-hint"><span className="dot-a" />{project.alternateLabelA || "Primary"}<span className="arr">⇄</span>{project.alternateLabelB || "Alternate"}<span className="dot-b" /> · hover</span>
           ) : null}
         </div>
       </div>
@@ -311,37 +265,20 @@ function ProjectSection({ project, index }: { project: PortfolioProject; index: 
 
 export function PortfolioProjects() {
   const { projects, source } = usePortfolioProjects();
-  const orderedProjects = useMemo(
-    () => [...projects].sort((a, b) => a.sortOrder - b.sortOrder),
-    [projects]
-  );
+  const orderedProjects = useMemo(() => [...projects].sort((a, b) => a.sortOrder - b.sortOrder), [projects]);
 
   useEffect(() => {
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const targets = Array.from(document.querySelectorAll<HTMLElement>("#portfolio-projects-root .project"));
-    if (reduced || !("IntersectionObserver" in window)) {
-      targets.forEach((target) => target.classList.add("in"));
-      return;
-    }
-
+    if (reduced || !("IntersectionObserver" in window)) { targets.forEach((target) => target.classList.add("in")); return; }
     const observer = new IntersectionObserver((entries) => {
       entries.forEach((entry) => {
-        if (entry.isIntersecting) {
-          entry.target.classList.add("in");
-          observer.unobserve(entry.target);
-        }
+        if (entry.isIntersecting) { entry.target.classList.add("in"); observer.unobserve(entry.target); }
       });
     }, { threshold: 0.12 });
-
     targets.forEach((target) => observer.observe(target));
     return () => observer.disconnect();
   }, [orderedProjects]);
 
-  return (
-    <div className="portfolio-projects" data-source={source}>
-      {orderedProjects.map((project, index) => (
-        <ProjectSection key={project.id} project={project} index={index} />
-      ))}
-    </div>
-  );
+  return <div className="portfolio-projects" data-source={source}>{orderedProjects.map((project, index) => <ProjectSection key={project.id} project={project} index={index} />)}</div>;
 }
