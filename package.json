@@ -15,7 +15,7 @@
     "build": "npm run prepare:instagram && npm run build:react && npm run build:css",
     "deploy": "vercel --prod",
     "test": "node --test test/*.test.js",
-    "quality": "npm run test && node --check api/agent.js && node --check api/contact.js && node --check api/instagram.js && node --check lib/agent.js && node --check lib/agent-validation.js && node --check lib/pricing.js && node --check assets/js/admin-agent.js && npm run build"
+    "quality": "npm run test && node --check api/agent.js && node --check api/contact.js && node --check api/instagram.js && node --check api/portfolio.js && node --check lib/agent.js && node --check lib/agent-validation.js && node --check lib/pricing.js && node --check assets/js/admin-agent.js && node --check assets/js/admin-portfolio.js && npm run build"
   },
   "repository": {
     "type": "git",
