@@ -22,12 +22,9 @@ function error(statusCode, code, message) {
 async function readJson(req) {
   if (req.body && typeof req.body === "object") {
     const serialized = JSON.stringify(req.body);
-    if (Buffer.byteLength(serialized, "utf8") > MAX_BODY_BYTES) {
-      throw error(413, "body_too_large", "Request body is too large.");
-    }
+    if (Buffer.byteLength(serialized, "utf8") > MAX_BODY_BYTES) throw error(413, "body_too_large", "Request body is too large.");
     return req.body;
   }
-
   const chunks = [];
   let size = 0;
   for await (const chunk of req) {
@@ -36,11 +33,8 @@ async function readJson(req) {
     chunks.push(chunk);
   }
   if (!chunks.length) return {};
-  try {
-    return JSON.parse(Buffer.concat(chunks).toString("utf8"));
-  } catch {
-    throw error(400, "invalid_json", "Request body must be valid JSON.");
-  }
+  try { return JSON.parse(Buffer.concat(chunks).toString("utf8")); }
+  catch { throw error(400, "invalid_json", "Request body must be valid JSON."); }
 }
 
 function cleanString(value, maxLength, fallback = "") {
@@ -49,11 +43,7 @@ function cleanString(value, maxLength, fallback = "") {
 }
 
 function cleanId(value) {
-  const id = cleanString(value, 100)
-    .toLowerCase()
-    .replace(/[^a-z0-9-]/g, "-")
-    .replace(/-+/g, "-")
-    .replace(/^-|-$/g, "");
+  const id = cleanString(value, 100).toLowerCase().replace(/[^a-z0-9-]/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "");
   if (!id) throw error(400, "invalid_id", "A valid project id is required.");
   return id;
 }
@@ -61,36 +51,33 @@ function cleanId(value) {
 function cleanUrl(value, required = false) {
   const url = cleanString(value, 1000);
   if (!url && !required) return "";
-  if (!url && required) throw error(400, "missing_url", "Live URL is required.");
+  if (!url && required) throw error(400, "missing_url", "Project URL is required.");
   let parsed;
-  try {
-    parsed = new URL(url);
-  } catch {
-    throw error(400, "invalid_url", "Live URL must be a valid http or https URL.");
-  }
-  if (!new Set(["http:", "https:"]).has(parsed.protocol)) {
-    throw error(400, "invalid_url_protocol", "Live URL must use http or https.");
-  }
+  try { parsed = new URL(url); }
+  catch { throw error(400, "invalid_url", "Project URL must be a valid http or https URL."); }
+  if (!new Set(["http:", "https:"]).has(parsed.protocol)) throw error(400, "invalid_url_protocol", "Project URL must use http or https.");
   return parsed.toString();
 }
 
-function cleanImage(value, required = false) {
-  const image = cleanString(value, 1200);
-  if (!image && required) throw error(400, "missing_desktop_image", "Desktop image is required.");
+function cleanImage(value) {
+  const image = cleanString(value, 1600);
   if (!image) return "";
   if (/^(javascript|data):/i.test(image)) throw error(400, "invalid_image", "Image path is not allowed.");
   return image;
 }
 
+function serializeTimestamp(value) {
+  if (!value) return null;
+  if (typeof value.toDate === "function") return value.toDate().toISOString();
+  if (value instanceof Date) return value.toISOString();
+  return null;
+}
+
 function sanitizeProject(input = {}) {
   const title = cleanString(input.title, 120);
   if (!title) throw error(400, "missing_title", "Project title is required.");
-
-  const displayType = ALLOWED_DISPLAY_TYPES.has(input.displayType)
-    ? input.displayType
-    : "desktop-mobile";
+  const displayType = ALLOWED_DISPLAY_TYPES.has(input.displayType) ? input.displayType : "desktop-mobile";
   const sortOrder = Number(input.sortOrder);
-
   return {
     slug: cleanString(input.slug, 100),
     title,
@@ -100,7 +87,7 @@ function sanitizeProject(input = {}) {
     solution: cleanString(input.solution, 1200),
     result: cleanString(input.result, 1200),
     liveUrl: cleanUrl(input.liveUrl, true),
-    desktopImage: cleanImage(input.desktopImage, true),
+    desktopImage: cleanImage(input.desktopImage),
     mobileImage: cleanImage(input.mobileImage),
     alternateDesktopImage: cleanImage(input.alternateDesktopImage),
     alternateLabelA: cleanString(input.alternateLabelA, 60, "Primary"),
@@ -134,16 +121,15 @@ function serializeProject(doc) {
     sortOrder: Number.isFinite(Number(data.sortOrder)) ? Number(data.sortOrder) : 999,
     displayType: ALLOWED_DISPLAY_TYPES.has(data.displayType) ? data.displayType : "desktop-mobile",
     published: data.published !== false,
-    lang: data.lang || ""
+    lang: data.lang || "",
+    capturedFrom: data.capturedFrom || "",
+    captureUpdatedAt: serializeTimestamp(data.captureUpdatedAt)
   };
 }
 
 async function listProjects(includeHidden) {
   const snapshot = await db.collection(COLLECTION).get();
-  return snapshot.docs
-    .map(serializeProject)
-    .filter((project) => includeHidden || project.published)
-    .sort((left, right) => left.sortOrder - right.sortOrder || left.title.localeCompare(right.title));
+  return snapshot.docs.map(serializeProject).filter((project) => includeHidden || project.published).sort((left, right) => left.sortOrder - right.sortOrder || left.title.localeCompare(right.title));
 }
 
 async function verifyAdmin(req) {
@@ -183,10 +169,7 @@ async function handlePost(req, res) {
     projects.forEach((item) => {
       const id = cleanId(item.id || item.slug || item.title);
       const project = sanitizeProject(item);
-      batch.set(db.collection(COLLECTION).doc(id), {
-        ...project,
-        updatedAt: admin.firestore.FieldValue.serverTimestamp()
-      }, { merge: true });
+      batch.set(db.collection(COLLECTION).doc(id), { ...project, updatedAt: admin.firestore.FieldValue.serverTimestamp() }, { merge: true });
       seeded.push(id);
     });
     await batch.commit();
@@ -202,16 +185,9 @@ module.exports = async function handler(req, res) {
       const includeHidden = req.query?.includeHidden === "1";
       if (includeHidden) await verifyAdmin(req);
       const projects = await listProjects(includeHidden);
-      return sendJson(
-        res,
-        200,
-        { ok: true, projects },
-        includeHidden ? "no-store" : "public, max-age=30, s-maxage=60, stale-while-revalidate=300"
-      );
+      return sendJson(res, 200, { ok: true, projects }, includeHidden ? "no-store" : "public, max-age=30, s-maxage=60, stale-while-revalidate=300");
     }
-
     if (req.method === "POST") return handlePost(req, res);
-
     res.setHeader("Allow", "GET, POST");
     return sendJson(res, 405, { ok: false, code: "method_not_allowed", error: "Method not allowed." });
   } catch (cause) {
