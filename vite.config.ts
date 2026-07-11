@@ -7,9 +7,14 @@ export default defineConfig({
     outDir: "assets/react",
     emptyOutDir: true,
     rollupOptions: {
-      input: "src/react/main.tsx",
+      input: {
+        interactive: "src/react/main.tsx",
+        projects: "src/react/projects-main.tsx"
+      },
       output: {
-        entryFileNames: "interactive-sections.js",
+        entryFileNames: (chunkInfo) => chunkInfo.name === "interactive"
+          ? "interactive-sections.js"
+          : "projects.js",
         chunkFileNames: "chunks/[name]-[hash].js",
         assetFileNames: "assets/[name]-[hash][extname]"
       }
