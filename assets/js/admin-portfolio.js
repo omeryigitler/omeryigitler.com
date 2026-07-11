@@ -1,0 +1,159 @@
+(() => {
+  if (!/admin\.html$/i.test(window.location.pathname)) return;
+
+  const defaults = [
+    { id: "bugun-ne-yiyelim", slug: "bugun-ne-yiyelim", title: "Bugün Ne Yiyelim?", category: "Food decision app", kicker: "AI-Powered Food Decider", challenge: "Overcoming daily decision fatigue when choosing what to eat.", solution: "AI-driven recommendation engine personalized to user mood.", result: "Instant, stress-free meal decisions tailored to the moment.", liveUrl: "https://www.bugunneyiyelim.com/", desktopImage: "assets/bugun-desktop.png", mobileImage: "assets/bugun-mobile.png", alternateDesktopImage: "", alternateLabelA: "Primary", alternateLabelB: "Alternate", accent: "#FF2A1A", sortOrder: 10, displayType: "desktop-mobile", published: true, lang: "tr" },
+    { id: "elite-body-protocol", slug: "elite-body-protocol", title: "Elite Body Protocol", category: "Gamified fitness app", kicker: "React Web App", challenge: "Designing a seamless cinematic transition between two completely different UI design languages (Retro vs. Modern).", solution: "Built with React and Tailwind for dynamic state management and complex CSS animations.", result: "A highly engaging, gamified experience that increases user retention through narrative.", liveUrl: "https://elitebody.omeryigitler.com", desktopImage: "assets/elite-modern.png?v=V10", mobileImage: "", alternateDesktopImage: "assets/elite-retro.png?v=V10", alternateLabelA: "Modern", alternateLabelB: "Retro", accent: "#a78bfa", sortOrder: 20, displayType: "desktop-swap", published: true, lang: "" },
+    { id: "reformer-pilates-malta", slug: "reformer-pilates-malta", title: "Reformer Pilates Malta", category: "Wellness studio", kicker: "Custom Website Design", challenge: "Lack of online visibility and mobile booking options for clients.", solution: "Custom responsive design with clear class schedules and SEO foundations.", result: "Improved brand perception and accessible class information for locals.", liveUrl: "https://www.reformerpilatesmalta.com/", desktopImage: "assets/pilates-desktop.png", mobileImage: "assets/pilates-mobile.png", alternateDesktopImage: "", alternateLabelA: "Primary", alternateLabelB: "Alternate", accent: "#D38B99", sortOrder: 30, displayType: "desktop-mobile", published: true, lang: "" },
+    { id: "today-we-eat", slug: "today-we-eat", title: "Today We Eat", category: "Food decision app", kicker: "AI-Powered Food Decider", challenge: "Overcoming daily decision fatigue when choosing what to eat.", solution: "AI-driven recommendation engine personalized to user mood.", result: "Instant, stress-free meal decisions tailored to the moment.", liveUrl: "https://www.todayweeat.com/", desktopImage: "assets/today-we-eat-desktop.png", mobileImage: "assets/today-we-eat-mobile.png", alternateDesktopImage: "", alternateLabelA: "Primary", alternateLabelB: "Alternate", accent: "#FF2A1A", sortOrder: 40, displayType: "desktop-mobile", published: true, lang: "" }
+  ];
+
+  const state = { mounted: false, editingId: null, projects: [] };
+  const $ = (id) => document.getElementById(id);
+  const esc = (value) => String(value ?? "").replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;" }[char]));
+  const slugify = (value) => String(value || "project").normalize("NFKD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "") || `project-${Date.now()}`;
+
+  async function request(body = null) {
+    const user = window.firebase?.auth?.().currentUser;
+    if (!user) throw new Error("Firebase admin session is not ready.");
+    const response = await fetch("/api/portfolio?includeHidden=1", {
+      method: body ? "POST" : "GET",
+      headers: { Accept: "application/json", "Content-Type": "application/json", Authorization: `Bearer ${await user.getIdToken()}` },
+      body: body ? JSON.stringify(body) : undefined
+    });
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok || payload.ok === false) throw new Error(payload.error || `Portfolio API returned ${response.status}`);
+    return payload;
+  }
+
+  function alertUser(title, message, icon = "check-circle") {
+    return typeof window.systemAlert === "function" ? window.systemAlert(title, message, icon) : Promise.resolve(window.alert(message));
+  }
+
+  function installStyles() {
+    if ($("portfolio-admin-styles")) return;
+    const style = document.createElement("style");
+    style.id = "portfolio-admin-styles";
+    style.textContent = `
+      .pf-card{padding:24px;border:1px solid rgba(255,255,255,.09);border-radius:24px;background:rgba(255,255,255,.035);backdrop-filter:blur(20px)}
+      .pf-head{display:flex;justify-content:space-between;gap:16px;margin-bottom:20px}.pf-head h3{margin:0;color:#fff;font:700 17px Syncopate,sans-serif;text-transform:uppercase}.pf-head p{margin:8px 0 0;color:#737373;font:700 10px "JetBrains Mono",monospace;letter-spacing:.12em;text-transform:uppercase;line-height:1.6}.pf-badge{height:max-content;padding:8px 11px;border:1px solid rgba(255,215,0,.3);border-radius:999px;color:#FFD700;background:rgba(255,215,0,.07);font:800 9px "JetBrains Mono",monospace;letter-spacing:.12em;text-transform:uppercase}
+      .pf-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.pf-field{display:flex;flex-direction:column;gap:7px}.pf-field.wide{grid-column:1/-1}.pf-field>label{color:#777;font:800 9px "JetBrains Mono",monospace;letter-spacing:.12em;text-transform:uppercase}.pf-field input,.pf-field textarea,.pf-field select{width:100%;padding:11px 12px;border:1px solid rgba(255,255,255,.11);border-radius:12px;outline:0;background:rgba(0,0,0,.42);color:#fff;font:500 12px Manrope,sans-serif}.pf-field textarea{min-height:80px;resize:vertical;line-height:1.55}.pf-field input:focus,.pf-field textarea:focus,.pf-field select:focus{border-color:rgba(255,215,0,.65);box-shadow:0 0 0 3px rgba(255,215,0,.06)}.pf-toggle{display:flex!important;align-items:center;gap:10px;min-height:43px;color:#d2d2d2!important;font-size:11px!important}.pf-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:16px}.pf-btn{padding:11px 14px;border:1px solid rgba(255,255,255,.13);border-radius:11px;background:rgba(255,255,255,.05);color:#ddd;cursor:pointer;font:800 9px "JetBrains Mono",monospace;letter-spacing:.12em;text-transform:uppercase}.pf-btn:hover{border-color:rgba(255,215,0,.45);color:#FFD700}.pf-btn.primary{border-color:#FFD700;background:#FFD700;color:#080808}.pf-btn.primary:hover{border-color:#fff;background:#fff;color:#050505}.pf-btn:disabled{opacity:.5;cursor:wait}
+      .pf-list{display:grid;gap:10px;margin-top:22px}.pf-row{display:grid;grid-template-columns:58px minmax(0,1fr) auto;align-items:center;gap:12px;padding:10px;border:1px solid rgba(255,255,255,.08);border-radius:14px;background:rgba(255,255,255,.025)}.pf-thumb{width:58px;height:44px;border:1px solid rgba(255,255,255,.1);border-radius:8px;background:#0b0b0b;object-fit:cover;object-position:top}.pf-title{color:#fff;font:700 12px Manrope,sans-serif}.pf-meta{margin-top:4px;color:#777;font:700 9px "JetBrains Mono",monospace;letter-spacing:.08em;text-transform:uppercase}.pf-status{color:#22c55e}.pf-status.hidden{color:#888}.pf-row-actions{display:flex;gap:7px}.pf-icon{width:34px;height:34px;border:1px solid rgba(255,255,255,.1);border-radius:9px;background:rgba(255,255,255,.04);color:#ccc;cursor:pointer}.pf-icon:hover{border-color:rgba(255,215,0,.4);color:#FFD700}.pf-icon.delete:hover{border-color:rgba(248,113,113,.4);color:#f87171}.pf-empty{padding:22px;border:1px dashed rgba(255,255,255,.12);border-radius:14px;color:#777;text-align:center;font:700 10px "JetBrains Mono",monospace;letter-spacing:.1em;text-transform:uppercase}
+      @media(max-width:720px){.pf-grid{grid-template-columns:1fr}.pf-field.wide{grid-column:auto}.pf-head{flex-direction:column}.pf-row{grid-template-columns:50px minmax(0,1fr)}.pf-thumb{width:50px}.pf-row-actions{grid-column:1/-1;justify-content:flex-end}}
+    `;
+    document.head.appendChild(style);
+  }
+
+  function markup() {
+    return `<section class="pf-card" id="portfolio-admin-card">
+      <div class="pf-head"><div><h3>Portfolio Manager</h3><p>Manage the case studies rendered on projects.html without editing page markup.</p></div><span class="pf-badge">Public content</span></div>
+      <form id="portfolio-admin-form">
+        <div class="pf-grid">
+          <div class="pf-field"><label for="pf-title">Project title</label><input id="pf-title" required></div>
+          <div class="pf-field"><label for="pf-category">Category</label><input id="pf-category" required></div>
+          <div class="pf-field"><label for="pf-kicker">Service / technology</label><input id="pf-kicker" required></div>
+          <div class="pf-field"><label for="pf-url">Live URL</label><input id="pf-url" type="url" required placeholder="https://"></div>
+          <div class="pf-field wide"><label for="pf-challenge">Challenge</label><textarea id="pf-challenge" required></textarea></div>
+          <div class="pf-field wide"><label for="pf-solution">Solution</label><textarea id="pf-solution" required></textarea></div>
+          <div class="pf-field wide"><label for="pf-result">Result</label><textarea id="pf-result" required></textarea></div>
+          <div class="pf-field wide"><label for="pf-desktop">Desktop image path / URL</label><input id="pf-desktop" required placeholder="assets/project-desktop.png"></div>
+          <div class="pf-field wide"><label for="pf-mobile">iPhone image path / URL</label><input id="pf-mobile" placeholder="assets/project-mobile.png"></div>
+          <div class="pf-field wide"><label for="pf-alt">Alternate desktop image (hover swap)</label><input id="pf-alt" placeholder="assets/project-alternate.png"></div>
+          <div class="pf-field"><label for="pf-label-a">Primary label</label><input id="pf-label-a" value="Primary"></div>
+          <div class="pf-field"><label for="pf-label-b">Alternate label</label><input id="pf-label-b" value="Alternate"></div>
+          <div class="pf-field"><label for="pf-display">Presentation</label><select id="pf-display"><option value="desktop-mobile">MacBook + iPhone</option><option value="desktop-swap">MacBook hover swap</option></select></div>
+          <div class="pf-field"><label for="pf-accent">Accent</label><input id="pf-accent" type="color" value="#FFD700"></div>
+          <div class="pf-field"><label for="pf-order">Sort order</label><input id="pf-order" type="number" step="1" value="50"></div>
+          <div class="pf-field"><label for="pf-lang">Title language</label><input id="pf-lang" placeholder="tr / en"></div>
+          <div class="pf-field wide"><label>Publishing</label><label class="pf-toggle"><input id="pf-published" type="checkbox" checked> Visible on projects page</label></div>
+        </div>
+        <div class="pf-actions"><button class="pf-btn primary" id="pf-save" type="submit">Save project</button><button class="pf-btn" id="pf-reset" type="button">Clear form</button><button class="pf-btn" id="pf-seed" type="button">Restore current four entries</button></div>
+      </form>
+      <div class="pf-list" id="pf-list"><div class="pf-empty">Loading portfolio records…</div></div>
+    </section>`;
+  }
+
+  function reset() {
+    state.editingId = null;
+    $("portfolio-admin-form")?.reset();
+    $("pf-accent").value = "#FFD700";
+    $("pf-order").value = String((state.projects.length + 1) * 10);
+    $("pf-label-a").value = "Primary";
+    $("pf-label-b").value = "Alternate";
+    $("pf-published").checked = true;
+    $("pf-save").textContent = "Save project";
+  }
+
+  function readForm() {
+    const title = $("pf-title").value.trim();
+    return { slug: slugify(title), title, category: $("pf-category").value.trim(), kicker: $("pf-kicker").value.trim(), challenge: $("pf-challenge").value.trim(), solution: $("pf-solution").value.trim(), result: $("pf-result").value.trim(), liveUrl: $("pf-url").value.trim(), desktopImage: $("pf-desktop").value.trim(), mobileImage: $("pf-mobile").value.trim(), alternateDesktopImage: $("pf-alt").value.trim(), alternateLabelA: $("pf-label-a").value.trim() || "Primary", alternateLabelB: $("pf-label-b").value.trim() || "Alternate", displayType: $("pf-display").value, accent: $("pf-accent").value || "#FFD700", sortOrder: Number($("pf-order").value || 999), lang: $("pf-lang").value.trim(), published: $("pf-published").checked };
+  }
+
+  function render(projects) {
+    state.projects = projects;
+    const list = $("pf-list");
+    if (!projects.length) { list.innerHTML = '<div class="pf-empty">No portfolio records. Restore the current four entries or add a project.</div>'; return; }
+    list.innerHTML = projects.map((project) => `<article class="pf-row"><img class="pf-thumb" src="${esc(project.desktopImage || "assets/preview.png")}" alt=""><div><div class="pf-title">${esc(project.title || "Untitled")}</div><div class="pf-meta"><span class="pf-status${project.published === false ? " hidden" : ""}">${project.published === false ? "Hidden" : "Published"}</span> · ${esc(project.displayType || "desktop-mobile")} · order ${esc(project.sortOrder ?? 999)}</div></div><div class="pf-row-actions"><button class="pf-icon" type="button" data-edit="${esc(project.id)}" title="Edit">✎</button><button class="pf-icon delete" type="button" data-delete="${esc(project.id)}" title="Delete">×</button></div></article>`).join("");
+    list.querySelectorAll("[data-edit]").forEach((button) => button.addEventListener("click", () => edit(button.dataset.edit)));
+    list.querySelectorAll("[data-delete]").forEach((button) => button.addEventListener("click", () => remove(button.dataset.delete)));
+  }
+
+  async function load() {
+    const payload = await request();
+    const projects = Array.isArray(payload.projects) ? payload.projects : [];
+    projects.sort((a, b) => Number(a.sortOrder ?? 999) - Number(b.sortOrder ?? 999));
+    render(projects);
+    return projects;
+  }
+
+  function edit(id) {
+    const p = state.projects.find((item) => item.id === id);
+    if (!p) return;
+    state.editingId = id;
+    const values = { "pf-title": p.title, "pf-category": p.category, "pf-kicker": p.kicker, "pf-challenge": p.challenge, "pf-solution": p.solution, "pf-result": p.result, "pf-url": p.liveUrl, "pf-desktop": p.desktopImage, "pf-mobile": p.mobileImage, "pf-alt": p.alternateDesktopImage, "pf-label-a": p.alternateLabelA || "Primary", "pf-label-b": p.alternateLabelB || "Alternate", "pf-display": p.displayType || "desktop-mobile", "pf-accent": p.accent || "#FFD700", "pf-order": p.sortOrder ?? 999, "pf-lang": p.lang || "" };
+    Object.entries(values).forEach(([id, value]) => { $(id).value = value ?? ""; });
+    $("pf-published").checked = p.published !== false;
+    $("pf-save").textContent = "Update project";
+    $("portfolio-admin-card").scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  async function save(event) {
+    event.preventDefault();
+    const button = $("pf-save");
+    button.disabled = true; button.textContent = "Saving…";
+    try {
+      const project = readForm();
+      await request({ op: "upsert", id: state.editingId || project.slug, project });
+      await load(); reset();
+      await alertUser("PORTFOLIO UPDATED", "The public projects page now uses the saved record.", "layout-template");
+    } catch (error) {
+      console.error("Portfolio save failed", error);
+      await alertUser("SAVE FAILED", error.message || "Portfolio record could not be saved.", "circle-x");
+    } finally { button.disabled = false; if (!state.editingId) button.textContent = "Save project"; }
+  }
+
+  async function remove(id) {
+    const p = state.projects.find((item) => item.id === id);
+    const confirmed = typeof window.systemConfirm === "function" ? await window.systemConfirm("DELETE PORTFOLIO ITEM", `Remove ${p?.title || "this project"}?`, "trash-2") : window.confirm("Delete this portfolio item?");
+    if (!confirmed) return;
+    try { await request({ op: "delete", id }); if (state.editingId === id) reset(); await load(); }
+    catch (error) { await alertUser("DELETE FAILED", error.message || "Portfolio record could not be deleted.", "circle-x"); }
+  }
+
+  async function seed(showNotice = true) {
+    try { await request({ op: "seed", projects: defaults }); await load(); if (showNotice) await alertUser("PORTFOLIO RESTORED", "The current four case studies are available in Portfolio Manager.", "database"); }
+    catch (error) { await alertUser("RESTORE FAILED", error.message || "Default projects could not be restored.", "circle-x"); }
+  }
+
+  async function mount() {
+    if (state.mounted) return;
+    const settings = document.querySelector("#view-settings .max-w-3xl");
+    if (!settings || !window.firebase?.auth?.().currentUser) { window.setTimeout(mount, 350); return; }
+    state.mounted = true; installStyles(); settings.insertAdjacentHTML("beforeend", markup());
+    $("portfolio-admin-form").addEventListener("submit", save); $("pf-reset").addEventListener("click", reset); $("pf-seed").addEventListener("click", () => seed(true));
+    try { const projects = await load(); if (!projects.length) await seed(false); reset(); }
+    catch (error) { console.error("Portfolio Manager initialization failed", error); $("pf-list").innerHTML = `<div class="pf-empty">${esc(error.message || "Portfolio Manager could not load.")}</div>`; }
+  }
+
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", mount, { once: true }); else mount();
+})();
