@@ -137,3 +137,19 @@ window.systemConfirm = (title, message, icon = 'help-circle') => {
         load();
     }
 })();
+
+(function loadPortfolioManagerBridge() {
+    if (!/admin\.html$/.test(window.location.pathname)) return;
+    function load() {
+        if (document.querySelector('script[data-admin-portfolio]')) return;
+        var script = document.createElement('script');
+        script.src = 'assets/js/admin-portfolio.js?v=V1';
+        script.dataset.adminPortfolio = 'true';
+        document.body.appendChild(script);
+    }
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', load, { once: true });
+    } else {
+        load();
+    }
+})();
