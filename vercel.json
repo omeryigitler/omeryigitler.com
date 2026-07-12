@@ -51,7 +51,7 @@
   ],
   "rewrites": [
     {
-      "source": "/cookies.html",
+      "source": "/privacy.html",
       "destination": "/api/portfolio"
     },
     {
