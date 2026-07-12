@@ -5,6 +5,7 @@ const { admin, db, requireEnv } = require("../api/_firebaseAdmin");
 
 const PROJECT_ID = "built-with-seyhan";
 const TARGET_URL = "https://builtwithseyhan.com/tr";
+const HERO_SETTLE_MS = 5200;
 const DESKTOP_VIEWPORT = { width: 1440, height: 900, deviceScaleFactor: 1 };
 const MOBILE_VIEWPORT = { width: 390, height: 844, deviceScaleFactor: 2, isMobile: true, hasTouch: true };
 
@@ -28,10 +29,6 @@ async function capture(browser, viewport, mobile) {
   try {
     await page.goto(TARGET_URL, { waitUntil: "domcontentloaded", timeout: 45000 });
     await page.waitForNetworkIdle({ idleTime: 1000, timeout: 15000 }).catch(() => {});
-    await page.waitForFunction(
-      () => /BUILT\s+WITH\s+SEYHAN/i.test(document.body?.innerText || ""),
-      { timeout: 20000 }
-    );
     await page.evaluate(async () => {
       window.scrollTo(0, 0);
       if (document.fonts?.ready) await document.fonts.ready.catch(() => {});
@@ -42,7 +39,28 @@ async function capture(browser, viewport, mobile) {
             image.addEventListener("error", resolve, { once: true });
           })));
     });
-    await new Promise((resolve) => setTimeout(resolve, 2200));
+
+    // The hero copy changes after roughly four seconds. Wait past that point,
+    // then verify the large visible hero heading rather than matching logo/nav text.
+    await new Promise((resolve) => setTimeout(resolve, HERO_SETTLE_MS));
+    await page.waitForFunction(() => {
+      const normalize = (value) => String(value || "").replace(/\s+/g, " ").trim().toUpperCase();
+      return Array.from(document.querySelectorAll("h1, h2, [role='heading']")).some((element) => {
+        const text = normalize(element.textContent);
+        const rect = element.getBoundingClientRect();
+        const style = window.getComputedStyle(element);
+        const fontSize = Number.parseFloat(style.fontSize || "0");
+        const visible = rect.width > 180 && rect.height > 45 && rect.bottom > 0 && rect.top < window.innerHeight &&
+          style.visibility !== "hidden" && style.display !== "none" && Number(style.opacity || "1") > 0.8;
+        return visible && fontSize >= 32 && text.includes("BUILT WITH SEYHAN");
+      });
+    }, { timeout: 12000 });
+
+    await page.addStyleTag({
+      content: "*,*::before,*::after{animation-play-state:paused!important;transition:none!important;}"
+    });
+    await new Promise((resolve) => setTimeout(resolve, 500));
+
     const bytes = await page.screenshot({ type: "jpeg", quality: 90, fullPage: false, optimizeForSpeed: true });
     return Buffer.isBuffer(bytes) ? bytes : Buffer.from(bytes);
   } finally {
