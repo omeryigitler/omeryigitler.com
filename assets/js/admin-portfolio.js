@@ -236,7 +236,9 @@
       await alertUser("SAVE FAILED", error.message || "Portfolio record could not be saved.", "circle-x");
     } finally {
       button.disabled = false;
-      if (!state.editingId) button.textContent = "Save project";
+      // Restore the mode-appropriate label even when the save failed mid-flight,
+      // so the button never stays stuck on "Saving…" / "Capturing previews…".
+      button.textContent = state.editingId ? "Update project" : "Save project";
     }
   }
 
