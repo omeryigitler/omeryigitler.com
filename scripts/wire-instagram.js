@@ -12,6 +12,20 @@ function addBefore(marker, addition) {
   html = html.slice(0, index) + addition + html.slice(index);
 }
 
+function optimizePrimaryFonts() {
+  const href = 'https://fonts.googleapis.com/css2?family=Syncopate:wght@400;700&family=Manrope:wght@300;400;600;800&family=JetBrains+Mono:wght@400;700&display=swap';
+  const blockingTag = `    <link href="${href}" rel="stylesheet">`;
+  const optimizedTags = [
+    `    <link rel="preload" href="${href}" as="style">`,
+    `    <link href="${href}" rel="stylesheet" media="print" onload="this.onload=null;this.media='all'">`,
+    `    <noscript><link href="${href}" rel="stylesheet"></noscript>`
+  ].join('\n');
+
+  if (html.includes(optimizedTags)) return;
+  if (!html.includes(blockingTag)) throw new Error('Primary Google Fonts tag not found.');
+  html = html.replace(blockingTag, optimizedTags);
+}
+
 const instagramSection = `
             <section id="instagram" class="instagram-feed-section" data-instagram-feed data-limit="6">
                 <div class="instagram-feed-shell">
@@ -42,6 +56,7 @@ addBefore(
   '    <script>\n        /* Hide CookieYes during the globe intro;',
   '    <script src="/assets/js/trusted-types-bootstrap.js"></script>\n'
 );
+optimizePrimaryFonts();
 addBefore('</head>', '    <link rel="stylesheet" href="/assets/css/instagram-feed.css">\n');
 addBefore('            <section id="contact">', instagramSection);
 addBefore('</body>', '    <script src="/assets/js/instagram-feed.js" defer></script>\n');
@@ -80,4 +95,4 @@ tracker = tracker.replace(
 );
 
 fs.writeFileSync(trackerPath, tracker);
-console.log('Site integrations, security bootstrap and tracker hardening applied.');
+console.log('Site integrations, font loading, security bootstrap and tracker hardening applied.');
