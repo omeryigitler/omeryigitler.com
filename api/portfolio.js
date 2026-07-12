@@ -2,6 +2,7 @@ const { admin, db } = require("./_firebaseAdmin");
 
 const COLLECTION = "portfolio_projects";
 const MAX_BODY_BYTES = 96 * 1024;
+const MAX_REORDER_ITEMS = 100;
 const ALLOWED_DISPLAY_TYPES = new Set(["desktop-mobile", "desktop-swap"]);
 
 function sendJson(res, status, body, cache = "no-store") {
@@ -129,12 +130,37 @@ function serializeProject(doc) {
 
 async function listProjects(includeHidden) {
   const snapshot = await db.collection(COLLECTION).get();
-  return snapshot.docs.map(serializeProject).filter((project) => includeHidden || project.published).sort((left, right) => left.sortOrder - right.sortOrder || left.title.localeCompare(right.title));
+  return snapshot.docs
+    .map(serializeProject)
+    .filter((project) => includeHidden || project.published)
+    .sort((left, right) => left.sortOrder - right.sortOrder || left.title.localeCompare(right.title));
 }
 
 async function verifyAdmin(req) {
   const agent = require("../lib/agent");
   return agent.verifyAgentRequest(req);
+}
+
+async function reorderProjects(ids) {
+  if (!Array.isArray(ids) || !ids.length) throw error(400, "missing_order", "Project order is required.");
+  if (ids.length > MAX_REORDER_ITEMS) throw error(400, "too_many_projects", `Project order cannot exceed ${MAX_REORDER_ITEMS} items.`);
+
+  const cleaned = ids.map(cleanId);
+  if (new Set(cleaned).size !== cleaned.length) throw error(400, "duplicate_project_id", "Project order contains duplicate ids.");
+
+  const refs = cleaned.map((id) => db.collection(COLLECTION).doc(id));
+  const docs = await db.getAll(...refs);
+  const missing = docs.filter((doc) => !doc.exists).map((doc) => doc.id);
+  if (missing.length) throw error(404, "project_not_found", `Project records were not found: ${missing.join(", ")}`);
+
+  const batch = db.batch();
+  const timestamp = admin.firestore.FieldValue.serverTimestamp();
+  refs.forEach((ref, index) => {
+    batch.set(ref, { sortOrder: (index + 1) * 10, updatedAt: timestamp }, { merge: true });
+  });
+  await batch.commit();
+
+  return cleaned.map((id, index) => ({ id, sortOrder: (index + 1) * 10 }));
 }
 
 async function handlePost(req, res) {
@@ -159,6 +185,11 @@ async function handlePost(req, res) {
     const id = cleanId(body.id);
     await db.collection(COLLECTION).doc(id).delete();
     return sendJson(res, 200, { ok: true, deletedId: id });
+  }
+
+  if (op === "reorder") {
+    const order = await reorderProjects(body.ids);
+    return sendJson(res, 200, { ok: true, order });
   }
 
   if (op === "seed") {
