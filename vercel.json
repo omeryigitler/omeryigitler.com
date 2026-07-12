@@ -4,18 +4,8 @@
   "functions": {
     "api/portfolio-capture.js": {
       "maxDuration": 60
-    },
-    "api/install-builtwithseyhan-once.js": {
-      "maxDuration": 60
     }
   },
-  "redirects": [
-    {
-      "source": "/privacy.html",
-      "destination": "/api/install-builtwithseyhan-once",
-      "permanent": false
-    }
-  ],
   "headers": [
     {
       "source": "/(.*)",
