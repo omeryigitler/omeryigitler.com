@@ -234,6 +234,37 @@ async function notifyEmail(name, email, message, config) {
   return { sent: true };
 }
 
+// Auto-receipt to the customer. Replaces the old browser-side EmailJS flow so the
+// receipt is sent server-side on the same request that stores the message.
+async function sendCustomerReceipt(name, email, config) {
+  const apiKey = process.env.RESEND_API_KEY;
+  if (!apiKey) return { sent: false, reason: "not_configured" };
+
+  const from = String(process.env.CONTACT_EMAIL_FROM || "Ömer Yiğitler <contact@omeryigitler.com>").trim();
+  const replyTo = String(process.env.CONTACT_EMAIL_TO || "info@omeryigitler.com").trim();
+  let text = `Hi ${name},\n\nThanks for your project request — it has been received and I'll get back to you within one business day.\n`;
+  if (config) text += `\nYour request summary:\n${configSummary(config)}\n`;
+  text += `\nIf you want to add anything in the meantime, just reply to this email.\n\nÖmer Yiğitler\nomeryigitler.com`;
+
+  const response = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${apiKey}`
+    },
+    body: JSON.stringify({
+      from,
+      to: [email],
+      reply_to: replyTo,
+      subject: "Your project request has been received — omeryigitler.com",
+      text
+    }),
+    signal: AbortSignal.timeout(8000)
+  });
+  if (!response.ok) throw new Error(`Customer receipt failed (${response.status}).`);
+  return { sent: true };
+}
+
 function sendError(res, status, code, error) {
   return res.status(status).json({ ok: false, code, error });
 }
@@ -328,10 +359,14 @@ async function contactHandler(req, res) {
 
   // Even if Firestore is down, the request must still reach the owner —
   // never show the customer an error while a notification channel can deliver it.
-  const [telegramResult, emailResult] = await Promise.allSettled([
+  const [telegramResult, emailResult, receiptResult] = await Promise.allSettled([
     notifyTelegram(name, email, message, config),
-    notifyEmail(name, email, message, config)
+    notifyEmail(name, email, message, config),
+    sendCustomerReceipt(name, email, config)
   ]);
+  if (receiptResult.status === "rejected") {
+    console.warn("[contact] customer receipt failed", { requestId, error: receiptResult.reason?.message });
+  }
   const telegramSent = telegramResult.status === "fulfilled" && telegramResult.value?.sent === true;
   const emailSent = emailResult.status === "fulfilled" && emailResult.value?.sent === true;
   if (telegramResult.status === "rejected") {

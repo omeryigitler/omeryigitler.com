@@ -396,7 +396,7 @@
             font-size: 11px;
             letter-spacing: 0.28em;
             text-transform: uppercase;
-            color: #6b7280;
+            color: #8A8A8A;
             margin-top: 10px;
         }
 
@@ -587,7 +587,10 @@
             background-repeat: repeat;
         }
 
+        /* Drift runs on transform (compositor-only) instead of background-position;
+           the layer is extended 600px to the left so the sweep never shows an edge. */
         .starfield {
+            left: -600px;
             background-image:
                 radial-gradient(1px 1px at 24px 34px, rgba(255, 255, 255, 0.8), transparent 2px),
                 radial-gradient(1px 1px at 120px 90px, rgba(255, 255, 255, 0.45), transparent 2px),
@@ -599,6 +602,7 @@
         }
 
         .starfield2 {
+            left: -600px;
             background-image:
                 radial-gradient(1px 1px at 50px 60px, rgba(255, 255, 255, 0.5), transparent 2px),
                 radial-gradient(1.2px 1.2px at 170px 130px, rgba(255, 215, 0, 0.4), transparent 2.2px),
@@ -607,7 +611,7 @@
             animation: starDrift 140s linear infinite reverse, twinkle 5s ease-in-out infinite;
         }
 
-        @keyframes starDrift { to { background-position: 600px 0; } }
+        @keyframes starDrift { to { transform: translate3d(600px, 0, 0); } }
         @keyframes twinkle { 0%, 100% { opacity: 0.5; } 50% { opacity: 1; } }
 
         .shoot {
@@ -623,10 +627,10 @@
         }
 
         @keyframes shoot {
-            0% { left: -12%; opacity: 0; }
+            0% { transform: translate3d(0, 0, 0) rotate(8deg); opacity: 0; }
             4% { opacity: 0.9; }
-            11% { left: 108%; opacity: 0; }
-            100% { left: 108%; opacity: 0; }
+            11% { transform: translate3d(120vw, 0, 0) rotate(8deg); opacity: 0; }
+            100% { transform: translate3d(120vw, 0, 0) rotate(8deg); opacity: 0; }
         }
 
 
@@ -657,18 +661,31 @@
             height: 62%;
             transform: rotateX(68deg);
             transform-origin: 50% 0;
-            background:
-                linear-gradient(rgba(255, 215, 0, 0.14) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(255, 215, 0, 0.14) 1px, transparent 1px);
+            /* static vertical lines stay on the element; the moving horizontal
+               lines live on ::before and slide with a compositor-only transform */
+            background: linear-gradient(90deg, rgba(255, 215, 0, 0.14) 1px, transparent 1px);
             background-size: 64px 64px;
-            animation: gridMove 1.4s linear infinite;
+            overflow: hidden;
             -webkit-mask-image: linear-gradient(to top, black 30%, transparent);
             mask-image: linear-gradient(to top, black 30%, transparent);
             opacity: 0.5;
             pointer-events: none;
         }
 
-        @keyframes gridMove { to { background-position: 0 64px, 0 0; } }
+        .warp-grid::before {
+            content: "";
+            position: absolute;
+            left: 0;
+            right: 0;
+            top: -64px;
+            bottom: 0;
+            background: linear-gradient(rgba(255, 215, 0, 0.14) 1px, transparent 1px);
+            background-size: 64px 64px;
+            animation: gridMove 1.4s linear infinite;
+            will-change: transform;
+        }
+
+        @keyframes gridMove { to { transform: translate3d(0, 64px, 0); } }
 
         .warp-glow {
             position: absolute;
@@ -1034,7 +1051,7 @@
             font-size: 11px;
             letter-spacing: 0.26em;
             text-transform: uppercase;
-            color: #6b7280;
+            color: #8A8A8A;
         }
 
         .nominal {
@@ -1145,15 +1162,23 @@
             bottom: -6px;
             left: -90px;
             width: 70px;
+            /* travel distance approximates the old left:-90px → 110% sweep; the
+               chart's clip-path hides the band outside the card either way */
+            --scan-distance: 740px;
             transform: translateZ(8px);
             background: linear-gradient(to right, transparent, rgba(255, 215, 0, 0.18), transparent);
             animation: scanX 3.6s linear infinite;
             pointer-events: none;
+            will-change: transform;
+        }
+
+        @media (max-width: 640px) {
+            .bars-scan { --scan-distance: 500px; }
         }
 
         @keyframes scanX {
-            from { left: -90px; }
-            to { left: 110%; }
+            from { transform: translateZ(8px) translate3d(0, 0, 0); }
+            to { transform: translateZ(8px) translate3d(var(--scan-distance), 0, 0); }
         }
 
         .metrics {
@@ -1207,7 +1232,7 @@
             font-size: 11px;
             letter-spacing: 0.26em;
             text-transform: uppercase;
-            color: #6b7280;
+            color: #8A8A8A;
         }
 
         .support-strip {
@@ -1323,6 +1348,17 @@
             transform: none;
         }
 
+        /* Below-the-fold sections skip rendering work until they approach the
+           viewport. Sizes are estimates only — they prevent scrollbar jumps. */
+        .instagram-feed-section,
+        #contact,
+        footer {
+            content-visibility: auto;
+        }
+        .instagram-feed-section { contain-intrinsic-size: auto 760px; }
+        #contact { contain-intrinsic-size: auto 900px; }
+        footer { contain-intrinsic-size: auto 220px; }
+
         /* ---- footer ---- */
         footer {
             position: relative;
@@ -1376,7 +1412,7 @@
             box-shadow: 0 0 20px rgba(255, 215, 0, 0.15);
         }
 
-        .foot-copy { color: #4b5563; }
+        .foot-copy { color: #808080; }
 
         /* ---- project configurator modal ---- */
         .cfg-overlay, .ok-overlay {
@@ -1665,24 +1701,19 @@
             .phil-line { opacity: 1; transform: none; }
         }
     </style>
-    <!-- Start CookieYes banner -->
-  <script id="cookieyes" type="text/javascript"
+    <!-- Start CookieYes banner (deferred so it never blocks first paint; GTM below
+         stays inert as type="text/plain" until CookieYes activates it on consent) -->
+  <script id="cookieyes" type="text/javascript" defer
     src="https://cdn-cookieyes.com/client_data/f886281621648ff421f1bfbe80595834/script.js"></script>
   <!-- End CookieYes banner -->
-    <script async data-cookieyes="cookieyes-analytics"
+    <script type="text/plain" data-cookieyes="cookieyes-analytics"
     src="https://www.googletagmanager.com/gtag/js?id=G-KXDXVM2MY5"></script>
-    <script data-cookieyes="cookieyes-analytics">
+    <script type="text/plain" data-cookieyes="cookieyes-analytics">
     window.dataLayer = window.dataLayer || [];
     function gtag(){ dataLayer.push(arguments); }
     gtag('js', new Date());
     gtag('config', 'G-KXDXVM2MY5');
   </script>
-
-    <!-- EmailJS — email notifications for the contact / project form -->
-    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
-    <script type="text/javascript">
-        (function () { if (typeof emailjs !== "undefined") emailjs.init("V1YT-CYD1Y7eX0BIE"); })();
-    </script>
 
     <link rel="icon" href="assets/favicon_transparent.svg" type="image/svg+xml">
     <!-- SEO Meta Tags -->
@@ -1731,8 +1762,11 @@
       }
     }
     </script>
-    <script src="https://unpkg.com/three@0.160.0/build/three.min.js"></script>
-    <script src="https://unpkg.com/globe.gl@2.32.1/dist/globe.gl.min.js"></script>
+    <!-- Globe/Three.js are self-hosted and loaded dynamically by the intro script
+         after first paint, so they never block rendering. Preload only the texture
+         that matches the viewport. -->
+    <link rel="preload" as="image" href="assets/globe/earth-black-marble-2k.webp" media="(max-width: 767px)">
+    <link rel="preload" as="image" href="assets/globe/earth-black-marble-4k.webp" media="(min-width: 768px)">
     <style id="globe-preloader-styles">
         #intro-modal {
             position: fixed;
@@ -1795,6 +1829,31 @@
             display: block;
             cursor: default;
         }
+
+        /* Pure-CSS globe poster: shows the globe silhouette instantly while the
+           WebGL bundle loads, then fades out on the first rendered frame. */
+        #globe-poster {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            width: min(46vmin, 420px);
+            aspect-ratio: 1;
+            transform: translate(-50%, -50%);
+            border-radius: 50%;
+            background:
+                radial-gradient(circle at 38% 32%, rgba(255, 215, 0, 0.10), transparent 55%),
+                radial-gradient(circle, #0d0c08 0%, #070705 62%, #050505 100%);
+            box-shadow:
+                0 0 42px 6px rgba(255, 215, 0, 0.14),
+                inset 0 0 34px rgba(0, 0, 0, 0.85),
+                inset -8px -10px 42px rgba(0, 0, 0, 0.9);
+            opacity: 1;
+            transition: opacity 600ms ease;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        #globe-poster.is-hidden { opacity: 0; }
 
         /* intro theme: gold grid + corner HUD + boot log */
         .intro-grid {
@@ -2189,6 +2248,7 @@
         aria-live="polite"
         aria-label="Initializing location signal">
         <div class="intro-grid" aria-hidden="true"></div>
+        <div id="globe-poster" aria-hidden="true"></div>
         <div id="globe-container" aria-hidden="true"></div>
         <div class="intro-corners" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
         <div class="globe-preloader-status"><span class="prompt">$</span><span class="dim">status</span><span class="arrow">→</span><span class="sval" id="introStatusVal">scanning orbital nodes</span><span class="scur"></span></div>
@@ -2788,8 +2848,9 @@
             const pingEl = document.getElementById("pingVal");
             const reqEl = document.getElementById("reqVal");
             let requests = 1204;
+            let timer = null;
 
-            setInterval(() => {
+            function tick() {
                 bars.forEach((bar) => {
                     bar.style.height = (30 + Math.random() * 65).toFixed(0) + "%";
                 });
@@ -2798,7 +2859,26 @@
 
                 requests += Math.floor(Math.random() * 4);
                 if (reqEl) reqEl.textContent = requests.toLocaleString("en-US");
-            }, 1500);
+            }
+
+            // The dashboard only animates while its card is on screen, so the
+            // recurring layout work never runs for a section nobody can see.
+            const host = bars.length ? bars[0].closest("section") || bars[0].parentElement : null;
+            if (host && "IntersectionObserver" in window) {
+                const observer = new IntersectionObserver((entries) => {
+                    const visible = entries.some((entry) => entry.isIntersecting);
+                    if (visible && timer === null) {
+                        tick();
+                        timer = setInterval(tick, 1500);
+                    } else if (!visible && timer !== null) {
+                        clearInterval(timer);
+                        timer = null;
+                    }
+                });
+                observer.observe(host);
+            } else {
+                timer = setInterval(tick, 1500);
+            }
         })();
 
         (function () {
@@ -3091,31 +3171,7 @@
                     const out = await res.json().catch(() => ({}));
                     if (res.ok && out.ok) {
                         if (window.taurus_set_internal) window.taurus_set_internal();
-                        // Email notification via EmailJS (best-effort, mirrors the old flow)
-                        try {
-                            if (typeof emailjs !== "undefined") {
-                                const c = payload.config;
-                                const featuresTxt = c.features.length ? c.features.join(", ") : "none";
-                                const addonsTxt = c.addons.length ? c.addons.join(", ") : "none";
-                                emailjs.send("service_z24kvj8", "template_frpxeef", {
-                                    from_name: payload.name,
-                                    reply_to: payload.email,
-                                    from_email: payload.email,
-                                    email: payload.email,
-                                    to_email: payload.email,
-                                    project_type: c.siteType,
-                                    is_auto_receipt: true,
-                                    message: payload.message +
-                                        "\n\n--- PROJECT CONFIGURATION ---\n" +
-                                        "Site: " + c.siteType + " · " + c.designType + " · " + c.pageCount + " pages\n" +
-                                        "Features: " + featuresTxt + "\n" +
-                                        "Add-ons: " + addonsTxt + "\n" +
-                                        "Timeline: " + c.deliverySpeed + " · Maintenance: " + c.maintenanceLevel
-                                }).catch(function (mailErr) {
-                                    console.warn("EmailJS receipt failed:", mailErr && (mailErr.text || mailErr.message || mailErr));
-                                });
-                            }
-                        } catch (mailErr) { /* email is best-effort */ }
+                        // Customer receipt + owner notification are sent server-side (Resend).
                         recordSubmission();
                         closeModal(cfg);
                         form.reset();
@@ -3163,6 +3219,13 @@
             const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
             const spacing = 900;
             let rafPending = false;
+            // offsetHeight forces layout; measure it on resize only, so each
+            // scroll frame does a single geometry read (getBoundingClientRect).
+            let total = 0;
+
+            function measure() {
+                total = wrap.offsetHeight - window.innerHeight;
+            }
 
             function update() {
                 rafPending = false;
@@ -3176,7 +3239,7 @@
                     return;
                 }
 
-                const total = wrap.offsetHeight - window.innerHeight;
+                if (!total) measure();
                 const rect = wrap.getBoundingClientRect();
                 const progress = Math.min(1, Math.max(0, -rect.top / total));
                 const cam = progress * spacing * (panels.length - 1);
@@ -3204,7 +3267,8 @@
             }
 
             window.addEventListener("scroll", requestUpdate, { passive: true });
-            window.addEventListener("resize", requestUpdate);
+            window.addEventListener("resize", () => { measure(); requestUpdate(); }, { passive: true });
+            measure();
             update();
         })();
 
@@ -3325,8 +3389,15 @@
   const FADE_DURATION_MS = 500;
   const ACCENT_COLOR = "#FFD700";
   const SPACE_COLOR = "#0a0a0a";
-  const EARTH_NIGHT = "assets/globe/earth-black-marble-8k.jpg";
-  const EARTH_BUMP = "https://unpkg.com/three-globe/example/img/earth-topology.png";
+  // Device-tiered textures: a WebGL globe never shows 8K worth of detail at these
+  // camera altitudes, so the 3.26MB source stays out of the network entirely.
+  const IS_MOBILE = window.matchMedia("(max-width: 767px)").matches;
+  const EARTH_NIGHT = IS_MOBILE
+    ? "assets/globe/earth-black-marble-2k.webp"
+    : "assets/globe/earth-black-marble-4k.webp";
+  const EARTH_BUMP = IS_MOBILE ? null : "assets/globe/earth-topology-2k.webp";
+  const GLOBE_LIBS = ["assets/vendor/three.min.js", "assets/vendor/globe.gl.min.js"];
+  const LIB_LOAD_TIMEOUT_MS = 9000;
   const INITIAL_ALTITUDE = 3.2;
   const STANDARD_FOCUS_ALTITUDE = 1.35;
   // Malta occupies only a tiny area on an 8K equirectangular texture.
@@ -3383,9 +3454,69 @@
   let hasRevealedSite = false;
   let resizeObserver = null;
   let detachResizeHandler = null;
+  let detachVisibilityHandler = null;
 
   // Phase 1: Initialization (0ms) - lock scrolling before the globe sequence starts.
   document.body.style.overflow = "hidden";
+
+  function loadScript(src) {
+    return new Promise(function (resolve, reject) {
+      const script = document.createElement("script");
+      script.src = src;
+      script.async = true;
+      script.onload = resolve;
+      script.onerror = function () { reject(new Error("Failed to load " + src)); };
+      document.head.appendChild(script);
+    });
+  }
+
+  // three.min.js must be evaluated before globe.gl.min.js (global THREE dependency),
+  // so the libs load sequentially — but off the critical path, with a hard timeout.
+  const globeLibsPromise = (function () {
+    let chain = Promise.resolve();
+    GLOBE_LIBS.forEach(function (src) {
+      chain = chain.then(function () { return loadScript(src); });
+    });
+    const timeout = new Promise(function (_, reject) {
+      window.setTimeout(function () { reject(new Error("Globe libraries timed out")); }, LIB_LOAD_TIMEOUT_MS);
+    });
+    return Promise.race([chain, timeout]);
+  })();
+
+  // Frees GPU memory once the intro is gone: stop the render loop, dispose every
+  // geometry/material/texture and drop the WebGL context.
+  function destroyGlobe() {
+    if (!world) return;
+    const dyingWorld = world;
+    world = null;
+
+    try {
+      if (typeof dyingWorld.pauseAnimation === "function") dyingWorld.pauseAnimation();
+
+      const scene = typeof dyingWorld.scene === "function" ? dyingWorld.scene() : null;
+      if (scene && typeof scene.traverse === "function") {
+        scene.traverse(function (object) {
+          if (object.geometry && typeof object.geometry.dispose === "function") object.geometry.dispose();
+          const materials = Array.isArray(object.material) ? object.material : [object.material];
+          materials.forEach(function (material) {
+            if (!material) return;
+            ["map", "bumpMap", "specularMap", "emissiveMap", "alphaMap"].forEach(function (key) {
+              if (material[key] && typeof material[key].dispose === "function") material[key].dispose();
+            });
+            if (typeof material.dispose === "function") material.dispose();
+          });
+        });
+      }
+
+      const renderer = typeof dyingWorld.renderer === "function" ? dyingWorld.renderer() : null;
+      if (renderer) {
+        if (typeof renderer.dispose === "function") renderer.dispose();
+        if (typeof renderer.forceContextLoss === "function") renderer.forceContextLoss();
+      }
+    } catch (error) {
+      // Cleanup is best-effort; a failed dispose must never block the reveal.
+    }
+  }
 
   function revealSite(immediate) {
     if (hasRevealedSite) return;
@@ -3403,6 +3534,10 @@
       detachResizeHandler();
     }
 
+    if (detachVisibilityHandler) {
+      detachVisibilityHandler();
+    }
+
     signalOverlay.classList.remove("is-visible");
     signalOverlay.classList.remove("is-low-focus");
     globeContainer.classList.add("is-fading");
@@ -3410,6 +3545,7 @@
     document.documentElement.classList.remove("intro-active");
 
     window.setTimeout(function () {
+      destroyGlobe();
       introModal.remove();
       document.body.style.overflow = previousBodyOverflow;
     }, immediate ? 0 : FADE_DURATION_MS);
@@ -3537,7 +3673,9 @@
     if (!renderer) return;
 
     if (typeof renderer.setPixelRatio === "function") {
-      renderer.setPixelRatio(Math.min(Math.max(window.devicePixelRatio || 1, 2), 3));
+      // Cap the render resolution: 3x-DPR phones gain nothing visible on a dark
+      // globe, but pay for it in main-thread and GPU time.
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, IS_MOBILE ? 1.5 : 2));
     }
 
     if (typeof renderer.setClearColor === "function") {
@@ -3669,7 +3807,7 @@
       throw new Error("Globe.gl library is unavailable");
     }
 
-    world = Globe({ rendererConfig: { antialias: true, alpha: false, powerPreference: "high-performance" } })(globeContainer)
+    world = Globe({ rendererConfig: { antialias: !IS_MOBILE, alpha: false, powerPreference: "high-performance" } })(globeContainer)
       .backgroundColor(SPACE_COLOR)
       .globeImageUrl(EARTH_NIGHT)
       .bumpImageUrl(EARTH_BUMP)
@@ -3682,7 +3820,7 @@
       .pointLng("lng")
       .pointAltitude("altitude")
       .pointRadius("radius")
-      .pointResolution(28)
+      .pointResolution(IS_MOBILE ? 16 : 28)
       .pointColor("color")
       .arcsData([])
       .arcStartLat("startLat")
@@ -3691,8 +3829,8 @@
       .arcEndLng("endLng")
       .arcAltitude("altitude")
       .arcStroke("stroke")
-      .arcCurveResolution(96)
-      .arcCircularResolution(8)
+      .arcCurveResolution(IS_MOBILE ? 48 : 96)
+      .arcCircularResolution(IS_MOBILE ? 6 : 8)
       .arcColor(function () {
         return [
           "rgba(255, 215, 0, 0)",
@@ -3712,6 +3850,8 @@
       .ringRepeatPeriod(700)
       .onGlobeReady(function () {
         tuneGlobeMaterial();
+        const poster = document.getElementById("globe-poster");
+        if (poster) poster.classList.add("is-hidden");
       });
 
     if (typeof world.globeCurvatureResolution === "function") {
@@ -3745,14 +3885,32 @@
       resizeObserver = new ResizeObserver(syncGlobeSize);
       resizeObserver.observe(globeContainer);
     }
+
+    // A backgrounded tab must not keep burning frames on the WebGL loop.
+    function handleVisibility() {
+      if (!world) return;
+      if (document.hidden) {
+        if (typeof world.pauseAnimation === "function") world.pauseAnimation();
+      } else if (typeof world.resumeAnimation === "function") {
+        world.resumeAnimation();
+      }
+    }
+    document.addEventListener("visibilitychange", handleVisibility);
+    detachVisibilityHandler = function () {
+      document.removeEventListener("visibilitychange", handleVisibility);
+    };
   }
 
   async function runSignalSequence() {
     let geoPromise;
 
     try {
-      initGlobe();
+      // Geolocation races the library download; the CSS poster keeps the intro
+      // visually complete until WebGL takes over.
       geoPromise = fetchUserLocation();
+      await globeLibsPromise;
+      if (hasRevealedSite) return;
+      initGlobe();
     } catch (error) {
       console.warn("[globe-preloader]", error);
       revealSite(false);
@@ -3822,13 +3980,53 @@
   runSignalSequence();
 })();
 </script>
-    <!-- Firebase client (visitor tracker entry registration needs window.db + anonymous auth) -->
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
-    <script src="assets/js/firebase-config.js"></script>
-    <script src="assets/js/tracker/logo_data.js"></script>
-    <script src="assets/js/tracker/taurus-tracker.js?v=V45"></script>
+    <!-- Firebase client + visitor tracker: loaded after the first paint settles
+         (window load + idle) so auth/Firestore never compete with rendering.
+         logo_data.js is no longer preloaded — the tracker fetches it on demand. -->
+    <script>
+    (function () {
+        var TRACKER_STACK = [
+            "https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js",
+            "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js",
+            "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js",
+            "assets/js/firebase-config.js",
+            "assets/js/tracker/taurus-tracker.js?v=V46"
+        ];
+        var started = false;
+
+        function loadNext(index) {
+            if (index >= TRACKER_STACK.length) return;
+            var script = document.createElement("script");
+            script.src = TRACKER_STACK[index];
+            script.async = true;
+            script.onload = function () { loadNext(index + 1); };
+            script.onerror = function () { console.warn("Tracker stack failed at", TRACKER_STACK[index]); };
+            document.head.appendChild(script);
+        }
+
+        function start() {
+            if (started) return;
+            started = true;
+            loadNext(0);
+        }
+
+        function scheduleAfterLoad() {
+            if ("requestIdleCallback" in window) {
+                requestIdleCallback(start, { timeout: 3000 });
+            } else {
+                setTimeout(start, 1500);
+            }
+        }
+
+        if (document.readyState === "complete") {
+            scheduleAfterLoad();
+        } else {
+            window.addEventListener("load", scheduleAfterLoad, { once: true });
+        }
+        // Never lose the entry record on very short visits.
+        setTimeout(start, 6000);
+    })();
+    </script>
     <script>
     /* Logo: single tap = scroll to top, triple tap = admin gateway */
     (function () {

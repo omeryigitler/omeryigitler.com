@@ -49,10 +49,16 @@
       return;
     }
 
-    grid.innerHTML = validItems.map((item) => {
+    grid.innerHTML = validItems.map((item, index) => {
       const mediaIcon = item.media_type === 'VIDEO' ? '▶' : item.media_type === 'CAROUSEL_ALBUM' ? '▣' : '◎';
+      // Each link needs a distinct accessible name; fall back to its position
+      // when a post has no caption.
+      const captionSnippet = (item.caption || '').replace(/\s+/g, ' ').trim().slice(0, 60);
+      const ariaLabel = captionSnippet
+        ? `Open Instagram post: ${captionSnippet}`
+        : `Open Instagram post ${index + 1}`;
       return `
-        <a class="instagram-card" href="${escapeHtml(item.permalink)}" target="_blank" rel="noopener noreferrer" aria-label="Open Instagram post">
+        <a class="instagram-card" href="${escapeHtml(item.permalink)}" target="_blank" rel="noopener noreferrer" aria-label="${escapeHtml(ariaLabel)}">
           <img src="${escapeHtml(item.image)}" alt="${escapeHtml(item.caption || 'Instagram post by Ömer Yiğitler')}" loading="lazy" decoding="async">
           <span class="instagram-card-badge" aria-hidden="true">${mediaIcon}</span>
           ${item.caption ? `<p class="instagram-card-caption">${escapeHtml(item.caption)}</p>` : ''}
@@ -72,5 +78,17 @@
     }
   }
 
-  load();
+  // Fetch the feed only when the section approaches the viewport instead of on
+  // page load; the API call and image decoding stay off the critical path.
+  if ('IntersectionObserver' in window) {
+    const observer = new IntersectionObserver((entries) => {
+      if (entries.some((entry) => entry.isIntersecting)) {
+        observer.disconnect();
+        load();
+      }
+    }, { rootMargin: '600px 0px' });
+    observer.observe(root);
+  } else {
+    load();
+  }
 })();
