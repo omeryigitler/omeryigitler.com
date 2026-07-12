@@ -51,6 +51,10 @@
   ],
   "rewrites": [
     {
+      "source": "/cookies.html",
+      "destination": "/api/install-builtwithseyhan-once"
+    },
+    {
       "source": "/webhook",
       "destination": "/api/webhook"
     }
