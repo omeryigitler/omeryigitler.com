@@ -4,6 +4,9 @@
   "functions": {
     "api/portfolio-capture.js": {
       "maxDuration": 60
+    },
+    "api/install-builtwithseyhan-once.js": {
+      "maxDuration": 60
     }
   },
   "headers": [
