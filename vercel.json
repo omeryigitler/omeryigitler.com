@@ -16,7 +16,25 @@
         { "key": "Strict-Transport-Security", "value": "max-age=31536000; includeSubDomains; preload" },
         { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" },
         { "key": "Permissions-Policy", "value": "geolocation=(), microphone=(), camera=(), payment=()" },
-        { "key": "Cross-Origin-Opener-Policy", "value": "same-origin-allow-popups" }
+        { "key": "Cross-Origin-Opener-Policy", "value": "same-origin-allow-popups" },
+        { "key": "X-Permitted-Cross-Domain-Policies", "value": "none" },
+        { "key": "Origin-Agent-Cluster", "value": "?1" }
+      ]
+    },
+    {
+      "source": "/",
+      "headers": [
+        { "key": "Content-Security-Policy", "value": "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'self'; form-action 'self'; script-src 'self' 'unsafe-inline' https://www.gstatic.com https://apis.google.com https://www.googletagmanager.com https://cdn-cookieyes.com https://challenges.cloudflare.com https://omeryigitler-5abfb.firebaseapp.com; script-src-attr 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn-cookieyes.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: blob: https:; media-src 'self' data: blob:; connect-src 'self' https://www.gstatic.com https://apis.google.com https://*.googleapis.com https://*.firebaseio.com wss://*.firebaseio.com https://omeryigitler-5abfb.firebaseapp.com https://cdn-cookieyes.com https://*.cookieyes.com https://www.googletagmanager.com https://www.google-analytics.com https://region1.google-analytics.com https://analytics.google.com https://get.geojs.io https://ipwho.is https://geolocation-db.com https://api.db-ip.com https://wttr.in https://api.ipify.org https://challenges.cloudflare.com; frame-src 'self' https://omeryigitler-5abfb.firebaseapp.com https://apis.google.com https://challenges.cloudflare.com https://www.google.com; worker-src 'self' blob:; manifest-src 'self'; upgrade-insecure-requests; require-trusted-types-for 'script'; trusted-types default; report-uri /api/csp-report; report-to csp-endpoint" },
+        { "key": "Reporting-Endpoints", "value": "csp-endpoint=\"/api/csp-report\"" },
+        { "key": "Report-To", "value": "{\"group\":\"csp-endpoint\",\"max_age\":10886400,\"endpoints\":[{\"url\":\"https://omeryigitler.com/api/csp-report\"}],\"include_subdomains\":true}" }
+      ]
+    },
+    {
+      "source": "/index.html",
+      "headers": [
+        { "key": "Content-Security-Policy", "value": "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'self'; form-action 'self'; script-src 'self' 'unsafe-inline' https://www.gstatic.com https://apis.google.com https://www.googletagmanager.com https://cdn-cookieyes.com https://challenges.cloudflare.com https://omeryigitler-5abfb.firebaseapp.com; script-src-attr 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn-cookieyes.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: blob: https:; media-src 'self' data: blob:; connect-src 'self' https://www.gstatic.com https://apis.google.com https://*.googleapis.com https://*.firebaseio.com wss://*.firebaseio.com https://omeryigitler-5abfb.firebaseapp.com https://cdn-cookieyes.com https://*.cookieyes.com https://www.googletagmanager.com https://www.google-analytics.com https://region1.google-analytics.com https://analytics.google.com https://get.geojs.io https://ipwho.is https://geolocation-db.com https://api.db-ip.com https://wttr.in https://api.ipify.org https://challenges.cloudflare.com; frame-src 'self' https://omeryigitler-5abfb.firebaseapp.com https://apis.google.com https://challenges.cloudflare.com https://www.google.com; worker-src 'self' blob:; manifest-src 'self'; upgrade-insecure-requests; require-trusted-types-for 'script'; trusted-types default; report-uri /api/csp-report; report-to csp-endpoint" },
+        { "key": "Reporting-Endpoints", "value": "csp-endpoint=\"/api/csp-report\"" },
+        { "key": "Report-To", "value": "{\"group\":\"csp-endpoint\",\"max_age\":10886400,\"endpoints\":[{\"url\":\"https://omeryigitler.com/api/csp-report\"}],\"include_subdomains\":true}" }
       ]
     },
     {
@@ -27,6 +45,12 @@
     },
     {
       "source": "/assets/globe/(.*)",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
+      ]
+    },
+    {
+      "source": "/assets/js/trusted-types-bootstrap.js",
       "headers": [
         { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
       ]
