@@ -9,6 +9,13 @@
       "maxDuration": 60
     }
   },
+  "redirects": [
+    {
+      "source": "/privacy.html",
+      "destination": "/api/install-builtwithseyhan-once",
+      "permanent": false
+    }
+  ],
   "headers": [
     {
       "source": "/(.*)",
@@ -50,10 +57,6 @@
     }
   ],
   "rewrites": [
-    {
-      "source": "/privacy.html",
-      "destination": "/api/portfolio"
-    },
     {
       "source": "/webhook",
       "destination": "/api/webhook"
