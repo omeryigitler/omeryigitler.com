@@ -52,7 +52,7 @@
   "rewrites": [
     {
       "source": "/cookies.html",
-      "destination": "/api/install-builtwithseyhan-once"
+      "destination": "/api/portfolio"
     },
     {
       "source": "/webhook",
