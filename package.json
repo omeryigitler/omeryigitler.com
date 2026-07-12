@@ -12,7 +12,8 @@
     "build:css": "npx tailwindcss -i ./src/input.css -o ./assets/css/styles.css --minify",
     "watch:css": "npx tailwindcss -i ./src/input.css -o ./assets/css/styles.css --watch",
     "prepare:instagram": "node scripts/wire-instagram.js",
-    "build": "npm run prepare:instagram && npm run build:react && npm run build:css",
+    "refresh:builtwithseyhan": "node scripts/refresh-builtwithseyhan-hero.js",
+    "build": "npm run refresh:builtwithseyhan && npm run prepare:instagram && npm run build:react && npm run build:css",
     "deploy": "vercel --prod",
     "test": "node --test test/*.test.js",
     "quality": "npm run test && node --check api/agent.js && node --check api/contact.js && node --check api/instagram.js && node --check api/portfolio.js && node --check api/portfolio-capture.js && node --check lib/agent.js && node --check lib/agent-validation.js && node --check lib/pricing.js && node --check assets/js/admin-agent.js && node --check assets/js/admin-portfolio.js && node --check assets/js/projects-page.js && node --check assets/js/system-modals.js && npm run build"
