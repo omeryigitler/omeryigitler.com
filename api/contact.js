@@ -11,6 +11,7 @@ const ADDONS = ["logo_design", "content_writing", "social_media", "google_maps"]
 const COUNTRIES = ["TR", "MT"];
 const RATE_LIMIT_MAX = 3;
 const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000;
+const RESEND_API_URL = "https://api.resend.com/emails";
 let firebaseRuntime = null;
 
 function loadFirebaseRuntime() {
@@ -206,63 +207,90 @@ async function notifyTelegram(name, email, message, config) {
   return { sent: true };
 }
 
-async function notifyEmail(name, email, message, config) {
+async function sendResendEmail(payload, idempotencyKey) {
   const apiKey = process.env.RESEND_API_KEY;
   if (!apiKey) return { sent: false, reason: "not_configured" };
 
-  const to = String(process.env.CONTACT_EMAIL_TO || "info@omeryigitler.com").trim();
-  const from = String(process.env.CONTACT_EMAIL_FROM || "Taurus Contact <contact@omeryigitler.com>").trim();
-  let text = `New project request\n\nName: ${name}\nEmail: ${email}\n\n${message}`;
-  if (config) text += `\n\n— Project config —\n${configSummary(config)}`;
+  const headers = {
+    "Content-Type": "application/json",
+    "Authorization": `Bearer ${apiKey}`
+  };
+  if (idempotencyKey) headers["Idempotency-Key"] = idempotencyKey;
 
-  const response = await fetch("https://api.resend.com/emails", {
+  const response = await fetch(RESEND_API_URL, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Authorization": `Bearer ${apiKey}`
-    },
-    body: JSON.stringify({
-      from,
-      to: [to],
-      reply_to: email,
-      subject: `📨 New project request — ${name}`,
-      text
-    }),
+    headers,
+    body: JSON.stringify(payload),
     signal: AbortSignal.timeout(8000)
   });
-  if (!response.ok) throw new Error(`Email notification failed (${response.status}).`);
-  return { sent: true };
+
+  let responseBody = null;
+  try {
+    responseBody = await response.json();
+  } catch (error) {
+    responseBody = null;
+  }
+
+  if (!response.ok) {
+    const detail = responseBody?.message || responseBody?.name || "unknown_error";
+    throw new Error(`Resend email failed (${response.status}: ${detail}).`);
+  }
+
+  return { sent: true, id: responseBody?.id || null };
 }
 
-// Auto-receipt to the customer. Replaces the old browser-side EmailJS flow so the
-// receipt is sent server-side on the same request that stores the message.
-async function sendCustomerReceipt(name, email, config) {
-  const apiKey = process.env.RESEND_API_KEY;
-  if (!apiKey) return { sent: false, reason: "not_configured" };
+async function notifyEmail(name, email, message, config, requestId) {
+  const to = String(process.env.CONTACT_EMAIL_TO || "info@omeryigitler.com").trim();
+  const from = String(
+    process.env.CONTACT_NOTIFICATION_FROM ||
+    process.env.CONTACT_EMAIL_FROM ||
+    "Ömer Yiğitler Website <notifications@omeryigitler.com>"
+  ).trim();
 
-  const from = String(process.env.CONTACT_EMAIL_FROM || "Ömer Yiğitler <contact@omeryigitler.com>").trim();
+  let text = `New project request\n\nName: ${name}\nEmail: ${email}\n\n${message}`;
+  if (config) text += `\n\nProject configuration\n${configSummary(config)}`;
+  text += `\n\nRequest reference: ${requestId}\nSource: https://omeryigitler.com`;
+
+  return sendResendEmail({
+    from,
+    to: [to],
+    reply_to: email,
+    subject: `New project request from ${name}`,
+    text,
+    tags: [
+      { name: "category", value: "contact_notification" },
+      { name: "source", value: "website" }
+    ]
+  }, `contact-owner-${requestId}`);
+}
+
+async function sendCustomerReceipt(name, email, config, requestId) {
+  const from = String(
+    process.env.CONTACT_RECEIPT_FROM ||
+    process.env.CONTACT_EMAIL_FROM ||
+    "Ömer Yiğitler <notifications@omeryigitler.com>"
+  ).trim();
   const replyTo = String(process.env.CONTACT_EMAIL_TO || "info@omeryigitler.com").trim();
-  let text = `Hi ${name},\n\nThanks for your project request — it has been received and I'll get back to you within one business day.\n`;
-  if (config) text += `\nYour request summary:\n${configSummary(config)}\n`;
-  text += `\nIf you want to add anything in the meantime, just reply to this email.\n\nÖmer Yiğitler\nomeryigitler.com`;
 
-  const response = await fetch("https://api.resend.com/emails", {
-    method: "POST",
+  let text = `Hello ${name},\n\nYour project request was received successfully. I usually reply within one business day.\n`;
+  if (config) text += `\nRequest summary\n${configSummary(config)}\n`;
+  text += `\nRequest reference: ${requestId}\n\nYou can reply directly to this email if you need to add anything.\n\nRegards,\nÖmer Yiğitler\nhttps://omeryigitler.com`;
+
+  return sendResendEmail({
+    from,
+    to: [email],
+    reply_to: replyTo,
+    subject: "We received your project request",
+    text,
     headers: {
-      "Content-Type": "application/json",
-      "Authorization": `Bearer ${apiKey}`
+      "Auto-Submitted": "auto-generated",
+      "X-Auto-Response-Suppress": "All"
     },
-    body: JSON.stringify({
-      from,
-      to: [email],
-      reply_to: replyTo,
-      subject: "Your project request has been received — omeryigitler.com",
-      text
-    }),
-    signal: AbortSignal.timeout(8000)
-  });
-  if (!response.ok) throw new Error(`Customer receipt failed (${response.status}).`);
-  return { sent: true };
+    tags: [
+      { name: "category", value: "contact_receipt" },
+      { name: "source", value: "website" }
+    ]
+  }, `contact-receipt-${requestId}`);
 }
 
 function sendError(res, status, code, error) {
@@ -286,8 +314,8 @@ async function contactHandler(req, res) {
   if (body.website && String(body.website).trim() !== "") return res.status(200).json({ ok: true });
 
   const name = clean(body.name, MAX.name);
-  // mobile autocorrect can inject spaces into the address; spaces are never
-  // valid in an email, so strip them all before validating
+  // Mobile autocorrect can inject spaces into the address; spaces are never
+  // valid in an email, so strip them all before validating.
   const email = clean(body.email, MAX.email).replace(/\s+/g, "");
   const message = clean(body.message, MAX.message);
   if (!name || !email || !message) {
@@ -357,16 +385,14 @@ async function contactHandler(req, res) {
     console.error("[contact] Firestore unavailable, falling back to notifications only", { requestId });
   }
 
-  // Even if Firestore is down, the request must still reach the owner —
-  // never show the customer an error while a notification channel can deliver it.
-  const [telegramResult, emailResult, receiptResult] = await Promise.allSettled([
+  // Notify the owner first. A customer receipt is only sent after at least one
+  // durable delivery channel accepted the request, so the acknowledgement can
+  // never claim success for a request that was lost.
+  const [telegramResult, emailResult] = await Promise.allSettled([
     notifyTelegram(name, email, message, config),
-    notifyEmail(name, email, message, config),
-    sendCustomerReceipt(name, email, config)
+    notifyEmail(name, email, message, config, requestId)
   ]);
-  if (receiptResult.status === "rejected") {
-    console.warn("[contact] customer receipt failed", { requestId, error: receiptResult.reason?.message });
-  }
+
   const telegramSent = telegramResult.status === "fulfilled" && telegramResult.value?.sent === true;
   const emailSent = emailResult.status === "fulfilled" && emailResult.value?.sent === true;
   if (telegramResult.status === "rejected") {
@@ -381,7 +407,15 @@ async function contactHandler(req, res) {
     return sendError(res, 503, "contact_backend_unavailable", "Your request could not be delivered right now. Please email info@omeryigitler.com directly.");
   }
 
-  return res.status(200).json({ ok: true, requestId, stored });
+  let receiptSent = false;
+  try {
+    const receiptResult = await sendCustomerReceipt(name, email, config, requestId);
+    receiptSent = receiptResult?.sent === true;
+  } catch (error) {
+    console.warn("[contact] customer receipt failed", { requestId, error: error?.message });
+  }
+
+  return res.status(200).json({ ok: true, requestId, stored, receiptSent });
 }
 
 module.exports = contactHandler;
@@ -389,5 +423,6 @@ module.exports._test = {
   allowedTurnstileHosts,
   rateLimitKey,
   sanitizeConfig,
-  verifyTurnstile
+  verifyTurnstile,
+  sendResendEmail
 };
