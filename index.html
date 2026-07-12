@@ -1765,8 +1765,8 @@
     <!-- Globe/Three.js are self-hosted and loaded dynamically by the intro script
          after first paint, so they never block rendering. Preload only the texture
          that matches the viewport. -->
-    <link rel="preload" as="image" href="assets/globe/earth-black-marble-2k.webp" media="(max-width: 767px)">
-    <link rel="preload" as="image" href="assets/globe/earth-black-marble-4k.webp" media="(min-width: 768px)">
+    <link rel="preload" as="image" href="assets/globe/earth-black-marble-4k.webp" media="(max-width: 767px)">
+    <link rel="preload" as="image" href="assets/globe/earth-black-marble-8k.webp" media="(min-width: 768px)">
     <style id="globe-preloader-styles">
         #intro-modal {
             position: fixed;
@@ -2916,7 +2916,17 @@
             const submitLabel = "Submit Final Request";
             let turnstileWidgetId = null;
             let turnstileLoader = null;
+            let pendingSubmit = false;
+            let pendingSubmitTimer = 0;
             window.__tsToken = "";
+
+            // Warm the Turnstile script on the visitor's first interaction with the
+            // form: by the time they open the configurator and press Submit, the
+            // token is almost always already issued — no visible waiting.
+            form.addEventListener("focusin", function warmOnce() {
+                form.removeEventListener("focusin", warmOnce);
+                loadTurnstileScript().catch(() => {});
+            });
 
             function setStatus(msg, cls) {
                 statusEl.textContent = msg;
@@ -2930,13 +2940,24 @@
             }
             function setTurnstileToken(token) {
                 window.__tsToken = String(token || "");
-                submitBtn.disabled = !window.__tsToken;
-                submitBtn.textContent = window.__tsToken ? submitLabel : "Complete Security Check";
-                // once verified, the enabled button says it all — no extra status line
-                setSecurityStatus(window.__tsToken ? "" : "Complete the security check to continue.", false);
+                if (window.__tsToken) {
+                    setSecurityStatus("", false);
+                    if (pendingSubmit) {
+                        // The visitor already pressed Submit while the check was
+                        // finishing — complete their request right away.
+                        pendingSubmit = false;
+                        clearTimeout(pendingSubmitTimer);
+                        doSubmit(window.__tsToken);
+                        return;
+                    }
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = submitLabel;
+                }
             }
             function invalidateTurnstile(message) {
                 window.__tsToken = "";
+                pendingSubmit = false;
+                clearTimeout(pendingSubmitTimer);
                 // keep the button clickable: without a token a click only restarts
                 // the security check, it can never submit the form
                 submitBtn.disabled = false;
@@ -2968,11 +2989,11 @@
                     submitBtn.textContent = "Retry Security Check";
                 }
             }
-            function ensureTurnstile() {
-                submitBtn.disabled = true;
-                submitBtn.textContent = "Loading Security Check...";
-                setSecurityStatus("Loading Cloudflare security verification...", false);
-                if (window.turnstile) { renderTurnstile(); return Promise.resolve(); }
+            // Downloads api.js without touching any UI state, so the script can be
+            // warmed the moment the visitor starts typing in the form — long before
+            // the configurator opens.
+            function loadTurnstileScript() {
+                if (window.turnstile) return Promise.resolve();
                 if (turnstileLoader) return turnstileLoader;
 
                 turnstileLoader = new Promise((resolve, reject) => {
@@ -2981,16 +3002,23 @@
                     script.src = "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
                     script.async = true;
                     script.defer = true;
-                    script.onload = () => { clearTimeout(timeout); renderTurnstile(); resolve(); };
+                    script.onload = () => { clearTimeout(timeout); resolve(); };
                     script.onerror = () => { clearTimeout(timeout); reject(new Error("turnstile_load_failed")); };
                     document.head.appendChild(script);
+                });
+                turnstileLoader.catch(() => { turnstileLoader = null; });
+                return turnstileLoader;
+            }
+
+            function ensureTurnstile() {
+                // the button stays ready — verification runs quietly in the background
+                loadTurnstileScript().then(() => {
+                    renderTurnstile();
                 }).catch(() => {
-                    turnstileLoader = null;
                     submitBtn.disabled = false;
                     submitBtn.textContent = "Retry Security Check";
                     setSecurityStatus("Security verification was blocked. Allow challenges.cloudflare.com or contact info@omeryigitler.com.", true);
                 });
-                return turnstileLoader;
             }
             function openModal(el) {
                 el.classList.add("open");
@@ -3141,16 +3169,7 @@
             cfg.addEventListener("click", (e) => { if (e.target === cfg) closeModal(cfg); });
 
             // final submit
-            submitBtn.addEventListener("click", async () => {
-                const token = window.__tsToken || "";
-                if (!token) {
-                    setSecurityStatus("Restarting the security check...", false);
-                    if (window.turnstile && turnstileWidgetId !== null) {
-                        try { window.turnstile.reset(turnstileWidgetId); } catch (error) { turnstileWidgetId = null; }
-                    }
-                    if (turnstileWidgetId === null) ensureTurnstile();
-                    return;
-                }
+            async function doSubmit(token) {
                 const payload = {
                     name: form.name.value.trim(),
                     email: form.email.value.replace(/\s+/g, ""),
@@ -3194,6 +3213,32 @@
                         submitBtn.disabled = false;
                     }
                 }
+            }
+
+            submitBtn.addEventListener("click", () => {
+                const token = window.__tsToken || "";
+                if (token) {
+                    doSubmit(token);
+                    return;
+                }
+
+                // No token yet: finish the security check in the background and
+                // submit automatically the moment it lands — one click, no retry.
+                pendingSubmit = true;
+                submitBtn.disabled = true;
+                submitBtn.textContent = "Verifying security...";
+                setSecurityStatus("", false);
+
+                if (window.turnstile && turnstileWidgetId !== null) {
+                    try { window.turnstile.reset(turnstileWidgetId); } catch (error) { turnstileWidgetId = null; }
+                }
+                if (turnstileWidgetId === null) ensureTurnstile();
+
+                clearTimeout(pendingSubmitTimer);
+                pendingSubmitTimer = setTimeout(() => {
+                    if (!pendingSubmit) return;
+                    invalidateTurnstile("Security check is taking longer than expected. Please retry.");
+                }, 15000);
             });
 
             if (ok) {
@@ -3389,13 +3434,13 @@
   const FADE_DURATION_MS = 500;
   const ACCENT_COLOR = "#FFD700";
   const SPACE_COLOR = "#0a0a0a";
-  // Device-tiered textures: a WebGL globe never shows 8K worth of detail at these
-  // camera altitudes, so the 3.26MB source stays out of the network entirely.
+  // Device-tiered textures: full 8K detail on desktop (WebP, ~810KB vs the old
+  // 3.26MB JPG), 4K on mobile where GPU memory is the constraint.
   const IS_MOBILE = window.matchMedia("(max-width: 767px)").matches;
   const EARTH_NIGHT = IS_MOBILE
-    ? "assets/globe/earth-black-marble-2k.webp"
-    : "assets/globe/earth-black-marble-4k.webp";
-  const EARTH_BUMP = IS_MOBILE ? null : "assets/globe/earth-topology-2k.webp";
+    ? "assets/globe/earth-black-marble-4k.webp"
+    : "assets/globe/earth-black-marble-8k.webp";
+  const EARTH_BUMP = "assets/globe/earth-topology-2k.webp";
   const GLOBE_LIBS = ["assets/vendor/three.min.js", "assets/vendor/globe.gl.min.js"];
   const LIB_LOAD_TIMEOUT_MS = 9000;
   const INITIAL_ALTITUDE = 3.2;
@@ -3673,9 +3718,9 @@
     if (!renderer) return;
 
     if (typeof renderer.setPixelRatio === "function") {
-      // Cap the render resolution: 3x-DPR phones gain nothing visible on a dark
-      // globe, but pay for it in main-thread and GPU time.
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, IS_MOBILE ? 1.5 : 2));
+      // Cap the render resolution at 2x: crisp on retina screens without the
+      // 3x-DPR cost the old code forced on every phone.
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
     }
 
     if (typeof renderer.setClearColor === "function") {
