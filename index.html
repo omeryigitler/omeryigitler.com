@@ -853,9 +853,12 @@
             text-transform: uppercase;
             line-height: 1.12;
             margin: 26px 0;
-            opacity: 0.35;
-            transform: scale(0.94);
-            transition: opacity 0.5s ease, transform 0.5s ease;
+            opacity: 0.18;
+            transform: translateY(16px) scale(0.94);
+            /* snappy overshoot: each line lands with a "tick" instead of a slow fade */
+            transition:
+                opacity 0.3s cubic-bezier(0.2, 0.9, 0.3, 1),
+                transform 0.34s cubic-bezier(0.24, 1.2, 0.32, 1);
         }
 
         .phil-line .w {
@@ -865,7 +868,15 @@
             color: transparent;
         }
 
-        .phil-line .gdot { color: var(--gold); }
+        .phil-line .gdot { color: var(--gold); display: inline-block; }
+
+        .phil-line.lit .gdot { animation: gdotTick 0.34s cubic-bezier(0.24, 1.4, 0.32, 1) 0.12s backwards; }
+
+        @keyframes gdotTick {
+            from { transform: scale(0); }
+            60% { transform: scale(1.5); }
+            to { transform: scale(1); }
+        }
 
         .phil-line em {
             font-family: "Manrope", sans-serif;
@@ -878,11 +889,12 @@
             transition: color 0.5s ease, text-shadow 0.5s ease;
         }
 
-        .phil-line.lit { opacity: 1; transform: scale(1); }
+        .phil-line.lit { opacity: 1; transform: translateY(0) scale(1); }
 
         .phil-line.lit em {
             color: var(--gold);
             text-shadow: 0 0 18px rgba(255, 215, 0, 0.6);
+            transition-delay: 0.1s;
         }
 
         .phil-sub {
@@ -2816,28 +2828,33 @@
                 return;
             }
 
-            let rafPending = false;
+            // "Tık tık tık": once the section is in view the lines snap in one
+            // after another with a fixed staccato cadence — identical on mobile
+            // and desktop — and the sequence replays when the section returns.
+            const philSection = document.getElementById("philosophy");
+            const PHIL_STEP_MS = 300;
+            let philTimers = [];
 
-            function updatePhilosophy() {
-                rafPending = false;
-                const center = window.innerHeight / 2;
-                const range = window.innerHeight * 0.24;
-
-                philLines.forEach((line) => {
-                    const rect = line.getBoundingClientRect();
-                    const distance = Math.abs(rect.top + rect.height / 2 - center);
-                    line.classList.toggle("lit", distance < range);
-                });
+            function clearPhilTimers() {
+                philTimers.forEach((timer) => clearTimeout(timer));
+                philTimers = [];
             }
 
-            window.addEventListener("scroll", () => {
-                if (!rafPending) {
-                    rafPending = true;
-                    requestAnimationFrame(updatePhilosophy);
-                }
-            }, { passive: true });
+            const philObserver = new IntersectionObserver((entries) => {
+                entries.forEach((entry) => {
+                    if (entry.isIntersecting) {
+                        clearPhilTimers();
+                        philLines.forEach((line, index) => {
+                            philTimers.push(setTimeout(() => line.classList.add("lit"), 120 + index * PHIL_STEP_MS));
+                        });
+                    } else {
+                        clearPhilTimers();
+                        philLines.forEach((line) => line.classList.remove("lit"));
+                    }
+                });
+            }, { threshold: 0.3 });
 
-            updatePhilosophy();
+            philObserver.observe(philSection || philLines[0]);
         })();
 
         (function () {
