@@ -853,9 +853,24 @@
             text-transform: uppercase;
             line-height: 1.12;
             margin: 26px 0;
+        }
+
+        /* Reveal-system variant: lines start dimmed (never invisible) and settle
+           to full strength once, when the section first scrolls into view. */
+        .phil-line.rv {
             opacity: 0.35;
             transform: scale(0.94);
-            transition: opacity 0.5s ease, transform 0.5s ease;
+        }
+
+        .in .phil-line.rv {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        .in .phil-line.rv em {
+            color: var(--gold);
+            text-shadow: 0 0 18px rgba(255, 215, 0, 0.6);
+            transition-delay: calc(var(--rv-delay, 0ms) + 150ms);
         }
 
         .phil-line .w {
@@ -878,12 +893,6 @@
             transition: color 0.5s ease, text-shadow 0.5s ease;
         }
 
-        .phil-line.lit { opacity: 1; transform: scale(1); }
-
-        .phil-line.lit em {
-            color: var(--gold);
-            text-shadow: 0 0 18px rgba(255, 215, 0, 0.6);
-        }
 
         .phil-sub {
             font-family: "Manrope", sans-serif;
@@ -1348,6 +1357,26 @@
             transform: none;
         }
 
+        /* ---- unified reveal system (Layer B) ----
+           One grammar for every entrance on the page: elements marked
+           data-reveal (or children of data-reveal-group) slide up 24px over
+           600ms with a shared ease, staggered by --rv-delay, and play ONCE —
+           scrolling back never rewinds them. The .rv class is added by JS, so
+           without JS (or with reduced motion) everything is simply visible. */
+        .rv {
+            opacity: 0;
+            transform: translateY(24px);
+            transition:
+                opacity 0.6s cubic-bezier(0.22, 1, 0.36, 1) var(--rv-delay, 0ms),
+                transform 0.6s cubic-bezier(0.22, 1, 0.36, 1) var(--rv-delay, 0ms);
+        }
+
+        .rv.in,
+        .in .rv {
+            opacity: 1;
+            transform: none;
+        }
+
         /* Below-the-fold sections skip rendering work until they approach the
            viewport. Sizes are estimates only — they prevent scrollbar jumps. */
         .instagram-feed-section,
@@ -1697,6 +1726,8 @@
             .warp-grid { animation: none; }
 
             .reveal { opacity: 1; transform: none; }
+
+            .rv, .phil-line.rv { opacity: 1; transform: none; transition: none; }
 
             .phil-line { opacity: 1; transform: none; }
         }
@@ -2316,14 +2347,14 @@
             </section>
 
             <section id="expertise">
-                <div class="center-head">
+                <div class="center-head" data-reveal-group>
                     <div class="v-line"></div>
                     <span class="badge">What I Do</span>
                     <h2>Complete Digital<br><span class="soft">Solutions</span></h2>
                     <p class="section-sub">A holistic approach to digital product creation, ensuring every layer from design to deployment is crafted to perfection.</p>
                 </div>
 
-                <div class="ecard-grid" id="expertiseCards">
+                <div class="ecard-grid" id="expertiseCards" data-reveal-group data-reveal-stagger="120">
                     <article class="ecard" data-pos="left" style="--accent: #FFD700; --shadow: rgba(255, 215, 0, 0.18);">
                         <div class="ecard-in">
                             <div class="topline"></div>
@@ -2380,7 +2411,7 @@
             <section id="process">
                 <div class="status-line section-status"><span class="prompt">$</span><span>status</span><span class="arrow">→</span><span class="status-value type-target" data-text="building the system"></span><span class="cursor" style="height: 0.95em;"></span></div>
                 <h2><span class="soft">Structure before pixels</span></h2>
-                <p class="section-sub">A precise build system from strategy to launch-ready deployment, shaped for fast decisions and durable execution.</p>
+                <p class="section-sub" data-reveal>A precise build system from strategy to launch-ready deployment, shaped for fast decisions and durable execution.</p>
 
                 <div class="warp-wrap" id="warpWrap">
                     <div class="warp-sticky">
@@ -2424,21 +2455,21 @@
                 </div>
             </section>
 
-            <section id="philosophy" class="philosophy">
+            <section id="philosophy" class="philosophy" data-reveal-group data-reveal-select=".phil-line" data-reveal-stagger="150">
                 <div class="taurus-mark" aria-hidden="true">TAURUS</div>
                 <h2 class="phil-line"><span class="w">Balance</span> <em>over</em> <span class="w">Chaos<span class="gdot">.</span></span></h2>
                 <h2 class="phil-line"><span class="w">Symmetry</span> <em>over</em> <span class="w">Noise<span class="gdot">.</span></span></h2>
                 <h2 class="phil-line"><span class="w">Quality</span> <em>over</em> <span class="w">Shortcuts<span class="gdot">.</span></span></h2>
 
-                <p class="phil-sub">I design websites that feel <b>solid</b>, <b>intentional</b> and <b>timeless</b>.<br>Not trends. Not templates.</p>
-                <div class="phil-rule"></div>
-                <div class="phil-cta">Just work that lasts.</div>
+                <p class="phil-sub" data-reveal>I design websites that feel <b>solid</b>, <b>intentional</b> and <b>timeless</b>.<br>Not trends. Not templates.</p>
+                <div class="phil-rule" data-reveal></div>
+                <div class="phil-cta" data-reveal>Just work that lasts.</div>
             </section>
 
 
             <section id="instagram" class="instagram-feed-section" data-instagram-feed data-limit="6">
                 <div class="instagram-feed-shell">
-                    <div class="instagram-feed-copy-column">
+                    <div class="instagram-feed-copy-column" data-reveal>
                         <div class="instagram-feed-status">
                             <span class="prompt">$</span>
                             <span>status</span>
@@ -2463,7 +2494,7 @@
                 <h2><span class="soft">Ready when you are</span></h2>
 
                 <div class="contact-grid">
-                    <div class="contact-card">
+                    <div class="contact-card" data-reveal>
                         <h3>Start a Project</h3>
                         <p class="lede">Ready to build? Fill out the form below.</p>
                         <form id="contactForm" novalidate>
@@ -2479,7 +2510,7 @@
                         </form>
                     </div>
 
-                    <div class="contact-card status-card" id="statusCard">
+                    <div class="contact-card status-card" id="statusCard" data-reveal data-reveal-delay="120">
                         <div class="status-3d" id="status3d">
                             <div class="status-grid" aria-hidden="true"></div>
                             <div class="status-head" style="transform: translateZ(22px);">
@@ -2509,7 +2540,7 @@
                     </div>
                 </div>
 
-                <div class="support-strip">
+                <div class="support-strip" data-reveal>
                     <div class="support-info">
                         <div class="shield">⛨</div>
                         <div>
@@ -2539,7 +2570,7 @@
             </section>
         </main>
 
-        <footer>
+        <footer data-reveal>
             <p class="foot-credit">Designed &amp; Developed by <b>Ömer Yiğitler</b></p>
             <div class="foot-links">
                 <a href="privacy.html">Privacy Policy</a>
@@ -2745,23 +2776,39 @@
         (function () {
             const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-            const revealTargets = document.querySelectorAll(
-                ".contact-card, .support-strip, .center-head, section > .section-sub, .phil-sub, .phil-rule, .phil-cta"
-            );
-
+            // Unified reveal orchestrator (Layer B): every entrance on the page
+            // uses one grammar. data-reveal marks a single element; children of
+            // data-reveal-group get staggered --rv-delay values (90ms default,
+            // overridable via data-reveal-stagger; data-reveal-select narrows
+            // which descendants participate). Reveals play ONCE — scrolling away
+            // and back never rewinds them. Without JS or with reduced motion the
+            // .rv class is never added, so all content is simply visible.
             if (!reduced && "IntersectionObserver" in window) {
-                const observer = new IntersectionObserver((entries) => {
+                const revealObserver = new IntersectionObserver((entries) => {
                     entries.forEach((entry) => {
-                        if (entry.isIntersecting) {
-                            entry.target.classList.add("in");
-                            observer.unobserve(entry.target);
-                        }
+                        if (!entry.isIntersecting) return;
+                        entry.target.classList.add("in");
+                        revealObserver.unobserve(entry.target);
                     });
-                }, { threshold: 0.16 });
+                }, { threshold: 0.15, rootMargin: "0px 0px -8% 0px" });
 
-                revealTargets.forEach((el) => {
-                    el.classList.add("reveal");
-                    observer.observe(el);
+                document.querySelectorAll("[data-reveal]").forEach((el) => {
+                    const delay = Number(el.dataset.revealDelay || 0);
+                    if (delay) el.style.setProperty("--rv-delay", delay + "ms");
+                    el.classList.add("rv");
+                    revealObserver.observe(el);
+                });
+
+                document.querySelectorAll("[data-reveal-group]").forEach((group) => {
+                    const step = Number(group.dataset.revealStagger || 90);
+                    const targets = group.dataset.revealSelect
+                        ? group.querySelectorAll(group.dataset.revealSelect)
+                        : group.children;
+                    Array.from(targets).forEach((child, index) => {
+                        child.classList.add("rv");
+                        child.style.setProperty("--rv-delay", (index * step) + "ms");
+                    });
+                    revealObserver.observe(group);
                 });
             }
 
@@ -2810,34 +2857,9 @@
                 typeTargets.forEach((el) => typeObserver.observe(el));
             }
 
-            const philLines = Array.from(document.querySelectorAll(".phil-line"));
-            if (!philLines.length || reduced) {
-                philLines.forEach((line) => line.classList.add("lit"));
-                return;
-            }
-
-            let rafPending = false;
-
-            function updatePhilosophy() {
-                rafPending = false;
-                const center = window.innerHeight / 2;
-                const range = window.innerHeight * 0.24;
-
-                philLines.forEach((line) => {
-                    const rect = line.getBoundingClientRect();
-                    const distance = Math.abs(rect.top + rect.height / 2 - center);
-                    line.classList.toggle("lit", distance < range);
-                });
-            }
-
-            window.addEventListener("scroll", () => {
-                if (!rafPending) {
-                    rafPending = true;
-                    requestAnimationFrame(updatePhilosophy);
-                }
-            }, { passive: true });
-
-            updatePhilosophy();
+            // Philosophy lines are revealed by the unified orchestrator above
+            // (data-reveal-group on #philosophy): they settle in once, 150ms
+            // apart, and never rewind on scroll.
         })();
 
         (function () {
