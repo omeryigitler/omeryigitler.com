@@ -2820,11 +2820,17 @@
             // point in the viewport, staggered per line, so scrolling lights them
             // strictly one at a time — slower scroll means slower ticks — and
             // scrolling back dims them in reverse order. Same on mobile/desktop.
+            // A minimum tick gap keeps the sequence intact even when a mouse-wheel
+            // flick jumps past several thresholds within a single frame.
+            const MIN_TICK_GAP_MS = 240;
             let rafPending = false;
+            let lastLitTime = 0;
+            let gapTimer = 0;
 
             function updatePhilosophy() {
                 rafPending = false;
                 const vh = window.innerHeight;
+                const now = performance.now();
 
                 philLines.forEach((line, index) => {
                     const rect = line.getBoundingClientRect();
@@ -2832,7 +2838,25 @@
                     // later lines require deeper scroll (staggered thresholds)
                     const enterAt = vh * (0.80 - index * 0.09);
                     const exitAt = vh * 0.06;
-                    line.classList.toggle("lit", center < enterAt && center > exitAt);
+                    const eligible = center < enterAt && center > exitAt;
+                    const isLit = line.classList.contains("lit");
+
+                    if (!eligible) {
+                        if (isLit) line.classList.remove("lit");
+                        return;
+                    }
+                    if (isLit) return;
+
+                    const previousLit = index === 0 || philLines[index - 1].classList.contains("lit");
+                    if (previousLit && now - lastLitTime >= MIN_TICK_GAP_MS) {
+                        line.classList.add("lit");
+                        lastLitTime = now;
+                    } else {
+                        // eligible but too soon after the previous tick — re-check
+                        // shortly so a fast wheel jump still lands line by line
+                        clearTimeout(gapTimer);
+                        gapTimer = setTimeout(updatePhilosophy, MIN_TICK_GAP_MS);
+                    }
                 });
             }
 
