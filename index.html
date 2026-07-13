@@ -855,11 +855,7 @@
             margin: 26px 0;
             opacity: 0.35;
             transform: scale(0.94);
-            /* --tick-delay staggers lines that cross their thresholds in the same
-               frame (violent wheel flings); it is 0 during normal scrolling */
-            transition:
-                opacity 0.55s ease var(--tick-delay, 0s),
-                transform 0.55s ease var(--tick-delay, 0s);
+            transition: opacity 0.5s ease, transform 0.5s ease;
         }
 
         .phil-line .w {
@@ -879,7 +875,7 @@
             letter-spacing: normal;
             font-size: 0.5em;
             color: #374151;
-            transition: color 0.5s ease var(--tick-delay, 0s), text-shadow 0.5s ease var(--tick-delay, 0s);
+            transition: color 0.5s ease, text-shadow 0.5s ease;
         }
 
         .phil-line.lit { opacity: 1; transform: scale(1); }
@@ -2820,50 +2816,26 @@
                 return;
             }
 
-            // Pure scroll-driven "teker teker" reveal — no timers, so a line can
-            // only ever light as a direct response to scrolling. Thresholds are
-            // spaced ~0.16vh apart (≈270px of scroll per tick on desktop): a
-            // normal wheel notch (~100px) can never cross two at once. If a
-            // violent fling does cross several in one frame, the newly lit lines
-            // get incremental CSS transition delays (--tick-delay), so they still
-            // animate in order — starting immediately, tied to that scroll.
-            const TICK_STAGGER_MS = 300;
             let rafPending = false;
 
             function updatePhilosophy() {
                 rafPending = false;
-                const vh = window.innerHeight;
-                let newlyLit = 0;
+                const center = window.innerHeight / 2;
+                const range = window.innerHeight * 0.24;
 
-                philLines.forEach((line, index) => {
+                philLines.forEach((line) => {
                     const rect = line.getBoundingClientRect();
-                    const center = rect.top + rect.height / 2;
-                    // later lines require deeper scroll (staggered thresholds)
-                    const enterAt = vh * (0.85 - index * 0.16);
-                    const exitAt = vh * 0.05;
-                    const eligible = center < enterAt && center > exitAt;
-                    const isLit = line.classList.contains("lit");
-
-                    if (eligible && !isLit) {
-                        line.style.setProperty("--tick-delay", (newlyLit * TICK_STAGGER_MS) + "ms");
-                        newlyLit += 1;
-                        line.classList.add("lit");
-                    } else if (!eligible && isLit) {
-                        line.style.setProperty("--tick-delay", "0ms");
-                        line.classList.remove("lit");
-                    }
+                    const distance = Math.abs(rect.top + rect.height / 2 - center);
+                    line.classList.toggle("lit", distance < range);
                 });
             }
 
-            function requestPhilosophyUpdate() {
+            window.addEventListener("scroll", () => {
                 if (!rafPending) {
                     rafPending = true;
                     requestAnimationFrame(updatePhilosophy);
                 }
-            }
-
-            window.addEventListener("scroll", requestPhilosophyUpdate, { passive: true });
-            window.addEventListener("resize", requestPhilosophyUpdate, { passive: true });
+            }, { passive: true });
 
             updatePhilosophy();
         })();
