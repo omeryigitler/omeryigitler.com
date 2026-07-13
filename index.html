@@ -855,7 +855,11 @@
             margin: 26px 0;
             opacity: 0.35;
             transform: scale(0.94);
-            transition: opacity 0.55s ease, transform 0.55s ease;
+            /* --tick-delay staggers lines that cross their thresholds in the same
+               frame (violent wheel flings); it is 0 during normal scrolling */
+            transition:
+                opacity 0.55s ease var(--tick-delay, 0s),
+                transform 0.55s ease var(--tick-delay, 0s);
         }
 
         .phil-line .w {
@@ -875,7 +879,7 @@
             letter-spacing: normal;
             font-size: 0.5em;
             color: #374151;
-            transition: color 0.5s ease, text-shadow 0.5s ease;
+            transition: color 0.5s ease var(--tick-delay, 0s), text-shadow 0.5s ease var(--tick-delay, 0s);
         }
 
         .phil-line.lit { opacity: 1; transform: scale(1); }
@@ -2816,58 +2820,50 @@
                 return;
             }
 
-            // Scroll-driven "teker teker" reveal: each line has its own trigger
-            // point in the viewport, staggered per line, so scrolling lights them
-            // strictly one at a time — slower scroll means slower ticks — and
-            // scrolling back dims them in reverse order. Same on mobile/desktop.
-            // A minimum tick gap keeps the sequence intact even when a mouse-wheel
-            // flick jumps past several thresholds within a single frame. Desktop
-            // needs a wider gap: with the 0.55s transition, ticks must not overlap
-            // heavily or the lines read as moving together.
-            const MIN_TICK_GAP_MS = window.matchMedia("(max-width: 767px)").matches ? 240 : 450;
+            // Pure scroll-driven "teker teker" reveal — no timers, so a line can
+            // only ever light as a direct response to scrolling. Thresholds are
+            // spaced ~0.16vh apart (≈270px of scroll per tick on desktop): a
+            // normal wheel notch (~100px) can never cross two at once. If a
+            // violent fling does cross several in one frame, the newly lit lines
+            // get incremental CSS transition delays (--tick-delay), so they still
+            // animate in order — starting immediately, tied to that scroll.
+            const TICK_STAGGER_MS = 300;
             let rafPending = false;
-            let lastLitTime = 0;
-            let gapTimer = 0;
 
             function updatePhilosophy() {
                 rafPending = false;
                 const vh = window.innerHeight;
-                const now = performance.now();
+                let newlyLit = 0;
 
                 philLines.forEach((line, index) => {
                     const rect = line.getBoundingClientRect();
                     const center = rect.top + rect.height / 2;
                     // later lines require deeper scroll (staggered thresholds)
-                    const enterAt = vh * (0.80 - index * 0.09);
-                    const exitAt = vh * 0.06;
+                    const enterAt = vh * (0.85 - index * 0.16);
+                    const exitAt = vh * 0.05;
                     const eligible = center < enterAt && center > exitAt;
                     const isLit = line.classList.contains("lit");
 
-                    if (!eligible) {
-                        if (isLit) line.classList.remove("lit");
-                        return;
-                    }
-                    if (isLit) return;
-
-                    const previousLit = index === 0 || philLines[index - 1].classList.contains("lit");
-                    if (previousLit && now - lastLitTime >= MIN_TICK_GAP_MS) {
+                    if (eligible && !isLit) {
+                        line.style.setProperty("--tick-delay", (newlyLit * TICK_STAGGER_MS) + "ms");
+                        newlyLit += 1;
                         line.classList.add("lit");
-                        lastLitTime = now;
-                    } else {
-                        // eligible but too soon after the previous tick — re-check
-                        // shortly so a fast wheel jump still lands line by line
-                        clearTimeout(gapTimer);
-                        gapTimer = setTimeout(updatePhilosophy, MIN_TICK_GAP_MS);
+                    } else if (!eligible && isLit) {
+                        line.style.setProperty("--tick-delay", "0ms");
+                        line.classList.remove("lit");
                     }
                 });
             }
 
-            window.addEventListener("scroll", () => {
+            function requestPhilosophyUpdate() {
                 if (!rafPending) {
                     rafPending = true;
                     requestAnimationFrame(updatePhilosophy);
                 }
-            }, { passive: true });
+            }
+
+            window.addEventListener("scroll", requestPhilosophyUpdate, { passive: true });
+            window.addEventListener("resize", requestPhilosophyUpdate, { passive: true });
 
             updatePhilosophy();
         })();
