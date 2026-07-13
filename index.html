@@ -2821,8 +2821,10 @@
             // strictly one at a time — slower scroll means slower ticks — and
             // scrolling back dims them in reverse order. Same on mobile/desktop.
             // A minimum tick gap keeps the sequence intact even when a mouse-wheel
-            // flick jumps past several thresholds within a single frame.
-            const MIN_TICK_GAP_MS = 240;
+            // flick jumps past several thresholds within a single frame. Desktop
+            // needs a wider gap: with the 0.55s transition, ticks must not overlap
+            // heavily or the lines read as moving together.
+            const MIN_TICK_GAP_MS = window.matchMedia("(max-width: 767px)").matches ? 240 : 450;
             let rafPending = false;
             let lastLitTime = 0;
             let gapTimer = 0;
