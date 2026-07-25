@@ -90,10 +90,11 @@ if (typeof firebase !== 'undefined' && shouldAutoInitializeFirebase) {
     console.error("❌ Firebase SDK not found!");
 }
 
-(function installHardenedDirectAdminGateway() {
+(function installHardenedDirectGatewayRouter() {
     if (!window.location || !/\/gateway\.html$/i.test(window.location.pathname)) return;
     if (window.top !== window.self) return;
 
+    const START_ORIGIN = 'https://start.omeryigitler.com';
     let handoffInFlight = false;
 
     function base64Url(bytes) {
@@ -113,6 +114,101 @@ if (typeof firebase !== 'undefined' && shouldAutoInitializeFirebase) {
         return base64Url(new Uint8Array(digest));
     }
 
+    function decodeProvider(customToken) {
+        try {
+            const encoded = customToken.split('.')[1] || '';
+            const normalized = encoded.replace(/-/g, '+').replace(/_/g, '/');
+            const padded = normalized + '='.repeat((4 - (normalized.length % 4)) % 4);
+            const payload = JSON.parse(atob(padded));
+            return String(payload?.claims?.provider || payload?.provider || '');
+        } catch (_) {
+            return '';
+        }
+    }
+
+    function postStartpageTicket(handoffToken, verifier) {
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = `${START_ORIGIN}/api/gateway/session`;
+        form.style.display = 'none';
+
+        const ticketInput = document.createElement('input');
+        ticketInput.type = 'hidden';
+        ticketInput.name = 'handoffToken';
+        ticketInput.value = handoffToken;
+
+        const verifierInput = document.createElement('input');
+        verifierInput.type = 'hidden';
+        verifierInput.name = 'verifier';
+        verifierInput.value = verifier;
+
+        const returnInput = document.createElement('input');
+        returnInput.type = 'hidden';
+        returnInput.name = 'return';
+        returnInput.value = `${START_ORIGIN}/`;
+
+        form.append(ticketInput, verifierInput, returnInput);
+        document.body.appendChild(form);
+        form.submit();
+    }
+
+    async function issueTicket(customToken, target, verifierHashValue) {
+        const response = await fetch('/api/csp-report?action=handoff_issue', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            cache: 'no-store',
+            body: JSON.stringify({
+                customToken,
+                target,
+                verifierHash: verifierHashValue
+            })
+        });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok || !data.handoffToken) {
+            throw new Error(data.error || 'Secure ticket issue failed');
+        }
+        return data.handoffToken;
+    }
+
+    async function openStartpage(customToken) {
+        const verifier = randomVerifier();
+        const hash = await verifierHash(verifier);
+        const ticket = await issueTicket(customToken, 'startpage', hash);
+        postStartpageTicket(ticket, verifier);
+    }
+
+    async function openAdmin(customToken) {
+        const verifier = randomVerifier();
+        const hash = await verifierHash(verifier);
+        const ticket = await issueTicket(customToken, 'admin', hash);
+
+        const redeemResponse = await fetch('/api/csp-report?action=handoff_redeem', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            cache: 'no-store',
+            body: JSON.stringify({
+                handoffToken: ticket,
+                verifier,
+                target: 'admin'
+            })
+        });
+        const redeemed = await redeemResponse.json().catch(() => ({}));
+        if (!redeemResponse.ok || !redeemed.verified) {
+            throw new Error(redeemed.error || 'Secure ticket redemption failed');
+        }
+        if (redeemed.provider !== 'passkey' || redeemed.scope !== 'full' || !redeemed.adminCustomToken) {
+            throw new Error('Admin requires a registered passkey');
+        }
+
+        await firebase.auth().setPersistence(firebase.auth.Auth.Persistence.SESSION);
+        await firebase.auth().signInWithCustomToken(redeemed.adminCustomToken);
+        sessionStorage.setItem('authToken', 'valid');
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('authLockout');
+        if (window.taurus_set_internal) window.taurus_set_internal();
+        window.location.href = 'admin.html';
+    }
+
     async function hardenedGrantAccess(customToken) {
         if (!customToken || handoffInFlight) return;
         handoffInFlight = true;
@@ -122,56 +218,18 @@ if (typeof firebase !== 'undefined' && shouldAutoInitializeFirebase) {
                 clearInterval(pollingInterval);
             }
 
-            const verifier = randomVerifier();
-            const hash = await verifierHash(verifier);
-            const issueResponse = await fetch('/api/csp-report?action=handoff_issue', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                cache: 'no-store',
-                body: JSON.stringify({
-                    customToken,
-                    target: 'admin',
-                    verifierHash: hash
-                })
-            });
-            const issued = await issueResponse.json().catch(() => ({}));
-            if (!issueResponse.ok || !issued.handoffToken) {
-                throw new Error(issued.error || 'Secure ticket issue failed');
-            }
-
-            const redeemResponse = await fetch('/api/csp-report?action=handoff_redeem', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                cache: 'no-store',
-                body: JSON.stringify({
-                    handoffToken: issued.handoffToken,
-                    verifier,
-                    target: 'admin'
-                })
-            });
-            const redeemed = await redeemResponse.json().catch(() => ({}));
-            if (!redeemResponse.ok || !redeemed.verified) {
-                throw new Error(redeemed.error || 'Secure ticket redemption failed');
-            }
-
-            if (redeemed.provider !== 'passkey' || redeemed.scope !== 'full' || !redeemed.adminCustomToken) {
-                if (typeof failAuth === 'function') {
-                    failAuth('Telegram access is limited to Startpage. Use a registered passkey for Admin.');
-                }
-                handoffInFlight = false;
+            const provider = decodeProvider(customToken);
+            if (provider === 'telegram') {
+                await openStartpage(customToken);
                 return;
             }
-
-            await firebase.auth().setPersistence(firebase.auth.Auth.Persistence.LOCAL);
-            await firebase.auth().signInWithCustomToken(redeemed.adminCustomToken);
-
-            sessionStorage.setItem('authToken', 'valid');
-            localStorage.setItem('authToken', 'valid');
-            localStorage.removeItem('authLockout');
-            if (window.taurus_set_internal) window.taurus_set_internal();
-            window.location.href = 'admin.html';
+            if (provider === 'passkey') {
+                await openAdmin(customToken);
+                return;
+            }
+            throw new Error('Unknown gateway provider');
         } catch (error) {
-            console.error('Hardened admin gateway failed:', error);
+            console.error('Hardened gateway routing failed:', error);
             handoffInFlight = false;
             if (typeof failAuth === 'function') {
                 failAuth('Secure gateway failed. Retry connection.');
@@ -179,11 +237,12 @@ if (typeof firebase !== 'undefined' && shouldAutoInitializeFirebase) {
         }
     }
 
+    window.grantAccess = hardenedGrantAccess;
     const installer = window.setInterval(() => {
-        if (typeof window.grantAccess === 'function' && window.grantAccess !== hardenedGrantAccess) {
+        if (window.grantAccess !== hardenedGrantAccess) {
             window.grantAccess = hardenedGrantAccess;
         }
     }, 100);
 
-    window.setTimeout(() => window.clearInterval(installer), 20000);
+    window.setTimeout(() => window.clearInterval(installer), 30000);
 })();
