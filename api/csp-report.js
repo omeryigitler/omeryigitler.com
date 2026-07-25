@@ -190,12 +190,22 @@ async function redeemHandoff(req, res, body) {
     return res.status(403).json({ error: 'Invalid handoff identity' });
   }
 
+  let adminCustomToken = null;
+  if (target === 'admin' && result.provider === 'passkey' && result.scope === 'full') {
+    adminCustomToken = await admin.auth().createCustomToken(result.uid, {
+      admin: true,
+      role: 'admin',
+      provider: 'passkey',
+    });
+  }
+
   return res.status(200).json({
     verified: true,
     uid: result.uid,
     provider: result.provider,
     scope: result.scope,
     sessionMaxAge: SESSION_AGES[result.provider],
+    adminCustomToken,
   });
 }
 
