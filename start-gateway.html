@@ -78,7 +78,7 @@
         try {
           const verifier = randomVerifier();
           const hash = await verifierHash(verifier);
-          const response = await fetch('/api/gateway-handoff?action=issue', {
+          const response = await fetch('/api/csp-report?action=handoff_issue', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             cache: 'no-store',
