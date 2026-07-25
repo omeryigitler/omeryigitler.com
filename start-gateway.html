@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Taurus Gateway | Startpage</title>
+  <link rel="icon" href="assets/favicon_transparent.svg" type="image/svg+xml">
+  <style>
+    html,body{width:100%;height:100%;margin:0;overflow:hidden;background:#050505}
+    iframe{display:block;width:100%;height:100%;border:0;background:#050505}
+  </style>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+  <script src="assets/js/firebase-config.js"></script>
+</head>
+<body>
+  <iframe src="gateway.html" title="Taurus Security Gateway" allow="publickey-credentials-get *"></iframe>
+  <script>
+    (function () {
+      const START_ORIGIN = 'https://start.omeryigitler.com';
+      let handoffStarted = false;
+
+      function safeReturnTarget() {
+        try {
+          const raw = new URLSearchParams(window.location.search).get('return') || START_ORIGIN + '/';
+          const target = new URL(raw);
+          return target.origin === START_ORIGIN ? target.href : START_ORIGIN + '/';
+        } catch (_) {
+          return START_ORIGIN + '/';
+        }
+      }
+
+      function postSession(idToken) {
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = START_ORIGIN + '/api/gateway/session';
+        form.style.display = 'none';
+
+        const tokenInput = document.createElement('input');
+        tokenInput.type = 'hidden';
+        tokenInput.name = 'idToken';
+        tokenInput.value = idToken;
+
+        const returnInput = document.createElement('input');
+        returnInput.type = 'hidden';
+        returnInput.name = 'return';
+        returnInput.value = safeReturnTarget();
+
+        form.append(tokenInput, returnInput);
+        document.body.appendChild(form);
+        form.submit();
+      }
+
+      firebase.auth().onAuthStateChanged(async (user) => {
+        if (!user || handoffStarted) return;
+        try {
+          const tokenResult = await user.getIdTokenResult(true);
+          const claims = tokenResult.claims || {};
+          if (claims.admin !== true || claims.role !== 'admin') return;
+          handoffStarted = true;
+          postSession(tokenResult.token);
+        } catch (error) {
+          console.error('Startpage gateway handoff failed:', error);
+          handoffStarted = false;
+        }
+      });
+    })();
+  </script>
+</body>
+</html>
