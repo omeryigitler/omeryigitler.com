@@ -1,6 +1,6 @@
-const fs = require("fs");
-const path = require("path");
 const { verifyAdminSession } = require("./_gatewayAdminSession");
+
+const ADMIN_SOURCE_URL = "https://raw.githubusercontent.com/omeryigitler/omeryigitler.com/main/admin.html";
 
 function escapeJson(value) {
   return JSON.stringify(value).replace(/</g, "\\u003c");
@@ -26,8 +26,13 @@ module.exports = async (req, res) => {
   }
 
   try {
-    const filePath = path.join(process.cwd(), "admin.html");
-    let html = fs.readFileSync(filePath, "utf8");
+    const sourceResponse = await fetch(`${ADMIN_SOURCE_URL}?v=${Date.now()}`, {
+      headers: { "User-Agent": "Taurus-Admin-Gateway/1.0" },
+      cache: "no-store",
+    });
+    if (!sourceResponse.ok) throw new Error(`Admin source unavailable: ${sourceResponse.status}`);
+    let html = await sourceResponse.text();
+
     const sessionData = {
       provider: session.provider,
       scope: session.scope,
@@ -104,6 +109,6 @@ module.exports = async (req, res) => {
     return res.end(html);
   } catch (error) {
     console.error("Protected admin page failed:", error);
-    return res.status(500).send("Admin page unavailable");
+    return res.status(503).send("Admin page unavailable");
   }
 };
