@@ -9,15 +9,13 @@
     html,body{width:100%;height:100%;margin:0;overflow:hidden;background:#050505}
     iframe{display:block;width:100%;height:100%;border:0;background:#050505}
   </style>
-  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
-  <script src="assets/js/firebase-config.js"></script>
 </head>
 <body>
-  <iframe src="gateway.html" title="Taurus Security Gateway" allow="publickey-credentials-get *"></iframe>
+  <iframe id="taurus-gateway-frame" src="gateway.html" title="Taurus Security Gateway" allow="publickey-credentials-get *"></iframe>
   <script>
     (function () {
       const START_ORIGIN = 'https://start.omeryigitler.com';
+      const frame = document.getElementById('taurus-gateway-frame');
       let handoffStarted = false;
 
       function safeReturnTarget() {
@@ -30,7 +28,10 @@
         }
       }
 
-      function postSession(idToken) {
+      function postSession(customToken) {
+        if (!customToken || handoffStarted) return;
+        handoffStarted = true;
+
         const form = document.createElement('form');
         form.method = 'POST';
         form.action = START_ORIGIN + '/api/gateway/session';
@@ -38,8 +39,8 @@
 
         const tokenInput = document.createElement('input');
         tokenInput.type = 'hidden';
-        tokenInput.name = 'idToken';
-        tokenInput.value = idToken;
+        tokenInput.name = 'customToken';
+        tokenInput.value = customToken;
 
         const returnInput = document.createElement('input');
         returnInput.type = 'hidden';
@@ -51,19 +52,23 @@
         form.submit();
       }
 
-      firebase.auth().onAuthStateChanged(async (user) => {
-        if (!user || handoffStarted) return;
+      function installGatewayHandoff() {
         try {
-          const tokenResult = await user.getIdTokenResult(true);
-          const claims = tokenResult.claims || {};
-          if (claims.admin !== true || claims.role !== 'admin') return;
-          handoffStarted = true;
-          postSession(tokenResult.token);
+          const child = frame.contentWindow;
+          if (!child) return;
+
+          child.grantAccess = function (customToken) {
+            postSession(customToken);
+          };
         } catch (error) {
-          console.error('Startpage gateway handoff failed:', error);
-          handoffStarted = false;
+          console.error('Taurus Gateway handoff could not be installed:', error);
         }
-      });
+      }
+
+      frame.addEventListener('load', installGatewayHandoff);
+      const guard = window.setInterval(installGatewayHandoff, 500);
+      window.setTimeout(() => window.clearInterval(guard), 15000);
+      installGatewayHandoff();
     })();
   </script>
 </body>
