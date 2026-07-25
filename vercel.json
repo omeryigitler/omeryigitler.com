@@ -63,6 +63,13 @@
       ]
     },
     {
+      "source": "/agent.html",
+      "headers": [
+        { "key": "X-Robots-Tag", "value": "noindex, nofollow, noarchive" },
+        { "key": "Permissions-Policy", "value": "geolocation=(), microphone=(self), camera=(), payment=()" }
+      ]
+    },
+    {
       "source": "/gateway.html",
       "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow, noarchive" }]
     },
