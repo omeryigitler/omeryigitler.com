@@ -4,9 +4,6 @@
   "functions": {
     "api/portfolio-capture.js": {
       "maxDuration": 60
-    },
-    "api/admin-page.js": {
-      "includeFiles": "admin.html"
     }
   },
   "headers": [
