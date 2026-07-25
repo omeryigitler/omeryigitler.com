@@ -64,6 +64,50 @@ window.firebaseConfig = firebaseConfig;
     window.addEventListener('load', () => setTimeout(applyFix, 250), { once: true });
 })();
 
+// Company networks can block direct Firebase Auth endpoints. Telegram sessions
+// use a same-origin proxy. The real refresh token is discarded server-side.
+(function installRestrictedNetworkFirebaseProxy() {
+    if (window.__taurusFirebaseProxyInstalled || typeof window.fetch !== 'function') return;
+    window.__taurusFirebaseProxyInstalled = true;
+
+    const nativeFetch = window.fetch.bind(window);
+    window.__taurusNativeFetch = nativeFetch;
+
+    window.fetch = function taurusFetch(input, init) {
+        const url = typeof input === 'string' ? input : String(input?.url || '');
+        const telegramSession = sessionStorage.getItem('taurusAuthProvider') === 'telegram';
+
+        if (telegramSession && url.includes('identitytoolkit.googleapis.com/v1/accounts:signInWithCustomToken')) {
+            return nativeFetch('/api/csp-report?action=firebase_exchange', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                cache: 'no-store',
+                body: init?.body || '{}'
+            });
+        }
+
+        if (telegramSession && url.includes('identitytoolkit.googleapis.com/v1/accounts:lookup')) {
+            return nativeFetch('/api/csp-report?action=firebase_lookup', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                cache: 'no-store',
+                body: init?.body || '{}'
+            });
+        }
+
+        if (telegramSession && url.includes('securetoken.googleapis.com/v1/token')) {
+            return Promise.resolve(new Response(JSON.stringify({
+                error: { code: 401, message: 'TOKEN_EXPIRED' }
+            }), {
+                status: 401,
+                headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' }
+            }));
+        }
+
+        return nativeFetch(input, init);
+    };
+})();
+
 // AUTO-INITIALIZE
 const shouldAutoInitializeFirebase =
     !(window.location && /\/admin\.html$/i.test(window.location.pathname));
@@ -90,11 +134,12 @@ if (typeof firebase !== 'undefined' && shouldAutoInitializeFirebase) {
     console.error("❌ Firebase SDK not found!");
 }
 
-(function installHardenedDirectGatewayRouter() {
+// Direct gateway.html always opens the admin target. Authentication method
+// (passkey or Telegram) never changes the destination.
+(function installHardenedDirectAdminGateway() {
     if (!window.location || !/\/gateway\.html$/i.test(window.location.pathname)) return;
     if (window.top !== window.self) return;
 
-    const START_ORIGIN = 'https://start.omeryigitler.com';
     let handoffInFlight = false;
 
     function base64Url(bytes) {
@@ -114,52 +159,14 @@ if (typeof firebase !== 'undefined' && shouldAutoInitializeFirebase) {
         return base64Url(new Uint8Array(digest));
     }
 
-    function decodeProvider(customToken) {
-        try {
-            const encoded = customToken.split('.')[1] || '';
-            const normalized = encoded.replace(/-/g, '+').replace(/_/g, '/');
-            const padded = normalized + '='.repeat((4 - (normalized.length % 4)) % 4);
-            const payload = JSON.parse(atob(padded));
-            return String(payload?.claims?.provider || payload?.provider || '');
-        } catch (_) {
-            return '';
-        }
-    }
-
-    function postStartpageTicket(handoffToken, verifier) {
-        const form = document.createElement('form');
-        form.method = 'POST';
-        form.action = `${START_ORIGIN}/api/gateway/session`;
-        form.style.display = 'none';
-
-        const ticketInput = document.createElement('input');
-        ticketInput.type = 'hidden';
-        ticketInput.name = 'handoffToken';
-        ticketInput.value = handoffToken;
-
-        const verifierInput = document.createElement('input');
-        verifierInput.type = 'hidden';
-        verifierInput.name = 'verifier';
-        verifierInput.value = verifier;
-
-        const returnInput = document.createElement('input');
-        returnInput.type = 'hidden';
-        returnInput.name = 'return';
-        returnInput.value = `${START_ORIGIN}/`;
-
-        form.append(ticketInput, verifierInput, returnInput);
-        document.body.appendChild(form);
-        form.submit();
-    }
-
-    async function issueTicket(customToken, target, verifierHashValue) {
+    async function issueTicket(customToken, verifierHashValue) {
         const response = await fetch('/api/csp-report?action=handoff_issue', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             cache: 'no-store',
             body: JSON.stringify({
                 customToken,
-                target,
+                target: 'admin',
                 verifierHash: verifierHashValue
             })
         });
@@ -170,17 +177,10 @@ if (typeof firebase !== 'undefined' && shouldAutoInitializeFirebase) {
         return data.handoffToken;
     }
 
-    async function openStartpage(customToken) {
-        const verifier = randomVerifier();
-        const hash = await verifierHash(verifier);
-        const ticket = await issueTicket(customToken, 'startpage', hash);
-        postStartpageTicket(ticket, verifier);
-    }
-
     async function openAdmin(customToken) {
         const verifier = randomVerifier();
         const hash = await verifierHash(verifier);
-        const ticket = await issueTicket(customToken, 'admin', hash);
+        const ticket = await issueTicket(customToken, hash);
 
         const redeemResponse = await fetch('/api/csp-report?action=handoff_redeem', {
             method: 'POST',
@@ -193,15 +193,20 @@ if (typeof firebase !== 'undefined' && shouldAutoInitializeFirebase) {
             })
         });
         const redeemed = await redeemResponse.json().catch(() => ({}));
-        if (!redeemResponse.ok || !redeemed.verified) {
-            throw new Error(redeemed.error || 'Secure ticket redemption failed');
+        if (!redeemResponse.ok || !redeemed.verified || !redeemed.adminCustomToken) {
+            throw new Error(redeemed?.error?.message || redeemed.error || 'Secure ticket redemption failed');
         }
-        if (redeemed.provider !== 'passkey' || redeemed.scope !== 'full' || !redeemed.adminCustomToken) {
-            throw new Error('Admin requires a registered passkey');
+        if (!['passkey', 'telegram'].includes(redeemed.provider)) {
+            throw new Error('Unknown gateway provider');
         }
+
+        sessionStorage.setItem('taurusAuthProvider', redeemed.provider);
+        sessionStorage.setItem('taurusAuthScope', redeemed.scope || (redeemed.provider === 'passkey' ? 'full' : 'workspace'));
+        sessionStorage.setItem('taurusAuthExpiresAt', String(Date.now() + Number(redeemed.sessionMaxAge || 3600) * 1000));
 
         await firebase.auth().setPersistence(firebase.auth.Auth.Persistence.SESSION);
         await firebase.auth().signInWithCustomToken(redeemed.adminCustomToken);
+
         sessionStorage.setItem('authToken', 'valid');
         localStorage.removeItem('authToken');
         localStorage.removeItem('authLockout');
@@ -217,19 +222,9 @@ if (typeof firebase !== 'undefined' && shouldAutoInitializeFirebase) {
             if (typeof pollingInterval !== 'undefined' && pollingInterval) {
                 clearInterval(pollingInterval);
             }
-
-            const provider = decodeProvider(customToken);
-            if (provider === 'telegram') {
-                await openStartpage(customToken);
-                return;
-            }
-            if (provider === 'passkey') {
-                await openAdmin(customToken);
-                return;
-            }
-            throw new Error('Unknown gateway provider');
+            await openAdmin(customToken);
         } catch (error) {
-            console.error('Hardened gateway routing failed:', error);
+            console.error('Hardened admin gateway failed:', error);
             handoffInFlight = false;
             if (typeof failAuth === 'function') {
                 failAuth('Secure gateway failed. Retry connection.');
