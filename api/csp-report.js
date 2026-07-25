@@ -76,7 +76,20 @@ async function exchangeCustomToken(customToken) {
   if (!response.ok || !data.idToken) {
     throw new Error('Gateway token exchange failed');
   }
-  return String(data.idToken);
+  return data;
+}
+
+function assertGatewayIdentity(decoded) {
+  const uid = String(decoded?.uid || '');
+  const provider = String(decoded?.provider || '');
+  const authorized =
+    decoded?.admin === true &&
+    decoded?.role === 'admin' &&
+    /^(?:passkey_admin_primary|telegram_admin_)/.test(uid) &&
+    (provider === 'passkey' || provider === 'telegram');
+
+  if (!authorized) throw new Error('Unauthorized gateway identity');
+  return { uid, provider };
 }
 
 async function issueHandoff(req, res, body) {
@@ -93,19 +106,9 @@ async function issueHandoff(req, res, body) {
     return res.status(400).json({ error: 'Invalid handoff request' });
   }
 
-  const idToken = await exchangeCustomToken(customToken);
-  const decoded = await admin.auth().verifyIdToken(idToken, true);
-  const uid = String(decoded.uid || '');
-  const provider = String(decoded.provider || '');
-  const authorized =
-    decoded.admin === true &&
-    decoded.role === 'admin' &&
-    /^(?:passkey_admin_primary|telegram_admin_)/.test(uid) &&
-    (provider === 'passkey' || provider === 'telegram');
-
-  if (!authorized) {
-    return res.status(403).json({ error: 'Unauthorized gateway identity' });
-  }
+  const exchanged = await exchangeCustomToken(customToken);
+  const decoded = await admin.auth().verifyIdToken(String(exchanged.idToken), true);
+  const { uid, provider } = assertGatewayIdentity(decoded);
 
   const ticket = crypto.randomBytes(32).toString('base64url');
   const hash = ticketHash(ticket);
@@ -191,11 +194,12 @@ async function redeemHandoff(req, res, body) {
   }
 
   let adminCustomToken = null;
-  if (target === 'admin' && result.provider === 'passkey' && result.scope === 'full') {
+  if (target === 'admin') {
     adminCustomToken = await admin.auth().createCustomToken(result.uid, {
       admin: true,
       role: 'admin',
-      provider: 'passkey',
+      provider: result.provider,
+      scope: result.scope,
     });
   }
 
@@ -207,6 +211,66 @@ async function redeemHandoff(req, res, body) {
     sessionMaxAge: SESSION_AGES[result.provider],
     adminCustomToken,
   });
+}
+
+async function proxyTelegramFirebaseExchange(req, res, body) {
+  const customToken = String(body.token || body.customToken || '');
+  if (!customToken || customToken.length > 12000) {
+    return res.status(400).json({ error: { message: 'INVALID_CUSTOM_TOKEN' } });
+  }
+
+  const exchanged = await exchangeCustomToken(customToken);
+  const decoded = await admin.auth().verifyIdToken(String(exchanged.idToken), false);
+  const identity = assertGatewayIdentity(decoded);
+  if (identity.provider !== 'telegram') {
+    return res.status(403).json({ error: { message: 'TELEGRAM_PROXY_ONLY' } });
+  }
+
+  // The real Firebase refresh token is deliberately never returned to the browser.
+  // The current ID token remains usable for its normal ~1 hour lifetime.
+  await admin.auth().revokeRefreshTokens(identity.uid);
+
+  await db.collection('gateway_auth_audit').add({
+    uid: identity.uid,
+    provider: 'telegram',
+    mode: 'restricted-network-proxy',
+    createdAt: admin.firestore.FieldValue.serverTimestamp(),
+    ip: getClientIp(req),
+    userAgent: String(req.headers['user-agent'] || '').slice(0, 500),
+  });
+
+  return res.status(200).json({
+    kind: exchanged.kind || 'identitytoolkit#VerifyCustomTokenResponse',
+    idToken: String(exchanged.idToken),
+    refreshToken: `disabled_${crypto.randomBytes(24).toString('base64url')}`,
+    expiresIn: '3600',
+    localId: String(exchanged.localId || identity.uid),
+    isNewUser: Boolean(exchanged.isNewUser),
+  });
+}
+
+async function proxyTelegramAccountLookup(req, res, body) {
+  const idToken = String(body.idToken || '');
+  if (!idToken || idToken.length > 12000) {
+    return res.status(400).json({ error: { message: 'INVALID_ID_TOKEN' } });
+  }
+
+  const decoded = await admin.auth().verifyIdToken(idToken, false);
+  const identity = assertGatewayIdentity(decoded);
+  if (identity.provider !== 'telegram') {
+    return res.status(403).json({ error: { message: 'TELEGRAM_PROXY_ONLY' } });
+  }
+
+  const response = await fetch(
+    `https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=${encodeURIComponent(FIREBASE_API_KEY)}`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ idToken }),
+    },
+  );
+  const data = await response.json().catch(() => ({}));
+  return res.status(response.status).json(data);
 }
 
 function handleCspReport(req, res) {
@@ -240,9 +304,11 @@ module.exports = async function cspReportHandler(req, res) {
   try {
     if (action === 'handoff_issue') return issueHandoff(req, res, body);
     if (action === 'handoff_redeem') return redeemHandoff(req, res, body);
+    if (action === 'firebase_exchange') return proxyTelegramFirebaseExchange(req, res, body);
+    if (action === 'firebase_lookup') return proxyTelegramAccountLookup(req, res, body);
     return handleCspReport(req, res);
   } catch (error) {
-    console.error('CSP / gateway handoff error:', error);
-    return res.status(401).json({ error: 'Gateway handoff failed' });
+    console.error('CSP / gateway security error:', error);
+    return res.status(401).json({ error: { message: 'GATEWAY_SECURITY_FAILED' } });
   }
 };
