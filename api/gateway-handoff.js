@@ -1,14 +1,19 @@
 const crypto = require("crypto");
 const { admin, db } = require("./_firebaseAdmin");
 
-const HANDOFF_TTL_MS = 60 * 1000;
+const HANDOFF_TTL_MS = 45 * 1000;
 const FIREBASE_API_KEY = process.env.FIREBASE_API_KEY || "AIzaSyC0DAIT0cVPD4WFpfgqrn0lfb-kyFRsnWM";
-const ALLOWED_TARGET = "startpage";
+const ALLOWED_TARGETS = new Set(["startpage", "admin"]);
+const SESSION_AGES = {
+  passkey: 12 * 60 * 60,
+  telegram: 60 * 60,
+};
 
 function noStore(res) {
   res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, private");
   res.setHeader("Pragma", "no-cache");
   res.setHeader("X-Content-Type-Options", "nosniff");
+  res.setHeader("Referrer-Policy", "no-referrer");
 }
 
 function readBody(req) {
@@ -23,8 +28,19 @@ function readBody(req) {
   return req.body;
 }
 
+function sha256Base64Url(value) {
+  return crypto.createHash("sha256").update(value).digest("base64url");
+}
+
 function ticketHash(ticket) {
   return crypto.createHash("sha256").update(ticket).digest("hex");
+}
+
+function safeEqual(left, right) {
+  const leftBuffer = Buffer.from(String(left || ""));
+  const rightBuffer = Buffer.from(String(right || ""));
+  if (leftBuffer.length !== rightBuffer.length) return false;
+  return crypto.timingSafeEqual(leftBuffer, rightBuffer);
 }
 
 function getClientIp(req) {
@@ -55,7 +71,14 @@ async function exchangeCustomToken(customToken) {
 async function issueHandoff(req, res, body) {
   const customToken = String(body.customToken || "");
   const target = String(body.target || "");
-  if (target !== ALLOWED_TARGET || !customToken || customToken.length > 12000) {
+  const verifierHash = String(body.verifierHash || "");
+
+  if (
+    !ALLOWED_TARGETS.has(target) ||
+    !customToken ||
+    customToken.length > 12000 ||
+    !/^[A-Za-z0-9_-]{43}$/.test(verifierHash)
+  ) {
     return res.status(400).json({ error: "Invalid handoff request" });
   }
 
@@ -77,12 +100,14 @@ async function issueHandoff(req, res, body) {
   const hash = ticketHash(ticket);
   const now = Date.now();
   const expiresAt = admin.firestore.Timestamp.fromMillis(now + HANDOFF_TTL_MS);
+  const scope = provider === "passkey" ? "full" : "workspace";
 
   await db.collection("gateway_handoffs").doc(hash).set({
-    target: ALLOWED_TARGET,
+    target,
     uid,
     provider,
-    used: false,
+    scope,
+    verifierHash,
     createdAt: admin.firestore.FieldValue.serverTimestamp(),
     expiresAt,
     ip: getClientIp(req),
@@ -98,36 +123,61 @@ async function issueHandoff(req, res, body) {
 async function redeemHandoff(req, res, body) {
   const ticket = String(body.handoffToken || "");
   const target = String(body.target || "");
-  if (target !== ALLOWED_TARGET || !/^[A-Za-z0-9_-]{40,100}$/.test(ticket)) {
+  const verifier = String(body.verifier || "");
+
+  if (
+    !ALLOWED_TARGETS.has(target) ||
+    !/^[A-Za-z0-9_-]{40,100}$/.test(ticket) ||
+    !/^[A-Za-z0-9_-]{43,128}$/.test(verifier)
+  ) {
     return res.status(400).json({ error: "Invalid handoff token" });
   }
 
   const hash = ticketHash(ticket);
+  const suppliedVerifierHash = sha256Base64Url(verifier);
   const docRef = db.collection("gateway_handoffs").doc(hash);
+  const auditRef = db.collection("gateway_handoff_audit").doc();
   let result = null;
 
   await db.runTransaction(async (transaction) => {
     const snapshot = await transaction.get(docRef);
-    if (!snapshot.exists) throw new Error("Handoff not found");
+    if (!snapshot.exists) throw new Error("Handoff not found or already burned");
 
     const data = snapshot.data() || {};
     const expiresAtMs = data.expiresAt?.toMillis ? data.expiresAt.toMillis() : 0;
-    if (data.used || data.target !== ALLOWED_TARGET || !expiresAtMs || Date.now() > expiresAtMs) {
-      throw new Error("Handoff expired or already used");
-    }
+    const valid =
+      data.target === target &&
+      expiresAtMs > Date.now() &&
+      safeEqual(data.verifierHash, suppliedVerifierHash);
 
-    transaction.update(docRef, {
-      used: true,
-      usedAt: admin.firestore.FieldValue.serverTimestamp(),
-    });
+    if (!valid) throw new Error("Handoff expired or verifier mismatch");
 
     result = {
       uid: String(data.uid || ""),
       provider: String(data.provider || "telegram"),
+      scope: String(data.scope || "workspace"),
     };
+
+    // Burn-on-read: the live ticket is deleted in the same atomic transaction.
+    transaction.delete(docRef);
+    transaction.set(auditRef, {
+      ticketHash: hash,
+      target,
+      uid: result.uid,
+      provider: result.provider,
+      scope: result.scope,
+      redeemedAt: admin.firestore.FieldValue.serverTimestamp(),
+      redeemIp: getClientIp(req),
+      userAgent: String(req.headers["user-agent"] || "").slice(0, 500),
+    });
   });
 
-  if (!result?.uid || !/^(?:passkey_admin_primary|telegram_admin_)/.test(result.uid)) {
+  if (
+    !result?.uid ||
+    !/^(?:passkey_admin_primary|telegram_admin_)/.test(result.uid) ||
+    !["passkey", "telegram"].includes(result.provider) ||
+    !["full", "workspace"].includes(result.scope)
+  ) {
     return res.status(403).json({ error: "Invalid handoff identity" });
   }
 
@@ -135,7 +185,8 @@ async function redeemHandoff(req, res, body) {
     verified: true,
     uid: result.uid,
     provider: result.provider,
-    sessionMaxAge: result.provider === "passkey" ? 7 * 24 * 60 * 60 : 8 * 60 * 60,
+    scope: result.scope,
+    sessionMaxAge: SESSION_AGES[result.provider],
   });
 }
 
