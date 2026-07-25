@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Taurus Gateway | Admin</title>
+  <link rel="icon" href="assets/favicon_transparent.svg" type="image/svg+xml">
+  <style>
+    html,body{width:100%;height:100%;margin:0;overflow:hidden;background:#050505}
+    iframe{display:block;width:100%;height:100%;border:0;background:#050505}
+  </style>
+</head>
+<body>
+  <iframe id="taurus-gateway-frame" src="gateway.html" title="Taurus Security Gateway" allow="publickey-credentials-get *"></iframe>
+  <script>
+    (function () {
+      const frame = document.getElementById('taurus-gateway-frame');
+      let handoffStarted = false;
+
+      function base64Url(bytes) {
+        let binary = '';
+        bytes.forEach((byte) => { binary += String.fromCharCode(byte); });
+        return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
+      }
+
+      function randomVerifier() {
+        const bytes = new Uint8Array(32);
+        crypto.getRandomValues(bytes);
+        return base64Url(bytes);
+      }
+
+      async function verifierHash(verifier) {
+        const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(verifier));
+        return base64Url(new Uint8Array(digest));
+      }
+
+      function safeReturnTarget() {
+        try {
+          const raw = new URLSearchParams(window.location.search).get('return') || '/admin.html';
+          const target = new URL(raw, window.location.origin);
+          return target.origin === window.location.origin && target.pathname === '/admin.html'
+            ? target.pathname + target.search + target.hash
+            : '/admin.html';
+        } catch (_) {
+          return '/admin.html';
+        }
+      }
+
+      function postTicket(handoffToken, verifier) {
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = '/api/admin-session';
+        form.style.display = 'none';
+
+        const ticketInput = document.createElement('input');
+        ticketInput.type = 'hidden';
+        ticketInput.name = 'handoffToken';
+        ticketInput.value = handoffToken;
+
+        const verifierInput = document.createElement('input');
+        verifierInput.type = 'hidden';
+        verifierInput.name = 'verifier';
+        verifierInput.value = verifier;
+
+        const returnInput = document.createElement('input');
+        returnInput.type = 'hidden';
+        returnInput.name = 'return';
+        returnInput.value = safeReturnTarget();
+
+        form.append(ticketInput, verifierInput, returnInput);
+        document.body.appendChild(form);
+        form.submit();
+      }
+
+      async function issueTicket(customToken) {
+        if (!customToken || handoffStarted) return;
+        handoffStarted = true;
+
+        try {
+          const verifier = randomVerifier();
+          const hash = await verifierHash(verifier);
+          const response = await fetch('/api/gateway-handoff?action=issue', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            cache: 'no-store',
+            body: JSON.stringify({ customToken, target: 'admin', verifierHash: hash })
+          });
+          const data = await response.json().catch(() => ({}));
+          if (!response.ok || !data.handoffToken) throw new Error(data.error || 'Ticket issue failed');
+          postTicket(data.handoffToken, verifier);
+        } catch (error) {
+          console.error('Admin gateway handoff failed:', error);
+          handoffStarted = false;
+          try { frame.contentWindow.failAuth('Secure handoff failed. Retry.'); } catch (_) {}
+        }
+      }
+
+      function installGatewayHandoff() {
+        try {
+          const child = frame.contentWindow;
+          if (!child) return;
+          child.grantAccess = issueTicket;
+        } catch (error) {
+          console.error('Taurus Gateway handoff could not be installed:', error);
+        }
+      }
+
+      frame.addEventListener('load', installGatewayHandoff);
+      const guard = window.setInterval(installGatewayHandoff, 300);
+      window.setTimeout(() => window.clearInterval(guard), 20000);
+      installGatewayHandoff();
+    })();
+  </script>
+</body>
+</html>
