@@ -4,6 +4,9 @@
   "functions": {
     "api/portfolio-capture.js": {
       "maxDuration": 60
+    },
+    "api/admin-page.js": {
+      "includeFiles": "admin.html"
     }
   },
   "headers": [
@@ -59,6 +62,7 @@
       "source": "/admin.html",
       "headers": [
         { "key": "X-Robots-Tag", "value": "noindex, nofollow, noarchive" },
+        { "key": "Cache-Control", "value": "no-store, no-cache, must-revalidate, private" },
         { "key": "Permissions-Policy", "value": "geolocation=(), microphone=(self), camera=(), payment=()" }
       ]
     },
@@ -72,6 +76,20 @@
     {
       "source": "/gateway.html",
       "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow, noarchive" }]
+    },
+    {
+      "source": "/admin-gateway.html",
+      "headers": [
+        { "key": "X-Robots-Tag", "value": "noindex, nofollow, noarchive" },
+        { "key": "Cache-Control", "value": "no-store, no-cache, must-revalidate" }
+      ]
+    },
+    {
+      "source": "/start-gateway.html",
+      "headers": [
+        { "key": "X-Robots-Tag", "value": "noindex, nofollow, noarchive" },
+        { "key": "Cache-Control", "value": "no-store, no-cache, must-revalidate" }
+      ]
     },
     {
       "source": "/passkey-setup.html",
@@ -91,6 +109,10 @@
     }
   ],
   "rewrites": [
+    {
+      "source": "/admin.html",
+      "destination": "/api/admin-page"
+    },
     {
       "source": "/webhook",
       "destination": "/api/webhook"
