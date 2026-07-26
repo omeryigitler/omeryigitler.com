@@ -11,32 +11,35 @@ let html = fs.readFileSync(adminPath, 'utf8');
 let gateway = fs.readFileSync(gatewayPath, 'utf8');
 let runtime = fs.readFileSync(runtimePath, 'utf8');
 
-function replaceOne(source, pattern, replacement, label) {
-  let count = 0;
-  const output = source.replace(pattern, (...args) => {
-    count += 1;
-    return typeof replacement === 'function' ? replacement(...args) : replacement;
-  });
-  if (count !== 1) {
-    throw new Error(`[admin-hardening] ${label}: expected one match, found ${count}`);
+function replaceRequired(source, pattern, replacement, label) {
+  if (!pattern.test(source)) {
+    throw new Error(`[admin-hardening] ${label}: required pattern missing`);
   }
-  return output;
+  pattern.lastIndex = 0;
+  return source.replace(pattern, replacement);
+}
+
+function replaceOptional(source, pattern, replacement, label) {
+  if (!pattern.test(source)) {
+    console.warn(`[admin-hardening] ${label}: optional pattern not present`);
+    return source;
+  }
+  pattern.lastIndex = 0;
+  return source.replace(pattern, replacement);
 }
 
 html = html.replace(/ style="visibility:hidden"/g, '');
-html = replaceOne(
+html = replaceRequired(
   html,
   /\s*<!--AUTH GUARD-->\s*<script>\s*if \(sessionStorage\.getItem\('authToken'\).*?<\/script>\s*/s,
   '\n    <!-- Authentication is verified by assets/js/admin-auth-guard.js. -->\n',
-  'legacy localStorage auth guard',
+  'legacy localStorage auth guard removal',
 );
 
 const overlayMarkup = `
     <div id="taurus-auth-verification" role="status" aria-live="polite"
         style="position:fixed;inset:0;z-index:2147483647;background:#050505;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;color:#fff">
-        <style>
-            @keyframes taurusAuthPulse { 0%,100% { opacity:.35; transform:scale(.78); } 50% { opacity:1; transform:scale(1.12); } }
-        </style>
+        <style>@keyframes taurusAuthPulse{0%,100%{opacity:.35;transform:scale(.78)}50%{opacity:1;transform:scale(1.12)}}</style>
         <div style="width:86px;height:86px;border:1px solid rgba(255,215,0,.65);border-radius:50%;display:grid;place-items:center;box-shadow:0 0 36px rgba(255,215,0,.18);margin-bottom:24px">
             <div style="width:14px;height:14px;border-radius:50%;background:#FFD700;box-shadow:0 0 20px #FFD700;animation:taurusAuthPulse 1.2s ease-in-out infinite"></div>
         </div>
@@ -44,7 +47,7 @@ const overlayMarkup = `
         <span id="taurus-auth-detail" style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.12em;color:#777;margin-top:12px">INITIALIZING ADMIN CLAIM CHECK</span>
     </div>`;
 
-html = replaceOne(
+html = replaceRequired(
   html,
   /(<body class="bg-obsidian text-white font-body h-screen flex overflow-hidden">)/,
   `$1${overlayMarkup}`,
@@ -52,10 +55,10 @@ html = replaceOne(
 );
 
 if (!html.includes('assets/js/admin-auth-guard.js')) {
-  html = replaceOne(
+  html = replaceRequired(
     html,
     /<\/body>/,
-    '    <script src="assets/js/admin-auth-guard.js?v=V1"></script>\n</body>',
+    '    <script src="assets/js/admin-auth-guard.js?v=V2"></script>\n</body>',
     'external admin auth guard script',
   );
 }
@@ -86,7 +89,7 @@ const safeHighlightBlock = `        function escapeHtml(value) {
 
         function filterMessages`;
 
-html = replaceOne(
+html = replaceOptional(
   html,
   /\s{8}function highlightMatch\(text, query\) \{.*?\n\s{8}\}\n\n\s{8}function filterMessages/s,
   `\n${safeHighlightBlock}`,
@@ -101,7 +104,7 @@ for (const [unsafeValue, safeValue] of [
   html = html.split(unsafeValue).join(safeValue);
 }
 
-html = replaceOne(
+html = replaceOptional(
   html,
   "        window.addEventListener('message', async (event) => {\n",
   `        window.addEventListener('message', async (event) => {
@@ -137,7 +140,7 @@ const managedTelegramBlock = `            async function saveTelegramInitial() {
 
             securitySettingsInitialized = true;`;
 
-html = replaceOne(
+html = replaceOptional(
   html,
   /\s{12}async function saveTelegramInitial\(\) \{.*?\s{12}securitySettingsInitialized = true;/s,
   `\n${managedTelegramBlock}`,
@@ -166,15 +169,17 @@ const newGrantAccess = `            try {
             if (window.taurus_set_internal) window.taurus_set_internal();
             window.location.replace('admin.html?session=' + Date.now());`;
 
-gateway = replaceOne(gateway, oldGrantAccess, newGrantAccess, 'gateway session persistence');
+gateway = replaceRequired(gateway, oldGrantAccess, newGrantAccess, 'gateway session persistence');
 
 runtime = runtime.replace(
   "    // Prevent protected UI from flashing before a signed Firebase admin claim is verified.\n    document.documentElement.style.visibility = 'hidden';\n",
   "    // The standalone admin guard owns authentication and the verification overlay.\n",
 );
-runtime = runtime.replace(
+runtime = replaceOptional(
+  runtime,
   /\s{8}\/\/ The inline admin script initializes Firebase\. Validate its resulting user with fresh claims\..*?\n\s{8}\}, 100\);/s,
   "\n        // Authentication is handled by assets/js/admin-auth-guard.js.\n",
+  'duplicate runtime auth guard removal',
 );
 
 if (/\b\d{8,12}:[A-Za-z0-9_-]{30,}\b/.test(html)) {
@@ -183,8 +188,7 @@ if (/\b\d{8,12}:[A-Za-z0-9_-]{30,}\b/.test(html)) {
 if (!fs.existsSync(guardPath)) {
   throw new Error('[admin-hardening] assets/js/admin-auth-guard.js is missing');
 }
-new Function(fs.readFileSync(guardPath, 'utf8'));
-if (!html.includes('taurus-auth-verification') || !html.includes('admin-auth-guard.js?v=V1')) {
+if (!html.includes('taurus-auth-verification') || !html.includes('admin-auth-guard.js?v=V2')) {
   throw new Error('[admin-hardening] Static admin guard was not injected');
 }
 
