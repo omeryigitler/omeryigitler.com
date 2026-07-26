@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="referrer" content="no-referrer">
+  <meta name="robots" content="noindex,nofollow,noarchive">
+  <title>Taurus Gateway Approval</title>
+  <style>
+    :root{color-scheme:dark;--gold:#ffd700;--bg:#050505;--panel:#0b0b09;--muted:#8c8c84}
+    *{box-sizing:border-box}
+    body{margin:0;min-height:100vh;display:grid;place-items:center;background:radial-gradient(circle at 50% 30%,#171405 0,#080806 38%,var(--bg) 72%);font-family:ui-monospace,SFMono-Regular,Menlo,monospace;color:#fff;padding:24px}
+    main{width:min(420px,100%);border:1px solid rgba(255,215,0,.35);border-radius:28px;background:rgba(8,8,7,.9);padding:42px 30px;text-align:center;box-shadow:0 0 60px rgba(255,215,0,.08)}
+    .mark{width:92px;height:92px;margin:0 auto 28px;border:2px solid var(--gold);border-radius:50%;display:grid;place-items:center;color:var(--gold);font-size:34px;box-shadow:0 0 28px rgba(255,215,0,.24)}
+    h1{font-size:22px;letter-spacing:.18em;margin:0 0 14px;color:var(--gold)}
+    p{font-size:13px;line-height:1.7;color:var(--muted);margin:0}
+    .state{margin-top:30px;padding:16px;border:1px solid rgba(255,255,255,.1);border-radius:14px;font-size:13px;letter-spacing:.08em}
+    .ok{color:#8eff9b;border-color:rgba(75,255,108,.3)}
+    .bad{color:#ff7979;border-color:rgba(255,80,80,.3)}
+  </style>
+</head>
+<body>
+  <main>
+    <div class="mark">✓</div>
+    <h1>TAURUS GATEWAY</h1>
+    <p id="message">Secure approval is being processed.</p>
+    <div id="state" class="state">VERIFYING…</div>
+  </main>
+  <script>
+    (async function () {
+      const state = document.getElementById('state');
+      const message = document.getElementById('message');
+      const params = new URLSearchParams(location.hash.slice(1));
+      const payload = {
+        reqId: params.get('reqId') || '',
+        code: params.get('code') || '',
+        exp: params.get('exp') || '',
+        sig: params.get('sig') || ''
+      };
+
+      history.replaceState(null, '', location.pathname);
+
+      if (!payload.reqId || !payload.code || !payload.exp || !payload.sig) {
+        state.textContent = 'INVALID APPROVAL LINK';
+        state.classList.add('bad');
+        message.textContent = 'This approval request is missing required security data.';
+        return;
+      }
+
+      try {
+        const response = await fetch('/api/csp-report?action=telegram_approve', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          cache: 'no-store',
+          body: JSON.stringify(payload)
+        });
+        const data = await response.json().catch(() => ({}));
+
+        if (!response.ok || data.status !== 'approved') {
+          state.textContent = data.status === 'denied' ? 'ACCESS DENIED' : 'APPROVAL FAILED';
+          state.classList.add('bad');
+          message.textContent = data.status === 'denied'
+            ? 'The selected number did not match the gateway screen.'
+            : 'The approval link expired or was already used.';
+          return;
+        }
+
+        state.textContent = 'ACCESS GRANTED';
+        state.classList.add('ok');
+        message.textContent = 'Return to the device where Taurus Gateway is open. It will continue automatically.';
+      } catch (_) {
+        state.textContent = 'CONNECTION FAILED';
+        state.classList.add('bad');
+        message.textContent = 'The approval server could not be reached. Please retry from the gateway.';
+      }
+    })();
+  </script>
+</body>
+</html>
