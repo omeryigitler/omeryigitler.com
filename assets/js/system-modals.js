@@ -1,3 +1,12 @@
+// Lucide is visual-only. Never allow a blocked CDN to stop authentication.
+if (!window.lucide || typeof window.lucide.createIcons !== 'function') {
+    window.lucide = {
+        createIcons() {
+            // Intentionally empty fallback. Authentication must remain functional.
+        }
+    };
+}
+
 /**
  * System Modal Service
  * Replaces native alert() and confirm() with premium styled modals.
