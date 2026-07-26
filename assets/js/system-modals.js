@@ -3,6 +3,15 @@
  * Replaces native alert() and confirm() with premium styled modals.
  */
 
+// Lucide is visual-only. A CDN failure must never stop gateway authentication.
+if (!window.lucide) {
+    window.lucide = {
+        createIcons() {
+            // Icons may remain as placeholders; authentication continues normally.
+        }
+    };
+}
+
 window.systemAlert = (title, message, icon = 'info') => {
     return new Promise((resolve) => {
         const modal = document.getElementById('system-modal');
