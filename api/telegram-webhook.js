@@ -1,8 +1,8 @@
 const axios = require("axios");
 const { admin, db } = require("./_firebaseAdmin");
-const legacyWebhook = require("./webhook");
 
 const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
+const LEGACY_WEBHOOK_URL = "https://omeryigitler.com/api/webhook";
 
 function allowedTelegramIds() {
   return (process.env.TELEGRAM_ALLOWED_IDS || process.env.TELEGRAM_CHAT_ID || "")
@@ -16,8 +16,12 @@ function isAllowedTelegramId(value) {
   return allowed.length > 0 && allowed.includes(Number(value));
 }
 
+function webhookSecret() {
+  return String(process.env.TELEGRAM_WEBHOOK_SECRET || "").trim();
+}
+
 function isAuthorizedWebhook(req) {
-  const expected = String(process.env.TELEGRAM_WEBHOOK_SECRET || "").trim();
+  const expected = webhookSecret();
   if (!expected) return true;
   return req.headers["x-telegram-bot-api-secret-token"] === expected;
 }
@@ -150,6 +154,17 @@ async function processAuthCallback(callbackQuery) {
   }
 }
 
+async function forwardLegacyUpdate(req) {
+  const headers = { "Content-Type": "application/json" };
+  const secret = webhookSecret();
+  if (secret) headers["X-Telegram-Bot-Api-Secret-Token"] = secret;
+
+  await axios.post(LEGACY_WEBHOOK_URL, req.body || {}, {
+    headers,
+    timeout: 8000,
+  });
+}
+
 module.exports = async (req, res) => {
   if (req.method !== "POST") return res.status(200).send("OK");
 
@@ -160,11 +175,14 @@ module.exports = async (req, res) => {
 
   const callbackQuery = req.body?.callback_query;
   if (!callbackQuery?.data?.startsWith("auth_")) {
-    return legacyWebhook(req, res);
+    try {
+      await forwardLegacyUpdate(req);
+    } catch (error) {
+      console.error("Legacy Telegram update forwarding failed:", error?.response?.data || error.message);
+    }
+    return res.status(200).send("OK");
   }
 
-  // Return HTTP 200 immediately after the Telegram acknowledgement. The remaining
-  // transaction still completes within the same serverless invocation.
   try {
     await processAuthCallback(callbackQuery);
   } catch (error) {
