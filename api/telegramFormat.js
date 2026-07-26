@@ -1,4 +1,8 @@
+const crypto = require("crypto");
+
 const SEPARATOR = "━━━━━━━━━━━━━━━━━━━━";
+const APPROVAL_TTL_MS = 5 * 60 * 1000;
+const APPROVAL_PAGE = "https://omeryigitler.com/telegram-approve.html";
 
 function escapeHtml(value) {
   return String(value ?? "")
@@ -66,12 +70,45 @@ function actionKeyboard(sessionID) {
   };
 }
 
+function approvalSecret() {
+  return String(process.env.TELEGRAM_APPROVAL_SECRET || process.env.TELEGRAM_BOT_TOKEN || "").trim();
+}
+
+function signApproval(reqId, code, expiresAt) {
+  const secret = approvalSecret();
+  if (!secret) return "";
+  return crypto
+    .createHmac("sha256", secret)
+    .update(`v1:${reqId}:${code}:${expiresAt}`)
+    .digest("base64url");
+}
+
 function authKeyboard(reqId, options) {
+  const expiresAt = Date.now() + APPROVAL_TTL_MS;
+  const secret = approvalSecret();
+
   return {
-    inline_keyboard: options.map((option) => [{
-      text: `${option}`,
-      callback_data: `auth_${reqId}_${option}`,
-    }]),
+    inline_keyboard: options.map((option) => {
+      if (!secret) {
+        return [{
+          text: `${option}`,
+          callback_data: `auth_${reqId}_${option}`,
+        }];
+      }
+
+      const signature = signApproval(reqId, option, expiresAt);
+      const fragment = new URLSearchParams({
+        reqId,
+        code: String(option),
+        exp: String(expiresAt),
+        sig: signature,
+      }).toString();
+
+      return [{
+        text: `${option}`,
+        url: `${APPROVAL_PAGE}#${fragment}`,
+      }];
+    }),
   };
 }
 
