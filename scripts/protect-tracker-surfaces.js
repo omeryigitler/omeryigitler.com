@@ -25,7 +25,18 @@ for (const relativePath of htmlFiles) {
   if (!fs.existsSync(filePath)) continue;
   let html = fs.readFileSync(filePath, 'utf8');
   html = html.replace(/taurus-tracker\.js\?v=V\d+/g, 'taurus-tracker.js?v=V45');
+
+  if (relativePath === 'admin.html' && !html.includes('admin-runtime-recovery.js')) {
+    if (!html.includes('</body>')) {
+      throw new Error('[protected-surfaces] admin.html closing body tag not found');
+    }
+    html = html.replace(
+      '</body>',
+      '    <script src="assets/js/admin-runtime-recovery.js?v=V1"></script>\n</body>'
+    );
+  }
+
   fs.writeFileSync(filePath, html, 'utf8');
 }
 
-console.log('[protected-surfaces] Taurus Tracker disabled on admin and gateway surfaces.');
+console.log('[protected-surfaces] Tracker disabled on protected pages and admin recovery injected.');
