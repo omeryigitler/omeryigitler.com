@@ -4,6 +4,7 @@ on:
   push:
     paths:
       - .github/workflows/security-hotfix.yml
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -26,66 +27,27 @@ jobs:
           path = Path('admin.html')
           text = path.read_text(encoding='utf-8')
 
-          def replace_once(old, new, label):
+          def sub_once(pattern, replacement, label, flags=0):
               global text
-              count = text.count(old)
+              text, count = re.subn(pattern, replacement, text, count=1, flags=flags)
               if count != 1:
                   raise SystemExit(f'{label}: expected 1 match, found {count}')
-              text = text.replace(old, new, 1)
 
-          replace_once(
-              '<body class="bg-obsidian text-white font-body h-screen flex overflow-hidden">',
-              '<body class="bg-obsidian text-white font-body h-screen flex overflow-hidden" style="visibility:hidden">',
-              'body visibility guard'
+          if 'style="visibility:hidden"' not in text:
+              sub_once(
+                  r'<body class="bg-obsidian text-white font-body h-screen flex overflow-hidden">',
+                  '<body class="bg-obsidian text-white font-body h-screen flex overflow-hidden" style="visibility:hidden">',
+                  'body visibility guard'
+              )
+
+          sub_once(
+              r'\s*<!--AUTH GUARD-->\s*<script>\s*if \(sessionStorage\.getItem\(\'authToken\'\).*?</script>\s*',
+              '\n    <!-- Authentication is verified below with Firebase ID-token claims. -->\n',
+              'localStorage auth guard',
+              re.S,
           )
 
-          old_guard = '''    <!--AUTH GUARD-->
-              <script>
-                  if (sessionStorage.getItem('authToken') !== 'valid' && localStorage.getItem('authToken') !== 'valid') {
-                      window.location.replace('gateway.html');
-                  }
-              </script>
-          '''
-          new_guard = '''    <!-- Authentication is verified below with Firebase ID-token claims. -->
-          '''
-          replace_once(old_guard, new_guard, 'localStorage auth guard')
-
-          old_auth = '''        document.addEventListener('DOMContentLoaded', () => {
-                      if (window.firebaseConfig && window.firebaseConfig.apiKey !== "BURAYA_API_KEY_GELECEK") {
-                          firebase.initializeApp(window.firebaseConfig);
-                          db = firebase.firestore();
-          
-                          // SECURITY: Check authentication state
-                          firebase.auth().onAuthStateChanged((user) => {
-                              if (user) {
-                                  // User is authenticated - grant access
-                                  console.log("✅ Authenticated access verified:", user.uid, "IsAnon:", user.isAnonymous);
-                                  console.log("Intelligence System Initialized");
-          
-                                  // Explicit Global DB assignment
-                                  window.db = firebase.firestore();
-          
-                                  setupRealtimeListeners();
-                                  loadTrafficChart();
-                                  startAutoPipelineListener();
-          
-                                  // Live Metadata Update
-                                  setInterval(() => {
-                                      const ping = Math.floor(Math.random() * 15) + 12;
-                                      const metaEl = document.getElementById('live-metadata');
-                                      if (metaEl) metaEl.innerText = `MS-Pulse: ${ping}ms`;
-                                  }, 3000);
-                              } else {
-                                  // User is NOT authenticated - redirect to gateway
-                                  console.warn("⛔ Unauthorized access attempt - redirecting to gateway");
-                                  if (window.taurus_set_internal) window.taurus_set_internal();
-                                  window.location.href = 'gateway.html';
-                              }
-                          });
-                      }
-                  });
-          '''
-          new_auth = '''        document.addEventListener('DOMContentLoaded', async () => {
+          admin_auth = r'''        document.addEventListener('DOMContentLoaded', async () => {
                       const rejectAdminSession = async () => {
                           try {
                               if (window.firebase && firebase.auth) await firebase.auth().signOut();
@@ -94,7 +56,7 @@ jobs:
                           localStorage.removeItem('authToken');
                           window.location.replace('gateway.html');
                       };
-          
+
                       try {
                           if (!window.firebaseConfig || window.firebaseConfig.apiKey === "BURAYA_API_KEY_GELECEK") {
                               throw new Error('Firebase configuration unavailable');
@@ -102,7 +64,7 @@ jobs:
                           if (!firebase.apps.length) firebase.initializeApp(window.firebaseConfig);
                           const auth = firebase.auth();
                           await auth.setPersistence(firebase.auth.Auth.Persistence.SESSION);
-          
+
                           auth.onAuthStateChanged(async (user) => {
                               if (!user || user.isAnonymous) return rejectAdminSession();
                               try {
@@ -111,17 +73,17 @@ jobs:
                                   if (claims.admin !== true || claims.role !== 'admin') {
                                       return rejectAdminSession();
                                   }
-          
+
                                   db = firebase.firestore();
                                   window.db = db;
                                   window.auth = auth;
                                   if (firebase.storage) window.storage = firebase.storage();
                                   document.body.style.visibility = 'visible';
-          
+
                                   setupRealtimeListeners();
                                   loadTrafficChart();
                                   startAutoPipelineListener();
-          
+
                                   setInterval(() => {
                                       const ping = Math.floor(Math.random() * 15) + 12;
                                       const metaEl = document.getElementById('live-metadata');
@@ -137,18 +99,17 @@ jobs:
                           return rejectAdminSession();
                       }
                   });
-          '''
-          replace_once(old_auth, new_auth, 'Firebase admin-claim guard')
 
-          old_highlight = '''        function highlightMatch(text, query) {
-                      if (!query) return text;
-                      try {
-                          const regex = new RegExp(`(${query})`, 'gi');
-                          return String(text).replace(regex, '<span class="search-highlight">$1</span>');
-                      } catch (e) { return text; }
-                  }
-          '''
-          new_highlight = '''        function escapeHtml(value) {
+                  // POST MESSAGE LISTENER - Pricing Tool Integration'''
+
+          sub_once(
+              r"\s{8}document\.addEventListener\('DOMContentLoaded', \(\) => \{.*?\n\s{8}\}\);\n\n\s*// POST MESSAGE LISTENER - Pricing Tool Integration",
+              '\n' + admin_auth,
+              'Firebase admin-claim guard',
+              re.S,
+          )
+
+          safe_highlight = r'''        function escapeHtml(value) {
                       return String(value ?? '')
                           .replace(/&/g, '&amp;')
                           .replace(/</g, '&lt;')
@@ -156,11 +117,11 @@ jobs:
                           .replace(/"/g, '&quot;')
                           .replace(/'/g, '&#39;');
                   }
-          
+
                   function escapeRegExp(value) {
-                      return String(value).replace(/[.*+?^${}()|[\\]\\]/g, '\\$&');
+                      return String(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
                   }
-          
+
                   function highlightMatch(value, query) {
                       const safeValue = escapeHtml(value);
                       if (!query) return safeValue;
@@ -172,33 +133,35 @@ jobs:
                           return safeValue;
                       }
                   }
-          '''
-          replace_once(old_highlight, new_highlight, 'HTML escaping helper')
 
-          # Raw contact values used in HTML attributes/blocks must be encoded.
-          replacements = {
+                  function filterMessages'''
+
+          sub_once(
+              r"\s{8}function highlightMatch\(text, query\) \{.*?\n\s{8}\}\n\n\s{8}function filterMessages",
+              '\n' + safe_highlight,
+              'HTML escaping helper',
+              re.S,
+          )
+
+          for old, new in {
               "${data.name || 'Anonymous'}": "${escapeHtml(data.name || 'Anonymous')}",
               "${data.email || ''}": "${escapeHtml(data.email || '')}",
               "${data.message || ''}": "${escapeHtml(data.message || '')}",
-          }
-          for old, new in replacements.items():
+          }.items():
               text = text.replace(old, new)
 
           marker = "        window.addEventListener('message', async (event) => {\n"
-          origin_guard = """        window.addEventListener('message', async (event) => {
+          if marker not in text:
+              raise SystemExit('postMessage listener marker not found')
+          text = text.replace(marker, """        window.addEventListener('message', async (event) => {
                       const pricingFrame = document.getElementById('pricing-iframe');
                       if (event.origin !== window.location.origin || !pricingFrame || event.source !== pricingFrame.contentWindow) {
                           return;
                       }
-          """
-          replace_once(marker, origin_guard, 'postMessage origin guard')
+          """, 1)
           text = text.replace("}, '*');", "}, window.location.origin);")
 
-          pattern = re.compile(
-              r"\s{12}async function saveTelegramInitial\(\) \{.*?\s{12}securitySettingsInitialized = true;",
-              re.S,
-          )
-          replacement = '''            async function saveTelegramInitial() {
+          telegram_managed = r'''            async function saveTelegramInitial() {
                           if (teleTokenInput) {
                               teleTokenInput.value = '';
                               teleTokenInput.disabled = true;
@@ -210,9 +173,9 @@ jobs:
                               teleChatIdInput.placeholder = 'Managed securely in Vercel environment variables';
                           }
                       }
-          
+
                       if (teleTokenInput) saveTelegramInitial();
-          
+
                       document.getElementById('save-telegram-btn')?.addEventListener('click', async () => {
                           await systemAlert(
                               'SERVER-MANAGED SECURITY',
@@ -220,14 +183,17 @@ jobs:
                               'shield-check'
                           );
                       });
-          
-                      securitySettingsInitialized = true;'''
-          text, count = pattern.subn(replacement, text, count=1)
-          if count != 1:
-              raise SystemExit(f'Telegram browser-secret block: expected 1 match, found {count}')
 
-          # No Telegram bot token may remain in a static browser file.
-          if re.search(r"\b\d{8,12}:[A-Za-z0-9_-]{30,}\b", text):
+                      securitySettingsInitialized = true;'''
+
+          sub_once(
+              r"\s{12}async function saveTelegramInitial\(\) \{.*?\s{12}securitySettingsInitialized = true;",
+              '\n' + telegram_managed,
+              'Telegram browser-secret block',
+              re.S,
+          )
+
+          if re.search(r'\b\d{8,12}:[A-Za-z0-9_-]{30,}\b', text):
               raise SystemExit('A Telegram bot token still exists in admin.html')
 
           path.write_text(text, encoding='utf-8')
