@@ -3,6 +3,7 @@ const { admin, db } = require('./_firebaseAdmin');
 
 const MAX_REPORT_BYTES = 16 * 1024;
 const HANDOFF_TTL_MS = 45 * 1000;
+const EXCHANGED_TOKEN_MAX_AGE_SECONDS = 120;
 const FIREBASE_API_KEY = process.env.FIREBASE_API_KEY || 'AIzaSyC0DAIT0cVPD4WFpfgqrn0lfb-kyFRsnWM';
 const ALLOWED_TARGETS = new Set(['startpage', 'admin']);
 const SESSION_AGES = {
@@ -17,7 +18,7 @@ function readReport(req) {
   const raw = String(req.body).slice(0, MAX_REPORT_BYTES);
   try {
     return JSON.parse(raw);
-  } catch (error) {
+  } catch (_) {
     return { raw };
   }
 }
@@ -63,20 +64,28 @@ function getClientIp(req) {
 }
 
 async function exchangeCustomToken(customToken) {
-  const response = await fetch(
-    `https://identitytoolkit.googleapis.com/v1/accounts:signInWithCustomToken?key=${encodeURIComponent(FIREBASE_API_KEY)}`,
-    {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ token: customToken, returnSecureToken: true }),
-    },
-  );
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 12000);
 
-  const data = await response.json().catch(() => ({}));
-  if (!response.ok || !data.idToken) {
-    throw new Error('Gateway token exchange failed');
+  try {
+    const response = await fetch(
+      `https://identitytoolkit.googleapis.com/v1/accounts:signInWithCustomToken?key=${encodeURIComponent(FIREBASE_API_KEY)}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token: customToken, returnSecureToken: true }),
+        signal: controller.signal,
+      },
+    );
+
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok || !data.idToken) {
+      throw new Error('Gateway token exchange failed');
+    }
+    return data;
+  } finally {
+    clearTimeout(timeout);
   }
-  return data;
 }
 
 function assertGatewayIdentity(decoded) {
@@ -90,6 +99,24 @@ function assertGatewayIdentity(decoded) {
 
   if (!authorized) throw new Error('Unauthorized gateway identity');
   return { uid, provider };
+}
+
+function assertFreshExchangedToken(decoded) {
+  const now = Math.floor(Date.now() / 1000);
+  const issuedAt = Number(decoded?.iat || 0);
+  const authTime = Number(decoded?.auth_time || 0);
+  const validIssuedAt =
+    Number.isFinite(issuedAt) &&
+    issuedAt >= now - EXCHANGED_TOKEN_MAX_AGE_SECONDS &&
+    issuedAt <= now + 30;
+  const validAuthTime =
+    Number.isFinite(authTime) &&
+    authTime >= now - EXCHANGED_TOKEN_MAX_AGE_SECONDS &&
+    authTime <= now + 30;
+
+  if (!validIssuedAt || !validAuthTime) {
+    throw new Error('Stale gateway identity token');
+  }
 }
 
 async function issueHandoff(req, res, body) {
@@ -106,8 +133,11 @@ async function issueHandoff(req, res, body) {
     return res.status(400).json({ error: 'Invalid handoff request' });
   }
 
+  // The Firebase custom token is exchanged only on the server. The returned
+  // refresh token is intentionally discarded and never reaches the browser.
   const exchanged = await exchangeCustomToken(customToken);
-  const decoded = await admin.auth().verifyIdToken(String(exchanged.idToken), true);
+  const decoded = await admin.auth().verifyIdToken(String(exchanged.idToken), false);
+  assertFreshExchangedToken(decoded);
   const { uid, provider } = assertGatewayIdentity(decoded);
 
   const ticket = crypto.randomBytes(32).toString('base64url');
@@ -171,6 +201,8 @@ async function redeemHandoff(req, res, body) {
       scope: String(data.scope || 'workspace'),
     };
 
+    // Atomic burn-on-read: the ticket is deleted in the same transaction in
+    // which its verifier and expiry are accepted.
     transaction.delete(docRef);
     transaction.set(auditRef, {
       ticketHash: hash,
@@ -213,66 +245,6 @@ async function redeemHandoff(req, res, body) {
   });
 }
 
-async function proxyTelegramFirebaseExchange(req, res, body) {
-  const customToken = String(body.token || body.customToken || '');
-  if (!customToken || customToken.length > 12000) {
-    return res.status(400).json({ error: { message: 'INVALID_CUSTOM_TOKEN' } });
-  }
-
-  const exchanged = await exchangeCustomToken(customToken);
-  const decoded = await admin.auth().verifyIdToken(String(exchanged.idToken), false);
-  const identity = assertGatewayIdentity(decoded);
-  if (identity.provider !== 'telegram') {
-    return res.status(403).json({ error: { message: 'TELEGRAM_PROXY_ONLY' } });
-  }
-
-  // The real Firebase refresh token is deliberately never returned to the browser.
-  // The current ID token remains usable for its normal ~1 hour lifetime.
-  await admin.auth().revokeRefreshTokens(identity.uid);
-
-  await db.collection('gateway_auth_audit').add({
-    uid: identity.uid,
-    provider: 'telegram',
-    mode: 'restricted-network-proxy',
-    createdAt: admin.firestore.FieldValue.serverTimestamp(),
-    ip: getClientIp(req),
-    userAgent: String(req.headers['user-agent'] || '').slice(0, 500),
-  });
-
-  return res.status(200).json({
-    kind: exchanged.kind || 'identitytoolkit#VerifyCustomTokenResponse',
-    idToken: String(exchanged.idToken),
-    refreshToken: `disabled_${crypto.randomBytes(24).toString('base64url')}`,
-    expiresIn: '3600',
-    localId: String(exchanged.localId || identity.uid),
-    isNewUser: Boolean(exchanged.isNewUser),
-  });
-}
-
-async function proxyTelegramAccountLookup(req, res, body) {
-  const idToken = String(body.idToken || '');
-  if (!idToken || idToken.length > 12000) {
-    return res.status(400).json({ error: { message: 'INVALID_ID_TOKEN' } });
-  }
-
-  const decoded = await admin.auth().verifyIdToken(idToken, false);
-  const identity = assertGatewayIdentity(decoded);
-  if (identity.provider !== 'telegram') {
-    return res.status(403).json({ error: { message: 'TELEGRAM_PROXY_ONLY' } });
-  }
-
-  const response = await fetch(
-    `https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=${encodeURIComponent(FIREBASE_API_KEY)}`,
-    {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ idToken }),
-    },
-  );
-  const data = await response.json().catch(() => ({}));
-  return res.status(response.status).json(data);
-}
-
 function handleCspReport(req, res) {
   const report = readReport(req);
   const payload = report?.['csp-report'] || report?.body || report || {};
@@ -304,8 +276,9 @@ module.exports = async function cspReportHandler(req, res) {
   try {
     if (action === 'handoff_issue') return issueHandoff(req, res, body);
     if (action === 'handoff_redeem') return redeemHandoff(req, res, body);
-    if (action === 'firebase_exchange') return proxyTelegramFirebaseExchange(req, res, body);
-    if (action === 'firebase_lookup') return proxyTelegramAccountLookup(req, res, body);
+    if (action === 'firebase_exchange' || action === 'firebase_lookup') {
+      return res.status(410).json({ error: { message: 'LEGACY_PROXY_DISABLED' } });
+    }
     return handleCspReport(req, res);
   } catch (error) {
     console.error('CSP / gateway security error:', error);
