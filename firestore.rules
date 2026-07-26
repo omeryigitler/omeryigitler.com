@@ -6,36 +6,47 @@ service cloud.firestore {
     }
 
     function isAdmin() {
-      return request.auth != null && request.auth.token.admin == true;
+      return request.auth != null &&
+        request.auth.token.admin == true &&
+        request.auth.token.role == 'admin';
     }
 
-    // Public contact form can create messages. Admin session is required to read or manage them.
+    // Contact submissions are written only by the server-side Admin SDK.
+    // Browser clients cannot create, read, update, or delete inbox records.
     match /messages/{docId} {
-      allow create: if true;
-      allow read, update, delete: if isAdmin();
+      allow read, create, update, delete: if isAdmin();
     }
 
-    // Tracker/system telemetry is intentionally separated from customer inbox messages.
     match /system_reports/{docId} {
       allow create: if isSignedIn();
       allow read, update, delete: if isAdmin();
     }
 
-    // Public visitor tracker writes with anonymous Firebase Auth.
-    // The browser may listen only to its own known session document for remote commands.
-    // Collection listing and deletes stay admin-only.
+    // Visitor telemetry remains authenticated. Admin-only collection listing and deletion.
     match /visitors_v1/{docId} {
       allow create, update: if isSignedIn();
       allow get: if isSignedIn();
       allow list, delete: if isAdmin();
     }
 
-    // Gateway auth requests are written/read by backend Admin SDK.
+    // Gateway records are exclusively managed by backend Admin SDK / verified admin sessions.
     match /auth_requests/{docId} {
       allow read, write: if isAdmin();
     }
 
-    // Admin workspace data.
+    match /gateway_handoffs/{docId} {
+      allow read, write: if isAdmin();
+    }
+
+    match /gateway_handoff_audit/{docId} {
+      allow read: if isAdmin();
+      allow write: if false;
+    }
+
+    match /gateway_rate_limits/{docId} {
+      allow read, write: if false;
+    }
+
     match /projects/{docId} {
       allow read, write: if isAdmin();
     }
