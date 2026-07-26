@@ -13,31 +13,6 @@ const firebaseConfig = {
 // Global Exposure
 window.firebaseConfig = firebaseConfig;
 
-(function ensureGatewayTelegramWebhook() {
-    const pathname = window.location?.pathname || '';
-    if (!/\/(?:gateway|start-gateway)\.html$/i.test(pathname)) return;
-
-    window.taurusWebhookReady = fetch('/api/telegram-webhook-health', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: '{}',
-        cache: 'no-store',
-        keepalive: true
-    })
-        .then(async (response) => {
-            const data = await response.json().catch(() => ({}));
-            if (!response.ok || data.ok !== true) {
-                throw new Error(data.error || `Webhook health failed (${response.status})`);
-            }
-            console.log('✅ Telegram webhook ready');
-            return true;
-        })
-        .catch((error) => {
-            console.error('❌ Telegram webhook unavailable:', error);
-            return false;
-        });
-})();
-
 (function injectTaurusFreezeLayoutFix() {
     const styleId = 'taurus-freeze-layout-fix';
 
