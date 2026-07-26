@@ -5,6 +5,7 @@ const root = process.cwd();
 const adminPath = path.join(root, 'admin.html');
 const gatewayPath = path.join(root, 'gateway.html');
 const runtimePath = path.join(root, 'assets/js/system-modals.js');
+const guardPath = path.join(root, 'assets/js/admin-auth-guard.js');
 
 let html = fs.readFileSync(adminPath, 'utf8');
 let gateway = fs.readFileSync(gatewayPath, 'utf8');
@@ -22,122 +23,42 @@ function replaceOne(source, pattern, replacement, label) {
   return output;
 }
 
-if (!html.includes('style="visibility:hidden"')) {
-  html = replaceOne(
-    html,
-    /<body class="bg-obsidian text-white font-body h-screen flex overflow-hidden">/,
-    '<body class="bg-obsidian text-white font-body h-screen flex overflow-hidden" style="visibility:hidden">',
-    'body visibility guard',
-  );
-}
-
+html = html.replace(/ style="visibility:hidden"/g, '');
 html = replaceOne(
   html,
   /\s*<!--AUTH GUARD-->\s*<script>\s*if \(sessionStorage\.getItem\('authToken'\).*?<\/script>\s*/s,
-  '\n    <!-- Authentication is verified with fresh Firebase admin claims below. -->\n',
+  '\n    <!-- Authentication is verified by assets/js/admin-auth-guard.js. -->\n',
   'legacy localStorage auth guard',
 );
 
-const verifiedAuthBlock = `        document.addEventListener('DOMContentLoaded', async () => {
-            const overlay = document.createElement('div');
-            overlay.id = 'taurus-auth-verification';
-            overlay.setAttribute('role', 'status');
-            overlay.innerHTML =
-                '<div style="width:86px;height:86px;border:1px solid rgba(255,215,0,.65);border-radius:50%;display:grid;place-items:center;box-shadow:0 0 36px rgba(255,215,0,.18);margin-bottom:24px">' +
-                '<div style="width:14px;height:14px;border-radius:50%;background:#FFD700;box-shadow:0 0 20px #FFD700;animation:taurusAuthPulse 1.2s ease-in-out infinite"></div></div>' +
-                '<strong style="font-family:JetBrains Mono,monospace;font-size:12px;letter-spacing:.22em;color:#FFD700">VERIFYING SECURE SESSION</strong>' +
-                '<span id="taurus-auth-detail" style="font-family:JetBrains Mono,monospace;font-size:10px;letter-spacing:.12em;color:#777;margin-top:12px">FIREBASE ADMIN CLAIM CHECK</span>';
-            overlay.style.cssText = 'position:fixed;inset:0;z-index:2147483647;background:#050505;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center';
-            const style = document.createElement('style');
-            style.textContent = '@keyframes taurusAuthPulse{0%,100%{opacity:.35;transform:scale(.78)}50%{opacity:1;transform:scale(1.12)}}';
-            document.head.appendChild(style);
-            document.body.appendChild(overlay);
-            document.body.style.visibility = 'visible';
-
-            const detail = () => document.getElementById('taurus-auth-detail');
-            const rejectAdminSession = async (message = 'SESSION INVALID — RETURNING TO GATEWAY') => {
-                const detailEl = detail();
-                if (detailEl) {
-                    detailEl.textContent = message;
-                    detailEl.style.color = '#ef4444';
-                }
-                try { if (window.firebase && firebase.auth) await firebase.auth().signOut(); } catch (_) {}
-                try {
-                    sessionStorage.removeItem('authToken');
-                    localStorage.removeItem('authToken');
-                } catch (_) {}
-                window.setTimeout(() => window.location.replace('gateway.html'), 700);
-            };
-
-            const waitForUser = (auth, timeoutMs = 8000) => new Promise((resolve) => {
-                if (auth.currentUser) return resolve(auth.currentUser);
-                let settled = false;
-                let unsubscribe = () => {};
-                const timer = window.setTimeout(() => {
-                    if (settled) return;
-                    settled = true;
-                    unsubscribe();
-                    resolve(null);
-                }, timeoutMs);
-                unsubscribe = auth.onAuthStateChanged((user) => {
-                    if (settled) return;
-                    settled = true;
-                    window.clearTimeout(timer);
-                    unsubscribe();
-                    resolve(user || null);
-                });
-            });
-
-            try {
-                if (!window.firebaseConfig || window.firebaseConfig.apiKey === 'BURAYA_API_KEY_GELECEK') {
-                    throw new Error('Firebase configuration unavailable');
-                }
-                if (!firebase.apps.length) firebase.initializeApp(window.firebaseConfig);
-                const auth = firebase.auth();
-                const user = await waitForUser(auth);
-                if (!user || user.isAnonymous) return rejectAdminSession('NO VERIFIED ADMIN SESSION');
-
-                let tokenResult = await user.getIdTokenResult(false);
-                let claims = tokenResult.claims || {};
-                if (claims.admin !== true || claims.role !== 'admin') {
-                    tokenResult = await user.getIdTokenResult(true);
-                    claims = tokenResult.claims || {};
-                }
-                if (claims.admin !== true || claims.role !== 'admin') {
-                    return rejectAdminSession('ADMIN CLAIM NOT PRESENT');
-                }
-
-                db = firebase.firestore();
-                window.db = db;
-                window.auth = auth;
-                if (firebase.storage) window.storage = firebase.storage();
-                overlay.remove();
-
-                if (!window.__taurusAdminInitialized) {
-                    window.__taurusAdminInitialized = true;
-                    setupRealtimeListeners();
-                    loadTrafficChart();
-                    startAutoPipelineListener();
-                    setInterval(() => {
-                        const ping = Math.floor(Math.random() * 15) + 12;
-                        const metaEl = document.getElementById('live-metadata');
-                        if (metaEl) metaEl.innerText = 'MS-Pulse: ' + ping + 'ms';
-                    }, 3000);
-                }
-            } catch (error) {
-                console.error('Admin authentication initialization failed:', error);
-                return rejectAdminSession('SESSION VERIFICATION FAILED');
-            }
-        });
-
-        // POST MESSAGE LISTENER - Pricing Tool Integration`;
+const overlayMarkup = `
+    <div id="taurus-auth-verification" role="status" aria-live="polite"
+        style="position:fixed;inset:0;z-index:2147483647;background:#050505;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;color:#fff">
+        <style>
+            @keyframes taurusAuthPulse { 0%,100% { opacity:.35; transform:scale(.78); } 50% { opacity:1; transform:scale(1.12); } }
+        </style>
+        <div style="width:86px;height:86px;border:1px solid rgba(255,215,0,.65);border-radius:50%;display:grid;place-items:center;box-shadow:0 0 36px rgba(255,215,0,.18);margin-bottom:24px">
+            <div style="width:14px;height:14px;border-radius:50%;background:#FFD700;box-shadow:0 0 20px #FFD700;animation:taurusAuthPulse 1.2s ease-in-out infinite"></div>
+        </div>
+        <strong style="font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:.22em;color:#FFD700">VERIFYING SECURE SESSION</strong>
+        <span id="taurus-auth-detail" style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.12em;color:#777;margin-top:12px">INITIALIZING ADMIN CLAIM CHECK</span>
+    </div>`;
 
 html = replaceOne(
   html,
-  /\s{8}document\.addEventListener\('DOMContentLoaded', \(\) => \{.*?\n\s{8}\}\);\n\n\s*\/\/ POST MESSAGE LISTENER - Pricing Tool Integration/s,
-  `\n${verifiedAuthBlock}`,
-  'Firebase admin-claim guard',
+  /(<body class="bg-obsidian text-white font-body h-screen flex overflow-hidden">)/,
+  `$1${overlayMarkup}`,
+  'static admin verification overlay',
 );
+
+if (!html.includes('assets/js/admin-auth-guard.js')) {
+  html = replaceOne(
+    html,
+    /<\/body>/,
+    '    <script src="assets/js/admin-auth-guard.js?v=V1"></script>\n</body>',
+    'external admin auth guard script',
+  );
+}
 
 const safeHighlightBlock = `        function escapeHtml(value) {
             return String(value ?? '')
@@ -249,20 +170,25 @@ gateway = replaceOne(gateway, oldGrantAccess, newGrantAccess, 'gateway session p
 
 runtime = runtime.replace(
   "    // Prevent protected UI from flashing before a signed Firebase admin claim is verified.\n    document.documentElement.style.visibility = 'hidden';\n",
-  "    // The generated admin guard owns authentication and the verification overlay.\n",
+  "    // The standalone admin guard owns authentication and the verification overlay.\n",
 );
-runtime = replaceOne(
-  runtime,
+runtime = runtime.replace(
   /\s{8}\/\/ The inline admin script initializes Firebase\. Validate its resulting user with fresh claims\..*?\n\s{8}\}, 100\);/s,
-  "\n        // Authentication is handled once by the generated admin guard.\n",
-  'duplicate runtime auth guard removal',
+  "\n        // Authentication is handled by assets/js/admin-auth-guard.js.\n",
 );
 
 if (/\b\d{8,12}:[A-Za-z0-9_-]{30,}\b/.test(html)) {
   throw new Error('[admin-hardening] Telegram bot credential remains in generated admin.html');
 }
+if (!fs.existsSync(guardPath)) {
+  throw new Error('[admin-hardening] assets/js/admin-auth-guard.js is missing');
+}
+new Function(fs.readFileSync(guardPath, 'utf8'));
+if (!html.includes('taurus-auth-verification') || !html.includes('admin-auth-guard.js?v=V1')) {
+  throw new Error('[admin-hardening] Static admin guard was not injected');
+}
 
 fs.writeFileSync(adminPath, html, 'utf8');
 fs.writeFileSync(gatewayPath, gateway, 'utf8');
 fs.writeFileSync(runtimePath, runtime, 'utf8');
-console.log('[admin-hardening] Admin claim gate, gateway session handoff and runtime checks passed.');
+console.log('[admin-hardening] Static overlay, external admin claim guard and security transforms passed.');
