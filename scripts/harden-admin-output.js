@@ -42,7 +42,7 @@ const verifiedAuthBlock = `        document.addEventListener('DOMContentLoaded',
             const overlay = document.createElement('div');
             overlay.id = 'taurus-auth-verification';
             overlay.setAttribute('role', 'status');
-            overlay.innerHTML = \
+            overlay.innerHTML =
                 '<div style="width:86px;height:86px;border:1px solid rgba(255,215,0,.65);border-radius:50%;display:grid;place-items:center;box-shadow:0 0 36px rgba(255,215,0,.18);margin-bottom:24px">' +
                 '<div style="width:14px;height:14px;border-radius:50%;background:#FFD700;box-shadow:0 0 20px #FFD700;animation:taurusAuthPulse 1.2s ease-in-out infinite"></div></div>' +
                 '<strong style="font-family:JetBrains Mono,monospace;font-size:12px;letter-spacing:.22em;color:#FFD700">VERIFYING SECURE SESSION</strong>' +
@@ -72,13 +72,14 @@ const verifiedAuthBlock = `        document.addEventListener('DOMContentLoaded',
             const waitForUser = (auth, timeoutMs = 8000) => new Promise((resolve) => {
                 if (auth.currentUser) return resolve(auth.currentUser);
                 let settled = false;
+                let unsubscribe = () => {};
                 const timer = window.setTimeout(() => {
                     if (settled) return;
                     settled = true;
                     unsubscribe();
                     resolve(null);
                 }, timeoutMs);
-                const unsubscribe = auth.onAuthStateChanged((user) => {
+                unsubscribe = auth.onAuthStateChanged((user) => {
                     if (settled) return;
                     settled = true;
                     window.clearTimeout(timer);
@@ -120,7 +121,7 @@ const verifiedAuthBlock = `        document.addEventListener('DOMContentLoaded',
                     setInterval(() => {
                         const ping = Math.floor(Math.random() * 15) + 12;
                         const metaEl = document.getElementById('live-metadata');
-                        if (metaEl) metaEl.innerText = \\`MS-Pulse: \\${ping}ms\\`;
+                        if (metaEl) metaEl.innerText = 'MS-Pulse: ' + ping + 'ms';
                     }, 3000);
                 }
             } catch (error) {
@@ -156,7 +157,7 @@ const safeHighlightBlock = `        function escapeHtml(value) {
             if (!query) return safeValue;
             try {
                 const safeQuery = escapeRegExp(escapeHtml(query));
-                return safeValue.replace(new RegExp(\\`(\\${safeQuery})\\`, 'gi'), '<span class="search-highlight">$1</span>');
+                return safeValue.replace(new RegExp('(' + safeQuery + ')', 'gi'), '<span class="search-highlight">$1</span>');
             } catch (_) {
                 return safeValue;
             }
