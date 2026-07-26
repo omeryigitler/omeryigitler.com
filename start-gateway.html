@@ -11,12 +11,13 @@
   </style>
 </head>
 <body>
-  <iframe id="taurus-gateway-frame" src="gateway.html" title="Taurus Security Gateway" allow="publickey-credentials-get *"></iframe>
+  <iframe id="taurus-gateway-frame" src="gateway.html?v=20260726-3" title="Taurus Security Gateway" allow="publickey-credentials-get *"></iframe>
   <script>
     (function () {
       const START_ORIGIN = 'https://start.omeryigitler.com';
       const frame = document.getElementById('taurus-gateway-frame');
       let handoffStarted = false;
+      let installTimer = null;
 
       function base64Url(bytes) {
         let binary = '';
@@ -71,9 +72,21 @@
         form.submit();
       }
 
+      function childStatus(message, isError) {
+        try {
+          if (isError && typeof frame.contentWindow.failAuth === 'function') {
+            frame.contentWindow.failAuth(message);
+          } else if (typeof frame.contentWindow.showStatus === 'function') {
+            frame.contentWindow.showStatus(message, Boolean(isError));
+          }
+        } catch (_) {}
+      }
+
       async function issueTicket(customToken) {
         if (!customToken || handoffStarted) return;
         handoffStarted = true;
+        if (installTimer) window.clearInterval(installTimer);
+        childStatus('Secure session is being created...', false);
 
         try {
           const verifier = randomVerifier();
@@ -85,19 +98,24 @@
             body: JSON.stringify({ customToken, target: 'startpage', verifierHash: hash })
           });
           const data = await response.json().catch(() => ({}));
-          if (!response.ok || !data.handoffToken) throw new Error(data.error || 'Ticket issue failed');
+          if (!response.ok || !data.handoffToken) {
+            const reason = data?.error?.message || data?.error || 'Ticket issue failed';
+            throw new Error(reason);
+          }
           postTicket(data.handoffToken, verifier);
         } catch (error) {
           console.error('Startpage gateway handoff failed:', error);
           handoffStarted = false;
-          try { frame.contentWindow.failAuth('Secure handoff failed. Retry.'); } catch (_) {}
+          childStatus('Secure handoff failed. Retry connection.', true);
+          installGatewayHandoff();
+          installTimer = window.setInterval(installGatewayHandoff, 250);
         }
       }
 
       function installGatewayHandoff() {
         try {
           const child = frame.contentWindow;
-          if (!child) return;
+          if (!child || handoffStarted) return;
           child.grantAccess = issueTicket;
         } catch (error) {
           console.error('Taurus Gateway handoff could not be installed:', error);
@@ -105,8 +123,10 @@
       }
 
       frame.addEventListener('load', installGatewayHandoff);
-      const guard = window.setInterval(installGatewayHandoff, 300);
-      window.setTimeout(() => window.clearInterval(guard), 20000);
+      installTimer = window.setInterval(installGatewayHandoff, 250);
+      window.addEventListener('pagehide', () => {
+        if (installTimer) window.clearInterval(installTimer);
+      }, { once: true });
       installGatewayHandoff();
     })();
   </script>
