@@ -64,50 +64,6 @@ window.firebaseConfig = firebaseConfig;
     window.addEventListener('load', () => setTimeout(applyFix, 250), { once: true });
 })();
 
-// Company networks can block direct Firebase Auth endpoints. Telegram sessions
-// use a same-origin proxy. The real refresh token is discarded server-side.
-(function installRestrictedNetworkFirebaseProxy() {
-    if (window.__taurusFirebaseProxyInstalled || typeof window.fetch !== 'function') return;
-    window.__taurusFirebaseProxyInstalled = true;
-
-    const nativeFetch = window.fetch.bind(window);
-    window.__taurusNativeFetch = nativeFetch;
-
-    window.fetch = function taurusFetch(input, init) {
-        const url = typeof input === 'string' ? input : String(input?.url || '');
-        const telegramSession = sessionStorage.getItem('taurusAuthProvider') === 'telegram';
-
-        if (telegramSession && url.includes('identitytoolkit.googleapis.com/v1/accounts:signInWithCustomToken')) {
-            return nativeFetch('/api/csp-report?action=firebase_exchange', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                cache: 'no-store',
-                body: init?.body || '{}'
-            });
-        }
-
-        if (telegramSession && url.includes('identitytoolkit.googleapis.com/v1/accounts:lookup')) {
-            return nativeFetch('/api/csp-report?action=firebase_lookup', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                cache: 'no-store',
-                body: init?.body || '{}'
-            });
-        }
-
-        if (telegramSession && url.includes('securetoken.googleapis.com/v1/token')) {
-            return Promise.resolve(new Response(JSON.stringify({
-                error: { code: 401, message: 'TOKEN_EXPIRED' }
-            }), {
-                status: 401,
-                headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' }
-            }));
-        }
-
-        return nativeFetch(input, init);
-    };
-})();
-
 // AUTO-INITIALIZE
 const shouldAutoInitializeFirebase =
     !(window.location && /\/admin\.html$/i.test(window.location.pathname));
