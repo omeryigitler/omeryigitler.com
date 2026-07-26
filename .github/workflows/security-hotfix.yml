@@ -1,0 +1,244 @@
+name: One-time admin security hardening
+
+on:
+  push:
+    paths:
+      - .github/workflows/security-hotfix.yml
+
+permissions:
+  contents: write
+
+jobs:
+  harden:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Harden admin client
+        shell: bash
+        run: |
+          python3 <<'PY'
+          from pathlib import Path
+          import re
+
+          path = Path('admin.html')
+          text = path.read_text(encoding='utf-8')
+
+          def replace_once(old, new, label):
+              global text
+              count = text.count(old)
+              if count != 1:
+                  raise SystemExit(f'{label}: expected 1 match, found {count}')
+              text = text.replace(old, new, 1)
+
+          replace_once(
+              '<body class="bg-obsidian text-white font-body h-screen flex overflow-hidden">',
+              '<body class="bg-obsidian text-white font-body h-screen flex overflow-hidden" style="visibility:hidden">',
+              'body visibility guard'
+          )
+
+          old_guard = '''    <!--AUTH GUARD-->
+              <script>
+                  if (sessionStorage.getItem('authToken') !== 'valid' && localStorage.getItem('authToken') !== 'valid') {
+                      window.location.replace('gateway.html');
+                  }
+              </script>
+          '''
+          new_guard = '''    <!-- Authentication is verified below with Firebase ID-token claims. -->
+          '''
+          replace_once(old_guard, new_guard, 'localStorage auth guard')
+
+          old_auth = '''        document.addEventListener('DOMContentLoaded', () => {
+                      if (window.firebaseConfig && window.firebaseConfig.apiKey !== "BURAYA_API_KEY_GELECEK") {
+                          firebase.initializeApp(window.firebaseConfig);
+                          db = firebase.firestore();
+          
+                          // SECURITY: Check authentication state
+                          firebase.auth().onAuthStateChanged((user) => {
+                              if (user) {
+                                  // User is authenticated - grant access
+                                  console.log("✅ Authenticated access verified:", user.uid, "IsAnon:", user.isAnonymous);
+                                  console.log("Intelligence System Initialized");
+          
+                                  // Explicit Global DB assignment
+                                  window.db = firebase.firestore();
+          
+                                  setupRealtimeListeners();
+                                  loadTrafficChart();
+                                  startAutoPipelineListener();
+          
+                                  // Live Metadata Update
+                                  setInterval(() => {
+                                      const ping = Math.floor(Math.random() * 15) + 12;
+                                      const metaEl = document.getElementById('live-metadata');
+                                      if (metaEl) metaEl.innerText = `MS-Pulse: ${ping}ms`;
+                                  }, 3000);
+                              } else {
+                                  // User is NOT authenticated - redirect to gateway
+                                  console.warn("⛔ Unauthorized access attempt - redirecting to gateway");
+                                  if (window.taurus_set_internal) window.taurus_set_internal();
+                                  window.location.href = 'gateway.html';
+                              }
+                          });
+                      }
+                  });
+          '''
+          new_auth = '''        document.addEventListener('DOMContentLoaded', async () => {
+                      const rejectAdminSession = async () => {
+                          try {
+                              if (window.firebase && firebase.auth) await firebase.auth().signOut();
+                          } catch (_) {}
+                          sessionStorage.removeItem('authToken');
+                          localStorage.removeItem('authToken');
+                          window.location.replace('gateway.html');
+                      };
+          
+                      try {
+                          if (!window.firebaseConfig || window.firebaseConfig.apiKey === "BURAYA_API_KEY_GELECEK") {
+                              throw new Error('Firebase configuration unavailable');
+                          }
+                          if (!firebase.apps.length) firebase.initializeApp(window.firebaseConfig);
+                          const auth = firebase.auth();
+                          await auth.setPersistence(firebase.auth.Auth.Persistence.SESSION);
+          
+                          auth.onAuthStateChanged(async (user) => {
+                              if (!user || user.isAnonymous) return rejectAdminSession();
+                              try {
+                                  const tokenResult = await user.getIdTokenResult(true);
+                                  const claims = tokenResult.claims || {};
+                                  if (claims.admin !== true || claims.role !== 'admin') {
+                                      return rejectAdminSession();
+                                  }
+          
+                                  db = firebase.firestore();
+                                  window.db = db;
+                                  window.auth = auth;
+                                  if (firebase.storage) window.storage = firebase.storage();
+                                  document.body.style.visibility = 'visible';
+          
+                                  setupRealtimeListeners();
+                                  loadTrafficChart();
+                                  startAutoPipelineListener();
+          
+                                  setInterval(() => {
+                                      const ping = Math.floor(Math.random() * 15) + 12;
+                                      const metaEl = document.getElementById('live-metadata');
+                                      if (metaEl) metaEl.innerText = `MS-Pulse: ${ping}ms`;
+                                  }, 3000);
+                              } catch (error) {
+                                  console.error('Admin claim verification failed:', error);
+                                  return rejectAdminSession();
+                              }
+                          });
+                      } catch (error) {
+                          console.error('Admin authentication initialization failed:', error);
+                          return rejectAdminSession();
+                      }
+                  });
+          '''
+          replace_once(old_auth, new_auth, 'Firebase admin-claim guard')
+
+          old_highlight = '''        function highlightMatch(text, query) {
+                      if (!query) return text;
+                      try {
+                          const regex = new RegExp(`(${query})`, 'gi');
+                          return String(text).replace(regex, '<span class="search-highlight">$1</span>');
+                      } catch (e) { return text; }
+                  }
+          '''
+          new_highlight = '''        function escapeHtml(value) {
+                      return String(value ?? '')
+                          .replace(/&/g, '&amp;')
+                          .replace(/</g, '&lt;')
+                          .replace(/>/g, '&gt;')
+                          .replace(/"/g, '&quot;')
+                          .replace(/'/g, '&#39;');
+                  }
+          
+                  function escapeRegExp(value) {
+                      return String(value).replace(/[.*+?^${}()|[\\]\\]/g, '\\$&');
+                  }
+          
+                  function highlightMatch(value, query) {
+                      const safeValue = escapeHtml(value);
+                      if (!query) return safeValue;
+                      try {
+                          const safeQuery = escapeRegExp(escapeHtml(query));
+                          const regex = new RegExp(`(${safeQuery})`, 'gi');
+                          return safeValue.replace(regex, '<span class="search-highlight">$1</span>');
+                      } catch (_) {
+                          return safeValue;
+                      }
+                  }
+          '''
+          replace_once(old_highlight, new_highlight, 'HTML escaping helper')
+
+          # Raw contact values used in HTML attributes/blocks must be encoded.
+          replacements = {
+              "${data.name || 'Anonymous'}": "${escapeHtml(data.name || 'Anonymous')}",
+              "${data.email || ''}": "${escapeHtml(data.email || '')}",
+              "${data.message || ''}": "${escapeHtml(data.message || '')}",
+          }
+          for old, new in replacements.items():
+              text = text.replace(old, new)
+
+          marker = "        window.addEventListener('message', async (event) => {\n"
+          origin_guard = """        window.addEventListener('message', async (event) => {
+                      const pricingFrame = document.getElementById('pricing-iframe');
+                      if (event.origin !== window.location.origin || !pricingFrame || event.source !== pricingFrame.contentWindow) {
+                          return;
+                      }
+          """
+          replace_once(marker, origin_guard, 'postMessage origin guard')
+          text = text.replace("}, '*');", "}, window.location.origin);")
+
+          pattern = re.compile(
+              r"\s{12}async function saveTelegramInitial\(\) \{.*?\s{12}securitySettingsInitialized = true;",
+              re.S,
+          )
+          replacement = '''            async function saveTelegramInitial() {
+                          if (teleTokenInput) {
+                              teleTokenInput.value = '';
+                              teleTokenInput.disabled = true;
+                              teleTokenInput.placeholder = 'Managed securely in Vercel environment variables';
+                          }
+                          if (teleChatIdInput) {
+                              teleChatIdInput.value = '';
+                              teleChatIdInput.disabled = true;
+                              teleChatIdInput.placeholder = 'Managed securely in Vercel environment variables';
+                          }
+                      }
+          
+                      if (teleTokenInput) saveTelegramInitial();
+          
+                      document.getElementById('save-telegram-btn')?.addEventListener('click', async () => {
+                          await systemAlert(
+                              'SERVER-MANAGED SECURITY',
+                              'Telegram credentials are stored only in Vercel environment variables and cannot be viewed or changed in the browser.',
+                              'shield-check'
+                          );
+                      });
+          
+                      securitySettingsInitialized = true;'''
+          text, count = pattern.subn(replacement, text, count=1)
+          if count != 1:
+              raise SystemExit(f'Telegram browser-secret block: expected 1 match, found {count}')
+
+          # No Telegram bot token may remain in a static browser file.
+          if re.search(r"\b\d{8,12}:[A-Za-z0-9_-]{30,}\b", text):
+              raise SystemExit('A Telegram bot token still exists in admin.html')
+
+          path.write_text(text, encoding='utf-8')
+          Path('.github/workflows/security-hotfix.yml').unlink()
+          PY
+
+      - name: Commit hardened admin
+        shell: bash
+        run: |
+          git config user.name "taurus-security-bot"
+          git config user.email "security@omeryigitler.com"
+          git add admin.html .github/workflows/security-hotfix.yml
+          git commit -m "Harden admin authentication, secrets and rendering"
+          git push origin HEAD:main
