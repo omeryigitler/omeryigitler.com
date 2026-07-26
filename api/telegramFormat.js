@@ -1,8 +1,4 @@
-const crypto = require("crypto");
-
 const SEPARATOR = "━━━━━━━━━━━━━━━━━━━━";
-const APPROVAL_TTL_MS = 5 * 60 * 1000;
-const APPROVAL_PAGE = "https://omeryigitler.com/telegram-approve.html";
 
 function escapeHtml(value) {
   return String(value ?? "")
@@ -14,9 +10,7 @@ function escapeHtml(value) {
 
 function cleanValue(value, fallback = "Unknown") {
   if (value === null || value === undefined || value === "") return fallback;
-  if (typeof value === "object") {
-    return formatDevice(value, fallback);
-  }
+  if (typeof value === "object") return formatDevice(value, fallback);
   return String(value);
 }
 
@@ -27,7 +21,6 @@ function formatCode(value, fallback = "Unknown") {
 function formatDevice(device, fallback = "Unknown") {
   if (!device) return fallback;
   if (typeof device === "string") return device.trim() || fallback;
-
   if (typeof device === "object") {
     const model = device.model || device.device || device.type || device.vendor || "";
     const os = device.os || device.platform || "";
@@ -35,12 +28,13 @@ function formatDevice(device, fallback = "Unknown") {
     const parts = [model, os, browser].filter(Boolean);
     return parts.length ? parts.join(" / ") : fallback;
   }
-
   return String(device);
 }
 
 function row(icon, label, value, options = {}) {
-  const displayValue = options.code ? formatCode(value, options.fallback) : escapeHtml(cleanValue(value, options.fallback));
+  const displayValue = options.code
+    ? formatCode(value, options.fallback)
+    : escapeHtml(cleanValue(value, options.fallback));
   return `${icon} <b>${escapeHtml(label)}</b>\n${displayValue}`;
 }
 
@@ -70,45 +64,12 @@ function actionKeyboard(sessionID) {
   };
 }
 
-function approvalSecret() {
-  return String(process.env.TELEGRAM_APPROVAL_SECRET || process.env.TELEGRAM_BOT_TOKEN || "").trim();
-}
-
-function signApproval(reqId, code, expiresAt) {
-  const secret = approvalSecret();
-  if (!secret) return "";
-  return crypto
-    .createHmac("sha256", secret)
-    .update(`v1:${reqId}:${code}:${expiresAt}`)
-    .digest("base64url");
-}
-
 function authKeyboard(reqId, options) {
-  const expiresAt = Date.now() + APPROVAL_TTL_MS;
-  const secret = approvalSecret();
-
   return {
-    inline_keyboard: options.map((option) => {
-      if (!secret) {
-        return [{
-          text: `${option}`,
-          callback_data: `auth_${reqId}_${option}`,
-        }];
-      }
-
-      const signature = signApproval(reqId, option, expiresAt);
-      const fragment = new URLSearchParams({
-        reqId,
-        code: String(option),
-        exp: String(expiresAt),
-        sig: signature,
-      }).toString();
-
-      return [{
-        text: `${option}`,
-        url: `${APPROVAL_PAGE}#${fragment}`,
-      }];
-    }),
+    inline_keyboard: options.map((option) => [{
+      text: String(option),
+      callback_data: `auth_${reqId}_${option}`,
+    }]),
   };
 }
 
