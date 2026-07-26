@@ -14,10 +14,11 @@
   <script src="assets/js/firebase-config.js"></script>
 </head>
 <body>
-  <iframe src="gateway.html" title="Taurus Security Gateway" allow="publickey-credentials-get *"></iframe>
+  <iframe id="gateway-frame" title="Taurus Security Gateway" allow="publickey-credentials-get *"></iframe>
   <script>
-    (function () {
+    (async function () {
       const START_ORIGIN = 'https://start.omeryigitler.com';
+      const gatewayFrame = document.getElementById('gateway-frame');
       let handoffStarted = false;
 
       function safeReturnTarget() {
@@ -51,19 +52,32 @@
         form.submit();
       }
 
-      firebase.auth().onAuthStateChanged(async (user) => {
-        if (!user || handoffStarted) return;
-        try {
-          const tokenResult = await user.getIdTokenResult(true);
-          const claims = tokenResult.claims || {};
-          if (claims.admin !== true || claims.role !== 'admin') return;
-          handoffStarted = true;
-          postSession(tokenResult.token);
-        } catch (error) {
-          console.error('Startpage gateway handoff failed:', error);
-          handoffStarted = false;
-        }
-      });
+      try {
+        const auth = firebase.auth();
+
+        // A previously persisted Firebase user must never be re-submitted automatically.
+        // Startpage handoff is accepted only after a fresh passkey or Telegram approval.
+        await auth.signOut().catch(() => undefined);
+
+        auth.onAuthStateChanged(async (user) => {
+          if (!user || handoffStarted) return;
+          try {
+            const tokenResult = await user.getIdTokenResult(true);
+            const claims = tokenResult.claims || {};
+            if (claims.admin !== true || claims.role !== 'admin') return;
+            handoffStarted = true;
+            postSession(tokenResult.token);
+          } catch (error) {
+            console.error('Startpage gateway handoff failed:', error);
+            handoffStarted = false;
+          }
+        });
+
+        gatewayFrame.src = 'gateway.html?target=startpage&t=' + Date.now();
+      } catch (error) {
+        console.error('Startpage gateway bootstrap failed:', error);
+        gatewayFrame.src = 'gateway.html?target=startpage&t=' + Date.now();
+      }
     })();
   </script>
 </body>
