@@ -4,6 +4,7 @@ const { admin, db } = require('./_firebaseAdmin');
 const MAX_REPORT_BYTES = 16 * 1024;
 const HANDOFF_TTL_MS = 45 * 1000;
 const EXCHANGED_TOKEN_MAX_AGE_SECONDS = 120;
+const TELEGRAM_APPROVAL_TTL_MS = 5 * 60 * 1000;
 const FIREBASE_API_KEY = process.env.FIREBASE_API_KEY || 'AIzaSyC0DAIT0cVPD4WFpfgqrn0lfb-kyFRsnWM';
 const ALLOWED_TARGETS = new Set(['startpage', 'admin']);
 const SESSION_AGES = {
@@ -55,12 +56,91 @@ function safeEqual(left, right) {
   return crypto.timingSafeEqual(leftBuffer, rightBuffer);
 }
 
+function telegramApprovalSecret() {
+  return String(process.env.TELEGRAM_APPROVAL_SECRET || process.env.TELEGRAM_BOT_TOKEN || '').trim();
+}
+
+function telegramApprovalSignature(reqId, code, expiresAt) {
+  const secret = telegramApprovalSecret();
+  if (!secret) return '';
+  return crypto
+    .createHmac('sha256', secret)
+    .update(`v1:${reqId}:${code}:${expiresAt}`)
+    .digest('base64url');
+}
+
 function getClientIp(req) {
   const forwardedFor = req.headers['x-forwarded-for'];
   if (typeof forwardedFor === 'string' && forwardedFor.trim()) {
     return forwardedFor.split(',')[0].trim();
   }
   return req.socket?.remoteAddress || 'Unknown';
+}
+
+async function handleTelegramApproval(req, res, body) {
+  const reqId = String(body.reqId || '').trim();
+  const code = String(body.code || '').trim();
+  const expiresAt = Number(body.exp || 0);
+  const signature = String(body.sig || '').trim();
+  const now = Date.now();
+
+  if (
+    !/^[a-f0-9]{32}$/i.test(reqId) ||
+    !/^\d{2}$/.test(code) ||
+    !Number.isFinite(expiresAt) ||
+    expiresAt < now ||
+    expiresAt > now + TELEGRAM_APPROVAL_TTL_MS + 60 * 1000 ||
+    !/^[A-Za-z0-9_-]{43}$/.test(signature)
+  ) {
+    return res.status(400).json({ status: 'invalid', error: 'Invalid or expired approval link' });
+  }
+
+  const expectedSignature = telegramApprovalSignature(reqId, code, expiresAt);
+  if (!expectedSignature || !safeEqual(signature, expectedSignature)) {
+    return res.status(401).json({ status: 'invalid', error: 'Approval signature mismatch' });
+  }
+
+  const docRef = db.collection('auth_requests').doc(reqId);
+  const auditRef = db.collection('gateway_telegram_approval_audit').doc();
+  let result = null;
+
+  await db.runTransaction(async (transaction) => {
+    const snapshot = await transaction.get(docRef);
+    if (!snapshot.exists) throw new Error('Approval request not found');
+
+    const data = snapshot.data() || {};
+    const requestExpiresAt = data.expiresAt?.toMillis ? data.expiresAt.toMillis() : 0;
+    if (data.status !== 'pending' || !requestExpiresAt || requestExpiresAt <= now) {
+      throw new Error('Approval request expired or already used');
+    }
+
+    const approved = Number(code) === Number(data.expectedCode);
+    result = approved ? 'approved' : 'denied';
+
+    transaction.update(docRef, approved ? {
+      status: 'approved',
+      approvedAt: admin.firestore.FieldValue.serverTimestamp(),
+      approvedBy: 'signed-telegram-link',
+      approvalMode: 'signed-link',
+    } : {
+      status: 'denied',
+      deniedAt: admin.firestore.FieldValue.serverTimestamp(),
+      deniedBy: 'signed-telegram-link',
+      approvalMode: 'signed-link',
+      attempts: admin.firestore.FieldValue.increment(1),
+    });
+
+    transaction.set(auditRef, {
+      reqId,
+      selectedCode: code,
+      result,
+      approvedAt: admin.firestore.FieldValue.serverTimestamp(),
+      ip: getClientIp(req),
+      userAgent: String(req.headers['user-agent'] || '').slice(0, 500),
+    });
+  });
+
+  return res.status(200).json({ status: result });
 }
 
 async function exchangeCustomToken(customToken) {
@@ -274,6 +354,7 @@ module.exports = async function cspReportHandler(req, res) {
   const body = readBody(req);
 
   try {
+    if (action === 'telegram_approve') return handleTelegramApproval(req, res, body);
     if (action === 'handoff_issue') return issueHandoff(req, res, body);
     if (action === 'handoff_redeem') return redeemHandoff(req, res, body);
     if (action === 'firebase_exchange' || action === 'firebase_lookup') {
