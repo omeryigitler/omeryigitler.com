@@ -4,7 +4,7 @@ const path = require("node:path");
 const indexPath = path.resolve(__dirname, "..", "index.html");
 let html = fs.readFileSync(indexPath, "utf8");
 
-const PATCH_MARKER = "Taurus intro session + adaptive HQ texture bootstrap v3";
+const PATCH_MARKER = "Taurus intro session + adaptive HQ texture bootstrap v5";
 if (html.includes(PATCH_MARKER)) {
   console.log("HQ one-time globe intro is already patched");
   process.exit(0);
@@ -26,7 +26,7 @@ const oldHeadBootstrap = `    <script>
 const newHeadBootstrap = `    <script>
         /* ${PATCH_MARKER} */
         (function () {
-            var INTRO_SESSION_KEY = "taurus-intro-seen-v3";
+            var INTRO_SESSION_KEY = "taurus-intro-seen-v5";
             var shouldShowIntro = true;
 
             try {
@@ -253,48 +253,6 @@ const newPixelRatio = `    if (typeof renderer.setPixelRatio === "function") {
     }`;
 replaceRequired(oldPixelRatio, newPixelRatio, "adaptive render pixel ratio");
 
-replaceRequired(
-  `        renderer.toneMappingExposure = 1.08;`,
-  `        renderer.toneMappingExposure = 1.03;`,
-  "ACES exposure"
-);
-replaceRequired(`    material.bumpScale = 1.6;`, `    material.bumpScale = 1.35;`, "bump intensity");
-replaceRequired(
-  `      material.specular = new THREE.Color("#8a6f1a");`,
-  `      material.specular = new THREE.Color("#64779d");`,
-  "cooler specular response"
-);
-replaceRequired(
-  `      material.emissive = new THREE.Color("#080600");\n      material.emissiveIntensity = 0.08;`,
-  `      material.emissive = new THREE.Color("#030712");\n      material.emissiveIntensity = 0.05;`,
-  "blue-black emissive response"
-);
-
-const oldLights = `    world.lights().forEach(function (light) {
-      if (light.type === "AmbientLight") {
-        light.intensity = 1.55;
-      }
-
-      if (light.type === "DirectionalLight") {
-        light.color.set("#fff1a8");
-        light.intensity = 0.75;
-        light.position.set(-1.2, 0.85, 1.25);
-      }
-    });`;
-const newLights = `    world.lights().forEach(function (light) {
-      if (light.type === "AmbientLight") {
-        light.color.set("#8ea6d0");
-        light.intensity = 1.25;
-      }
-
-      if (light.type === "DirectionalLight") {
-        light.color.set("#ffe6a0");
-        light.intensity = 0.58;
-        light.position.set(-1.2, 0.85, 1.25);
-      }
-    });`;
-replaceRequired(oldLights, newLights, "blue-gold lighting");
-
 const materialFunctionEnd = `    material.needsUpdate = true;
   }
 
@@ -367,4 +325,4 @@ const newSignalStart = `      geoPromise = fetchUserLocation();
 replaceRequired(oldSignalStart, newSignalStart, "parallel library and texture preparation");
 
 fs.writeFileSync(indexPath, html, "utf8");
-console.log("Patched one-time adaptive HQ globe intro in index.html");
+console.log("Patched one-time adaptive 8K/4K globe intro without changing visual color settings");
