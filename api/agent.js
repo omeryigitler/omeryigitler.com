@@ -69,6 +69,18 @@ function loadAgent() {
   }
 }
 
+function loadGoogleAuth() {
+  try {
+    return require("../lib/google-agent-auth");
+  } catch (error) {
+    console.error("[agent] Google auth initialization failed:", error?.message);
+    const unavailable = new Error("Startpage authentication is not configured for this environment.");
+    unavailable.statusCode = 503;
+    unavailable.code = "google_auth_not_configured";
+    throw unavailable;
+  }
+}
+
 function loadTasks() {
   try {
     return require("../lib/agent-tasks");
@@ -106,7 +118,8 @@ module.exports = async function handler(req, res) {
 
   try {
     const agent = loadAgent();
-    const actor = await agent.verifyAgentRequest(req);
+    const googleActor = await loadGoogleAuth().verifyGoogleAgentRequest(req);
+    const actor = googleActor || await agent.verifyAgentRequest(req);
 
     if (action === "status") {
       const approvals = await agent.listPendingApprovals();
