@@ -7,7 +7,7 @@
   <link rel="icon" href="assets/favicon_transparent.svg" type="image/svg+xml">
   <style>
     html,body{width:100%;height:100%;margin:0;overflow:hidden;background:#050505}
-    iframe{display:block;width:100%;height:100%;border:0;background:#050505}
+    iframe{display:block;width:100%;height:100%;border:0;background:#050505;visibility:visible}
   </style>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
@@ -20,6 +20,38 @@
       const START_ORIGIN = 'https://start.omeryigitler.com';
       const gatewayFrame = document.getElementById('gateway-frame');
       let handoffStarted = false;
+
+      function hideGatewayFrame() {
+        gatewayFrame.style.visibility = 'hidden';
+      }
+
+      function showGatewayFrame() {
+        gatewayFrame.style.visibility = 'visible';
+      }
+
+      function armNavigationShield() {
+        try {
+          const frameWindow = gatewayFrame.contentWindow;
+          if (!frameWindow) return;
+          frameWindow.addEventListener('beforeunload', hideGatewayFrame, { once: true });
+        } catch (_) {
+          // The frame is same-origin, but keep the handoff functional if access is blocked.
+        }
+      }
+
+      gatewayFrame.addEventListener('load', () => {
+        try {
+          const pathname = gatewayFrame.contentWindow?.location?.pathname || '';
+          if (pathname.endsWith('/admin.html')) {
+            hideGatewayFrame();
+            return;
+          }
+          showGatewayFrame();
+          armNavigationShield();
+        } catch (_) {
+          // Ignore frame inspection failures; Firebase handoff below remains authoritative.
+        }
+      });
 
       function safeReturnTarget() {
         try {
@@ -66,10 +98,13 @@
             const claims = tokenResult.claims || {};
             if (claims.admin !== true || claims.role !== 'admin') return;
             handoffStarted = true;
+            hideGatewayFrame();
             postSession(tokenResult.token);
           } catch (error) {
             console.error('Startpage gateway handoff failed:', error);
             handoffStarted = false;
+            showGatewayFrame();
+            armNavigationShield();
           }
         });
 
