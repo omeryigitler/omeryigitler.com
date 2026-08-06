@@ -2,11 +2,14 @@ const fs = require("node:fs");
 const path = require("node:path");
 
 const rootDir = path.resolve(__dirname, "..");
+const iconVersion = "20260806";
 const faviconBlock = [
-  '    <link rel="icon" href="/favicon.svg" type="image/svg+xml" sizes="any">',
-  '    <link rel="alternate icon" href="/favicon.ico" sizes="16x16 32x32 48x48">',
-  '    <link rel="apple-touch-icon" href="/apple-touch-icon.png" sizes="180x180">',
-  '    <link rel="manifest" href="/site.webmanifest">',
+  `    <link rel="icon" href="/favicon-${iconVersion}.svg" type="image/svg+xml" sizes="any">`,
+  `    <link rel="icon" href="/favicon-32x32-${iconVersion}.png" type="image/png" sizes="32x32">`,
+  `    <link rel="icon" href="/favicon-16x16-${iconVersion}.png" type="image/png" sizes="16x16">`,
+  `    <link rel="alternate icon" href="/favicon-${iconVersion}.ico" sizes="16x16 32x32 48x48">`,
+  `    <link rel="apple-touch-icon" href="/apple-touch-icon-${iconVersion}.png" sizes="180x180">`,
+  `    <link rel="manifest" href="/site.webmanifest?v=${iconVersion}">`,
   '    <meta name="theme-color" content="#050505">',
 ].join("\n");
 
@@ -41,8 +44,8 @@ for (const fileName of htmlFiles) {
   }
 
   if (fileName === "index.html") {
-    const desiredStructuredLogo = '      "logo": "https://omeryigitler.com/favicon.svg",';
-    const legacyStructuredLogoPattern = /^\s*"logo":\s*"https:\/\/omeryigitler\.com\/(?:icon-512\.png|favicon\.svg)",\s*$/m;
+    const desiredStructuredLogo = `      "logo": "https://omeryigitler.com/favicon-${iconVersion}.svg",`;
+    const legacyStructuredLogoPattern = /^\s*"logo":\s*"https:\/\/omeryigitler\.com\/(?:icon-512(?:-\d+)?\.png|favicon(?:-\d+)?\.svg)",\s*$/m;
     if (legacyStructuredLogoPattern.test(html)) {
       html = html.replace(legacyStructuredLogoPattern, desiredStructuredLogo);
     } else {
@@ -59,4 +62,4 @@ for (const fileName of htmlFiles) {
   }
 }
 
-console.log(`Unified round favicon metadata across ${patchedCount}/${htmlFiles.length} root HTML pages`);
+console.log(`Unified versioned round favicon metadata across ${patchedCount}/${htmlFiles.length} root HTML pages`);
