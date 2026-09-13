@@ -1,0 +1,174 @@
+name: Currency and percent formatting fix v2
+
+on:
+  push:
+    paths:
+      - '.github/workflows/currency-percent-format-fix-v2.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Apply formatting fixes
+        shell: bash
+        run: |
+          python <<'PY'
+          from pathlib import Path
+
+          def replace_exact(path, old, new, expected=1):
+              p = Path(path)
+              text = p.read_text(encoding='utf-8')
+              count = text.count(old)
+              if count != expected:
+                  raise SystemExit(f'{path}: expected {expected} occurrences, found {count} for {old[:120]!r}')
+              p.write_text(text.replace(old, new), encoding='utf-8')
+
+          calc = 'pricing-tool/components/PricingCalculator.tsx'
+          replace_exact(calc,
+              "return `${amount.toLocaleString('tr-TR', { maximumFractionDigits: 0 })} ${config[Country.TR].currencySymbol}`;",
+              "return `${config[Country.TR].currencySymbol}${amount.toLocaleString('tr-TR', { maximumFractionDigits: 0 })}`;")
+          replace_exact(calc, "return `+${factor.value}%`;",
+              "return request.country === Country.TR ? `+%${factor.value}` : `+${factor.value}%`;")
+          replace_exact(calc,
+              "const showSymbolLeft = (!isPercentage && !isTr) || (isPercentage && isTr);",
+              "const showSymbolLeft = !isPercentage || isTr;")
+          replace_exact(calc,
+              "const showSymbolRight = (!isPercentage && isTr) || (isPercentage && !isTr);",
+              "const showSymbolRight = isPercentage && !isTr;")
+
+          proposal = 'pricing-tool/components/ProposalView.tsx'
+          replace_exact(proposal, '// STRICT TDK FORMATTING', '// Locale-aware official display formatting')
+          replace_exact(proposal, '// TR: 10.000 ₺', '// TR: ₺10.000')
+          replace_exact(proposal,
+              "return `${Math.round(val).toLocaleString('tr-TR', { maximumFractionDigits: 0 })} ${rules.currencySymbol}`;",
+              "return `${rules.currencySymbol}${Math.round(val).toLocaleString('tr-TR', { maximumFractionDigits: 0 })}`;")
+          replace_exact(proposal,
+              '  // Helper to display factor (e.g., "+30%" or "+5000 ₺")',
+              "  const formatPercent = (value: number) =>\n    request.country === Country.TR ? `%${value}` : `${value}%`;\n\n  // Helper to display factor with locale-aware currency/percent placement")
+          replace_exact(proposal, "return `+${factor.value}%`;", "return `+${formatPercent(factor.value)}`;")
+          replace_exact(proposal, '({priceFactor.value}%)', '({formatPercent(priceFactor.value)})')
+          replace_exact(proposal,
+              "` (%${rules.maintenanceRates[request.maintenanceLevel].value})`",
+              "` (${formatPercent(rules.maintenanceRates[request.maintenanceLevel].value)})`")
+
+          contract = 'pricing-tool/components/ContractView.tsx'
+          replace_exact(contract, '// STRICT TDK FORMATTING HELPER', '// Locale-aware official display formatting')
+          replace_exact(contract, '// TR: 10.000 ₺', '// TR: ₺10.000')
+          replace_exact(contract,
+              "return `${Math.round(val).toLocaleString('tr-TR', { maximumFractionDigits: 0 })} ${rules.currencySymbol}`;",
+              "return `${rules.currencySymbol}${Math.round(val).toLocaleString('tr-TR', { maximumFractionDigits: 0 })}`;")
+
+          packages = 'pricing-tool/components/PackageTable.tsx'
+          replace_exact(packages, '// TR: 10.000 ₺ (Space before symbol)', '// TR: ₺10.000 (Symbol first, Turkish grouping)')
+          replace_exact(packages, '// MT: €1,000 (Symbol first, comma separator)', '// MT: €1,000 (Symbol first, English grouping)')
+          replace_exact(packages, "priceTR: '10.000 ₺'", "priceTR: '₺10.000'")
+          replace_exact(packages, "priceTR: '25.000 ₺'", "priceTR: '₺25.000'")
+          replace_exact(packages, "priceTR: '50.000 ₺'", "priceTR: '₺50.000'")
+
+          pdf = 'pricing-tool/utils/pdfGenerator.ts'
+          replace_exact(pdf,
+              "const currency = request.country === Country.TR ? '₺' : '€';",
+              "const currency = request.country === Country.TR ? '₺' : '€';\n    const locale = request.country === Country.TR ? 'tr-TR' : 'en-GB';")
+          replace_exact(pdf, 'value.toLocaleString(undefined, { minimumFractionDigits: 2 })', 'value.toLocaleString(locale, { minimumFractionDigits: 2 })')
+          replace_exact(pdf, 'breakdown.discountAmount.toLocaleString()', 'breakdown.discountAmount.toLocaleString(locale)')
+          replace_exact(pdf, 'breakdown.finalTotal.toLocaleString(undefined, { minimumFractionDigits: 2 })', 'breakdown.finalTotal.toLocaleString(locale, { minimumFractionDigits: 2 })')
+          replace_exact(pdf, 'breakdown.totalMonthly.toLocaleString()', 'breakdown.totalMonthly.toLocaleString(locale)')
+          replace_exact(pdf, 'val.toLocaleString(undefined, { minimumFractionDigits: 2 })', 'val.toLocaleString(locale, { minimumFractionDigits: 2 })')
+
+          admin = 'admin.html'
+          replace_exact(admin,
+              '        function calculateBreakdownFromRequest(request, pricingConfig, addons) {',
+              "        function formatAdminMoney(value, currency = 'TRY') {\n            const isEuro = currency === 'EUR';\n            const symbol = isEuro ? '€' : '₺';\n            const locale = isEuro ? 'en-GB' : 'tr-TR';\n            return symbol + Number(value || 0).toLocaleString(locale, { maximumFractionDigits: 0 });\n        }\n\n        function calculateBreakdownFromRequest(request, pricingConfig, addons) {")
+          replace_exact(admin,
+              "${quote.totalPrice || 0} ${quote.currency || 'TRY'}",
+              "${formatAdminMoney(quote.totalPrice || 0, quote.currency || 'TRY')}")
+          replace_exact(admin,
+              "${item.data.siteType || 'N/A'} - ${item.data.totalPrice || 0} ${item.data.currency || 'TRY'}",
+              "${item.data.siteType || 'N/A'} - ${formatAdminMoney(item.data.totalPrice || 0, item.data.currency || 'TRY')}")
+          replace_exact(admin, '%${progress}', '${progress}%')
+          replace_exact(admin,
+              "${budget ? budget.toLocaleString('tr-TR') + ' ' + (data.currency || 'TRY') : '—'}",
+              "${budget ? formatAdminMoney(budget, data.currency || 'TRY') : '—'}")
+          replace_exact(admin,
+              "const symbol = currency === 'EUR' ? '€' : '₺';",
+              "const formatMoney = (value) => formatAdminMoney(value, currency);")
+          replace_exact(admin, '${symbol}${breakdown.base?.toLocaleString() || 0}', '${formatMoney(breakdown.base)}')
+          replace_exact(admin, '${symbol}${breakdown.pages?.toLocaleString() || 0}', '${formatMoney(breakdown.pages)}')
+          replace_exact(admin, '${symbol}${breakdown[f.k]?.toLocaleString()}', '${formatMoney(breakdown[f.k])}')
+          replace_exact(admin, '-${symbol}${breakdown.discountAmount?.toLocaleString()}', '-${formatMoney(breakdown.discountAmount)}')
+          replace_exact(admin,
+              "totalDisplay.innerText = symbol + (breakdown.finalTotal?.toLocaleString() || 0);",
+              'totalDisplay.innerText = formatMoney(breakdown.finalTotal);')
+          PY
+
+      - name: Build pricing tool
+        working-directory: pricing-tool
+        run: |
+          npm ci
+          npm run build
+
+      - name: Verify formatting
+        shell: bash
+        run: |
+          python <<'PY'
+          from pathlib import Path
+
+          calc = Path('pricing-tool/components/PricingCalculator.tsx').read_text(encoding='utf-8')
+          proposal = Path('pricing-tool/components/ProposalView.tsx').read_text(encoding='utf-8')
+          contract = Path('pricing-tool/components/ContractView.tsx').read_text(encoding='utf-8')
+          packages = Path('pricing-tool/components/PackageTable.tsx').read_text(encoding='utf-8')
+          pdf = Path('pricing-tool/utils/pdfGenerator.ts').read_text(encoding='utf-8')
+          admin = Path('admin.html').read_text(encoding='utf-8')
+          dist_index = Path('pricing-tool/dist/index.html').read_text(encoding='utf-8')
+
+          assert "`${config[Country.TR].currencySymbol}${amount.toLocaleString('tr-TR'" in calc
+          assert "request.country === Country.TR ? `+%${factor.value}` : `+${factor.value}%`" in calc
+          assert 'const showSymbolLeft = !isPercentage || isTr;' in calc
+          assert 'const showSymbolRight = isPercentage && !isTr;' in calc
+          assert '// TR: ₺10.000' in proposal
+          assert '({formatPercent(priceFactor.value)})' in proposal
+          assert 'formatPercent(rules.maintenanceRates[request.maintenanceLevel].value)' in proposal
+          assert '// TR: ₺10.000' in contract
+          assert "priceTR: '₺10.000'" in packages
+          assert "priceTR: '₺25.000'" in packages
+          assert "priceTR: '₺50.000'" in packages
+          assert "const locale = request.country === Country.TR ? 'tr-TR' : 'en-GB';" in pdf
+          assert 'toLocaleString(undefined' not in pdf
+          assert 'function formatAdminMoney' in admin
+          assert '${progress}%' in admin
+          assert '%${progress}' not in admin
+          assert "formatAdminMoney(quote.totalPrice || 0, quote.currency || 'TRY')" in admin
+          assert "formatAdminMoney(item.data.totalPrice || 0, item.data.currency || 'TRY')" in admin
+          assert "formatAdminMoney(budget, data.currency || 'TRY')" in admin
+          assert 'const formatMoney = (value) => formatAdminMoney(value, currency);' in admin
+          assert "const symbol = currency === 'EUR' ? '€' : '₺';" not in admin
+          assert 'assets/index-' in dist_index
+          assert Path('pricing-tool/dist/assets').is_dir()
+          print('Formatting checks passed.')
+          PY
+
+      - name: Commit source and rebuilt distribution
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git rm .github/workflows/currency-percent-format-fix-v2.yml
+          git add admin.html \
+            pricing-tool/components/PricingCalculator.tsx \
+            pricing-tool/components/ProposalView.tsx \
+            pricing-tool/components/ContractView.tsx \
+            pricing-tool/components/PackageTable.tsx \
+            pricing-tool/utils/pdfGenerator.ts \
+            pricing-tool/dist
+          git diff --cached --check
+          git status --short
+          git commit -m "Standardize currency and percent formatting"
+          git push origin HEAD:main
