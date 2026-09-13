@@ -1,0 +1,71 @@
+name: Finalize Turkish currency text usage
+
+on:
+  push:
+    paths:
+      - '.github/workflows/finalize-turkish-currency-text.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Use TL in Turkish contract prose
+        shell: bash
+        run: |
+          python <<'PY'
+          from pathlib import Path
+          p = Path('pricing-tool/components/ContractView.tsx')
+          text = p.read_text(encoding='utf-8')
+          old = "<br />Ödemeler {rules.currency} cinsinden fatura karşılığı yapılacaktır."
+          new = "<br />Ödemeler {request.country === Country.TR ? 'TL' : 'EUR'} cinsinden fatura karşılığı yapılacaktır."
+          if text.count(old) != 1:
+              raise SystemExit(f'Expected exactly one Turkish currency prose occurrence, found {text.count(old)}')
+          p.write_text(text.replace(old, new), encoding='utf-8')
+          PY
+
+      - name: Build pricing tool
+        working-directory: pricing-tool
+        run: |
+          npm ci
+          npm run build
+
+      - name: Verify final rules
+        shell: bash
+        run: |
+          python <<'PY'
+          from pathlib import Path
+          contract = Path('pricing-tool/components/ContractView.tsx').read_text(encoding='utf-8')
+          calc = Path('pricing-tool/components/PricingCalculator.tsx').read_text(encoding='utf-8')
+          proposal = Path('pricing-tool/components/ProposalView.tsx').read_text(encoding='utf-8')
+          seo = Path('pricing-tool/components/SeoTracker.tsx').read_text(encoding='utf-8')
+          pdf = Path('pricing-tool/utils/pdfGenerator.ts').read_text(encoding='utf-8')
+          admin = Path('admin.html').read_text(encoding='utf-8')
+          dist = Path('pricing-tool/dist/index.html').read_text(encoding='utf-8')
+
+          assert "request.country === Country.TR ? 'TL' : 'EUR'" in contract
+          assert 'Ödemeler {rules.currency}' not in contract
+          assert "`${config[Country.TR].currencySymbol}${amount.toLocaleString('tr-TR'" in calc
+          assert "request.country === Country.TR ? `+%${factor.value}` : `+${factor.value}%`" in calc
+          assert "request.country === Country.TR ? `%${value}` : `${value}%`" in proposal
+          assert "language === Language.TR ? `%${value}` : `${value}%`" in seo
+          assert "const locale = request.country === Country.TR ? 'tr-TR' : 'en-GB';" in pdf
+          assert 'function formatAdminMoney' in admin
+          assert 'assets/index-' in dist
+          print('Final currency and percent rules verified.')
+          PY
+
+      - name: Commit and clean workflow
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git rm .github/workflows/finalize-turkish-currency-text.yml
+          git add pricing-tool/components/ContractView.tsx pricing-tool/dist
+          git commit -m "Use TL in Turkish contract prose"
+          git push origin HEAD:main
