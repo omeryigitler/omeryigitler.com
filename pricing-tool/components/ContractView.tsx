@@ -105,7 +105,7 @@ const ContractView: React.FC<Props> = ({ config, addons, request, onBack, langua
           Toplam hizmet bedeli teklif formunda belirtilen tutardır. Ödemeler aksi kararlaştırılmadıkça:
           <br />- %50 İş başlangıcında avans.
           <br />- %50 Proje onaylanıp yayına alınmadan önce.
-          <br />Ödemeler {rules.currency} cinsinden fatura karşılığı yapılacaktır. Ödeme gecikmelerinde T.C. Merkez Bankası ticari temerrüt faizi uygulanır.
+          <br />Ödemeler {request.country === Country.TR ? 'TL' : 'EUR'} cinsinden fatura karşılığı yapılacaktır. Ödeme gecikmelerinde T.C. Merkez Bankası ticari temerrüt faizi uygulanır.
         </p>
 
         {/* SPECIAL DISCOUNT CLAUSE - TR */}
