@@ -22,6 +22,8 @@ const SeoTracker: React.FC<Props> = ({ language, initialClientName }) => {
   const [hideCompleted, setHideCompleted] = useState(false);
 
   const t = TRANSLATIONS[language].seo;
+  const formatPercent = (value: number) =>
+    language === Language.TR ? `%${value}` : `${value}%`;
 
   // Load from LocalStorage on mount
   useEffect(() => {
@@ -223,7 +225,7 @@ const SeoTracker: React.FC<Props> = ({ language, initialClientName }) => {
                 </div>
                 <div className="flex justify-between mt-2 text-[10px] text-zinc-500 font-bold uppercase tracking-wider">
                    <span>{t.progress}</span>
-                   <span className={progress === 100 ? 'text-green-500' : 'text-[#FFD700]'}>%{progress}</span>
+                   <span className={progress === 100 ? 'text-green-500' : 'text-[#FFD700]'}>{formatPercent(progress)}</span>
                 </div>
               </div>
             );
@@ -248,7 +250,7 @@ const SeoTracker: React.FC<Props> = ({ language, initialClientName }) => {
                   <div className="flex items-center space-x-4 mb-2">
                      <div className="text-right">
                         <span className="block text-xs text-zinc-500 uppercase font-bold tracking-wider">{t.totalSuccess}</span>
-                        <span className="text-3xl font-bold text-white font-poppins">%{calculateProgress(activeProject)}</span>
+                        <span className="text-3xl font-bold text-white font-poppins">{formatPercent(calculateProgress(activeProject))}</span>
                      </div>
                      <div className="w-16 h-16 relative flex items-center justify-center">
                         <Percent className="w-8 h-8 text-zinc-700 absolute" />
