@@ -121,7 +121,7 @@ const PricingCalculator: React.FC<Props> = ({ config, addons, onRequestUpdate, o
   // Helper function for locale-aware currency formatting
   const formatPrice = (amount: number) => {
     if (request.country === Country.TR) {
-      return `${amount.toLocaleString('tr-TR', { maximumFractionDigits: 0 })} ${config[Country.TR].currencySymbol}`;
+      return `${config[Country.TR].currencySymbol}${amount.toLocaleString('tr-TR', { maximumFractionDigits: 0 })}`;
     } else {
       return `${config[Country.MT].currencySymbol}${amount.toLocaleString('en-GB', { maximumFractionDigits: 0 })}`;
     }
@@ -136,7 +136,7 @@ const PricingCalculator: React.FC<Props> = ({ config, addons, onRequestUpdate, o
 
   const formatFactorDisplay = (factor: PricingFactor) => {
     if (factor.type === PricingFactorType.PERCENTAGE) {
-      return `+${factor.value}%`;
+      return request.country === Country.TR ? `+%${factor.value}` : `+${factor.value}%`;
     }
     return `+${formatPrice(factor.value)}`;
   }
@@ -349,8 +349,8 @@ const PricingCalculator: React.FC<Props> = ({ config, addons, onRequestUpdate, o
   const isTr = request.country === Country.TR;
   const isPercentage = request.discountType === DiscountType.PERCENTAGE;
 
-  const showSymbolLeft = (!isPercentage && !isTr) || (isPercentage && isTr);
-  const showSymbolRight = (!isPercentage && isTr) || (isPercentage && !isTr);
+  const showSymbolLeft = !isPercentage || isTr;
+  const showSymbolRight = isPercentage && !isTr;
 
   const displaySymbol = isPercentage ? '%' : rules.currencySymbol;
 

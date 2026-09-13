@@ -1262,6 +1262,13 @@
             return factor.value || 0;
         }
 
+        function formatAdminMoney(value, currency = 'TRY') {
+            const isEuro = currency === 'EUR';
+            const symbol = isEuro ? '€' : '₺';
+            const locale = isEuro ? 'en-GB' : 'tr-TR';
+            return symbol + Number(value || 0).toLocaleString(locale, { maximumFractionDigits: 0 });
+        }
+
         function calculateBreakdownFromRequest(request, pricingConfig, addons) {
             const rules = pricingConfig[request.country] || pricingConfig.TR;
             const base = (rules.basePrices && rules.basePrices[request.siteType]) || 0;
@@ -3425,7 +3432,7 @@
                                 <!-- Pricing -->
                                 <div class="flex justify-between items-center pt-4 border-t border-white/5">
                                     <span class="text-gray-400 text-[10px] uppercase tracking-wider font-bold">Total</span>
-                                    <span class="text-[#FFD700] font-bold text-lg">${quote.totalPrice || 0} ${quote.currency || 'TRY'}</span>
+                                    <span class="text-[#FFD700] font-bold text-lg">${formatAdminMoney(quote.totalPrice || 0, quote.currency || 'TRY')}</span>
                                 </div>
                                 
                                 <!-- Linked Project Badge -->
@@ -3704,7 +3711,7 @@
                                 <i data-lucide="file-text" class="w-4 h-4 text-blue-400 mt-1 flex-shrink-0"></i>
                                 <div class="flex-1 min-w-0">
                                     <div class="text-white text-sm font-bold">Proposal ${item.data.quoteNumber}</div>
-                                    <div class="text-gray-400 text-xs">${item.data.siteType || 'N/A'} - ${item.data.totalPrice || 0} ${item.data.currency || 'TRY'}</div>
+                                    <div class="text-gray-400 text-xs">${item.data.siteType || 'N/A'} - ${formatAdminMoney(item.data.totalPrice || 0, item.data.currency || 'TRY')}</div>
                                     <div class="text-gray-600 text-xs mt-1">${date}</div>
                                 </div>
                             </div>
@@ -3769,14 +3776,14 @@
 
                             <div class="flex items-center justify-between text-[9px] font-black uppercase tracking-widest text-gray-400 mb-1.5">
                                 <span>${stage}</span>
-                                <span class="text-taurusGold">%${progress}</span>
+                                <span class="text-taurusGold">${progress}%</span>
                             </div>
                             <div class="h-1.5 rounded-full bg-white/10 overflow-hidden mb-4">
                                 <div class="h-full rounded-full bg-taurusGold transition-all" style="width:${progress}%"></div>
                             </div>
 
                             <div class="flex items-center justify-between text-[10px] text-gray-500 font-mono">
-                                <span>${budget ? budget.toLocaleString('tr-TR') + ' ' + (data.currency || 'TRY') : '—'}</span>
+                                <span>${budget ? formatAdminMoney(budget, data.currency || 'TRY') : '—'}</span>
                                 <span>${dueDate ? dueDate : ''}</span>
                             </div>
                         </div>
@@ -4824,16 +4831,16 @@
                 return;
             }
 
-            const symbol = currency === 'EUR' ? '€' : '₺';
+            const formatMoney = (value) => formatAdminMoney(value, currency);
 
             let html = `
                 <div class="flex justify-between py-2 border-b border-white/5">
                     <span class="text-gray-400">Base Price</span>
-                    <span class="text-white font-mono">${symbol}${breakdown.base?.toLocaleString() || 0}</span>
+                    <span class="text-white font-mono">${formatMoney(breakdown.base)}</span>
                 </div>
                 <div class="flex justify-between py-2 border-b border-white/5">
                     <span class="text-gray-400">Page Cost</span>
-                    <span class="text-white font-mono">${symbol}${breakdown.pages?.toLocaleString() || 0}</span>
+                    <span class="text-white font-mono">${formatMoney(breakdown.pages)}</span>
                 </div>
             `;
 
@@ -4854,7 +4861,7 @@
                     html += `
                         <div class="flex justify-between py-2 border-b border-white/5">
                             <span class="text-gray-400">${f.l}</span>
-                            <span class="text-white font-mono">${symbol}${breakdown[f.k]?.toLocaleString()}</span>
+                            <span class="text-white font-mono">${formatMoney(breakdown[f.k])}</span>
                         </div>
                     `;
                 }
@@ -4865,13 +4872,13 @@
                 html += `
                     <div class="flex justify-between py-2 border-b border-white/5 bg-red-500/5 px-2 -mx-2 rounded">
                         <span class="text-red-400 font-bold">Discount Applied</span>
-                        <span class="text-red-400 font-mono">-${symbol}${breakdown.discountAmount?.toLocaleString()}</span>
+                        <span class="text-red-400 font-mono">-${formatMoney(breakdown.discountAmount)}</span>
                     </div>
                 `;
             }
 
             container.innerHTML = html;
-            totalDisplay.innerText = symbol + (breakdown.finalTotal?.toLocaleString() || 0);
+            totalDisplay.innerText = formatMoney(breakdown.finalTotal);
         }
 
         function renderRoadmap(roadmapData, projectStatus) {

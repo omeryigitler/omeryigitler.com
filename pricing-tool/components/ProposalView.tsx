@@ -27,21 +27,24 @@ const ProposalView: React.FC<Props> = ({ config, addons, request, breakdown, onB
   const labels = TRANSLATIONS[language].labels;
   const t_addons = TRANSLATIONS[language].addons as any;
 
-  // STRICT TDK FORMATTING
+  // Locale-aware official display formatting
   const formatCurrency = (val: number) => {
     if (request.country === Country.TR) {
-      // TR: 10.000 ₺
-      return `${Math.round(val).toLocaleString('tr-TR', { maximumFractionDigits: 0 })} ${rules.currencySymbol}`;
+      // TR: ₺10.000
+      return `${rules.currencySymbol}${Math.round(val).toLocaleString('tr-TR', { maximumFractionDigits: 0 })}`;
     } else {
       // MT: €1,000
       return `${rules.currencySymbol}${Math.round(val).toLocaleString('en-GB', { maximumFractionDigits: 0 })}`;
     }
   };
 
-  // Helper to display factor (e.g., "+30%" or "+5000 ₺")
+  const formatPercent = (value: number) =>
+    request.country === Country.TR ? `%${value}` : `${value}%`;
+
+  // Helper to display factor with locale-aware currency/percent placement
   const formatFactorDisplay = (factor: PricingFactor) => {
     if (factor.type === PricingFactorType.PERCENTAGE) {
-      return `+${factor.value}%`;
+      return `+${formatPercent(factor.value)}`;
     }
     return `+${formatCurrency(factor.value)}`;
   }
@@ -286,7 +289,7 @@ const ProposalView: React.FC<Props> = ({ config, addons, request, breakdown, onB
                           <CheckCircle className="w-3 h-3 mr-2 text-indigo-500" />
                           {displayLabel}
                           {priceFactor.type === PricingFactorType.PERCENTAGE && (
-                            <span className="text-xs text-indigo-600 ml-1 font-bold">({priceFactor.value}%)</span>
+                            <span className="text-xs text-indigo-600 ml-1 font-bold">({formatPercent(priceFactor.value)})</span>
                           )}
                         </td>
                         <td className="py-4 pr-4 text-right font-medium text-indigo-900">
@@ -345,7 +348,7 @@ const ProposalView: React.FC<Props> = ({ config, addons, request, breakdown, onB
                 <p className="text-sm text-zinc-300">
                   {labels.maintenance[request.maintenanceLevel]}
                   {rules.maintenanceRates[request.maintenanceLevel].type === PricingFactorType.PERCENTAGE && (
-                    ` (%${rules.maintenanceRates[request.maintenanceLevel].value})`
+                    ` (${formatPercent(rules.maintenanceRates[request.maintenanceLevel].value)})`
                   )}
                 </p>
               </div>

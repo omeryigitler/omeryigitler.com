@@ -24,11 +24,11 @@ const ContractView: React.FC<Props> = ({ config, addons, request, onBack, langua
   const t_calc = TRANSLATIONS[language].calc;
   const labels = TRANSLATIONS[language].labels;
 
-  // STRICT TDK FORMATTING HELPER
+  // Locale-aware official display formatting
   const fmt = (val: number) => {
     if (request.country === Country.TR) {
-      // TR: 10.000 ₺
-      return `${Math.round(val).toLocaleString('tr-TR', { maximumFractionDigits: 0 })} ${rules.currencySymbol}`;
+      // TR: ₺10.000
+      return `${rules.currencySymbol}${Math.round(val).toLocaleString('tr-TR', { maximumFractionDigits: 0 })}`;
     } else {
       // MT: €1,000
       return `${rules.currencySymbol}${Math.round(val).toLocaleString('en-GB', { maximumFractionDigits: 0 })}`;
