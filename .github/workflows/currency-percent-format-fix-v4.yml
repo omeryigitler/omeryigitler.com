@@ -1,0 +1,120 @@
+name: Currency and percent formatting fix v4
+
+on:
+  push:
+    paths:
+      - '.github/workflows/currency-percent-format-fix-v4.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Fix SEO tracker percent display
+        shell: bash
+        run: |
+          python <<'PY'
+          from pathlib import Path
+
+          p = Path('pricing-tool/components/SeoTracker.tsx')
+          text = p.read_text(encoding='utf-8')
+
+          old = "  const t = TRANSLATIONS[language].seo;\n"
+          new = "  const t = TRANSLATIONS[language].seo;\n  const formatPercent = (value: number) =>\n    language === Language.TR ? `%${value}` : `${value}%`;\n"
+          if text.count(old) != 1:
+              raise SystemExit('SeoTracker translation anchor mismatch')
+          text = text.replace(old, new)
+
+          old = "<span className={progress === 100 ? 'text-green-500' : 'text-[#FFD700]'}>%{progress}</span>"
+          new = "<span className={progress === 100 ? 'text-green-500' : 'text-[#FFD700]'}>{formatPercent(progress)}</span>"
+          if text.count(old) != 1:
+              raise SystemExit('SeoTracker mini progress format mismatch')
+          text = text.replace(old, new)
+
+          old = '<span className="text-3xl font-bold text-white font-poppins">%{calculateProgress(activeProject)}</span>'
+          new = '<span className="text-3xl font-bold text-white font-poppins">{formatPercent(calculateProgress(activeProject))}</span>'
+          if text.count(old) != 1:
+              raise SystemExit('SeoTracker total progress format mismatch')
+          text = text.replace(old, new)
+
+          p.write_text(text, encoding='utf-8')
+          PY
+
+      - name: Build pricing tool
+        working-directory: pricing-tool
+        run: |
+          npm ci
+          npm run build
+
+      - name: Verify complete locale rules
+        shell: bash
+        run: |
+          python <<'PY'
+          from pathlib import Path
+
+          calc = Path('pricing-tool/components/PricingCalculator.tsx').read_text(encoding='utf-8')
+          proposal = Path('pricing-tool/components/ProposalView.tsx').read_text(encoding='utf-8')
+          contract = Path('pricing-tool/components/ContractView.tsx').read_text(encoding='utf-8')
+          seo = Path('pricing-tool/components/SeoTracker.tsx').read_text(encoding='utf-8')
+          packages = Path('pricing-tool/components/PackageTable.tsx').read_text(encoding='utf-8')
+          translations = Path('pricing-tool/translations.ts').read_text(encoding='utf-8')
+          pdf = Path('pricing-tool/utils/pdfGenerator.ts').read_text(encoding='utf-8')
+          admin = Path('admin.html').read_text(encoding='utf-8')
+          dist = Path('pricing-tool/dist/index.html').read_text(encoding='utf-8')
+
+          # Currency display rules: TR ₺10.000, MT €1,000.
+          assert "`${config[Country.TR].currencySymbol}${amount.toLocaleString('tr-TR'" in calc
+          assert '// TR: ₺10.000' in proposal
+          assert '// TR: ₺10.000' in contract
+          assert "priceTR: '₺10.000'" in packages
+          assert "priceTR: '₺25.000'" in packages
+          assert "priceTR: '₺50.000'" in packages
+          assert '10.000 ₺' not in calc + proposal + contract + packages
+
+          # Percent display rules: Turkish %25, English 25%.
+          assert "request.country === Country.TR ? `+%${factor.value}` : `+${factor.value}%`" in calc
+          assert "request.country === Country.TR ? `%${value}` : `${value}%`" in proposal
+          assert "language === Language.TR ? `%${value}` : `${value}%`" in seo
+          assert '>%{progress}</span>' not in seo
+          assert '>%{calculateProgress(activeProject)}</span>' not in seo
+          assert "term1: '%50 İş başlangıcında peşinat'" in translations
+          assert "term1: '50% Deposit upon commencement'" in translations
+          assert '`- %50 İş başlangıcında avans.' in pdf
+          assert '`- 50% Upfront deposit upon commencement.' in pdf
+
+          # Admin is English UI: money localized by currency, percent follows English placement.
+          assert 'function formatAdminMoney' in admin
+          assert '<span class="text-taurusGold">${progress}%</span>' in admin
+          assert '<span class="text-taurusGold">%${progress}</span>' not in admin
+
+          # Native PDF uses locale-specific separators.
+          assert "const locale = request.country === Country.TR ? 'tr-TR' : 'en-GB';" in pdf
+          assert 'toLocaleString(undefined' not in pdf
+
+          # Built artifact must exist and reference a generated JS bundle.
+          assert 'assets/index-' in dist
+          assert Path('pricing-tool/dist/assets').is_dir()
+          print('All currency and percentage locale checks passed.')
+          PY
+
+      - name: Commit, clean temporary workflows, and push
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git rm -f \
+            .github/workflows/currency-percent-format-fix.yml \
+            .github/workflows/currency-percent-format-fix-v2.yml \
+            .github/workflows/currency-percent-format-fix-v3.yml \
+            .github/workflows/currency-percent-format-fix-v4.yml
+          git add pricing-tool/components/SeoTracker.tsx pricing-tool/dist
+          git status --short
+          git commit -m "Fix locale-aware SEO progress percentages"
+          git push origin HEAD:main
