@@ -35,6 +35,7 @@ export const generateNativePDF = async (request: QuoteRequest, breakdown: CostBr
     const doc = new jsPDF();
     const currency = request.country === Country.TR ? '₺' : '€';
     const locale = request.country === Country.TR ? 'tr-TR' : 'en-GB';
+    const formatMoney = (value: number) => `${currency}${Math.round(value).toLocaleString(locale, { maximumFractionDigits: 0 })}`;
     const pageWidth = doc.internal.pageSize.getWidth(); // 210mm
     const pageHeight = doc.internal.pageSize.getHeight();
     const margin = 20;
@@ -141,7 +142,7 @@ export const generateNativePDF = async (request: QuoteRequest, breakdown: CostBr
             else doc.setFont("helvetica", "normal");
 
             doc.text(label, margin + 5, y);
-            doc.text(`${currency}${value.toLocaleString(locale, { minimumFractionDigits: 2 })}`, pageWidth - margin - 5, y, { align: 'right' });
+            doc.text(formatMoney(value), pageWidth - margin - 5, y, { align: 'right' });
 
             // Bottom border
             doc.setDrawColor(240);
@@ -175,7 +176,7 @@ export const generateNativePDF = async (request: QuoteRequest, breakdown: CostBr
             doc.setTextColor(200, 0, 0); // Red
             doc.setFont("helvetica", "normal");
             doc.text(`${c.discount}:`, pageWidth - margin - 50, y, { align: 'right' });
-            doc.text(`-${currency}${breakdown.discountAmount.toLocaleString(locale)}`, pageWidth - margin - 5, y, { align: 'right' });
+            doc.text(`-${formatMoney(breakdown.discountAmount)}`, pageWidth - margin - 5, y, { align: 'right' });
             y += 8;
         }
 
@@ -186,7 +187,7 @@ export const generateNativePDF = async (request: QuoteRequest, breakdown: CostBr
         doc.setFont("helvetica", "bold");
         doc.setFontSize(12);
         doc.text(lang === Language.TR ? "NET TOPLAM:" : "TOTAL VALUE:", pageWidth - margin - 55, y + 2, { align: 'right' });
-        doc.text(`${currency}${breakdown.finalTotal.toLocaleString(locale, { minimumFractionDigits: 2 })}`, pageWidth - margin - 5, y + 2, { align: 'right' });
+        doc.text(formatMoney(breakdown.finalTotal), pageWidth - margin - 5, y + 2, { align: 'right' });
 
         y += 20;
 
@@ -195,7 +196,7 @@ export const generateNativePDF = async (request: QuoteRequest, breakdown: CostBr
             doc.setFontSize(10);
             doc.setTextColor(COLOR_DARK_GRAY);
             doc.setFont("helvetica", "italic");
-            doc.text(`* ${c.monthlyService}: ${currency}${breakdown.totalMonthly.toLocaleString(locale)}/${lang === Language.TR ? 'ay' : 'mo'}.`, margin, y);
+            doc.text(`* ${c.monthlyService}: ${formatMoney(breakdown.totalMonthly)}/${lang === Language.TR ? 'ay' : 'mo'}.`, margin, y);
         }
 
         // Footer (Quote Validity)
@@ -252,7 +253,7 @@ export const generateNativePDF = async (request: QuoteRequest, breakdown: CostBr
             (lang === Language.TR ? 'Hazır Tema' : 'Template Theme');
 
         const customerText = request.customerName || "................................................";
-        const fmt = (val: number) => `${currency}${val.toLocaleString(locale, { minimumFractionDigits: 2 })}`;
+        const fmt = (val: number) => formatMoney(val);
 
         // --- TURKISH CONTRACT CONTENT ---
         if (lang === Language.TR) {
