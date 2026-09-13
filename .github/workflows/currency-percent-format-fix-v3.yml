@@ -1,0 +1,75 @@
+name: Currency and percent formatting fix v3
+
+on:
+  push:
+    paths:
+      - '.github/workflows/currency-percent-format-fix-v3.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Apply verified patch
+        shell: bash
+        run: |
+          python <<'PY'
+          from pathlib import Path
+          import textwrap
+          workflow = Path('.github/workflows/currency-percent-format-fix-v2.yml').read_text(encoding='utf-8')
+          marker = "          python <<'PY'\n"
+          block = workflow.split(marker, 1)[1].split('\n          PY', 1)[0]
+          script = textwrap.dedent(block)
+          exec(compile(script, 'currency-percent-patch.py', 'exec'))
+          PY
+
+      - name: Build pricing tool
+        working-directory: pricing-tool
+        run: |
+          npm ci
+          npm run build
+
+      - name: Verify key outputs
+        shell: bash
+        run: |
+          python <<'PY'
+          from pathlib import Path
+          calc = Path('pricing-tool/components/PricingCalculator.tsx').read_text(encoding='utf-8')
+          proposal = Path('pricing-tool/components/ProposalView.tsx').read_text(encoding='utf-8')
+          contract = Path('pricing-tool/components/ContractView.tsx').read_text(encoding='utf-8')
+          packages = Path('pricing-tool/components/PackageTable.tsx').read_text(encoding='utf-8')
+          pdf = Path('pricing-tool/utils/pdfGenerator.ts').read_text(encoding='utf-8')
+          admin = Path('admin.html').read_text(encoding='utf-8')
+          assert "`${config[Country.TR].currencySymbol}${amount.toLocaleString('tr-TR'" in calc
+          assert "request.country === Country.TR ? `+%${factor.value}` : `+${factor.value}%`" in calc
+          assert '// TR: ₺10.000' in proposal and '// TR: ₺10.000' in contract
+          assert "priceTR: '₺10.000'" in packages
+          assert "const locale = request.country === Country.TR ? 'tr-TR' : 'en-GB';" in pdf
+          assert 'function formatAdminMoney' in admin
+          assert '%${progress}' not in admin
+          assert Path('pricing-tool/dist/index.html').exists()
+          print('Build and formatting verification passed.')
+          PY
+
+      - name: Commit and push
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add admin.html \
+            pricing-tool/components/PricingCalculator.tsx \
+            pricing-tool/components/ProposalView.tsx \
+            pricing-tool/components/ContractView.tsx \
+            pricing-tool/components/PackageTable.tsx \
+            pricing-tool/utils/pdfGenerator.ts \
+            pricing-tool/dist
+          git status --short
+          git commit -m "Standardize currency and percent formatting"
+          git push origin HEAD:main
