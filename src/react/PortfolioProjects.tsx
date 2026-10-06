@@ -13,6 +13,11 @@ export type PortfolioProject = {
   solution: string;
   result: string;
   liveUrl: string;
+  githubUrl?: string;
+  description?: string;
+  stack?: string[];
+  featured?: boolean;
+  featuredOrder?: number;
   desktopImage: string;
   mobileImage?: string;
   alternateDesktopImage?: string;
@@ -24,80 +29,6 @@ export type PortfolioProject = {
   published: boolean;
   lang?: string;
 };
-
-export const DEFAULT_PORTFOLIO_PROJECTS: PortfolioProject[] = [
-  {
-    id: "bugun-ne-yiyelim",
-    slug: "bugun-ne-yiyelim",
-    title: "Bugün Ne Yiyelim?",
-    category: "Food decision app",
-    kicker: "AI-Powered Food Decider",
-    challenge: "Overcoming daily decision fatigue when choosing what to eat.",
-    solution: "AI-driven recommendation engine personalized to user mood.",
-    result: "Instant, stress-free meal decisions tailored to the moment.",
-    liveUrl: "https://www.bugunneyiyelim.com/",
-    desktopImage: "assets/bugun-desktop.png",
-    mobileImage: "assets/bugun-mobile.png",
-    accent: "#FF2A1A",
-    sortOrder: 10,
-    displayType: "desktop-mobile",
-    published: true,
-    lang: "tr"
-  },
-  {
-    id: "elite-body-protocol",
-    slug: "elite-body-protocol",
-    title: "Elite Body Protocol",
-    category: "Gamified fitness app",
-    kicker: "React Web App",
-    challenge: "Designing a seamless cinematic transition between two completely different UI design languages (Retro vs. Modern).",
-    solution: "Built with React and Tailwind for dynamic state management and complex CSS animations.",
-    result: "A highly engaging, gamified experience that increases user retention through narrative.",
-    liveUrl: "https://elitebody.omeryigitler.com",
-    desktopImage: "assets/elite-modern.png?v=V10",
-    alternateDesktopImage: "assets/elite-retro.png?v=V10",
-    alternateLabelA: "Modern",
-    alternateLabelB: "Retro",
-    accent: "#a78bfa",
-    sortOrder: 20,
-    displayType: "desktop-swap",
-    published: true
-  },
-  {
-    id: "reformer-pilates-malta",
-    slug: "reformer-pilates-malta",
-    title: "Reformer Pilates Malta",
-    category: "Wellness studio",
-    kicker: "Custom Website Design",
-    challenge: "Lack of online visibility and mobile booking options for clients.",
-    solution: "Custom responsive design with clear class schedules and SEO foundations.",
-    result: "Improved brand perception and accessible class information for locals.",
-    liveUrl: "https://www.reformerpilatesmalta.com/",
-    desktopImage: "assets/pilates-desktop.png",
-    mobileImage: "assets/pilates-mobile.png",
-    accent: "#D38B99",
-    sortOrder: 30,
-    displayType: "desktop-mobile",
-    published: true
-  },
-  {
-    id: "today-we-eat",
-    slug: "today-we-eat",
-    title: "Today We Eat",
-    category: "Food decision app",
-    kicker: "AI-Powered Food Decider",
-    challenge: "Overcoming daily decision fatigue when choosing what to eat.",
-    solution: "AI-driven recommendation engine personalized to user mood.",
-    result: "Instant, stress-free meal decisions tailored to the moment.",
-    liveUrl: "https://www.todayweeat.com/",
-    desktopImage: "assets/today-we-eat-desktop.png",
-    mobileImage: "assets/today-we-eat-mobile.png",
-    accent: "#FF2A1A",
-    sortOrder: 40,
-    displayType: "desktop-mobile",
-    published: true
-  }
-];
 
 function asString(value: unknown, fallback = ""): string {
   return typeof value === "string" && value.trim() ? value.trim() : fallback;
@@ -111,10 +42,13 @@ function normalizeProject(id: string, value: Record<string, unknown>): Portfolio
     title: asString(value.title, "Untitled Project"),
     category: asString(value.category, "Selected work"),
     kicker: asString(value.kicker, "Custom digital experience"),
-    challenge: asString(value.challenge, "Project challenge details are being prepared."),
-    solution: asString(value.solution, "A tailored design and development approach was delivered."),
-    result: asString(value.result, "The project was shipped as a responsive production experience."),
-    liveUrl: asString(value.liveUrl, "#"),
+    challenge: asString(value.challenge),
+    solution: asString(value.solution),
+    result: asString(value.result),
+    liveUrl: asString(value.liveUrl),
+    githubUrl: asString(value.githubUrl), description: asString(value.description),
+    stack: Array.isArray(value.stack) ? value.stack.filter((v): v is string => typeof v === "string") : [],
+    featured: value.featured === true, featuredOrder: Number(value.featuredOrder ?? 9999),
     desktopImage: asString(value.desktopImage, "assets/preview.png"),
     mobileImage: asString(value.mobileImage),
     alternateDesktopImage: asString(value.alternateDesktopImage),
@@ -128,29 +62,30 @@ function normalizeProject(id: string, value: Record<string, unknown>): Portfolio
   };
 }
 
-function usePortfolioProjects() {
-  const [projects, setProjects] = useState<PortfolioProject[]>(DEFAULT_PORTFOLIO_PROJECTS);
-  const [source, setSource] = useState<"fallback" | "firestore">("fallback");
+export function usePortfolioProjects() {
+  const [projects, setProjects] = useState<PortfolioProject[]>([]);
+  const [source, setSource] = useState<"loading" | "error" | "firestore">("loading");
 
   useEffect(() => {
     let cancelled = false;
     async function load() {
       try {
-        const response = await fetch("/api/portfolio", { headers: { Accept: "application/json" } });
+        const response = await fetch("/api/portfolio", { cache: "no-store", headers: { Accept: "application/json" } });
         if (!response.ok) throw new Error(`Portfolio API returned ${response.status}`);
         const payload = await response.json();
+        if (!Array.isArray(payload.projects)) throw new Error("Invalid portfolio response");
         const loaded = Array.isArray(payload.projects)
           ? payload.projects
               .map((project: Record<string, unknown>) => normalizeProject(asString(project.id, asString(project.slug)), project))
               .filter((project: PortfolioProject) => project.published)
               .sort((a: PortfolioProject, b: PortfolioProject) => a.sortOrder - b.sortOrder)
           : [];
-        if (!cancelled && loaded.length > 0) {
+        if (!cancelled) {
           setProjects(loaded);
           setSource("firestore");
         }
       } catch (error) {
-        console.warn("Portfolio data fallback active:", error);
+        if (!cancelled) setSource("error");
       }
     }
     load();
@@ -241,15 +176,17 @@ function ProjectSection({ project, index }: { project: PortfolioProject; index: 
         <div className="project-copy">
           <h2 lang={project.lang || undefined}>{project.title}</h2>
           <div className="kicker">{project.kicker}</div>
+          <p>{project.description}</p><p>{project.stack?.join(" · ")}</p>
           <div className="csr">
-            <div className="csr-row"><h4>Challenge</h4><p>{project.challenge}</p></div>
-            <div className="csr-row"><h4>Solution</h4><p>{project.solution}</p></div>
-            <div className="csr-row"><h4>Result</h4><p>{project.result}</p></div>
+            {project.challenge ? <div className="csr-row"><h4>Challenge</h4><p>{project.challenge}</p></div> : null}
+            {project.solution ? <div className="csr-row"><h4>Solution</h4><p>{project.solution}</p></div> : null}
+            {project.result ? <div className="csr-row"><h4>Result</h4><p>{project.result}</p></div> : null}
           </div>
-          <a className="visit" href={project.liveUrl} target="_blank" rel="noreferrer">
+          {project.liveUrl ? <a className="visit" href={project.liveUrl} target="_blank" rel="noreferrer">
             Open project
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M7 17 17 7M7 7h10v10" /></svg>
-          </a>
+          </a> : null}
+          {project.githubUrl ? <a className="visit" href={project.githubUrl} target="_blank" rel="noreferrer">GitHub ↗</a> : null}
         </div>
         <div className={`devices${project.displayType === "desktop-swap" ? " elite-swap" : ""}`}>
           <DesktopPreview project={project} />
@@ -279,6 +216,8 @@ export function PortfolioProjects() {
     targets.forEach((target) => observer.observe(target));
     return () => observer.disconnect();
   }, [orderedProjects]);
+
+  if (!orderedProjects.length) return <p role="status" style={{ padding: "48px 24px", textAlign: "center" }}>{source === "loading" ? "Loading projects…" : source === "error" ? "Projects could not be loaded. Please try again later." : "New work will appear here soon."}</p>;
 
   return <div className="portfolio-projects" data-source={source}>{orderedProjects.map((project, index) => <ProjectSection key={project.id} project={project} index={index} />)}</div>;
 }
