@@ -62,6 +62,7 @@
       <form id="portfolio-admin-form">
         <div class="pf-grid">
           <div class="pf-field"><label for="pf-title">Proje adı</label><input id="pf-title" required></div>
+          <div class="pf-field"><label for="pf-archive-category">Arşiv filtresi</label><select id="pf-archive-category"><option value="other">Diğer</option><option value="sites">Sites</option><option value="commerce">Commerce</option><option value="apps">Apps</option><option value="tools">Tools</option><option value="experiments">Experiments</option></select></div>
           <div class="pf-field"><label for="pf-category">Kategori</label><input id="pf-category" required></div>
           <div class="pf-field"><label for="pf-kicker">Hizmet / teknoloji</label><input id="pf-kicker"></div>
           <div class="pf-field"><label for="pf-url">Canlı site adresi</label><input id="pf-url" type="url" placeholder="https://"></div>
@@ -113,7 +114,7 @@
     const title = $("pf-title").value.trim();
     return {
       slug: slugify(title), title,
-      category: $("pf-category").value.trim(), kicker: $("pf-kicker").value.trim(),
+      archiveCategory: $("pf-archive-category").value, category: $("pf-category").value.trim(), kicker: $("pf-kicker").value.trim(),
       challenge: $("pf-challenge").value.trim(), solution: $("pf-solution").value.trim(), result: $("pf-result").value.trim(),
       githubUrl: $("pf-github").value.trim(), description: $("pf-description").value.trim(), stack: $("pf-stack").value.split(",").map((value) => value.trim()).filter(Boolean), featured: $("pf-featured").checked,
       liveUrl: $("pf-url").value.trim(), desktopImage: $("pf-desktop").value.trim(), mobileImage: $("pf-mobile").value.trim(),
@@ -269,7 +270,7 @@
     if (!p) return;
     state.editingId = id;
     $("pf-editor").open = true;
-    const values = { "pf-github": p.githubUrl || "", "pf-description": p.description || "", "pf-stack": (p.stack || []).join(", "), "pf-title": p.title, "pf-category": p.category, "pf-kicker": p.kicker, "pf-challenge": p.challenge, "pf-solution": p.solution, "pf-result": p.result, "pf-url": p.liveUrl, "pf-desktop": p.desktopImage, "pf-mobile": p.mobileImage, "pf-alt": p.alternateDesktopImage, "pf-label-a": p.alternateLabelA || "Primary", "pf-label-b": p.alternateLabelB || "Alternate", "pf-display": p.displayType || "desktop-mobile", "pf-accent": p.accent || "#FFD700", "pf-order": p.sortOrder ?? 999, "pf-lang": p.lang || "" };
+    const values = { "pf-github": p.githubUrl || "", "pf-description": p.description || "", "pf-stack": (p.stack || []).join(", "), "pf-title": p.title, "pf-archive-category": p.archiveCategory || "other", "pf-category": p.category, "pf-kicker": p.kicker, "pf-challenge": p.challenge, "pf-solution": p.solution, "pf-result": p.result, "pf-url": p.liveUrl, "pf-desktop": p.desktopImage, "pf-mobile": p.mobileImage, "pf-alt": p.alternateDesktopImage, "pf-label-a": p.alternateLabelA || "Primary", "pf-label-b": p.alternateLabelB || "Alternate", "pf-display": p.displayType || "desktop-mobile", "pf-accent": p.accent || "#FFD700", "pf-order": p.sortOrder ?? 999, "pf-lang": p.lang || "" };
     Object.entries(values).forEach(([fieldId, value]) => { $(fieldId).value = value ?? ""; });
     $("pf-published").checked = p.published !== false;
     $("pf-featured").checked = p.featured === true;

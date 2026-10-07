@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from "react";
-import type { CSSProperties } from "react";
 
 export type PortfolioDisplayType = "desktop-mobile" | "desktop-swap";
 
@@ -8,6 +7,7 @@ export type PortfolioProject = {
   slug: string;
   title: string;
   category: string;
+  archiveCategory?: string;
   kicker: string;
   challenge: string;
   solution: string;
@@ -41,6 +41,7 @@ function normalizeProject(id: string, value: Record<string, unknown>): Portfolio
     slug: asString(value.slug, id),
     title: asString(value.title, "Untitled Project"),
     category: asString(value.category, "Selected work"),
+    archiveCategory: asString(value.archiveCategory, "other"),
     kicker: asString(value.kicker, "Custom digital experience"),
     challenge: asString(value.challenge),
     solution: asString(value.solution),
@@ -49,7 +50,7 @@ function normalizeProject(id: string, value: Record<string, unknown>): Portfolio
     githubUrl: asString(value.githubUrl), description: asString(value.description),
     stack: Array.isArray(value.stack) ? value.stack.filter((v): v is string => typeof v === "string") : [],
     featured: value.featured === true, featuredOrder: Number(value.featuredOrder ?? 9999),
-    desktopImage: asString(value.desktopImage, "assets/preview.png"),
+    desktopImage: asString(value.desktopImage),
     mobileImage: asString(value.mobileImage),
     alternateDesktopImage: asString(value.alternateDesktopImage),
     alternateLabelA: asString(value.alternateLabelA, "Primary"),
@@ -95,129 +96,57 @@ export function usePortfolioProjects() {
   return { projects, source };
 }
 
-function Typewriter({ text, delay = 0 }: { text: string; delay?: number }) {
-  const [visible, setVisible] = useState("");
-  useEffect(() => {
-    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (reduced) { setVisible(text); return; }
-    let timer = 0;
-    let index = 0;
-    let deleting = false;
-    let stopped = false;
-    const step = () => {
-      if (stopped) return;
-      setVisible(text.slice(0, index));
-      if (!deleting) {
-        if (index < text.length) { index += 1; timer = window.setTimeout(step, 48 + Math.random() * 44); }
-        else { deleting = true; timer = window.setTimeout(step, 2400); }
-      } else if (index > 0) { index -= 1; timer = window.setTimeout(step, 34); }
-      else { deleting = false; timer = window.setTimeout(step, 600); }
-    };
-    timer = window.setTimeout(step, delay);
-    return () => { stopped = true; window.clearTimeout(timer); };
-  }, [delay, text]);
-  return <span className="type-eyebrow">{visible}</span>;
-}
+const FILTERS = [
+  ["all", "All"], ["sites", "Sites"], ["commerce", "Commerce"], ["apps", "Apps"],
+  ["tools", "Tools"], ["experiments", "Experiments"], ["other", "Other"]
+];
 
-function getDisplayUrl(url: string): string {
-  try { return new URL(url).hostname.replace(/^www\./, ""); }
-  catch { return "project-preview"; }
-}
-
-function DesktopPreview({ project }: { project: PortfolioProject }) {
-  const swap = project.displayType === "desktop-swap" && project.alternateDesktopImage;
-  return (
-    <div className="desktop-preview" aria-label={`${project.title} desktop preview`}>
-      <div className="desktop-toolbar" aria-hidden="true">
-        <span className="traffic red" /><span className="traffic yellow" /><span className="traffic green" />
-        <span className="browser-address">{getDisplayUrl(project.liveUrl)}</span>
-        <span className="browser-action">↗</span>
-      </div>
-      <div className="desktop-viewport">
-        {swap ? (
-          <div className="swap">
-            <img className="swap-a" src={project.desktopImage} alt={`${project.title} ${project.alternateLabelA || "primary"} desktop view`} loading="lazy" />
-            <img className="swap-b" src={project.alternateDesktopImage} alt={`${project.title} ${project.alternateLabelB || "alternate"} desktop view`} loading="lazy" />
-          </div>
-        ) : (
-          <img className="desktop-shot" src={project.desktopImage} alt={`${project.title} desktop view`} loading="lazy" />
-        )}
-      </div>
+export function ProjectArchiveCard({ project, index }: { project: PortfolioProject; index: number }) {
+  const [imageFailed, setImageFailed] = useState(false);
+  const [preview, setPreview] = useState(false);
+  const hasImage = Boolean(project.desktopImage) && !imageFailed;
+  const target = project.liveUrl || project.githubUrl;
+  let address = "";
+  try { address = new URL(target || "").hostname.replace(/^www\./, ""); } catch { /* No external link. */ }
+  return <article className={`archive-card${preview ? " preview-open" : ""}${hasImage ? " has-preview" : ""}`}>
+    <div className="archive-card-top"><span>{String(index + 1).padStart(2, "0")}</span><span>{project.archiveCategory === "other" ? project.category : project.archiveCategory}</span></div>
+    <div className="archive-card-main">
+      <h2 lang={project.lang}>{target ? <a href={target} target="_blank" rel="noreferrer">{project.title}<span className="archive-card-arrow" aria-hidden="true">↗</span></a> : project.title}</h2>
+      <p className="archive-address">{address || project.category}</p>
+      {hasImage ? <div className="archive-image">{target ? <a href={target} target="_blank" rel="noreferrer" aria-label={`Open ${project.title}`}><img src={project.desktopImage} alt={`${project.title} website preview`} loading="lazy" decoding="async" onError={() => setImageFailed(true)} /></a> : <img src={project.desktopImage} alt={`${project.title} preview`} loading="lazy" onError={() => setImageFailed(true)} />}</div> : null}
+      <dl><div><dt>Project</dt><dd>{project.description || project.kicker || project.category}</dd></div>{project.stack?.length ? <div><dt>Stack</dt><dd>{project.stack.join(" · ")}</dd></div> : null}</dl>
     </div>
-  );
-}
-
-function MobilePreview({ project }: { project: PortfolioProject }) {
-  if (!project.mobileImage || project.displayType === "desktop-swap") return null;
-  return (
-    <div className="mobile-device" aria-label={`${project.title} mobile preview`}>
-      <span className="mobile-button mobile-silent" aria-hidden="true" />
-      <span className="mobile-button mobile-volume-up" aria-hidden="true" />
-      <span className="mobile-button mobile-volume-down" aria-hidden="true" />
-      <span className="mobile-button mobile-power" aria-hidden="true" />
-      <div className="mobile-screen">
-        <span className="dynamic-island" aria-hidden="true" />
-        <img src={project.mobileImage} alt={`${project.title} mobile view`} loading="lazy" />
-      </div>
-    </div>
-  );
-}
-
-function ProjectSection({ project, index }: { project: PortfolioProject; index: number }) {
-  const flipped = index % 2 === 1;
-  return (
-    <section className={`project reveal${flipped ? " flip" : ""}`} style={{ "--accent": project.accent } as CSSProperties} data-project-id={project.id}>
-      <div className="project-eyebrow">
-        <span className="num">{String(index + 1).padStart(2, "0")} /</span>
-        <Typewriter text={project.category} delay={400 + index * 260} />
-        <span className="cursor eb-cursor" />
-      </div>
-      <div className="project-grid">
-        <div className="project-copy">
-          <h2 lang={project.lang || undefined}>{project.title}</h2>
-          <div className="kicker">{project.kicker}</div>
-          <p>{project.description}</p><p>{project.stack?.join(" · ")}</p>
-          <div className="csr">
-            {project.challenge ? <div className="csr-row"><h4>Challenge</h4><p>{project.challenge}</p></div> : null}
-            {project.solution ? <div className="csr-row"><h4>Solution</h4><p>{project.solution}</p></div> : null}
-            {project.result ? <div className="csr-row"><h4>Result</h4><p>{project.result}</p></div> : null}
-          </div>
-          {project.liveUrl ? <a className="visit" href={project.liveUrl} target="_blank" rel="noreferrer">
-            Open project
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M7 17 17 7M7 7h10v10" /></svg>
-          </a> : null}
-          {project.githubUrl ? <a className="visit" href={project.githubUrl} target="_blank" rel="noreferrer">GitHub ↗</a> : null}
-        </div>
-        <div className={`devices${project.displayType === "desktop-swap" ? " elite-swap" : ""}`}>
-          <DesktopPreview project={project} />
-          <MobilePreview project={project} />
-          {project.displayType === "desktop-swap" && project.alternateDesktopImage ? (
-            <span className="swap-hint"><span className="dot-a" />{project.alternateLabelA || "Primary"}<span className="arr">⇄</span>{project.alternateLabelB || "Alternate"}<span className="dot-b" /> · hover</span>
-          ) : null}
-        </div>
-      </div>
-    </section>
-  );
+    <div className="archive-card-bottom"><div>{project.liveUrl ? <a href={project.liveUrl} target="_blank" rel="noreferrer">Live site ↗</a> : null}{project.githubUrl ? <a href={project.githubUrl} target="_blank" rel="noreferrer">GitHub ↗</a> : null}</div>{hasImage ? <button type="button" onClick={() => setPreview(!preview)} aria-pressed={preview} aria-label={`${preview ? "Hide" : "Show"} preview for ${project.title}`}>{preview ? "Close ×" : "Preview +"}</button> : null}</div>
+  </article>;
 }
 
 export function PortfolioProjects() {
   const { projects, source } = usePortfolioProjects();
-  const orderedProjects = useMemo(() => [...projects].sort((a, b) => a.sortOrder - b.sortOrder), [projects]);
-
-  useEffect(() => {
-    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const targets = Array.from(document.querySelectorAll<HTMLElement>("#portfolio-projects-root .project"));
-    if (reduced || !("IntersectionObserver" in window)) { targets.forEach((target) => target.classList.add("in")); return; }
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach((entry) => {
-        if (entry.isIntersecting) { entry.target.classList.add("in"); observer.unobserve(entry.target); }
-      });
-    }, { threshold: 0.12 });
-    targets.forEach((target) => observer.observe(target));
-    return () => observer.disconnect();
-  }, [orderedProjects]);
-
-  if (!orderedProjects.length) return <p role="status" style={{ padding: "48px 24px", textAlign: "center" }}>{source === "loading" ? "Loading projects…" : source === "error" ? "Projects could not be loaded. Please try again later." : "New work will appear here soon."}</p>;
-
-  return <div className="portfolio-projects" data-source={source}>{orderedProjects.map((project, index) => <ProjectSection key={project.id} project={project} index={index} />)}</div>;
+  const [query, setQuery] = useState(() => new URLSearchParams(window.location.search).get("q") || "");
+  const [filter, setFilter] = useState(() => {
+    const value = new URLSearchParams(window.location.search).get("filter");
+    return FILTERS.some(([key]) => key === value) ? value! : "all";
+  });
+  const results = useMemo(() => projects.filter((project) => {
+    const matchesCategory = filter === "all" || (project.archiveCategory || "other") === filter;
+    const haystack = [project.title, project.category, project.description, project.kicker, ...(project.stack || [])].join(" ").toLocaleLowerCase();
+    return matchesCategory && haystack.includes(query.trim().toLocaleLowerCase());
+  }), [projects, filter, query]);
+  function update(nextFilter: string, nextQuery: string) {
+    setFilter(nextFilter); setQuery(nextQuery);
+    const url = new URL(window.location.href);
+    if (nextFilter === "all") url.searchParams.delete("filter"); else url.searchParams.set("filter", nextFilter);
+    if (!nextQuery) url.searchParams.delete("q"); else url.searchParams.set("q", nextQuery);
+    window.history.replaceState(null, "", `${url.pathname}${url.search}${url.hash}`);
+  }
+  return <section className="project-archive" aria-labelledby="archive-title">
+    <div className="archive-eyebrow"><span><i aria-hidden="true" /> Project archive</span><span>{source === "loading" ? "Loading collection" : `${String(projects.length).padStart(2, "0")} selected projects`}</span><a href="/">↖ Back home</a></div>
+    <header className="archive-heading"><p>Design / Development / Independent work</p><h1 id="archive-title">Projects,<br />experiments &amp; tools<span>.</span></h1><div className="archive-intro"><p>A collection of things I’ve designed, built and brought to life.</p><span>Explore the work ↓</span></div></header>
+    <div className="archive-controls">
+      <div className="archive-search"><span aria-hidden="true">⌕</span><input type="search" aria-label="Search projects" placeholder="Find a project…" value={query} onChange={(event) => update(filter, event.target.value)} /><span role="status" aria-live="polite">{results.length} results</span>{query ? <button type="button" aria-label="Clear search" onClick={() => update(filter, "")}>×</button> : null}</div>
+      <div className="archive-filters" aria-label="Project categories">{FILTERS.filter(([key]) => key !== "other" || projects.some((p) => p.archiveCategory === "other")).map(([key, label]) => <button key={key} type="button" aria-pressed={filter === key} onClick={() => update(key, query)}>{label}</button>)}</div>
+    </div>
+    {results.length ? <div className="archive-grid">{results.map((project, index) => <ProjectArchiveCard key={project.id} project={project} index={index} />)}</div> : <div className="archive-empty" role="status"><p>{source === "loading" ? "Loading the collection…" : source === "error" ? "The collection is temporarily unavailable. Please try again later." : projects.length ? "No projects match your search." : "New work will appear here soon."}</p>{query || filter !== "all" ? <button type="button" onClick={() => update("all", "")}>Reset filters ↗</button> : null}</div>}
+    <div className="archive-end"><span>Thoughtfully designed. Carefully built.</span><a href="/#contact">Let’s make something together ↗</a></div>
+  </section>;
 }

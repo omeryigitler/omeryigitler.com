@@ -10,7 +10,7 @@ export function FeaturedProjects() {
     <div className="featured-work-grid">{featured.map((project) => <article key={project.id}>
       <img src={project.desktopImage} alt={`${project.title} preview`} loading="lazy" width="640" height="400" />
       <div><p>{project.category}</p><h3>{project.title}</h3><p>{project.description || project.kicker}</p>
-        <nav aria-label={`${project.title} links`}>{project.liveUrl ? <a href={project.liveUrl} target="_blank" rel="noreferrer">Live project ↗</a> : null}{project.githubUrl ? <a href={project.githubUrl} target="_blank" rel="noreferrer">GitHub ↗</a> : null}</nav>
+        <div className="featured-links" aria-label={`${project.title} links`}>{project.liveUrl ? <a href={project.liveUrl} target="_blank" rel="noreferrer">Live project ↗</a> : null}{project.githubUrl ? <a href={project.githubUrl} target="_blank" rel="noreferrer">GitHub ↗</a> : null}</div>
       </div>
     </article>)}</div>
   </section>;

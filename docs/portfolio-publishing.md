@@ -20,3 +20,9 @@ GitHub içe aktarma mevcut Firebase admin doğrulamasını kullanır, token kuru
 `npm run quality`, `npx tsc --noEmit` ve `node --test test/portfolio-publishing.test.js`.
 
 Yerel arayüz kontrolü örnek kayıtlar ve taklit API ile yapılır. Gerçek Firebase yazma, GitHub import ve yayınlama işlemleri üretimde çalıştırılmamıştır. Yayın öncesi Firebase yapılandırılmış preview ortamında admin girişini ve bir test kaydının kaydedilmesini doğrulayın.
+
+## Ziyaretçi arşivi
+
+Projeler sayfası Portfolio reposundaki editoryal arşiv düzenini siyah–altın kimliğe uyarlar: büyük başlık, kategori filtreleri, URL ile paylaşılabilir arama ve üç/iki/tek sütun proje kartları. Masaüstünde hover veya Önizle kontrolüyle görsel açılır; 680px altında görseller doğrudan görünür. Görsel yüklenmezse proje metni ve bağlantılar kullanılabilir kalır. Arşiv filtre kategorisi, açıklayıcı kategori metninden bağımsızdır ve panelde seçilir. Filtreleme adminin belirlediği sıralamayı korur.
+
+Son arayüz kontrolü: örnek verilerle masaüstü arama, kategori, önizleme; 390px iframe içinde responsive düzen ve taşma ölçümü (390px içerik / 390px genişlik). Gerçek cihaz dokunma testi yapılmadı.
