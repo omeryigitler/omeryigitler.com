@@ -634,189 +634,6 @@
         }
 
 
-        /* ---- warp tunnel process ---- */
-        .warp-wrap {
-            position: relative;
-            height: 380vh;
-            margin-top: 48px;
-        }
-
-        .warp-sticky {
-            position: sticky;
-            top: 95px;
-            height: calc(100vh - 170px);
-            min-height: 480px;
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 26px;
-            background: #060609;
-            overflow: hidden;
-            perspective: 900px;
-        }
-
-        .warp-grid {
-            position: absolute;
-            left: -40%;
-            right: -40%;
-            bottom: -12%;
-            height: 62%;
-            transform: rotateX(68deg);
-            transform-origin: 50% 0;
-            /* static vertical lines stay on the element; the moving horizontal
-               lines live on ::before and slide with a compositor-only transform */
-            background: linear-gradient(90deg, rgba(255, 215, 0, 0.14) 1px, transparent 1px);
-            background-size: 64px 64px;
-            overflow: hidden;
-            -webkit-mask-image: linear-gradient(to top, black 30%, transparent);
-            mask-image: linear-gradient(to top, black 30%, transparent);
-            opacity: 0.5;
-            pointer-events: none;
-        }
-
-        .warp-grid::before {
-            content: "";
-            position: absolute;
-            left: 0;
-            right: 0;
-            top: -64px;
-            bottom: 0;
-            background: linear-gradient(rgba(255, 215, 0, 0.14) 1px, transparent 1px);
-            background-size: 64px 64px;
-            animation: gridMove 1.4s linear infinite;
-            will-change: transform;
-        }
-
-        @keyframes gridMove { to { transform: translate3d(0, 64px, 0); } }
-
-        .warp-glow {
-            position: absolute;
-            left: 50%;
-            top: 42%;
-            width: 560px;
-            height: 360px;
-            transform: translate(-50%, -50%);
-            background: radial-gradient(ellipse, rgba(255, 215, 0, 0.1), transparent 65%);
-            pointer-events: none;
-        }
-
-        .warp-stage {
-            position: absolute;
-            inset: 0;
-            transform-style: preserve-3d;
-        }
-
-        .warp-panel {
-            position: absolute;
-            left: 50%;
-            top: 45%;
-            width: min(540px, 86%);
-            transform: translate(-50%, -50%);
-            border: 1px solid rgba(255, 215, 0, 0.35);
-            border-radius: 18px;
-            background: rgba(9, 9, 12, 0.84);
-            backdrop-filter: blur(8px);
-            padding: 32px 34px;
-            box-shadow: 0 0 60px -28px rgba(255, 215, 0, 0.5);
-            will-change: transform, opacity;
-            --accent: #FFD700;
-        }
-
-        .warp-panel .we {
-            font-family: var(--mono);
-            font-size: 11px;
-            font-weight: 700;
-            letter-spacing: 0.3em;
-            text-transform: uppercase;
-            color: var(--gold);
-            margin-bottom: 12px;
-        }
-
-        .warp-panel h3 {
-            font-family: "Syncopate", sans-serif;
-            font-size: 20px;
-            font-weight: 700;
-            text-transform: uppercase;
-            margin-bottom: 12px;
-        }
-
-        .warp-panel p {
-            font-family: var(--mono);
-            font-size: 12.5px;
-            line-height: 1.8;
-            color: #9ca3af;
-            margin-bottom: 18px;
-        }
-
-        .warp-hud {
-            position: absolute;
-            top: 18px;
-            left: 24px;
-            z-index: 20;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            font-family: var(--mono);
-            font-size: 10px;
-            font-weight: 700;
-            letter-spacing: 0.26em;
-            text-transform: uppercase;
-            color: #9ca3af;
-        }
-
-        .warp-hud .st { color: var(--gold); }
-
-        .warp-dots {
-            position: absolute;
-            bottom: 18px;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 20;
-            display: flex;
-            gap: 8px;
-        }
-
-        .warp-dots span {
-            width: 26px;
-            height: 3px;
-            border-radius: 999px;
-            background: rgba(255, 255, 255, 0.12);
-            transition: background 0.3s, width 0.3s, box-shadow 0.3s;
-        }
-
-        .warp-dots span.on {
-            width: 44px;
-            background: var(--gold);
-            box-shadow: 0 0 12px rgba(255, 215, 0, 0.6);
-        }
-
-        @media (max-width: 899px) {
-            .warp-wrap { height: auto; }
-
-            .warp-sticky {
-                position: static;
-                height: auto;
-                min-height: 0;
-                perspective: none;
-                padding: 22px 16px;
-            }
-
-            .warp-stage { position: static; }
-
-            .warp-panel {
-                position: static;
-                transform: none !important;
-                opacity: 1 !important;
-                visibility: visible !important;
-                width: 100%;
-                margin: 0 0 16px;
-            }
-
-            .warp-grid,
-            .warp-glow,
-            .warp-dots,
-            .warp-hud { display: none; }
-        }
-
-
         /* ---- philosophy: "over" lines with glow ---- */
         .philosophy {
             text-align: center;
@@ -1355,7 +1172,7 @@
         footer {
             content-visibility: auto;
         }
-        .instagram-feed-section { contain-intrinsic-size: auto 760px; }
+        .instagram-feed-section { contain-intrinsic-size: auto 430px; }
         #contact { contain-intrinsic-size: auto 900px; }
         footer { contain-intrinsic-size: auto 220px; }
 
@@ -1694,7 +1511,6 @@
             .starfield,
             .starfield2,
             .shoot,
-            .warp-grid { animation: none; }
 
             .reveal { opacity: 1; transform: none; }
 
@@ -2242,6 +2058,7 @@
     <link rel="stylesheet" href="/assets/css/instagram-feed.css">
     <link rel="stylesheet" href="assets/css/featured-projects.css">
     <script type="module" src="assets/react/featured.js"></script>
+    <link rel="stylesheet" href="/assets/css/home-studio.css">
 </head>
 <body>
     <div
@@ -2381,52 +2198,38 @@
                 </div>
             </section>
 
-            <section id="process">
-                <div class="status-line section-status"><span class="prompt">$</span><span>status</span><span class="arrow">→</span><span class="status-value type-target" data-text="building the system"></span><span class="cursor" style="height: 0.95em;"></span></div>
-                <h2><span class="soft">Structure before pixels</span></h2>
-                <p class="section-sub">A precise build system from strategy to launch-ready deployment, shaped for fast decisions and durable execution.</p>
-
-                <div class="warp-wrap" id="warpWrap">
-                    <div class="warp-sticky">
-                        <div class="starfield"></div>
-                        <div class="starfield2"></div>
-                        <div class="warp-grid"></div>
-                        <div class="warp-glow"></div>
-                        <div class="shoot" style="top: 22%; animation-delay: 2.2s;"></div>
-
-                        <div class="warp-hud"><span class="st" id="warpStep">01 / 04</span><span class="type-target" data-text="warp transit — build pipeline"></span><span class="cursor" style="height: 1em; width: 6px;"></span></div>
-
-                        <div class="warp-stage">
-                            <div class="warp-panel">
-                                <div class="we">01 / Strategy</div>
-                                <h3>From visitor to enquiry</h3>
-                                <p>We map how a local customer finds you, understands what you sell, trusts the business, and contacts you without friction.</p>
-                                <div class="tags"><span class="tag">Google</span><span class="tag">Trust</span><span class="tag">Call / WhatsApp</span></div>
-                            </div>
-                            <div class="warp-panel">
-                                <div class="we">02 / Interface</div>
-                                <h3>A storefront people understand</h3>
-                                <p>Services, prices, photos, reviews, location, and contact actions arranged so visitors instantly know what to do next.</p>
-                                <div class="tags"><span class="tag">Services</span><span class="tag">Photos</span><span class="tag">Clear actions</span></div>
-                            </div>
-                            <div class="warp-panel">
-                                <div class="we">03 / Development</div>
-                                <h3>Built to load and convert</h3>
-                                <p>The approved design becomes a fast site with working forms, tracking, screen checks, SEO foundations, and clean production code.</p>
-                                <div class="tags"><span class="tag">Fast pages</span><span class="tag">Forms work</span><span class="tag">Tracking</span></div>
-                            </div>
-                            <div class="warp-panel">
-                                <div class="we">04 / Launch</div>
-                                <h3>Live project proof</h3>
-                                <p>The same system finishes as real work: live sites checked on desktop and phone before the launch is handed over.</p>
-                                <div class="tags"><span class="tag">MacBook view</span><span class="tag">iPhone view</span><span class="tag">Live launches</span></div>
-                            </div>
-                        </div>
-
-                        <div class="warp-dots"><span class="on"></span><span></span><span></span><span></span></div>
-                    </div>
-                </div>
-            </section>
+            <section id="process" class="build-process" aria-labelledby="process-title">
+  <div class="process-heading">
+    <div>
+      <p class="studio-eyebrow"><span></span> THE PROCESS / 01 — 04</p>
+      <h2 id="process-title">A clear path.<br><span class="soft">From idea to live.</span></h2>
+    </div>
+    <p class="process-intro">One point of contact, four considered stages. You know what is happening, what comes next and where your input matters.</p>
+  </div>
+  <ol class="process-track">
+    <li class="process-phase">
+      <div class="phase-index"><span>01</span><span class="phase-connector" aria-hidden="true"></span></div>
+      <div class="phase-main"><p class="phase-name">Discover</p><h3>Define what matters.</h3><p class="phase-description">We talk through your business, your audience and what the website needs to achieve.</p></div>
+      <div class="phase-delivery"><span class="delivery-label">YOU RECEIVE</span><p>A focused brief & clear scope</p><details><summary>Your part <span aria-hidden="true">+</span></summary><p>Your goals, references and priorities.</p></details></div>
+    </li>
+    <li class="process-phase">
+      <div class="phase-index"><span>02</span><span class="phase-connector" aria-hidden="true"></span></div>
+      <div class="phase-main"><p class="phase-name">Design</p><h3>See it before we build it.</h3><p class="phase-description">I turn the brief into a visual direction and key page layouts, with room to refine the details together.</p></div>
+      <div class="phase-delivery"><span class="delivery-label">YOU RECEIVE</span><p>Page layouts & visual direction</p><details><summary>Your part <span aria-hidden="true">+</span></summary><p>Your feedback on the proposed design.</p></details></div>
+    </li>
+    <li class="process-phase">
+      <div class="phase-index"><span>03</span><span class="phase-connector" aria-hidden="true"></span></div>
+      <div class="phase-main"><p class="phase-name">Build</p><h3>Make every detail work.</h3><p class="phase-description">The approved design becomes a responsive website. Navigation, forms and the small interactions come together.</p></div>
+      <div class="phase-delivery"><span class="delivery-label">YOU RECEIVE</span><p>A working preview to explore</p><details><summary>Your part <span aria-hidden="true">+</span></summary><p>Try the site and share final feedback.</p></details></div>
+    </li>
+    <li class="process-phase">
+      <div class="phase-index"><span>04</span><span class="phase-connector" aria-hidden="true"></span></div>
+      <div class="phase-main"><p class="phase-name">Launch</p><h3>Ready for the real world.</h3><p class="phase-description">We review the pages on desktop and mobile, check the key journeys and connect your domain for launch.</p></div>
+      <div class="phase-delivery"><span class="delivery-label">YOU RECEIVE</span><p>A live website & practical handover</p><details><summary>Your part <span aria-hidden="true">+</span></summary><p>Your final approval before going live.</p></details></div>
+    </li>
+  </ol>
+  <div class="process-closing"><span><i aria-hidden="true"></i> Built together. Approved by you.</span><a href="#contact">Let’s talk about your project ↗</a></div>
+</section>
 
             <section id="philosophy" class="philosophy">
                 <div class="taurus-mark" aria-hidden="true">TAURUS</div>
@@ -2440,28 +2243,34 @@
             </section>
 
 
-            <section id="instagram" class="instagram-feed-section" data-instagram-feed data-limit="6">
-                <div class="instagram-feed-shell">
-                    <div class="instagram-feed-copy-column">
-                        <div class="instagram-feed-status">
-                            <span class="prompt">$</span>
-                            <span>status</span>
-                            <span class="status-label">INSTAGRAM</span>
-                            <span class="arrow">→</span>
-                            <span class="value type-target" data-text="omeryigitler.web"></span>
-                            <span class="cursor" style="height: 0.95em;"></span>
-                        </div>
-                        <h2 class="instagram-feed-title">Latest from Instagram</h2>
-                        <p class="instagram-feed-copy">A live glimpse into the projects, ideas and moments shaping the studio — placed right before the contact flow.</p>
-                        <div class="instagram-feed-actions">
-                            <a class="instagram-feed-button" href="https://www.instagram.com/omeryigitler.web/" target="_blank" rel="noopener noreferrer">Follow Instagram ↗</a>
-                        </div>
-                    </div>
-                    <div class="instagram-feed-grid" data-instagram-grid>
-                        <div class="instagram-feed-empty">Loading Instagram feed…</div>
-                    </div>
-                </div>
-            </section>
+            <section id="instagram" class="instagram-feed-section" aria-labelledby="social-title">
+  <div class="social-studio">
+    <div class="social-copy">
+      <p class="studio-eyebrow"><span></span> BEYOND THE WEBSITE / SOCIAL DESIGN</p>
+      <h2 id="social-title">Same identity.<br><em>Every touchpoint.</em></h2>
+      <p>A website is only part of the picture. I can also create social posts, story layouts and launch visuals that feel unmistakably yours.</p>
+      <div class="social-actions">
+        <a class="social-primary" href="#contact">Create something like this <span aria-hidden="true">↗</span></a>
+        <a class="social-instagram" href="https://www.instagram.com/omeryigitler.web/" target="_blank" rel="noopener noreferrer">Instagram ↗</a>
+      </div>
+    </div>
+    <div class="social-samples" aria-label="Two illustrative social design concepts">
+      <div class="social-poster poster-square">
+        <span class="poster-label">STUDIO / 001</span>
+        <div class="poster-orbit" aria-hidden="true"></div>
+        <strong>Make<br>your<br><em>mark.</em></strong>
+        <span class="poster-foot">A DISTINCT DIGITAL PRESENCE ↗</span>
+      </div>
+      <div class="social-poster poster-story">
+        <span class="poster-label">NEXT CHAPTER</span>
+        <span class="poster-star" aria-hidden="true">✳</span>
+        <strong>Ready<br>to be<br>seen?</strong>
+        <span class="poster-foot">YOUR BRAND. IN MOTION. ↗</span>
+      </div>
+      <p class="samples-caption">DESIGN CONCEPTS <span>Posts · Stories · Launch visuals</span></p>
+    </div>
+  </div>
+</section>
             <section id="contact">
                 <div class="status-line section-status"><span class="prompt">$</span><span>status</span><span class="arrow">→</span><span class="status-value type-target" data-text="ready for new projects"></span><span class="cursor" style="height: 0.95em;"></span></div>
                 <h2><span class="soft">Ready when you are</span></h2>
@@ -3257,69 +3066,6 @@
             });
         })();
 
-        (function () {
-            const wrap = document.getElementById("warpWrap");
-            if (!wrap) return;
-
-            const panels = Array.from(wrap.querySelectorAll(".warp-panel"));
-            const dots = Array.from(wrap.querySelectorAll(".warp-dots span"));
-            const stepEl = document.getElementById("warpStep");
-            const desktop = window.matchMedia("(min-width: 900px)");
-            const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-            const spacing = 900;
-            let rafPending = false;
-            // offsetHeight forces layout; measure it on resize only, so each
-            // scroll frame does a single geometry read (getBoundingClientRect).
-            let total = 0;
-
-            function measure() {
-                total = wrap.offsetHeight - window.innerHeight;
-            }
-
-            function update() {
-                rafPending = false;
-
-                if (!desktop.matches || reduced) {
-                    panels.forEach((el) => {
-                        el.style.transform = "";
-                        el.style.opacity = "";
-                        el.style.visibility = "";
-                    });
-                    return;
-                }
-
-                if (!total) measure();
-                const rect = wrap.getBoundingClientRect();
-                const progress = Math.min(1, Math.max(0, -rect.top / total));
-                const cam = progress * spacing * (panels.length - 1);
-
-                panels.forEach((el, i) => {
-                    const dz = cam - i * spacing;
-                    let opacity = dz >= 0 ? 1 - dz / 420 : 1 + dz / (spacing * 2.1);
-                    opacity = Math.max(0, Math.min(1, opacity));
-
-                    el.style.transform = "translate(-50%, -50%) translateZ(" + dz.toFixed(1) + "px)";
-                    el.style.opacity = opacity.toFixed(3);
-                    el.style.visibility = opacity <= 0.01 ? "hidden" : "visible";
-                });
-
-                const active = Math.min(panels.length - 1, Math.round(progress * (panels.length - 1)));
-                dots.forEach((dot, i) => dot.classList.toggle("on", i === active));
-                if (stepEl) stepEl.textContent = "0" + (active + 1) + " / 04";
-            }
-
-            function requestUpdate() {
-                if (!rafPending) {
-                    rafPending = true;
-                    requestAnimationFrame(update);
-                }
-            }
-
-            window.addEventListener("scroll", requestUpdate, { passive: true });
-            window.addEventListener("resize", () => { measure(); requestUpdate(); }, { passive: true });
-            measure();
-            update();
-        })();
 
         (function () {
             const area = document.getElementById("projectMessage");
@@ -4105,6 +3851,5 @@
         });
     })();
     </script>
-    <script src="/assets/js/instagram-feed.js" defer></script>
 </body>
 </html>
