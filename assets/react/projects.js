@@ -1,0 +1,1 @@
+import{n as e,r as t,s as n,t as r}from"./chunks/jsx-runtime-DqstNRUv.js";import{t as i}from"./chunks/PortfolioProjects-CMZI_thE.js";var a=n(t()),o=e(),s=r(),c=document.getElementById(`portfolio-projects-root`);c&&(0,o.createRoot)(c).render((0,s.jsx)(a.StrictMode,{children:(0,s.jsx)(i,{})}));

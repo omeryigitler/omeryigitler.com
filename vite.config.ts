@@ -9,12 +9,13 @@ export default defineConfig({
     rollupOptions: {
       input: {
         interactive: "src/react/main.tsx",
-        projects: "src/react/projects-main.tsx"
+        projects: "src/react/projects-main.tsx",
+        featured: "src/react/featured-main.tsx"
       },
       output: {
         entryFileNames: (chunkInfo) => chunkInfo.name === "interactive"
           ? "interactive-sections.js"
-          : "projects.js",
+          : `${chunkInfo.name}.js`,
         chunkFileNames: "chunks/[name]-[hash].js",
         assetFileNames: "assets/[name]-[hash][extname]"
       }

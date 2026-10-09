@@ -2,7 +2,7 @@ const { admin, db } = require("./_firebaseAdmin");
 
 const COLLECTION = "portfolio_projects";
 const MAX_BODY_BYTES = 96 * 1024;
-const MAX_REORDER_ITEMS = 100;
+const MAX_REORDER_ITEMS = 400;
 const ALLOWED_DISPLAY_TYPES = new Set(["desktop-mobile", "desktop-swap"]);
 
 function sendJson(res, status, body, cache = "no-store") {
@@ -83,11 +83,17 @@ function sanitizeProject(input = {}) {
     slug: cleanString(input.slug, 100),
     title,
     category: cleanString(input.category, 120, "Selected work"),
+    archiveCategory: ["sites", "commerce", "apps", "tools", "experiments"].includes(input.archiveCategory) ? input.archiveCategory : "other",
     kicker: cleanString(input.kicker, 120, "Custom digital experience"),
     challenge: cleanString(input.challenge, 1200),
     solution: cleanString(input.solution, 1200),
     result: cleanString(input.result, 1200),
-    liveUrl: cleanUrl(input.liveUrl, true),
+    liveUrl: cleanUrl(input.liveUrl),
+    githubUrl: cleanUrl(input.githubUrl),
+    description: cleanString(input.description, 1200),
+    stack: Array.isArray(input.stack) ? input.stack.slice(0, 12).map((value) => cleanString(value, 40)).filter(Boolean) : [],
+    featured: input.featured === true,
+    featuredOrder: Number.isFinite(Number(input.featuredOrder)) ? Math.round(Number(input.featuredOrder)) : 9999,
     desktopImage: cleanImage(input.desktopImage),
     mobileImage: cleanImage(input.mobileImage),
     alternateDesktopImage: cleanImage(input.alternateDesktopImage),
@@ -96,7 +102,7 @@ function sanitizeProject(input = {}) {
     accent: /^#[0-9a-f]{6}$/i.test(String(input.accent || "")) ? String(input.accent) : "#FFD700",
     sortOrder: Number.isFinite(sortOrder) ? Math.max(-9999, Math.min(9999, Math.round(sortOrder))) : 999,
     displayType,
-    published: input.published !== false,
+    published: input.published === true,
     lang: cleanString(input.lang, 12)
   };
 }
@@ -108,12 +114,22 @@ function serializeProject(doc) {
     slug: data.slug || doc.id,
     title: data.title || "Untitled Project",
     category: data.category || "Selected work",
+    archiveCategory: data.archiveCategory || "other",
     kicker: data.kicker || "Custom digital experience",
     challenge: data.challenge || "",
     solution: data.solution || "",
     result: data.result || "",
-    liveUrl: data.liveUrl || "#",
-    desktopImage: data.desktopImage || "assets/preview.png",
+    liveUrl: data.liveUrl || "",
+    githubUrl: data.githubUrl || "",
+    description: data.description || "",
+    stack: Array.isArray(data.stack) ? data.stack : [],
+    featured: data.featured === true,
+    featuredOrder: Number(data.featuredOrder ?? 9999),
+    githubRepoId: data.githubRepoId || null,
+    githubRepoName: data.githubRepoName || "",
+    githubArchived: data.githubArchived === true,
+    githubFork: data.githubFork === true,
+    desktopImage: data.desktopImage || "",
     mobileImage: data.mobileImage || "",
     alternateDesktopImage: data.alternateDesktopImage || "",
     alternateLabelA: data.alternateLabelA || "Primary",
@@ -141,7 +157,7 @@ async function verifyAdmin(req) {
   return agent.verifyAgentRequest(req);
 }
 
-async function reorderProjects(ids) {
+async function reorderProjects(ids, field = "sortOrder", actor) {
   if (!Array.isArray(ids) || !ids.length) throw error(400, "missing_order", "Project order is required.");
   if (ids.length > MAX_REORDER_ITEMS) throw error(400, "too_many_projects", `Project order cannot exceed ${MAX_REORDER_ITEMS} items.`);
 
@@ -156,28 +172,84 @@ async function reorderProjects(ids) {
   const batch = db.batch();
   const timestamp = admin.firestore.FieldValue.serverTimestamp();
   refs.forEach((ref, index) => {
-    batch.set(ref, { sortOrder: (index + 1) * 10, updatedAt: timestamp }, { merge: true });
+    batch.set(ref, { [field]: (index + 1) * 10, updatedAt: timestamp }, { merge: true });
   });
+  batch.set(db.collection("agent_audit_logs").doc(), { action: "portfolio.reorder", actor: actor.id, field, ids: cleaned, createdAt: timestamp });
   await batch.commit();
 
   return cleaned.map((id, index) => ({ id, sortOrder: (index + 1) * 10 }));
 }
 
 async function handlePost(req, res) {
-  await verifyAdmin(req);
+  const actor = await verifyAdmin(req);
   const body = await readJson(req);
   const op = cleanString(body.op, 20).toLowerCase();
 
+  if (op === "sync-github") {
+    const { fetchPublicRepositories, draftFromRepository } = require("../lib/portfolio-github");
+    const repos = await fetchPublicRepositories();
+    if (repos.length > MAX_REORDER_ITEMS) throw error(422, "too_many_projects", "Envanter aktarım sınırını aşıyor; kayıtlar değiştirilmedi.");
+    const result = await db.runTransaction(async (transaction) => {
+      const snapshot = await transaction.get(db.collection(COLLECTION));
+      const timestamp = admin.firestore.FieldValue.serverTimestamp();
+      let added = 0;
+      let updated = 0;
+      for (const repo of repos) {
+        const githubUrl = `https://github.com/omeryigitler/${repo.name}`;
+        const matches = snapshot.docs.filter((doc) => {
+          const value = doc.data();
+          return String(value.githubRepoId) === String(repo.id) ||
+            String(value.githubUrl || "").replace(/\/$/, "").toLowerCase() === githubUrl.toLowerCase();
+        });
+        const metadata = { githubRepoId: repo.id, githubRepoName: repo.name, githubArchived: repo.archived === true,
+          githubFork: repo.fork === true, githubSyncedAt: timestamp };
+        if (matches.length) {
+          for (const doc of matches) transaction.set(doc.ref, metadata, { merge: true });
+          updated += matches.length;
+        } else {
+          const ref = db.collection(COLLECTION).doc(`github-${repo.id}`);
+          // Do not overwrite an existing manually created record with a colliding id.
+          if (snapshot.docs.some((doc) => doc.id === ref.id)) continue;
+          transaction.create(ref, { ...draftFromRepository(repo), ...metadata, createdAt: timestamp, updatedAt: timestamp });
+          added += 1;
+        }
+      }
+      transaction.set(db.collection("agent_audit_logs").doc(), { action: "portfolio.sync-github", actor: actor.id, added, updated, createdAt: timestamp });
+      return { added, updated };
+    });
+    return sendJson(res, 200, { ok: true, ...result });
+  }
+
+  if (op === "visibility") {
+    const id = cleanId(body.id);
+    const patch = {};
+    if (typeof body.published === "boolean") patch.published = body.published;
+    if (typeof body.featured === "boolean") patch.featured = body.featured;
+    if (!Object.keys(patch).length) throw error(400, "missing_visibility", "Yayın durumu belirtilmedi.");
+    const ref = db.collection(COLLECTION).doc(id);
+    await db.runTransaction(async (transaction) => {
+      const doc = await transaction.get(ref);
+      if (!doc.exists) throw error(404, "project_not_found", "Proje bulunamadı.");
+      const timestamp = admin.firestore.FieldValue.serverTimestamp();
+      transaction.update(ref, { ...patch, updatedAt: timestamp });
+      transaction.set(db.collection("agent_audit_logs").doc(), { action: "portfolio.visibility", actor: actor.id, projectId: id, ...patch, createdAt: timestamp });
+    });
+    return sendJson(res, 200, { ok: true });
+  }
+
   if (op === "upsert") {
     const id = cleanId(body.id || body.project?.slug || body.project?.title);
-    const project = sanitizeProject(body.project || {});
     const ref = db.collection(COLLECTION).doc(id);
     const existing = await ref.get();
-    await ref.set({
+    const project = sanitizeProject({ ...(existing.data() || {}), ...(body.project || {}) });
+    const batch = db.batch();
+    batch.set(ref, {
       ...project,
       updatedAt: admin.firestore.FieldValue.serverTimestamp(),
       ...(existing.exists ? {} : { createdAt: admin.firestore.FieldValue.serverTimestamp() })
     }, { merge: true });
+    batch.set(db.collection("agent_audit_logs").doc(), { action: "portfolio.upsert", actor: actor.id, projectId: id, createdAt: admin.firestore.FieldValue.serverTimestamp() });
+    await batch.commit();
     return sendJson(res, 200, { ok: true, project: { id, ...project } });
   }
 
@@ -188,7 +260,7 @@ async function handlePost(req, res) {
   }
 
   if (op === "reorder") {
-    const order = await reorderProjects(body.ids);
+    const order = await reorderProjects(body.ids, body.scope === "featured" ? "featuredOrder" : "sortOrder", actor);
     return sendJson(res, 200, { ok: true, order });
   }
 
@@ -216,9 +288,9 @@ module.exports = async function handler(req, res) {
       const includeHidden = req.query?.includeHidden === "1";
       if (includeHidden) await verifyAdmin(req);
       const projects = await listProjects(includeHidden);
-      return sendJson(res, 200, { ok: true, projects }, includeHidden ? "no-store" : "public, max-age=30, s-maxage=60, stale-while-revalidate=300");
+      return sendJson(res, 200, { ok: true, projects }, includeHidden ? "no-store" : "no-store");
     }
-    if (req.method === "POST") return handlePost(req, res);
+    if (req.method === "POST") return await handlePost(req, res);
     res.setHeader("Allow", "GET, POST");
     return sendJson(res, 405, { ok: false, code: "method_not_allowed", error: "Method not allowed." });
   } catch (cause) {
