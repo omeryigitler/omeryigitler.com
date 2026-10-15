@@ -1,93 +1,53 @@
 /* Final visual refinements for the project archive and process system. */
 
-/* PROCESS — keep the sliding sheets, remove the awkward left rail, and make every state readable. */
+/* PROCESS — keep one readable active sheet, retain the sliding system, and remove the extra stage rail. */
 @media (min-width: 900px) {
   .process-system-body {
-    display: block;
-    position: relative;
-    height: calc(100% - 68px);
+    display:block;
+    position:relative;
+    height:calc(100% - 68px);
   }
 
   .process-rail {
-    position: absolute;
-    z-index: 20;
-    top: 18px;
-    left: 6%;
-    right: 6%;
-    display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 0;
-    padding: 0;
-    border: 1px solid rgba(255,255,255,.09);
-    background: #070707;
-  }
-
-  .process-rail-line {
-    display: none;
-  }
-
-  .process-rail-step {
-    min-height: 52px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    padding: 0 14px;
-    border-right: 1px solid rgba(255,255,255,.08);
-    color: #676e79;
-    transform: none !important;
-  }
-
-  .process-rail-step:last-child {
-    border-right: 0;
-  }
-
-  .process-rail-step::before {
-    position: static;
-    width: 7px;
-    height: 7px;
-    flex: 0 0 7px;
-    transform: none;
-  }
-
-  .process-rail-step.is-active {
-    color: #f4f4f5;
-    background: rgba(255,215,0,.055);
-    box-shadow: inset 0 -2px 0 #FFD700;
-  }
-
-  .process-rail-number {
-    font-size: 9px;
+    display:none !important;
   }
 
   .process-sheet-stage {
-    position: absolute;
-    z-index: 3;
-    left: 0;
-    right: 0;
-    top: 78px;
-    bottom: 0;
-    min-width: 0;
-    overflow: hidden;
+    position:absolute;
+    z-index:3;
+    inset:0;
+    min-width:0;
+    overflow:hidden;
   }
 
   .process-sheet-stage::before,
   .process-sheet-stage::after {
-    opacity: .55;
+    opacity:.48;
   }
 
   .process-sheet {
-    left: 6%;
-    right: 6%;
-    min-height: 400px;
-    background: #070707;
-    opacity: 1 !important;
-    z-index: 1;
+    left:6%;
+    right:6%;
+    top:50%;
+    height:min(430px, calc(100% - 44px));
+    min-height:360px;
+    background:transparent;
+    border-color:transparent;
+    box-shadow:none;
+    z-index:1;
+  }
+
+  .process-sheet:not(.is-active) .process-sheet-content {
+    opacity:0;
+    visibility:hidden;
   }
 
   .process-sheet.is-active {
-    z-index: 4;
-    border-color: rgba(255,215,0,.72);
+    z-index:4;
+    opacity:1 !important;
+    visibility:visible !important;
+    background:#070707;
+    border-color:rgba(255,215,0,.72);
     box-shadow:
       0 32px 90px rgba(0,0,0,.62),
       0 0 70px -34px rgba(255,215,0,.8),
@@ -95,83 +55,105 @@
   }
 
   .process-sheet-content {
-    width: min(760px, 82%);
-    padding: 48px 54px 44px;
+    width:min(760px,72%);
+    padding:46px 54px 42px;
+    transition:opacity .18s ease;
   }
 
   .process-sheet h3 {
-    max-width: 700px;
-    font-size: clamp(22px, 2.25vw, 36px);
-    line-height: 1.16;
+    max-width:700px;
+    font-size:clamp(22px,2.25vw,36px);
+    line-height:1.16;
   }
 
   .process-sheet p {
-    max-width: 640px;
-    margin-top: 20px;
-    line-height: 1.8;
+    max-width:640px;
+    margin-top:20px;
+    line-height:1.8;
   }
 
-  .process-output {
-    margin-top: 26px;
-  }
+  .process-output { margin-top:26px; }
+  .process-tags { margin-top:20px; }
 
-  .process-tags {
-    margin-top: 20px;
+  /* The active card shows only the next step number on the right. */
+  .process-sheet-ghost { display:none; }
+  .process-sheet.is-active::after {
+    position:absolute;
+    right:24px;
+    bottom:-34px;
+    z-index:1;
+    font-family:"Manrope",sans-serif;
+    font-size:clamp(160px,20vw,300px);
+    font-weight:800;
+    line-height:.8;
+    letter-spacing:-.08em;
+    color:rgba(255,255,255,.026);
+    pointer-events:none;
+    user-select:none;
   }
+  .process-sheet.is-active[data-process-sheet="0"]::after { content:"02"; }
+  .process-sheet.is-active[data-process-sheet="1"]::after { content:"03"; }
+  .process-sheet.is-active[data-process-sheet="2"]::after { content:"04"; }
+  .process-sheet.is-active[data-process-sheet="3"]::after { content:"04"; }
 
-  .process-sheet-ghost {
-    color: rgba(255,255,255,.018);
-  }
-
-  .process-system-progress {
-    left: 0;
-  }
+  .process-system-progress { left:0; }
 }
 
-/* Keep the mobile process intentionally linear and readable. */
+/* Mobile process remains linear and readable. */
 @media (max-width: 899px) {
-  .process-rail {
-    display: none !important;
-  }
-
+  .process-rail { display:none !important; }
   .process-sheet {
-    opacity: 1 !important;
-    background: #070707;
+    opacity:1 !important;
+    background:#070707;
   }
 }
 
-/* PROJECT ARCHIVE — cards should read like screens, not squares. */
+/* PHILOSOPHY — keep the full TAURUS word visible instead of accidental clipping. */
+@media (min-width: 900px) {
+  .philosophy .taurus-mark {
+    width:100%;
+    max-width:100%;
+    font-size:clamp(120px,17vw,250px) !important;
+    line-height:1 !important;
+    letter-spacing:-.04em !important;
+    white-space:nowrap;
+    transform:scale(.92);
+    transform-origin:center;
+    opacity:.035;
+    overflow:visible;
+  }
+}
+
+/* PROJECT ARCHIVE — restore three columns and make each card only slightly more screen-like. */
+.archive-header {
+  color:#9ca3af;
+}
+.archive-header strong {
+  color:#f3f4f6;
+}
+.archive-header strong::before {
+  content:"$";
+  margin-right:10px;
+  color:#FFD700;
+}
+.archive-header-left span:last-child,
+.archive-eyebrow {
+  color:#8f96a1;
+}
+
+.archive-card-preview img,
+.archive-card-mobile-preview img {
+  object-position:top center;
+}
+
 @media (min-width: 1100px) {
   .archive-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns:repeat(3,minmax(0,1fr));
   }
 
   .archive-card {
-    min-height: 330px;
-    aspect-ratio: 16 / 9;
-  }
-
-  .archive-card-main {
-    margin-top: 44px;
-  }
-
-  .archive-card-meta {
-    margin-top: 22px;
-    padding-top: 14px;
-  }
-
-  .archive-card-bottom {
-    padding-top: 22px;
-  }
-}
-
-@media (min-width: 768px) and (max-width: 1099px) {
-  .archive-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .archive-card {
-    min-height: 340px;
-    aspect-ratio: 16 / 9;
+    min-height:0;
+    height:clamp(350px,23vw,390px);
+    aspect-ratio:auto;
   }
 }
