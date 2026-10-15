@@ -1,159 +1,297 @@
-/* Final visual refinements for the project archive and process system. */
+/* Final visual refinements for the project archive, process system and philosophy. */
 
-/* PROCESS — keep one readable active sheet, retain the sliding system, and remove the extra stage rail. */
+/* PROCESS — restore depth and movement without letting inactive copy bleed through. */
 @media (min-width: 900px) {
   .process-system-body {
-    display:block;
-    position:relative;
-    height:calc(100% - 68px);
+    display: block;
+    position: relative;
+    height: calc(100% - 68px);
   }
 
   .process-rail {
-    display:none !important;
+    display: none !important;
   }
 
   .process-sheet-stage {
-    position:absolute;
-    z-index:3;
-    inset:0;
-    min-width:0;
-    overflow:hidden;
+    position: absolute;
+    z-index: 3;
+    inset: 0;
+    min-width: 0;
+    overflow: hidden;
+    isolation: isolate;
+    background:
+      radial-gradient(circle at 73% 52%, rgba(255,215,0,.055), transparent 34%),
+      linear-gradient(rgba(255,215,0,.032) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,215,0,.032) 1px, transparent 1px);
+    background-size: 100% 100%, 48px 48px, 48px 48px;
   }
 
-  .process-sheet-stage::before,
+  .process-sheet-stage::before {
+    content: "";
+    position: absolute;
+    z-index: 0;
+    top: 7%;
+    bottom: 7%;
+    left: 50%;
+    width: 1px;
+    background: linear-gradient(to bottom, transparent, rgba(255,215,0,.2) 18%, rgba(255,215,0,.2) 82%, transparent);
+    box-shadow: 0 0 22px rgba(255,215,0,.08);
+    opacity: 1;
+    pointer-events: none;
+  }
+
   .process-sheet-stage::after {
-    opacity:.48;
+    content: "";
+    position: absolute;
+    z-index: 0;
+    inset: 7% 4%;
+    border: 1px solid rgba(255,255,255,.045);
+    border-left-color: rgba(255,215,0,.09);
+    border-right-color: rgba(255,215,0,.09);
+    pointer-events: none;
+    opacity: 1;
   }
 
   .process-sheet {
-    left:6%;
-    right:6%;
-    top:50%;
-    height:min(430px, calc(100% - 44px));
-    min-height:360px;
-    background:transparent;
-    border-color:transparent;
-    box-shadow:none;
-    z-index:1;
+    left: 6%;
+    right: 6%;
+    top: 50%;
+    height: min(430px, calc(100% - 52px));
+    min-height: 360px;
+    background: transparent;
+    border-color: transparent;
+    box-shadow: none;
+    z-index: 1;
   }
 
+  /* Never show the text of a non-active sheet. */
   .process-sheet:not(.is-active) .process-sheet-content {
-    opacity:0;
-    visibility:hidden;
+    opacity: 0 !important;
+    visibility: hidden !important;
+    pointer-events: none;
+  }
+
+  .process-sheet:not(.is-active) .process-sheet-ghost {
+    opacity: 0 !important;
+    visibility: hidden !important;
+  }
+
+  /* Let only the immediate next sheet leave a faint physical layer behind the active one. */
+  .process-sheet.is-active + .process-sheet {
+    z-index: 2 !important;
+    opacity: .18 !important;
+    visibility: visible !important;
+    background: rgba(5,5,5,.9);
+    border-color: rgba(255,215,0,.18);
+    box-shadow: 0 24px 70px rgba(0,0,0,.5);
   }
 
   .process-sheet.is-active {
-    z-index:4;
-    opacity:1 !important;
-    visibility:visible !important;
-    background:#070707;
-    border-color:rgba(255,215,0,.72);
+    z-index: 4;
+    opacity: 1 !important;
+    visibility: visible !important;
+    overflow: hidden;
+    background:
+      linear-gradient(90deg, rgba(255,215,0,.018), transparent 22%),
+      #070707;
+    border-color: rgba(255,215,0,.78);
     box-shadow:
-      0 32px 90px rgba(0,0,0,.62),
-      0 0 70px -34px rgba(255,215,0,.8),
-      inset 0 0 0 1px rgba(255,215,0,.04);
+      0 34px 96px rgba(0,0,0,.66),
+      0 0 76px -34px rgba(255,215,0,.88),
+      inset 0 0 0 1px rgba(255,215,0,.045);
   }
 
+  .process-sheet.is-active::before {
+    content: "";
+    position: absolute;
+    z-index: 2;
+    top: 38px;
+    bottom: 38px;
+    left: 0;
+    width: 3px;
+    background: linear-gradient(to bottom, transparent, #FFD700 25%, #FFD700 75%, transparent);
+    box-shadow: 0 0 18px rgba(255,215,0,.5);
+    pointer-events: none;
+  }
+
+  /* The large numeral previews the next stage; on the last card it anchors the current stage. */
+  .process-sheet-ghost {
+    display: none !important;
+  }
+
+  .process-sheet.is-active::after {
+    position: absolute;
+    right: 22px;
+    bottom: -34px;
+    z-index: 1;
+    font-family: "Manrope", sans-serif;
+    font-size: clamp(170px, 20vw, 305px);
+    font-weight: 800;
+    line-height: .8;
+    letter-spacing: -.085em;
+    color: rgba(255,255,255,.045);
+    text-shadow: 0 0 48px rgba(255,215,0,.025);
+    pointer-events: none;
+    user-select: none;
+  }
+  .process-sheet.is-active[data-process-sheet="0"]::after { content: "02"; }
+  .process-sheet.is-active[data-process-sheet="1"]::after { content: "03"; }
+  .process-sheet.is-active[data-process-sheet="2"]::after { content: "04"; }
+  .process-sheet.is-active[data-process-sheet="3"]::after { content: "04"; }
+
   .process-sheet-content {
-    width:min(760px,72%);
-    padding:46px 54px 42px;
-    transition:opacity .18s ease;
+    position: relative;
+    z-index: 3;
+    width: min(760px, 72%);
+    padding: 44px 54px 40px;
+    transition: opacity .18s ease;
   }
 
   .process-sheet h3 {
-    max-width:700px;
-    font-size:clamp(22px,2.25vw,36px);
-    line-height:1.16;
+    max-width: 700px;
+    font-size: clamp(22px, 2.25vw, 36px);
+    line-height: 1.16;
   }
 
   .process-sheet p {
-    max-width:640px;
-    margin-top:20px;
-    line-height:1.8;
+    max-width: 640px;
+    margin-top: 18px;
+    line-height: 1.72;
   }
 
-  .process-output { margin-top:26px; }
-  .process-tags { margin-top:20px; }
+  .process-output { margin-top: 24px; }
+  .process-tags { margin-top: 18px; }
 
-  /* The active card shows only the next step number on the right. */
-  .process-sheet-ghost { display:none; }
-  .process-sheet.is-active::after {
-    position:absolute;
-    right:24px;
-    bottom:-34px;
-    z-index:1;
-    font-family:"Manrope",sans-serif;
-    font-size:clamp(160px,20vw,300px);
-    font-weight:800;
-    line-height:.8;
-    letter-spacing:-.08em;
-    color:rgba(255,255,255,.026);
-    pointer-events:none;
-    user-select:none;
+  .process-system-progress {
+    left: 0;
   }
-  .process-sheet.is-active[data-process-sheet="0"]::after { content:"02"; }
-  .process-sheet.is-active[data-process-sheet="1"]::after { content:"03"; }
-  .process-sheet.is-active[data-process-sheet="2"]::after { content:"04"; }
-  .process-sheet.is-active[data-process-sheet="3"]::after { content:"04"; }
-
-  .process-system-progress { left:0; }
 }
 
 /* Mobile process remains linear and readable. */
 @media (max-width: 899px) {
-  .process-rail { display:none !important; }
+  .process-rail { display: none !important; }
   .process-sheet {
-    opacity:1 !important;
-    background:#070707;
+    opacity: 1 !important;
+    background: #070707;
   }
 }
 
-/* PHILOSOPHY — keep the full TAURUS word visible instead of accidental clipping. */
+/* PHILOSOPHY — the TAURUS word is a deliberate background layer, never an accidental crop. */
+.philosophy {
+  isolation: isolate;
+}
+
+.philosophy .phil-line,
+.philosophy .phil-sub {
+  position: relative;
+  z-index: 2;
+}
+
 @media (min-width: 900px) {
   .philosophy .taurus-mark {
-    width:100%;
-    max-width:100%;
-    font-size:clamp(120px,17vw,250px) !important;
-    line-height:1 !important;
-    letter-spacing:-.04em !important;
-    white-space:nowrap;
-    transform:scale(.92);
-    transform-origin:center;
-    opacity:.035;
-    overflow:visible;
+    position: absolute;
+    z-index: 0;
+    inset: 0 !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    max-width: 100%;
+    overflow: visible;
+    color: rgba(255,255,255,.065) !important;
+    font-size: clamp(112px, 14.5vw, 205px) !important;
+    line-height: .9 !important;
+    letter-spacing: .01em !important;
+    white-space: nowrap;
+    opacity: 1 !important;
+    transform: translateY(-2%) !important;
+    transform-origin: center;
+    text-shadow: 0 0 70px rgba(255,215,0,.025);
+    pointer-events: none;
   }
 }
 
-/* PROJECT ARCHIVE — restore three columns and make each card only slightly more screen-like. */
+/* PROJECT ARCHIVE — use the site's own terminal/status language, not a dim secondary label. */
 .archive-header {
-  color:#9ca3af;
+  color: #9ca3af;
 }
-.archive-header strong {
-  color:#f3f4f6;
+
+.archive-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  color: #9ca3af;
+  font-family: var(--mono);
+  font-size: 13px;
+  font-weight: 400;
+  letter-spacing: 0;
+  text-transform: lowercase;
 }
-.archive-header strong::before {
-  content:"$";
-  margin-right:10px;
-  color:#FFD700;
+
+.archive-status .archive-prompt {
+  color: #FFD700;
+  font-weight: 700;
 }
-.archive-header-left span:last-child,
-.archive-eyebrow {
-  color:#8f96a1;
+
+.archive-status .archive-status-key {
+  color: #9ca3af;
+}
+
+.archive-status .archive-status-arrow {
+  color: #4b5563;
+}
+
+.archive-status strong {
+  color: #f3f4f6;
+  font: 700 13px var(--mono);
+  letter-spacing: 0;
+  text-transform: lowercase;
+}
+
+.archive-status-cursor {
+  display: inline-block;
+  width: 8px;
+  height: .95em;
+  margin-left: 1px;
+  background: #FFD700;
+  vertical-align: text-bottom;
+  animation: archiveCursorBlink 1.05s steps(1) infinite;
+}
+
+@keyframes archiveCursorBlink {
+  50% { opacity: 0; }
 }
 
 .archive-card-preview img,
 .archive-card-mobile-preview img {
-  object-position:top center;
+  object-position: top center;
 }
 
+/* Three columns stay intact; cards only become slightly more screen-like. */
 @media (min-width: 1100px) {
   .archive-grid {
-    grid-template-columns:repeat(3,minmax(0,1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
   .archive-card {
-    min-height:0;
-    height:clamp(350px,23vw,390px);
-    aspect-ratio:auto;
+    min-height: 0;
+    height: clamp(350px, 23vw, 390px);
+    aspect-ratio: auto;
+  }
+}
+
+@media (max-width: 700px) {
+  .archive-status {
+    gap: 7px;
+    font-size: 10px;
+  }
+
+  .archive-status strong {
+    font-size: 10px;
+  }
+
+  .archive-status-cursor {
+    width: 6px;
   }
 }
