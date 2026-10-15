@@ -1,4 +1,6 @@
-/* Instagram feed section — near Contact */
+/* Homepage project finder + shared late overrides.
+   The legacy filename is intentionally retained so index.html does not need a
+   risky large-file rewrite for this preview branch. */
 
 /* Global page-line overrides loaded after index.html inline styles.
    Keeps the gold divider fixed in the viewport so the falling beam remains
@@ -44,264 +46,326 @@ div.cky-consent-container {
   transform: translateX(-50%) !important;
 }
 
-.instagram-feed-section {
+/* Hide the old feed markup until the lightweight launcher script upgrades it.
+   If JS ever fails, a broken/fake Instagram grid is preferable to no longer show. */
+.instagram-feed-section:not(.project-finder-section) {
+  visibility: hidden;
+  min-height: 0;
+  height: 0;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+  overflow: hidden;
+}
+
+.project-finder-section {
   position: relative;
   isolation: isolate;
   overflow: hidden;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  padding: clamp(64px, 7vw, 88px) 24px !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.075);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.055);
   background:
-    radial-gradient(circle at 18% 8%, rgba(255, 215, 0, 0.075), transparent 30rem),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.018), rgba(255, 255, 255, 0));
-  padding: clamp(4.6rem, 7vw, 6.5rem) clamp(1.25rem, 4.4vw, 4.25rem);
+    radial-gradient(circle at 12% 12%, rgba(255, 215, 0, 0.055), transparent 32rem),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.012), transparent 48%);
 }
 
-.instagram-feed-section::before {
+.project-finder-section::before {
   content: '';
   position: absolute;
   inset: 0;
   z-index: -1;
   pointer-events: none;
-  opacity: 0.18;
-  background-image: linear-gradient(rgba(255,255,255,.08) 1px, transparent 1px);
-  background-size: 100% 6px;
-  mix-blend-mode: soft-light;
+  opacity: 0.24;
+  background-image: repeating-linear-gradient(
+    to bottom,
+    rgba(255,255,255,.035) 0,
+    rgba(255,255,255,.035) 1px,
+    transparent 1px,
+    transparent 4px
+  );
 }
 
-.instagram-feed-shell {
-  --instagram-feed-gap: clamp(3.4rem, 7vw, 6.25rem);
+.project-finder-shell {
   width: min(1180px, 100%);
   margin: 0 auto;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  gap: var(--instagram-feed-gap);
-  align-items: center;
 }
 
-.instagram-feed-copy-column {
-  position: relative;
-  z-index: 2;
-  max-width: 30rem;
-}
-
-.instagram-feed-status {
+.project-finder-head {
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
-  gap: .65rem;
-  margin: 0 0 1.4rem;
+  justify-content: space-between;
+  gap: 28px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.09);
   font-family: var(--mono);
-  font-size: .82rem;
-  color: #9ca3af;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1.55;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #737985;
 }
 
-.instagram-feed-status .prompt,
-.instagram-feed-status .status-label {
+.project-finder-head strong {
+  color: #d5d8de;
+  font-weight: 700;
+}
+
+.project-finder-head .prompt {
   color: var(--gold);
-  font-weight: 700;
 }
 
-.instagram-feed-status .status-label {
-  letter-spacing: .28em;
-  text-transform: uppercase;
+.project-finder-sep {
+  color: rgba(255, 255, 255, 0.17);
+  margin: 0 10px;
 }
 
-.instagram-feed-status .arrow {
-  color: #4b5563;
-}
-
-.instagram-feed-status .value {
-  color: #d1d5db;
-}
-
-.instagram-feed-kicker {
-  display: none;
-}
-
-.instagram-feed-title {
-  margin: 0;
-  max-width: 9.5ch;
-  font-family: "Syncopate", sans-serif;
-  color: #f8f8fb;
-  font-size: clamp(2.05rem, 3.45vw, 2.95rem);
-  font-weight: 700;
-  line-height: 1.07;
-  letter-spacing: -0.03em;
-  text-transform: uppercase;
-}
-
-.instagram-feed-copy {
-  max-width: 24rem;
-  margin: 1.6rem 0 0;
-  color: rgba(255, 255, 255, 0.58);
-  font-size: clamp(.98rem, 1.35vw, 1.04rem);
-  line-height: 1.85;
-}
-
-.instagram-feed-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: .875rem;
-  margin-top: 2rem;
-}
-
-.instagram-feed-button {
+.project-finder-all {
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-  gap: .7rem;
-  min-height: 3rem;
-  border: 1px solid rgba(255, 215, 0, .42);
-  border-radius: 999px;
-  padding: 0 1.15rem;
-  color: rgba(255,255,255,.86);
-  background: rgba(255, 215, 0, .035);
+  gap: 9px;
+  flex-shrink: 0;
+  color: #d5d8de;
   text-decoration: none;
+  transition: color .22s ease, transform .22s ease;
+}
+
+.project-finder-all:hover {
+  color: var(--gold);
+  transform: translateY(-1px);
+}
+
+.project-finder-launch {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: clamp(18px, 2.6vw, 34px);
+  min-height: clamp(104px, 11vw, 144px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.09);
+  color: inherit;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.project-finder-icon {
+  width: clamp(24px, 2.4vw, 34px);
+  height: clamp(24px, 2.4vw, 34px);
+  color: #b8bdc6;
+  transition: color .25s ease, transform .25s ease;
+}
+
+.project-finder-label {
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-family: "Manrope", sans-serif;
+  font-size: clamp(29px, 4.45vw, 61px);
+  font-weight: 600;
+  line-height: .98;
+  letter-spacing: -0.045em;
+  color: rgba(255, 255, 255, 0.22);
+  transition: color .35s ease, letter-spacing .35s ease;
+}
+
+.project-finder-open {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding-left: clamp(16px, 2vw, 28px);
+  min-height: 48px;
+  border-left: 1px solid rgba(255, 255, 255, 0.09);
   font-family: var(--mono);
-  font-size: .68rem;
+  font-size: 9px;
   font-weight: 700;
-  letter-spacing: .22em;
+  letter-spacing: .1em;
   text-transform: uppercase;
-  transition: border-color .25s ease, background .25s ease, transform .25s ease, box-shadow .25s ease;
+  color: #a2a7b0;
+  transition: color .25s ease;
 }
 
-.instagram-feed-button:hover {
-  transform: translateY(-2px);
-  border-color: rgba(255, 215, 0, .7);
-  background: rgba(255, 215, 0, .08);
-  box-shadow: 0 0 24px rgba(255, 215, 0, .14);
+.project-finder-open svg {
+  transition: transform .25s ease;
 }
 
-.instagram-feed-grid {
-  align-self: center;
-  justify-self: stretch;
+.project-finder-launch:hover .project-finder-label,
+.project-finder-launch:focus-visible .project-finder-label {
+  color: #f5f5f5;
+  letter-spacing: -0.05em;
+}
+
+.project-finder-launch:hover .project-finder-icon,
+.project-finder-launch:focus-visible .project-finder-icon,
+.project-finder-launch:hover .project-finder-open,
+.project-finder-launch:focus-visible .project-finder-open {
+  color: var(--gold);
+}
+
+.project-finder-launch:hover .project-finder-icon,
+.project-finder-launch:focus-visible .project-finder-icon {
+  transform: scale(1.05);
+}
+
+.project-finder-launch:hover .project-finder-open svg,
+.project-finder-launch:focus-visible .project-finder-open svg {
+  transform: translateX(4px);
+}
+
+.project-finder-foot {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: .9rem;
-  padding-top: 0;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 30px;
+  padding-top: 18px;
 }
 
-.instagram-card {
-  position: relative;
-  aspect-ratio: 1 / 1;
-  overflow: hidden;
-  border: 1px solid rgba(255,255,255,.1);
-  border-radius: 1.05rem;
-  background: rgba(255,255,255,.03);
-  color: #fff;
-  text-decoration: none;
-  transform: translateZ(0);
+.project-finder-chips {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
 }
 
-.instagram-card img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-  opacity: .9;
-  filter: saturate(.94) contrast(1.04);
-  transition: transform .55s ease, opacity .35s ease, filter .35s ease;
+.project-finder-chips::-webkit-scrollbar { display: none; }
+
+.project-finder-chip {
+  flex: 0 0 auto;
+  border: 1px solid rgba(255, 255, 255, 0.11);
+  padding: 8px 12px;
+  font-family: var(--mono);
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: .11em;
+  text-transform: uppercase;
+  color: #858b95;
+  background: rgba(255, 255, 255, 0.018);
 }
 
-.instagram-card:hover img {
-  opacity: 1;
-  transform: scale(1.055);
-  filter: saturate(1) contrast(1.05);
+.project-finder-chip.is-active {
+  border-color: var(--gold);
+  background: var(--gold);
+  color: #050505;
 }
 
-.instagram-card::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(180deg, transparent 38%, rgba(0,0,0,.78));
-  opacity: 0;
-  transition: opacity .3s ease;
+.project-finder-note {
+  max-width: 330px;
+  margin: 0;
+  text-align: right;
+  font-family: var(--mono);
+  font-size: 9px;
+  line-height: 1.6;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: #666d78;
 }
 
-.instagram-card:hover::after { opacity: 1; }
+.project-finder-note strong {
+  color: #aeb3bc;
+  font-weight: 700;
+}
 
-.instagram-card-badge {
-  position: absolute;
-  top: .7rem;
-  right: .7rem;
-  z-index: 2;
+/* Small positioning cue: local enough to be relevant, not a hero headline. */
+.home-location-note {
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-  width: 1.75rem;
-  height: 1.75rem;
-  border: 1px solid rgba(255,255,255,.14);
-  border-radius: 999px;
-  background: rgba(0,0,0,.34);
-  backdrop-filter: blur(12px);
-  color: rgba(255,255,255,.9);
-  font-size: .7rem;
+  gap: 9px;
+  margin-top: 18px;
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: #6f7680;
 }
 
-.instagram-card-caption {
-  position: absolute;
-  left: .9rem;
-  right: .9rem;
-  bottom: .9rem;
-  z-index: 2;
-  margin: 0;
-  color: rgba(255,255,255,.9);
-  font-size: .82rem;
-  line-height: 1.45;
-  opacity: 0;
-  transform: translateY(.65rem);
-  transition: opacity .3s ease, transform .3s ease;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
+.home-location-note::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--gold);
+  box-shadow: 0 0 10px rgba(255, 215, 0, .55);
 }
 
-.instagram-card:hover .instagram-card-caption {
-  opacity: 1;
-  transform: translateY(0);
+/* Contact remains wired to the existing admin/message/quote pipeline. These
+   additions only clarify that the initial form leads into project scoping. */
+.contact-card .contact-flow-hint {
+  margin: -4px 0 18px;
+  font-family: var(--mono);
+  font-size: 10px;
+  line-height: 1.6;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+  color: #656b75;
 }
 
-.instagram-feed-empty {
-  grid-column: 1 / -1;
-  min-height: 13rem;
-  display: grid;
-  place-items: center;
-  border: 1px dashed rgba(255,255,255,.14);
-  border-radius: 1.05rem;
-  color: rgba(255,255,255,.54);
-  text-align: center;
-  padding: 2rem;
+.contact-card .contact-flow-hint strong {
+  color: #aaaeb7;
+  font-weight: 700;
 }
 
 @media (max-width: 980px) {
-  body .bg-centerline {
+  body .bg-centerline { display: none; }
+
+  .project-finder-section {
+    padding-top: 58px !important;
+    padding-bottom: 58px !important;
+  }
+}
+
+@media (max-width: 720px) {
+  .project-finder-head {
+    align-items: flex-start;
+    font-size: 9px;
+  }
+
+  .project-finder-head-copy .project-finder-secondary,
+  .project-finder-sep {
     display: none;
   }
 
-  .instagram-feed-shell {
+  .project-finder-all {
+    font-size: 8px;
+  }
+
+  .project-finder-launch {
+    grid-template-columns: auto minmax(0, 1fr);
+    min-height: 104px;
+    gap: 16px;
+  }
+
+  .project-finder-label {
+    font-size: clamp(25px, 8.5vw, 38px);
+  }
+
+  .project-finder-open {
+    grid-column: 1 / -1;
+    justify-self: start;
+    min-height: auto;
+    padding: 0 0 16px 0;
+    border-left: 0;
+  }
+
+  .project-finder-foot {
     grid-template-columns: 1fr;
-    gap: 2.25rem;
+    gap: 15px;
   }
 
-  .instagram-feed-copy-column {
-    max-width: 38rem;
+  .project-finder-note {
+    max-width: none;
+    text-align: left;
   }
-
-  .instagram-feed-title {
-    max-width: 12ch;
-  }
-
-  .instagram-feed-grid {
-    padding-top: 0;
-  }
-}
-
-@media (max-width: 680px) {
-  .instagram-feed-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .instagram-feed-section { padding-left: 1rem; padding-right: 1rem; }
 }
 
 @media (max-width: 430px) {
-  .instagram-feed-grid { grid-template-columns: 1fr; }
+  .project-finder-section {
+    padding-left: 20px !important;
+    padding-right: 20px !important;
+  }
+
+  .project-finder-chip {
+    padding: 7px 10px;
+  }
 }
