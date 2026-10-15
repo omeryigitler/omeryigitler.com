@@ -1,7 +1,70 @@
 (() => {
   const PROJECTS_URL = 'projects.html';
-  const FALLBACK_PROJECT_COUNT = 4;
+  const FALLBACK_PROJECTS = [
+    {
+      id: 'built-with-seyhan',
+      title: 'Built with Seyhan',
+      category: 'Fitness · Health · Lifestyle',
+      kicker: 'Custom Coaching Website',
+      challenge: 'Present a personal coaching brand and transformation pathway clearly.',
+      solution: 'A responsive conversion-focused coaching website with direct consultation actions.',
+      result: 'A polished coaching presence built for desktop and mobile.',
+      liveUrl: 'https://builtwithseyhan.com/tr',
+      desktopImage: ''
+    },
+    {
+      id: 'bugun-ne-yiyelim',
+      title: 'Bugün Ne Yiyelim?',
+      category: 'Food decision app',
+      kicker: 'AI-Powered Food Decider',
+      challenge: 'Reduce daily decision fatigue around what to eat.',
+      solution: 'An AI-driven recommendation flow personalized to the moment.',
+      result: 'Faster, simpler meal decisions.',
+      liveUrl: 'https://www.bugunneyiyelim.com/',
+      desktopImage: ''
+    },
+    {
+      id: 'elite-body-protocol',
+      title: 'Elite Body Protocol',
+      category: 'Gamified fitness app',
+      kicker: 'React Web App',
+      challenge: 'Blend retro and modern interface languages into one experience.',
+      solution: 'A React interaction system with cinematic state transitions.',
+      result: 'A more engaging narrative-driven fitness experience.',
+      liveUrl: 'https://elitebody.omeryigitler.com/',
+      desktopImage: 'assets/elite-modern.png?v=V10'
+    },
+    {
+      id: 'reformer-pilates-malta',
+      title: 'Reformer Pilates Malta',
+      category: 'Wellness studio',
+      kicker: 'Custom Website Design',
+      challenge: 'Improve visibility and make class information easier to access.',
+      solution: 'A responsive studio website with clear schedules and SEO foundations.',
+      result: 'A stronger local brand presence across devices.',
+      liveUrl: 'https://www.reformerpilatesmalta.com/',
+      desktopImage: ''
+    },
+    {
+      id: 'today-we-eat',
+      title: 'Today We Eat',
+      category: 'Food decision app',
+      kicker: 'AI-Powered Food Decider',
+      challenge: 'Remove friction from everyday meal decisions.',
+      solution: 'A fast AI-assisted recommendation experience.',
+      result: 'Instant meal suggestions tailored to the user.',
+      liveUrl: 'https://www.todayweeat.com/',
+      desktopImage: 'assets/today-we-eat-desktop.png'
+    }
+  ];
+
   const root = document.querySelector('[data-instagram-feed]');
+  if (!root) return;
+
+  let projects = FALLBACK_PROJECTS.slice();
+  let query = '';
+  let activeFilter = 'all';
+  let lensReady = false;
 
   const searchIcon = `
     <svg class="project-finder-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true">
@@ -14,11 +77,49 @@
       <path d="M5 12h14"></path><path d="m13 6 6 6-6 6"></path>
     </svg>`;
 
-  function renderProjectFinder(count) {
-    if (!root) return;
-    const safeCount = Number.isFinite(Number(count)) && Number(count) > 0 ? Number(count) : FALLBACK_PROJECT_COUNT;
-    const countLabel = String(safeCount).padStart(2, '0');
+  function escapeHtml(value = '') {
+    return String(value)
+      .replaceAll('&', '&amp;')
+      .replaceAll('<', '&lt;')
+      .replaceAll('>', '&gt;')
+      .replaceAll('"', '&quot;')
+      .replaceAll("'", '&#039;');
+  }
 
+  function displayUrl(url = '') {
+    return String(url).replace(/^https?:\/\//i, '').replace(/^www\./i, '').replace(/\/$/, '');
+  }
+
+  function tagsFor(project) {
+    const text = [project.title, project.category, project.kicker, project.challenge, project.solution]
+      .filter(Boolean)
+      .join(' ')
+      .toLowerCase();
+    const tags = new Set();
+    if (/app|application|react web app/.test(text)) tags.add('apps');
+    if (/\bai\b|artificial intelligence|powered food decider/.test(text)) tags.add('ai');
+    if (/interactive|gamif|cinematic|animation|motion/.test(text)) tags.add('interactive');
+    if (!tags.size || /website|studio|coaching|wellness|site/.test(text)) tags.add('sites');
+    return [...tags];
+  }
+
+  function matchesProject(project) {
+    const filterMatch = activeFilter === 'all' || tagsFor(project).includes(activeFilter);
+    if (!filterMatch) return false;
+    const normalized = query.trim().toLowerCase();
+    if (!normalized) return true;
+    return [
+      project.title,
+      project.category,
+      project.kicker,
+      project.challenge,
+      project.solution,
+      project.result,
+      project.liveUrl
+    ].filter(Boolean).join(' ').toLowerCase().includes(normalized);
+  }
+
+  function renderShell() {
     root.id = 'selected-work';
     root.className = 'instagram-feed-section project-finder-section';
     root.removeAttribute('data-instagram-feed');
@@ -26,7 +127,7 @@
     root.setAttribute('aria-label', 'Selected work');
 
     root.innerHTML = `
-      <div class="project-finder-shell">
+      <div class="project-finder-shell" data-project-finder-content>
         <div class="project-finder-head">
           <div class="project-finder-head-copy">
             <span class="prompt">$</span>
@@ -34,49 +135,199 @@
             <span class="project-finder-sep">—</span>
             <span class="project-finder-secondary">THINGS I’VE DESIGNED AND BUILT</span>
             <span class="project-finder-sep">—</span>
-            <span><b data-project-count>${countLabel}</b> PROJECTS</span>
+            <span><b data-project-count>${String(projects.length).padStart(2, '0')}</b> PROJECTS</span>
           </div>
           <a class="project-finder-all" href="${PROJECTS_URL}">EXPLORE ALL <span aria-hidden="true">↗</span></a>
         </div>
 
-        <a class="project-finder-launch" href="${PROJECTS_URL}" aria-label="Browse selected projects">
+        <form class="project-finder-search" data-project-search>
           ${searchIcon}
-          <span class="project-finder-label">Search selected projects...</span>
-          <span class="project-finder-open">OPEN ARCHIVE ${arrowIcon}</span>
-        </a>
+          <input class="project-finder-input" data-project-input type="search" autocomplete="off" spellcheck="false" placeholder="Search selected projects..." aria-label="Search selected projects">
+          <button class="project-finder-open" type="submit">OPEN ARCHIVE ${arrowIcon}</button>
+        </form>
 
         <div class="project-finder-foot">
           <div class="project-finder-chips" aria-label="Project disciplines">
-            <span class="project-finder-chip is-active">ALL</span>
-            <span class="project-finder-chip">SITES</span>
-            <span class="project-finder-chip">APPS</span>
-            <span class="project-finder-chip">AI</span>
-            <span class="project-finder-chip">INTERACTIVE</span>
+            <button class="project-finder-chip is-active" type="button" data-filter="all">ALL</button>
+            <button class="project-finder-chip" type="button" data-filter="sites">SITES</button>
+            <button class="project-finder-chip" type="button" data-filter="apps">APPS</button>
+            <button class="project-finder-chip" type="button" data-filter="ai">AI</button>
+            <button class="project-finder-chip" type="button" data-filter="interactive">INTERACTIVE</button>
           </div>
           <p class="project-finder-note"><strong>Selected case studies</strong><br>Challenge · solution · live result</p>
         </div>
+
+        <div class="selected-project-results-head">
+          <span data-result-count>${String(projects.length).padStart(2, '0')} RESULTS</span>
+          <span>HOVER TO PREVIEW · OPEN LIVE PROJECT ↗</span>
+        </div>
+        <div class="selected-project-grid" data-project-grid></div>
+      </div>
+
+      <div class="project-magnifier" data-project-magnifier aria-hidden="true">
+        <div class="project-magnifier-clone" data-project-magnifier-clone></div>
+        <span class="project-magnifier-ring"></span>
+        <span class="project-magnifier-glint"></span>
       </div>`;
 
-    /* The old Instagram slot lived near Contact. Selected work is proof, so it
-       belongs immediately after the hero, before capability/process sections. */
     const hero = document.querySelector('.hero');
-    if (hero && root.previousElementSibling !== hero) {
-      hero.insertAdjacentElement('afterend', root);
-    }
+    if (hero && root.previousElementSibling !== hero) hero.insertAdjacentElement('afterend', root);
+
+    bindControls();
+    renderProjects();
+    setupMagnifier();
   }
 
-  async function refreshProjectCount() {
-    if (!root) return;
+  function projectCard(project, index) {
+    const image = project.desktopImage || project.mobileImage || '';
+    const liveUrl = project.liveUrl || PROJECTS_URL;
+    const tags = tagsFor(project);
+    const category = project.category || tags[0] || 'Selected work';
+    const challenge = project.challenge || 'A focused digital problem to solve.';
+    const solution = project.solution || project.kicker || 'A custom-designed web experience.';
+    const result = project.result || 'A polished live result.';
+
+    return `
+      <a class="selected-project-card${image ? ' has-preview' : ''}" href="${escapeHtml(liveUrl)}" target="_blank" rel="noopener noreferrer" data-project-card>
+        ${image ? `<div class="selected-project-preview" aria-hidden="true"><img src="${escapeHtml(image)}" alt="" loading="lazy" decoding="async"></div>` : ''}
+        <div class="selected-project-scrim" aria-hidden="true"></div>
+        <div class="selected-project-content">
+          <div class="selected-project-top">
+            <span>${String(index + 1).padStart(2, '0')}</span>
+            <span>${escapeHtml(category)}</span>
+          </div>
+          <div class="selected-project-main">
+            <h3>${escapeHtml(project.title || 'Untitled project')}</h3>
+            <p class="selected-project-url">${escapeHtml(displayUrl(liveUrl))}</p>
+            ${image ? `<div class="selected-project-mobile-preview"><img src="${escapeHtml(image)}" alt="Preview of ${escapeHtml(project.title || 'project')}" loading="lazy" decoding="async"></div>` : ''}
+            <dl class="selected-project-meta">
+              <div><dt>CHALLENGE</dt><dd>${escapeHtml(challenge)}</dd></div>
+              <div><dt>SOLUTION</dt><dd>${escapeHtml(solution)}</dd></div>
+              <div><dt>RESULT</dt><dd>${escapeHtml(result)}</dd></div>
+            </dl>
+          </div>
+          <div class="selected-project-bottom">
+            <span>${escapeHtml((project.kicker || tags.join(' · ') || 'LIVE PROJECT').toUpperCase())}</span>
+            <span>LIVE SITE ↗</span>
+          </div>
+        </div>
+      </a>`;
+  }
+
+  function renderProjects() {
+    const grid = root.querySelector('[data-project-grid]');
+    const resultCount = root.querySelector('[data-result-count]');
+    const countNode = root.querySelector('[data-project-count]');
+    if (!grid) return;
+
+    const visible = projects.filter(matchesProject);
+    if (countNode) countNode.textContent = String(projects.length).padStart(2, '0');
+    if (resultCount) resultCount.textContent = `${String(visible.length).padStart(2, '0')} RESULTS`;
+
+    if (!visible.length) {
+      grid.innerHTML = '<div class="selected-project-empty">NO MATCHING PROJECTS — TRY ANOTHER SEARCH OR FILTER.</div>';
+    } else {
+      grid.innerHTML = visible.map(projectCard).join('');
+    }
+    syncMagnifierClone();
+  }
+
+  function bindControls() {
+    const form = root.querySelector('[data-project-search]');
+    const input = root.querySelector('[data-project-input]');
+    const filters = [...root.querySelectorAll('[data-filter]')];
+
+    if (input) {
+      input.addEventListener('input', () => {
+        query = input.value || '';
+        renderProjects();
+      });
+    }
+
+    if (form) {
+      form.addEventListener('submit', (event) => {
+        event.preventDefault();
+        const suffix = query.trim() ? `?q=${encodeURIComponent(query.trim())}` : '';
+        window.location.href = `${PROJECTS_URL}${suffix}`;
+      });
+    }
+
+    filters.forEach((button) => {
+      button.addEventListener('click', () => {
+        activeFilter = button.dataset.filter || 'all';
+        filters.forEach((item) => item.classList.toggle('is-active', item === button));
+        renderProjects();
+      });
+    });
+  }
+
+  function syncMagnifierClone() {
+    if (!lensReady) return;
+    const source = root.querySelector('[data-project-finder-content]');
+    const clone = root.querySelector('[data-project-magnifier-clone]');
+    if (!source || !clone) return;
+
+    clone.innerHTML = source.innerHTML;
+    clone.querySelectorAll('input, button, a').forEach((element) => {
+      element.tabIndex = -1;
+      element.setAttribute('aria-hidden', 'true');
+      element.style.pointerEvents = 'none';
+    });
+    const clonedInput = clone.querySelector('[data-project-input]');
+    if (clonedInput) clonedInput.value = query;
+  }
+
+  function setupMagnifier() {
+    const lens = root.querySelector('[data-project-magnifier]');
+    const clone = root.querySelector('[data-project-magnifier-clone]');
+    const source = root.querySelector('[data-project-finder-content]');
+    if (!lens || !clone || !source) return;
+
+    const pointer = window.matchMedia('(pointer: fine)');
+    if (!pointer.matches) return;
+
+    lensReady = true;
+    syncMagnifierClone();
+
+    const move = (event) => {
+      if (event.pointerType === 'touch') return;
+      const rootRect = root.getBoundingClientRect();
+      const sourceRect = source.getBoundingClientRect();
+      const size = lens.offsetWidth || 70;
+      const zoom = 1.42;
+      const x = event.clientX - rootRect.left;
+      const y = event.clientY - rootRect.top;
+      const sourceX = event.clientX - sourceRect.left;
+      const sourceY = event.clientY - sourceRect.top;
+
+      lens.style.opacity = '1';
+      lens.style.transform = `translate3d(${x - size / 2}px, ${y - size / 2}px, 0)`;
+      clone.style.width = `${sourceRect.width}px`;
+      clone.style.height = `${sourceRect.height}px`;
+      clone.style.transform = `translate3d(${size / 2 - sourceX * zoom}px, ${size / 2 - sourceY * zoom}px, 0) scale(${zoom})`;
+    };
+
+    root.addEventListener('pointerenter', (event) => {
+      syncMagnifierClone();
+      move(event);
+    });
+    root.addEventListener('pointermove', move);
+    root.addEventListener('pointerleave', () => { lens.style.opacity = '0'; });
+  }
+
+  async function refreshProjects() {
     try {
       const response = await fetch('/api/portfolio', { headers: { Accept: 'application/json' } });
       if (!response.ok) return;
       const payload = await response.json();
-      const projects = Array.isArray(payload.projects) ? payload.projects.filter((project) => project && project.published !== false) : [];
-      if (!projects.length) return;
-      const countNode = root.querySelector('[data-project-count]');
-      if (countNode) countNode.textContent = String(projects.length).padStart(2, '0');
+      const fetched = Array.isArray(payload.projects)
+        ? payload.projects.filter((project) => project && project.published !== false)
+        : [];
+      if (!fetched.length) return;
+      projects = fetched;
+      renderProjects();
     } catch {
-      // The launcher remains useful with the local fallback count.
+      // Keep the local selected-work fallback visible.
     }
   }
 
@@ -121,10 +372,6 @@
       supportCopy.textContent = 'I provide continuous security updates and performance optimization for every project.';
     }
 
-    /* Keep the current Firestore messages -> admin inbox -> project/quote pipeline
-       intact. The public brand promises custom work, so select CUSTOM through the
-       configurator's own click handler and remove TEMPLATE from the visible UI.
-       The backend schema still accepts historical TEMPLATE records. */
     const designGrid = document.querySelector('.chip-grid[data-group="designType"]');
     if (designGrid) {
       const custom = designGrid.querySelector('.chip[data-value="CUSTOM"]');
@@ -136,19 +383,13 @@
         custom.classList.add('is-on');
         custom.textContent = 'Custom Design';
       }
-
       const label = designGrid.previousElementSibling;
       if (label && label.classList.contains('cfg-flabel')) label.textContent = 'Design Approach';
     }
   }
 
-  /* Render immediately so the old Instagram feed never becomes part of the
-     visible homepage. Then reconcile the count with the existing portfolio API. */
-  if (root) {
-    renderProjectFinder(FALLBACK_PROJECT_COUNT);
-    refreshProjectCount();
-  }
-
+  renderShell();
+  refreshProjects();
   addLocationCue();
   alignContactWithAdminPipeline();
 })();
