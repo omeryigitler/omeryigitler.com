@@ -176,13 +176,15 @@
   }
 }
 
-/* PHILOSOPHY — the TAURUS word is a deliberate background layer, never an accidental crop. */
+/* PHILOSOPHY — restore the original oversized TAURUS background treatment. */
 .philosophy {
   isolation: isolate;
 }
 
 .philosophy .phil-line,
-.philosophy .phil-sub {
+.philosophy .phil-sub,
+.philosophy .phil-rule,
+.philosophy .phil-cta {
   position: relative;
   z-index: 2;
 }
@@ -195,19 +197,18 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 100%;
-    max-width: 100%;
-    overflow: visible;
-    color: rgba(255,255,255,.065) !important;
-    font-size: clamp(112px, 14.5vw, 205px) !important;
-    line-height: .9 !important;
-    letter-spacing: .01em !important;
+    font-family: "Syncopate", sans-serif;
+    font-weight: 700;
+    font-size: clamp(110px, 21vw, 300px) !important;
+    letter-spacing: .04em !important;
+    line-height: normal !important;
+    color: rgba(255,255,255,.024) !important;
     white-space: nowrap;
     opacity: 1 !important;
-    transform: translateY(-2%) !important;
-    transform-origin: center;
-    text-shadow: 0 0 70px rgba(255,215,0,.025);
+    transform: none !important;
+    text-shadow: none !important;
     pointer-events: none;
+    user-select: none;
   }
 }
 
@@ -296,44 +297,58 @@
   }
 }
 
-/* PROCESS SIGNAL PIPELINE — AppSignal-inspired motion, rebuilt in the Taurus visual language. */
+/* PROCESS SIGNAL PIPELINE — one continuous network now feeds through the system and the active card. */
 @media (min-width: 900px) {
   .process-sheet-stage {
     background-image:
-      url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%201200%20660%22%20preserveAspectRatio%3D%22none%22%3E%3Cdefs%3E%3Cfilter%20id%3D%22g%22%20x%3D%22-50%25%22%20y%3D%22-50%25%22%20width%3D%22200%25%22%20height%3D%22200%25%22%3E%3CfeGaussianBlur%20stdDeviation%3D%226%22%20result%3D%22b%22/%3E%3CfeMerge%3E%3CfeMergeNode%20in%3D%22b%22/%3E%3CfeMergeNode%20in%3D%22SourceGraphic%22/%3E%3C/feMerge%3E%3C/filter%3E%3Cpath%20id%3D%22a%22%20pathLength%3D%22100%22%20d%3D%22M-40%20118%20H230%20Q292%20118%20292%20180%20V240%20Q292%20296%20348%20296%20H525%20Q575%20296%20575%20246%20V190%20Q575%20136%20630%20136%20H1240%22/%3E%3Cpath%20id%3D%22b%22%20pathLength%3D%22100%22%20d%3D%22M1240%20508%20H1020%20Q956%20508%20956%20448%20V398%20Q956%20340%20900%20340%20H732%20Q674%20340%20674%20396%20V450%20Q674%20506%20616%20506%20H-40%22/%3E%3Cpath%20id%3D%22c%22%20pathLength%3D%22100%22%20d%3D%22M170%20-30%20V72%20Q170%20126%20224%20126%20H388%20Q444%20126%20444%20182%20V226%20Q444%20278%20496%20278%20H714%20Q770%20278%20770%20226%20V182%20Q770%20126%20826%20126%20H1002%20Q1054%20126%201054%2072%20V-30%22/%3E%3C/defs%3E%3Cg%20fill%3D%22none%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cuse%20href%3D%22%23a%22%20stroke%3D%22%23151404%22%20stroke-width%3D%2236%22/%3E%3Cuse%20href%3D%22%23a%22%20stroke%3D%22%23FFD700%22%20stroke-opacity%3D%22.16%22%20stroke-width%3D%222%22/%3E%3Cuse%20href%3D%22%23b%22%20stroke%3D%22%23151404%22%20stroke-width%3D%2234%22/%3E%3Cuse%20href%3D%22%23b%22%20stroke%3D%22%23FFD700%22%20stroke-opacity%3D%22.12%22%20stroke-width%3D%222%22/%3E%3Cuse%20href%3D%22%23c%22%20stroke%3D%22%230E0E0E%22%20stroke-width%3D%2226%22/%3E%3Cuse%20href%3D%22%23c%22%20stroke%3D%22%23FFD700%22%20stroke-opacity%3D%22.10%22%20stroke-width%3D%222%22/%3E%3C/g%3E%3Cg%20font-family%3D%22monospace%22%20font-size%3D%2211%22%20font-weight%3D%22700%22%20letter-spacing%3D%222.1%22%20fill%3D%22%23FFD700%22%20fill-opacity%3D%22.42%22%3E%3Ctext%3E%3CtextPath%20href%3D%22%23a%22%20startOffset%3D%22-90%25%22%3ESTRATEGY%20%C2%B7%20OFFER%20CLARITY%20%C2%B7%20USER%20JOURNEY%20%C2%B7%20TRUST%20SIGNALS%20%C2%B7%20CTA%20ROUTE%20%C2%B7%20STRATEGY%20%C2%B7%20OFFER%20CLARITY%20%C2%B7%20USER%20JOURNEY%20%C2%B7%20TRUST%20SIGNALS%20%C2%B7%20CTA%20ROUTE%20%C2%B7%3Canimate%20attributeName%3D%22startOffset%22%20from%3D%22-90%25%22%20to%3D%2210%25%22%20dur%3D%2220s%22%20repeatCount%3D%22indefinite%22/%3E%3C/textPath%3E%3C/text%3E%3Ctext%3E%3CtextPath%20href%3D%22%23b%22%20startOffset%3D%220%25%22%3EINTERFACE%20%C2%B7%20PROOF%20%C2%B7%20MOBILE%20FLOW%20%C2%B7%20DEVELOPMENT%20%C2%B7%20PERFORMANCE%20%C2%B7%20SEO%20%C2%B7%20ANALYTICS%20%C2%B7%20INTERFACE%20%C2%B7%20PROOF%20%C2%B7%20MOBILE%20FLOW%20%C2%B7%20DEVELOPMENT%20%C2%B7%20PERFORMANCE%20%C2%B7%20SEO%20%C2%B7%20ANALYTICS%20%C2%B7%3Canimate%20attributeName%3D%22startOffset%22%20from%3D%220%25%22%20to%3D%22-100%25%22%20dur%3D%2224s%22%20repeatCount%3D%22indefinite%22/%3E%3C/textPath%3E%3C/text%3E%3Ctext%20fill-opacity%3D%22.26%22%3E%3CtextPath%20href%3D%22%23c%22%20startOffset%3D%22-75%25%22%3EQA%20%C2%B7%20DOMAIN%20%C2%B7%20MONITORING%20%C2%B7%20HANDOVER%20%C2%B7%20LIVE%20PROOF%20%C2%B7%20SUPPORT%20%C2%B7%20QA%20%C2%B7%20DOMAIN%20%C2%B7%20MONITORING%20%C2%B7%20HANDOVER%20%C2%B7%20LIVE%20PROOF%20%C2%B7%20SUPPORT%20%C2%B7%3Canimate%20attributeName%3D%22startOffset%22%20from%3D%22-75%25%22%20to%3D%2225%25%22%20dur%3D%2228s%22%20repeatCount%3D%22indefinite%22/%3E%3C/textPath%3E%3C/text%3E%3C/g%3E%3Cg%20fill%3D%22%23FFD700%22%20filter%3D%22url%28%23g%29%22%3E%3Ccircle%20r%3D%223.5%22%3E%3CanimateMotion%20dur%3D%226.5s%22%20repeatCount%3D%22indefinite%22%3E%3Cmpath%20href%3D%22%23a%22/%3E%3C/animateMotion%3E%3C/circle%3E%3Ccircle%20r%3D%223%22%3E%3CanimateMotion%20dur%3D%228s%22%20repeatCount%3D%22indefinite%22%20keyPoints%3D%221%3B0%22%20keyTimes%3D%220%3B1%22%20calcMode%3D%22linear%22%3E%3Cmpath%20href%3D%22%23b%22/%3E%3C/animateMotion%3E%3C/circle%3E%3C/g%3E%3C/svg%3E"),
-      radial-gradient(circle at 73% 52%, rgba(255,215,0,.055), transparent 34%),
+      url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%201200%20660'%20preserveAspectRatio%3D'none'%3E%0A%3Cdefs%3E%0A%20%20%3Cpath%20id%3D'p1'%20pathLength%3D'100'%20d%3D'M962%20-30%20V68%20Q962%20115%201009%20115%20H1076%20Q1128%20115%201128%20167%20V208%20Q1128%20252%201172%20252%20H1240'%2F%3E%0A%20%20%3Cpath%20id%3D'p2'%20pathLength%3D'100'%20d%3D'M1240%20330%20H1176%20Q1128%20330%201128%20378%20V428%20Q1128%20475%201081%20475%20H976%20Q928%20475%20928%20523%20V690'%2F%3E%0A%20%20%3Cpath%20id%3D'p3'%20pathLength%3D'100'%20d%3D'M842%20690%20V592%20Q842%20545%20889%20545%20H970%20Q1016%20545%201016%20499%20V454%20Q1016%20410%201060%20410%20H1128%20Q1174%20410%201174%20364%20V316'%2F%3E%0A%20%20%3Cpath%20id%3D'p4'%20pathLength%3D'100'%20d%3D'M1240%20150%20H1186%20Q1142%20150%201142%20106%20V72%20Q1142%2030%201100%2030%20H1042'%2F%3E%0A%3C%2Fdefs%3E%0A%3Cg%20fill%3D'none'%20stroke-linecap%3D'round'%20stroke-linejoin%3D'round'%3E%0A%20%20%3Cuse%20href%3D'%23p1'%20stroke%3D'%23181704'%20stroke-width%3D'34'%2F%3E%0A%20%20%3Cuse%20href%3D'%23p1'%20stroke%3D'%23FFD700'%20stroke-opacity%3D'.25'%20stroke-width%3D'1.6'%2F%3E%0A%20%20%3Cuse%20href%3D'%23p2'%20stroke%3D'%23141304'%20stroke-width%3D'31'%2F%3E%0A%20%20%3Cuse%20href%3D'%23p2'%20stroke%3D'%23FFD700'%20stroke-opacity%3D'.23'%20stroke-width%3D'1.6'%2F%3E%0A%20%20%3Cuse%20href%3D'%23p3'%20stroke%3D'%23111104'%20stroke-width%3D'27'%2F%3E%0A%20%20%3Cuse%20href%3D'%23p3'%20stroke%3D'%23FFD700'%20stroke-opacity%3D'.20'%20stroke-width%3D'1.5'%2F%3E%0A%20%20%3Cuse%20href%3D'%23p4'%20stroke%3D'%23101004'%20stroke-width%3D'23'%2F%3E%0A%20%20%3Cuse%20href%3D'%23p4'%20stroke%3D'%23FFD700'%20stroke-opacity%3D'.16'%20stroke-width%3D'1.3'%2F%3E%0A%3C%2Fg%3E%0A%3Cg%20font-family%3D'monospace'%20font-size%3D'11'%20font-weight%3D'700'%20letter-spacing%3D'1.9'%20fill%3D'%23FFD700'%20opacity%3D'.55'%3E%0A%20%20%3Ctext%3E%3CtextPath%20href%3D'%23p1'%20startOffset%3D'-48%25'%3ESTRATEGY%20%C2%B7%20OFFER%20CLARITY%20%C2%B7%20TRUST%20SIGNALS%20%C2%B7%20CTA%20ROUTE%20%C2%B7%20%3Canimate%20attributeName%3D'startOffset'%20from%3D'-48%25'%20to%3D'106%25'%20dur%3D'18s'%20repeatCount%3D'indefinite'%2F%3E%3C%2FtextPath%3E%3C%2Ftext%3E%0A%20%20%3Ctext%3E%3CtextPath%20href%3D'%23p2'%20startOffset%3D'106%25'%3EINTERFACE%20%C2%B7%20PROOF%20%C2%B7%20MOBILE%20FLOW%20%C2%B7%20PERFORMANCE%20%C2%B7%20%3Canimate%20attributeName%3D'startOffset'%20from%3D'106%25'%20to%3D'-58%25'%20dur%3D'19s'%20repeatCount%3D'indefinite'%2F%3E%3C%2FtextPath%3E%3C%2Ftext%3E%0A%20%20%3Ctext%3E%3CtextPath%20href%3D'%23p3'%20startOffset%3D'-54%25'%3EQA%20%C2%B7%20DOMAIN%20%C2%B7%20MONITORING%20%C2%B7%20HANDOVER%20%C2%B7%20LIVE%20%C2%B7%20%3Canimate%20attributeName%3D'startOffset'%20from%3D'-54%25'%20to%3D'108%25'%20dur%3D'16s'%20repeatCount%3D'indefinite'%2F%3E%3C%2FtextPath%3E%3C%2Ftext%3E%0A%20%20%3Ctext%3E%3CtextPath%20href%3D'%23p4'%20startOffset%3D'104%25'%3ESHIP%20%C2%B7%20VERIFY%20%C2%B7%20SUPPORT%20%C2%B7%20%3Canimate%20attributeName%3D'startOffset'%20from%3D'104%25'%20to%3D'-80%25'%20dur%3D'14s'%20repeatCount%3D'indefinite'%2F%3E%3C%2FtextPath%3E%3C%2Ftext%3E%0A%3C%2Fg%3E%0A%3Cg%20fill%3D'%23FFD700'%3E%0A%20%20%3Ccircle%20r%3D'4.3'%20opacity%3D'.95'%3E%3CanimateMotion%20dur%3D'6.8s'%20repeatCount%3D'indefinite'%3E%3Cmpath%20href%3D'%23p1'%2F%3E%3C%2FanimateMotion%3E%3C%2Fcircle%3E%0A%20%20%3Ccircle%20r%3D'3.7'%20opacity%3D'.82'%3E%3CanimateMotion%20dur%3D'8.1s'%20begin%3D'-2.4s'%20repeatCount%3D'indefinite'%3E%3Cmpath%20href%3D'%23p2'%2F%3E%3C%2FanimateMotion%3E%3C%2Fcircle%3E%0A%20%20%3Ccircle%20r%3D'3.3'%20opacity%3D'.74'%3E%3CanimateMotion%20dur%3D'7.2s'%20begin%3D'-3.2s'%20repeatCount%3D'indefinite'%3E%3Cmpath%20href%3D'%23p3'%2F%3E%3C%2FanimateMotion%3E%3C%2Fcircle%3E%0A%3C%2Fg%3E%0A%3C%2Fsvg%3E"),
+      radial-gradient(circle at 82% 52%, rgba(255,215,0,.075), transparent 31%),
       linear-gradient(rgba(255,215,0,.032) 1px, transparent 1px),
       linear-gradient(90deg, rgba(255,215,0,.032) 1px, transparent 1px);
     background-size: 100% 100%, 100% 100%, 48px 48px, 48px 48px;
-    background-position: center;
+    background-position: center, center, center, center;
     background-repeat: no-repeat, no-repeat, repeat, repeat;
   }
 
+  /* The same stage-level signal network is revealed through the right side of the card.
+     This removes the old separate card SVG and makes the pipe actually cross the card boundary. */
   .process-sheet.is-active {
-    background-color: #070707;
-    background-image:
-      url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%201000%20430%22%20preserveAspectRatio%3D%22none%22%3E%3Cdefs%3E%3Cfilter%20id%3D%22g%22%20x%3D%22-50%25%22%20y%3D%22-50%25%22%20width%3D%22200%25%22%20height%3D%22200%25%22%3E%3CfeGaussianBlur%20stdDeviation%3D%225%22%20result%3D%22b%22/%3E%3CfeMerge%3E%3CfeMergeNode%20in%3D%22b%22/%3E%3CfeMergeNode%20in%3D%22SourceGraphic%22/%3E%3C/feMerge%3E%3C/filter%3E%3Cpath%20id%3D%22p1%22%20pathLength%3D%22100%22%20d%3D%22M610%2032%20H808%20Q866%2032%20866%2090%20V148%20Q866%20202%20920%20202%20H1032%22/%3E%3Cpath%20id%3D%22p2%22%20pathLength%3D%22100%22%20d%3D%22M1030%20314%20H914%20Q850%20314%20850%20258%20V230%20Q850%20180%20800%20180%20H654%22/%3E%3Cpath%20id%3D%22p3%22%20pathLength%3D%22100%22%20d%3D%22M704%20454%20V374%20Q704%20332%20746%20332%20H866%20Q914%20332%20914%20284%20V238%22/%3E%3C/defs%3E%3Cg%20fill%3D%22none%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cuse%20href%3D%22%23p1%22%20stroke%3D%22%23171504%22%20stroke-width%3D%2232%22/%3E%3Cuse%20href%3D%22%23p1%22%20stroke%3D%22%23FFD700%22%20stroke-opacity%3D%22.22%22%20stroke-width%3D%222%22/%3E%3Cuse%20href%3D%22%23p2%22%20stroke%3D%22%23121204%22%20stroke-width%3D%2228%22/%3E%3Cuse%20href%3D%22%23p2%22%20stroke%3D%22%23FFD700%22%20stroke-opacity%3D%22.18%22%20stroke-width%3D%222%22/%3E%3Cuse%20href%3D%22%23p3%22%20stroke%3D%22%23101003%22%20stroke-width%3D%2224%22/%3E%3Cuse%20href%3D%22%23p3%22%20stroke%3D%22%23FFD700%22%20stroke-opacity%3D%22.14%22%20stroke-width%3D%222%22/%3E%3C/g%3E%3Cg%20font-family%3D%22monospace%22%20font-size%3D%2210.5%22%20font-weight%3D%22700%22%20letter-spacing%3D%221.7%22%20fill%3D%22%23FFD700%22%20fill-opacity%3D%22.56%22%3E%3Ctext%3E%3CtextPath%20href%3D%22%23p1%22%20startOffset%3D%22-95%25%22%3ECLARITY%20%C2%B7%20TRUST%20%C2%B7%20ACTION%20%C2%B7%20USER%20JOURNEY%20%C2%B7%20CLEAR%20OFFER%20%C2%B7%20PROOF%20%C2%B7%20CLARITY%20%C2%B7%20TRUST%20%C2%B7%20ACTION%20%C2%B7%20USER%20JOURNEY%20%C2%B7%20CLEAR%20OFFER%20%C2%B7%20PROOF%20%C2%B7%3Canimate%20attributeName%3D%22startOffset%22%20from%3D%22-95%25%22%20to%3D%225%25%22%20dur%3D%2217s%22%20repeatCount%3D%22indefinite%22/%3E%3C/textPath%3E%3C/text%3E%3Ctext%20fill-opacity%3D%22.46%22%3E%3CtextPath%20href%3D%22%23p2%22%20startOffset%3D%220%25%22%3ERESPONSIVE%20%C2%B7%20PERFORMANCE%20%C2%B7%20FORMS%20%C2%B7%20ANALYTICS%20%C2%B7%20SEO%20%C2%B7%20RESPONSIVE%20%C2%B7%20PERFORMANCE%20%C2%B7%20FORMS%20%C2%B7%20ANALYTICS%20%C2%B7%20SEO%20%C2%B7%3Canimate%20attributeName%3D%22startOffset%22%20from%3D%220%25%22%20to%3D%22-100%25%22%20dur%3D%2220s%22%20repeatCount%3D%22indefinite%22/%3E%3C/textPath%3E%3C/text%3E%3Ctext%20fill-opacity%3D%22.38%22%3E%3CtextPath%20href%3D%22%23p3%22%20startOffset%3D%22-65%25%22%3EQA%20%C2%B7%20DOMAIN%20%C2%B7%20MONITORING%20%C2%B7%20HANDOVER%20%C2%B7%20LIVE%20%C2%B7%20QA%20%C2%B7%20DOMAIN%20%C2%B7%20MONITORING%20%C2%B7%20HANDOVER%20%C2%B7%20LIVE%20%C2%B7%3Canimate%20attributeName%3D%22startOffset%22%20from%3D%22-65%25%22%20to%3D%2235%25%22%20dur%3D%2222s%22%20repeatCount%3D%22indefinite%22/%3E%3C/textPath%3E%3C/text%3E%3C/g%3E%3Cg%20fill%3D%22%23FFD700%22%20filter%3D%22url%28%23g%29%22%3E%3Ccircle%20r%3D%224%22%3E%3CanimateMotion%20dur%3D%225.4s%22%20repeatCount%3D%22indefinite%22%3E%3Cmpath%20href%3D%22%23p1%22/%3E%3C/animateMotion%3E%3C/circle%3E%3C/g%3E%3C/svg%3E"),
-      linear-gradient(90deg, rgba(255,215,0,.018), transparent 22%);
-    background-size: 100% 100%, 100% 100%;
-    background-position: center;
-    background-repeat: no-repeat;
+    background:
+      linear-gradient(90deg,
+        #070707 0%,
+        #070707 55%,
+        rgba(7,7,7,.98) 64%,
+        rgba(7,7,7,.82) 72%,
+        rgba(7,7,7,.48) 84%,
+        rgba(7,7,7,.34) 100%);
+    box-shadow:
+      0 34px 96px rgba(0,0,0,.66),
+      0 0 76px -34px rgba(255,215,0,.88),
+      inset 0 0 0 1px rgba(255,215,0,.045),
+      inset -120px 0 150px -130px rgba(255,215,0,.28);
   }
 
-  /* Fade the pipeline under the main copy while keeping the signal area vivid on the right. */
   .process-sheet.is-active .process-sheet-content {
-    background: linear-gradient(90deg, rgba(7,7,7,.98) 0%, rgba(7,7,7,.95) 62%, rgba(7,7,7,.3) 100%);
-    border-radius: 0 18px 18px 0;
+    background: transparent;
+    border-radius: 0;
   }
 }
 
-@media (prefers-reduced-motion: reduce) {
+@media (prefers-reduced-motion: reduce) and (min-width: 900px) {
   .process-sheet-stage {
     background-image:
-      radial-gradient(circle at 73% 52%, rgba(255,215,0,.055), transparent 34%),
+      radial-gradient(circle at 82% 52%, rgba(255,215,0,.075), transparent 31%),
       linear-gradient(rgba(255,215,0,.032) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(255,215,0,.032) 1px, transparent 1px) !important;
+      linear-gradient(90deg, rgba(255,215,0,.032) 1px, transparent 1px);
+    background-size: 100% 100%, 48px 48px, 48px 48px;
   }
+
   .process-sheet.is-active {
-    background-image: linear-gradient(90deg, rgba(255,215,0,.018), transparent 22%) !important;
+    background:
+      linear-gradient(90deg,
+        #070707 0%,
+        #070707 58%,
+        rgba(7,7,7,.96) 72%,
+        rgba(7,7,7,.80) 100%);
   }
 }
