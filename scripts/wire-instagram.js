@@ -58,6 +58,7 @@ addBefore(
 );
 optimizePrimaryFonts();
 addBefore('</head>', '    <link rel="stylesheet" href="/assets/css/instagram-feed.css">\n');
+addBefore('</head>', '    <link rel="stylesheet" href="/assets/css/refinements.css">\n');
 addBefore('            <section id="contact">', instagramSection);
 addBefore('</body>', '    <script src="/assets/js/instagram-feed.js" defer></script>\n');
 
