@@ -56,6 +56,13 @@
           <p class="project-finder-note"><strong>Selected case studies</strong><br>Challenge · solution · live result</p>
         </div>
       </div>`;
+
+    /* The old Instagram slot lived near Contact. Selected work is proof, so it
+       belongs immediately after the hero, before capability/process sections. */
+    const hero = document.querySelector('.hero');
+    if (hero && root.previousElementSibling !== hero) {
+      hero.insertAdjacentElement('afterend', root);
+    }
   }
 
   async function refreshProjectCount() {
