@@ -64,7 +64,6 @@
     z-index: 1;
   }
 
-  /* Never show the text of a non-active sheet. */
   .process-sheet:not(.is-active) .process-sheet-content {
     opacity: 0 !important;
     visibility: hidden !important;
@@ -76,7 +75,6 @@
     visibility: hidden !important;
   }
 
-  /* Let only the immediate next sheet leave a faint physical layer behind the active one. */
   .process-sheet.is-active + .process-sheet {
     z-index: 2 !important;
     opacity: .18 !important;
@@ -114,7 +112,6 @@
     pointer-events: none;
   }
 
-  /* The large numeral previews the next stage; on the last card it anchors the current stage. */
   .process-sheet-ghost {
     display: none !important;
   }
@@ -134,6 +131,7 @@
     pointer-events: none;
     user-select: none;
   }
+
   .process-sheet.is-active[data-process-sheet="0"]::after { content: "02"; }
   .process-sheet.is-active[data-process-sheet="1"]::after { content: "03"; }
   .process-sheet.is-active[data-process-sheet="2"]::after { content: "04"; }
@@ -161,13 +159,9 @@
 
   .process-output { margin-top: 24px; }
   .process-tags { margin-top: 18px; }
-
-  .process-system-progress {
-    left: 0;
-  }
+  .process-system-progress { left: 0; }
 }
 
-/* Mobile process remains linear and readable. */
 @media (max-width: 899px) {
   .process-rail { display: none !important; }
   .process-sheet {
@@ -235,13 +229,8 @@
   font-weight: 700;
 }
 
-.archive-status .archive-status-key {
-  color: #9ca3af;
-}
-
-.archive-status .archive-status-arrow {
-  color: #4b5563;
-}
+.archive-status .archive-status-key { color: #9ca3af; }
+.archive-status .archive-status-arrow { color: #4b5563; }
 
 .archive-status strong {
   color: #f3f4f6;
@@ -269,7 +258,6 @@
   object-position: top center;
 }
 
-/* Three columns stay intact; cards only become slightly more screen-like. */
 @media (min-width: 1100px) {
   .archive-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -288,20 +276,15 @@
     font-size: 10px;
   }
 
-  .archive-status strong {
-    font-size: 10px;
-  }
-
-  .archive-status-cursor {
-    width: 6px;
-  }
+  .archive-status strong { font-size: 10px; }
+  .archive-status-cursor { width: 6px; }
 }
 
-/* PROCESS SIGNAL PIPELINE — one continuous network now feeds through the system and the active card. */
+/* PROCESS SIGNAL TUNNELS — three inputs merge into one launch channel. */
 @media (min-width: 900px) {
   .process-sheet-stage {
     background-image:
-      url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%201200%20660'%20preserveAspectRatio%3D'none'%3E%0A%3Cdefs%3E%0A%20%20%3Cpath%20id%3D'p1'%20pathLength%3D'100'%20d%3D'M962%20-30%20V68%20Q962%20115%201009%20115%20H1076%20Q1128%20115%201128%20167%20V208%20Q1128%20252%201172%20252%20H1240'%2F%3E%0A%20%20%3Cpath%20id%3D'p2'%20pathLength%3D'100'%20d%3D'M1240%20330%20H1176%20Q1128%20330%201128%20378%20V428%20Q1128%20475%201081%20475%20H976%20Q928%20475%20928%20523%20V690'%2F%3E%0A%20%20%3Cpath%20id%3D'p3'%20pathLength%3D'100'%20d%3D'M842%20690%20V592%20Q842%20545%20889%20545%20H970%20Q1016%20545%201016%20499%20V454%20Q1016%20410%201060%20410%20H1128%20Q1174%20410%201174%20364%20V316'%2F%3E%0A%20%20%3Cpath%20id%3D'p4'%20pathLength%3D'100'%20d%3D'M1240%20150%20H1186%20Q1142%20150%201142%20106%20V72%20Q1142%2030%201100%2030%20H1042'%2F%3E%0A%3C%2Fdefs%3E%0A%3Cg%20fill%3D'none'%20stroke-linecap%3D'round'%20stroke-linejoin%3D'round'%3E%0A%20%20%3Cuse%20href%3D'%23p1'%20stroke%3D'%23181704'%20stroke-width%3D'34'%2F%3E%0A%20%20%3Cuse%20href%3D'%23p1'%20stroke%3D'%23FFD700'%20stroke-opacity%3D'.25'%20stroke-width%3D'1.6'%2F%3E%0A%20%20%3Cuse%20href%3D'%23p2'%20stroke%3D'%23141304'%20stroke-width%3D'31'%2F%3E%0A%20%20%3Cuse%20href%3D'%23p2'%20stroke%3D'%23FFD700'%20stroke-opacity%3D'.23'%20stroke-width%3D'1.6'%2F%3E%0A%20%20%3Cuse%20href%3D'%23p3'%20stroke%3D'%23111104'%20stroke-width%3D'27'%2F%3E%0A%20%20%3Cuse%20href%3D'%23p3'%20stroke%3D'%23FFD700'%20stroke-opacity%3D'.20'%20stroke-width%3D'1.5'%2F%3E%0A%20%20%3Cuse%20href%3D'%23p4'%20stroke%3D'%23101004'%20stroke-width%3D'23'%2F%3E%0A%20%20%3Cuse%20href%3D'%23p4'%20stroke%3D'%23FFD700'%20stroke-opacity%3D'.16'%20stroke-width%3D'1.3'%2F%3E%0A%3C%2Fg%3E%0A%3Cg%20font-family%3D'monospace'%20font-size%3D'11'%20font-weight%3D'700'%20letter-spacing%3D'1.9'%20fill%3D'%23FFD700'%20opacity%3D'.55'%3E%0A%20%20%3Ctext%3E%3CtextPath%20href%3D'%23p1'%20startOffset%3D'-48%25'%3ESTRATEGY%20%C2%B7%20OFFER%20CLARITY%20%C2%B7%20TRUST%20SIGNALS%20%C2%B7%20CTA%20ROUTE%20%C2%B7%20%3Canimate%20attributeName%3D'startOffset'%20from%3D'-48%25'%20to%3D'106%25'%20dur%3D'18s'%20repeatCount%3D'indefinite'%2F%3E%3C%2FtextPath%3E%3C%2Ftext%3E%0A%20%20%3Ctext%3E%3CtextPath%20href%3D'%23p2'%20startOffset%3D'106%25'%3EINTERFACE%20%C2%B7%20PROOF%20%C2%B7%20MOBILE%20FLOW%20%C2%B7%20PERFORMANCE%20%C2%B7%20%3Canimate%20attributeName%3D'startOffset'%20from%3D'106%25'%20to%3D'-58%25'%20dur%3D'19s'%20repeatCount%3D'indefinite'%2F%3E%3C%2FtextPath%3E%3C%2Ftext%3E%0A%20%20%3Ctext%3E%3CtextPath%20href%3D'%23p3'%20startOffset%3D'-54%25'%3EQA%20%C2%B7%20DOMAIN%20%C2%B7%20MONITORING%20%C2%B7%20HANDOVER%20%C2%B7%20LIVE%20%C2%B7%20%3Canimate%20attributeName%3D'startOffset'%20from%3D'-54%25'%20to%3D'108%25'%20dur%3D'16s'%20repeatCount%3D'indefinite'%2F%3E%3C%2FtextPath%3E%3C%2Ftext%3E%0A%20%20%3Ctext%3E%3CtextPath%20href%3D'%23p4'%20startOffset%3D'104%25'%3ESHIP%20%C2%B7%20VERIFY%20%C2%B7%20SUPPORT%20%C2%B7%20%3Canimate%20attributeName%3D'startOffset'%20from%3D'104%25'%20to%3D'-80%25'%20dur%3D'14s'%20repeatCount%3D'indefinite'%2F%3E%3C%2FtextPath%3E%3C%2Ftext%3E%0A%3C%2Fg%3E%0A%3Cg%20fill%3D'%23FFD700'%3E%0A%20%20%3Ccircle%20r%3D'4.3'%20opacity%3D'.95'%3E%3CanimateMotion%20dur%3D'6.8s'%20repeatCount%3D'indefinite'%3E%3Cmpath%20href%3D'%23p1'%2F%3E%3C%2FanimateMotion%3E%3C%2Fcircle%3E%0A%20%20%3Ccircle%20r%3D'3.7'%20opacity%3D'.82'%3E%3CanimateMotion%20dur%3D'8.1s'%20begin%3D'-2.4s'%20repeatCount%3D'indefinite'%3E%3Cmpath%20href%3D'%23p2'%2F%3E%3C%2FanimateMotion%3E%3C%2Fcircle%3E%0A%20%20%3Ccircle%20r%3D'3.3'%20opacity%3D'.74'%3E%3CanimateMotion%20dur%3D'7.2s'%20begin%3D'-3.2s'%20repeatCount%3D'indefinite'%3E%3Cmpath%20href%3D'%23p3'%2F%3E%3C%2FanimateMotion%3E%3C%2Fcircle%3E%0A%3C%2Fg%3E%0A%3C%2Fsvg%3E"),
+      url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%201200%20660%22%20preserveAspectRatio%3D%22none%22%3E%0A%3Cdefs%3E%0A%20%20%3Cfilter%20id%3D%22glow%22%20x%3D%22-90%25%22%20y%3D%22-90%25%22%20width%3D%22280%25%22%20height%3D%22280%25%22%3E%0A%20%20%20%20%3CfeGaussianBlur%20stdDeviation%3D%225%22%20result%3D%22b%22%2F%3E%0A%20%20%20%20%3CfeMerge%3E%3CfeMergeNode%20in%3D%22b%22%2F%3E%3CfeMergeNode%20in%3D%22SourceGraphic%22%2F%3E%3C%2FfeMerge%3E%0A%20%20%3C%2Ffilter%3E%0A%20%20%3Cpath%20id%3D%22left%22%20pathLength%3D%22100%22%20d%3D%22M-40%20104%20H540%20Q600%20104%20600%20164%20V220%20Q600%20276%20656%20276%20H878%20Q934%20276%20934%20332%20H1020%22%2F%3E%0A%20%20%3Cpath%20id%3D%22top%22%20pathLength%3D%22100%22%20d%3D%22M930%20-30%20V100%20Q930%20156%20986%20156%20H1080%20Q1136%20156%201136%20212%20V276%20Q1136%20332%201080%20332%20H1020%22%2F%3E%0A%20%20%3Cpath%20id%3D%22right%22%20pathLength%3D%22100%22%20d%3D%22M1240%20508%20H1168%20Q1110%20508%201110%20450%20V390%20Q1110%20332%201052%20332%20H1020%22%2F%3E%0A%20%20%3Cpath%20id%3D%22out%22%20pathLength%3D%22100%22%20d%3D%22M1020%20332%20H980%20Q920%20332%20920%20392%20V458%20Q920%20516%20862%20516%20H806%20Q748%20516%20748%20574%20V690%22%2F%3E%0A%3C%2Fdefs%3E%0A%3Cg%20fill%3D%22none%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%0A%20%20%3Cg%3E%0A%20%20%20%20%3Cuse%20href%3D%22%23left%22%20stroke%3D%22%23FFD700%22%20stroke-opacity%3D%22.055%22%20stroke-width%3D%2246%22%2F%3E%0A%20%20%20%20%3Cuse%20href%3D%22%23left%22%20stroke%3D%22%230D0C05%22%20stroke-width%3D%2237%22%2F%3E%0A%20%20%20%20%3Cuse%20href%3D%22%23left%22%20stroke%3D%22%23FFD700%22%20stroke-opacity%3D%22.21%22%20stroke-width%3D%221.5%22%2F%3E%0A%20%20%20%20%3Cuse%20href%3D%22%23top%22%20stroke%3D%22%23FFD700%22%20stroke-opacity%3D%22.065%22%20stroke-width%3D%2242%22%2F%3E%0A%20%20%20%20%3Cuse%20href%3D%22%23top%22%20stroke%3D%22%230C0B05%22%20stroke-width%3D%2234%22%2F%3E%0A%20%20%20%20%3Cuse%20href%3D%22%23top%22%20stroke%3D%22%23FFD700%22%20stroke-opacity%3D%22.25%22%20stroke-width%3D%221.5%22%2F%3E%0A%20%20%20%20%3Cuse%20href%3D%22%23right%22%20stroke%3D%22%23FFD700%22%20stroke-opacity%3D%22.050%22%20stroke-width%3D%2236%22%2F%3E%0A%20%20%20%20%3Cuse%20href%3D%22%23right%22%20stroke%3D%22%230A0A04%22%20stroke-width%3D%2229%22%2F%3E%0A%20%20%20%20%3Cuse%20href%3D%22%23right%22%20stroke%3D%22%23FFD700%22%20stroke-opacity%3D%22.18%22%20stroke-width%3D%221.3%22%2F%3E%0A%20%20%20%20%3Cuse%20href%3D%22%23out%22%20stroke%3D%22%23FFD700%22%20stroke-opacity%3D%22.075%22%20stroke-width%3D%2250%22%2F%3E%0A%20%20%20%20%3Cuse%20href%3D%22%23out%22%20stroke%3D%22%230E0D05%22%20stroke-width%3D%2240%22%2F%3E%0A%20%20%20%20%3Cuse%20href%3D%22%23out%22%20stroke%3D%22%23FFD700%22%20stroke-opacity%3D%22.28%22%20stroke-width%3D%221.6%22%2F%3E%0A%20%20%3C%2Fg%3E%0A%20%20%3Cg%20stroke%3D%22%23FFD700%22%20stroke-linecap%3D%22round%22%3E%0A%20%20%20%20%3Cuse%20href%3D%22%23left%22%20stroke-opacity%3D%22.14%22%20stroke-width%3D%221%22%20stroke-dasharray%3D%221%209%22%3E%3Canimate%20attributeName%3D%22stroke-dashoffset%22%20from%3D%220%22%20to%3D%22-42%22%20dur%3D%228s%22%20repeatCount%3D%22indefinite%22%2F%3E%3C%2Fuse%3E%0A%20%20%20%20%3Cuse%20href%3D%22%23top%22%20stroke-opacity%3D%22.18%22%20stroke-width%3D%221%22%20stroke-dasharray%3D%221%208%22%3E%3Canimate%20attributeName%3D%22stroke-dashoffset%22%20from%3D%220%22%20to%3D%22-40%22%20dur%3D%227s%22%20repeatCount%3D%22indefinite%22%2F%3E%3C%2Fuse%3E%0A%20%20%20%20%3Cuse%20href%3D%22%23right%22%20stroke-opacity%3D%22.12%22%20stroke-width%3D%221%22%20stroke-dasharray%3D%221%2010%22%3E%3Canimate%20attributeName%3D%22stroke-dashoffset%22%20from%3D%220%22%20to%3D%2244%22%20dur%3D%229s%22%20repeatCount%3D%22indefinite%22%2F%3E%3C%2Fuse%3E%0A%20%20%20%20%3Cuse%20href%3D%22%23out%22%20stroke-opacity%3D%22.20%22%20stroke-width%3D%221%22%20stroke-dasharray%3D%221%207%22%3E%3Canimate%20attributeName%3D%22stroke-dashoffset%22%20from%3D%220%22%20to%3D%22-38%22%20dur%3D%226s%22%20repeatCount%3D%22indefinite%22%2F%3E%3C%2Fuse%3E%0A%20%20%3C%2Fg%3E%0A%3C%2Fg%3E%0A%3Cg%20font-family%3D%22monospace%22%20font-size%3D%2210.5%22%20font-weight%3D%22700%22%20letter-spacing%3D%221.8%22%20fill%3D%22%23FFD700%22%3E%0A%20%20%3Ctext%20opacity%3D%22.28%22%3E%3CtextPath%20href%3D%22%23left%22%20startOffset%3D%22-72%25%22%3ESTRATEGY%20%C2%B7%20CLARITY%20%C2%B7%20TRUST%20%C2%B7%20%3Canimate%20attributeName%3D%22startOffset%22%20from%3D%22-72%25%22%20to%3D%22104%25%22%20dur%3D%2228s%22%20repeatCount%3D%22indefinite%22%2F%3E%3C%2FtextPath%3E%3C%2Ftext%3E%0A%20%20%3Ctext%20opacity%3D%22.38%22%3E%3CtextPath%20href%3D%22%23top%22%20startOffset%3D%22-58%25%22%3EINTERFACE%20%C2%B7%20PROOF%20%C2%B7%20PERFORMANCE%20%C2%B7%20%3Canimate%20attributeName%3D%22startOffset%22%20from%3D%22-58%25%22%20to%3D%22104%25%22%20dur%3D%2222s%22%20repeatCount%3D%22indefinite%22%2F%3E%3C%2FtextPath%3E%3C%2Ftext%3E%0A%20%20%3Ctext%20opacity%3D%22.25%22%3E%3CtextPath%20href%3D%22%23right%22%20startOffset%3D%22102%25%22%3EMOBILE%20%C2%B7%20QA%20%C2%B7%20VERIFY%20%C2%B7%20%3Canimate%20attributeName%3D%22startOffset%22%20from%3D%22102%25%22%20to%3D%22-72%25%22%20dur%3D%2220s%22%20repeatCount%3D%22indefinite%22%2F%3E%3C%2FtextPath%3E%3C%2Ftext%3E%0A%20%20%3Ctext%20opacity%3D%22.44%22%3E%3CtextPath%20href%3D%22%23out%22%20startOffset%3D%22-52%25%22%3EDOMAIN%20%C2%B7%20LAUNCH%20%C2%B7%20MONITOR%20%C2%B7%20HANDOVER%20%C2%B7%20%3Canimate%20attributeName%3D%22startOffset%22%20from%3D%22-52%25%22%20to%3D%22108%25%22%20dur%3D%2220s%22%20repeatCount%3D%22indefinite%22%2F%3E%3C%2FtextPath%3E%3C%2Ftext%3E%0A%3C%2Fg%3E%0A%3Cg%20fill%3D%22%23FFD700%22%20filter%3D%22url%28%23glow%29%22%3E%0A%20%20%3Ccircle%20r%3D%223.5%22%20opacity%3D%22.74%22%3E%3CanimateMotion%20dur%3D%229.2s%22%20begin%3D%22-3.1s%22%20repeatCount%3D%22indefinite%22%3E%3Cmpath%20href%3D%22%23left%22%2F%3E%3C%2FanimateMotion%3E%3C%2Fcircle%3E%0A%20%20%3Ccircle%20r%3D%224.0%22%20opacity%3D%22.88%22%3E%3CanimateMotion%20dur%3D%227.4s%22%20repeatCount%3D%22indefinite%22%3E%3Cmpath%20href%3D%22%23top%22%2F%3E%3C%2FanimateMotion%3E%3C%2Fcircle%3E%0A%20%20%3Ccircle%20r%3D%223.1%22%20opacity%3D%22.62%22%3E%3CanimateMotion%20dur%3D%228.6s%22%20begin%3D%22-4.4s%22%20repeatCount%3D%22indefinite%22%3E%3Cmpath%20href%3D%22%23right%22%2F%3E%3C%2FanimateMotion%3E%3C%2Fcircle%3E%0A%20%20%3Ccircle%20r%3D%224.4%22%20opacity%3D%22.94%22%3E%3CanimateMotion%20dur%3D%226.8s%22%20begin%3D%22-1.8s%22%20repeatCount%3D%22indefinite%22%3E%3Cmpath%20href%3D%22%23out%22%2F%3E%3C%2FanimateMotion%3E%3C%2Fcircle%3E%0A%3C%2Fg%3E%0A%3Cg%20fill%3D%22%23FFD700%22%3E%3Ccircle%20cx%3D%221020%22%20cy%3D%22332%22%20r%3D%224.8%22%20opacity%3D%22.68%22%2F%3E%3Ccircle%20cx%3D%221020%22%20cy%3D%22332%22%20r%3D%2211%22%20opacity%3D%22.035%22%2F%3E%3C%2Fg%3E%0A%3C%2Fsvg%3E"),
       radial-gradient(circle at 82% 52%, rgba(255,215,0,.075), transparent 31%),
       linear-gradient(rgba(255,215,0,.032) 1px, transparent 1px),
       linear-gradient(90deg, rgba(255,215,0,.032) 1px, transparent 1px);
@@ -310,8 +293,6 @@
     background-repeat: no-repeat, no-repeat, repeat, repeat;
   }
 
-  /* The same stage-level signal network is revealed through the right side of the card.
-     This removes the old separate card SVG and makes the pipe actually cross the card boundary. */
   .process-sheet.is-active {
     background:
       linear-gradient(90deg,
