@@ -1,10 +1,5 @@
 /*
  * Trusted Types compatibility policy.
- *
- * The site still contains legacy innerHTML-based UI builders. The default policy
- * keeps those existing templates working while enforcing a strict allowlist for
- * dynamically assigned script URLs. This lets `require-trusted-types-for 'script'`
- * run in production without breaking the current design or third-party services.
  */
 (function installTrustedTypesPolicy() {
   'use strict';
@@ -42,26 +37,16 @@
 
   try {
     window.trustedTypes.createPolicy('default', {
-      // Existing UI templates are authored locally and dynamic values are escaped
-      // before interpolation. Script URL sinks receive the stricter check above.
       createHTML: (value) => String(value),
       createScript: (value) => String(value),
       createScriptURL
     });
   } catch (error) {
-    // A duplicated policy should not prevent the rest of the page from loading.
     console.warn('[security] Trusted Types policy could not be installed.', error);
   }
 })();
 
-/*
- * Philosophy composition repair.
- *
- * The section's legacy `overflow: hidden` clips the TAURUS watermark exactly at
- * the shared 1180px section boundary. The watermark is intentionally wider than
- * that content column, so it must live on a viewport-wide visual layer while the
- * manifesto copy stays in the normal section column.
- */
+/* Keep the restored TAURUS composition on this branch. */
 (function restorePhilosophyComposition() {
   'use strict';
 
@@ -82,16 +67,12 @@
     style.id = 'philosophy-legacy-layer-fix';
     style.textContent = `
       @media (min-width: 900px) {
-        #philosophy.philosophy {
-          overflow: visible !important;
-        }
-
+        #philosophy.philosophy { overflow: visible !important; }
         .philosophy-manifesto {
           position: relative;
           isolation: isolate;
           overflow: visible !important;
         }
-
         .philosophy-manifesto .taurus-mark {
           position: absolute !important;
           inset: auto !important;
@@ -123,7 +104,6 @@
           pointer-events: none !important;
           user-select: none !important;
         }
-
         .philosophy-manifesto .phil-line {
           position: relative !important;
           z-index: 1 !important;
@@ -145,351 +125,158 @@
 })();
 
 /*
- * Process / build system — static launch panel with flowing typography only.
- *
- * The previous branch version mixed scroll-driven panels, tunnel nodes, pulses and
- * multiple depth effects. Keep the content completely fixed and let the lettering
- * be the only moving element. The paths stay structural and quiet behind the card.
+ * Process section: flowing typography only.
+ * No 01/02/03/04 state, no launch card, no pills, no nodes, no numbered panel.
  */
-(function installStaticProcessFlow() {
+(function installProcessFlowOnly() {
   'use strict';
 
   function apply() {
     const section = document.getElementById('process');
-    if (!section || section.dataset.staticFlowReady === 'true') return;
-    section.dataset.staticFlowReady = 'true';
+    if (!section || section.dataset.flowOnlyReady === 'true') return;
+    section.dataset.flowOnlyReady = 'true';
 
     const style = document.createElement('style');
-    style.id = 'oy-process-static-flow-style';
+    style.id = 'oy-process-flow-only-style';
     style.textContent = `
       #process {
         position: relative !important;
-        width: min(1130px, calc(100% - 48px)) !important;
-        max-width: 1130px !important;
-        height: auto !important;
+        width: min(1180px, calc(100% - 48px)) !important;
+        max-width: 1180px !important;
         min-height: 0 !important;
-        margin: 56px auto 72px !important;
+        height: auto !important;
+        margin: 48px auto 80px !important;
         padding: 0 !important;
         overflow: visible !important;
       }
 
-      #process > :not(.oyp-static) { display: none !important; }
+      #process > :not(.oy-process-flow-only) { display: none !important; }
 
-      .oyp-static {
+      .oy-process-flow-only {
         position: relative;
         width: 100%;
-        height: 720px;
+        height: 500px;
         overflow: hidden;
-        border: 1px solid rgba(255,255,255,.09);
-        border-radius: 27px;
+        border-top: 1px solid rgba(255,255,255,.08);
+        border-bottom: 1px solid rgba(255,255,255,.08);
         background:
-          radial-gradient(circle at 53% 48%, rgba(255,215,0,.055), transparent 33%),
-          linear-gradient(rgba(255,215,0,.028) 1px, transparent 1px),
-          linear-gradient(90deg, rgba(255,215,0,.028) 1px, transparent 1px),
+          radial-gradient(circle at 50% 50%, rgba(255,215,0,.045), transparent 38%),
+          linear-gradient(rgba(255,215,0,.025) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(255,215,0,.025) 1px, transparent 1px),
           #050505;
         background-size: 100% 100%, 48px 48px, 48px 48px, auto;
         isolation: isolate;
-        box-shadow: 0 24px 70px rgba(0,0,0,.24), inset 0 0 0 1px rgba(255,215,0,.025);
       }
 
-      .oyp-static::after {
+      .oy-process-flow-only::before,
+      .oy-process-flow-only::after {
         content: '';
         position: absolute;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        height: 3px;
-        z-index: 8;
-        background: #ffd700;
-        box-shadow: 0 0 18px rgba(255,215,0,.52);
-      }
-
-      .oyp-head {
-        position: absolute;
-        left: 0;
-        right: 0;
         top: 0;
-        height: 64px;
-        z-index: 10;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 0 28px;
-        border-bottom: 1px solid rgba(255,255,255,.07);
-        background: rgba(4,4,4,.58);
-        font-family: var(--mono, "JetBrains Mono", monospace);
-        font-size: 9px;
-        font-weight: 700;
-        letter-spacing: .17em;
-        text-transform: uppercase;
-        color: #747a84;
-      }
-
-      .oyp-head-left::before {
-        content: '$';
-        margin-right: 12px;
-        color: #ffd700;
-      }
-
-      .oyp-head-right b { color: #ffd700; }
-      .oyp-head-right span { margin-left: 11px; color: #70757e; }
-
-      .oyp-guide {
-        position: absolute;
-        left: 44px;
-        right: 44px;
-        top: 108px;
-        height: 1px;
-        z-index: 2;
-        background: rgba(255,215,0,.16);
-      }
-
-      .oyp-flow {
-        position: absolute;
-        inset: 64px 0 0;
-        width: 100%;
-        height: calc(100% - 64px);
-        z-index: 2;
-        overflow: visible;
+        bottom: 0;
+        width: 150px;
+        z-index: 3;
         pointer-events: none;
       }
 
-      .oyp-pipe-shadow,
-      .oyp-pipe-edge,
-      .oyp-pipe-core {
-        fill: none;
-        stroke-linecap: round;
-        stroke-linejoin: round;
+      .oy-process-flow-only::before {
+        left: 0;
+        background: linear-gradient(90deg, #050505 0%, rgba(5,5,5,.82) 35%, transparent 100%);
       }
 
-      .oyp-pipe-shadow { stroke: rgba(255,215,0,.038); stroke-width: 34; }
-      .oyp-pipe-edge { stroke: rgba(255,215,0,.11); stroke-width: 30; }
-      .oyp-pipe-core { stroke: rgba(255,215,0,.055); stroke-width: 10; }
-
-      .oyp-flow text {
-        fill: rgba(255,215,0,.58);
-        font-family: var(--mono, "JetBrains Mono", monospace);
-        font-size: 10px;
-        font-weight: 700;
-        letter-spacing: .18em;
-        text-transform: uppercase;
+      .oy-process-flow-only::after {
+        right: 0;
+        background: linear-gradient(270deg, #050505 0%, rgba(5,5,5,.82) 35%, transparent 100%);
       }
 
-      .oyp-flow text.oyp-flow-soft { fill: rgba(255,215,0,.42); }
-
-      .oyp-card {
-        position: absolute;
-        z-index: 5;
-        left: 68px;
-        right: 68px;
-        top: 176px;
-        bottom: 124px;
-        overflow: hidden;
-        border: 1px solid rgba(255,215,0,.78);
-        background:
-          linear-gradient(90deg, rgba(5,5,5,.985) 0%, rgba(5,5,5,.985) 65%, rgba(7,7,5,.94) 100%);
-        box-shadow: 0 0 64px rgba(255,215,0,.08), inset 0 0 0 1px rgba(255,215,0,.035);
-      }
-
-      .oyp-card::before {
-        content: '';
+      .oy-flow-svg {
         position: absolute;
         inset: 0;
-        pointer-events: none;
-        background:
-          linear-gradient(rgba(255,215,0,.025) 1px, transparent 1px),
-          linear-gradient(90deg, rgba(255,215,0,.025) 1px, transparent 1px);
-        background-size: 48px 48px;
-        opacity: .72;
+        width: 100%;
+        height: 100%;
+        overflow: visible;
       }
 
-      .oyp-content {
-        position: relative;
-        z-index: 3;
-        width: 68%;
-        padding: 45px 54px;
+      .oy-flow-guide {
+        fill: none;
+        stroke: rgba(255,215,0,.07);
+        stroke-width: 1.25;
       }
 
-      .oyp-kicker {
-        margin-bottom: 20px;
-        color: #ffd700;
-        font-family: var(--mono, "JetBrains Mono", monospace);
-        font-size: 10px;
-        font-weight: 700;
-        letter-spacing: .22em;
-        text-transform: uppercase;
-      }
-
-      .oyp-title {
-        margin: 0 0 24px;
-        color: #f4f4f1;
-        font-family: "Syncopate", sans-serif;
-        font-size: clamp(31px, 3.35vw, 48px);
-        font-weight: 700;
-        line-height: 1.05;
-        letter-spacing: -.025em;
-        text-transform: uppercase;
-      }
-
-      .oyp-copy {
-        max-width: 670px;
-        margin: 0;
-        color: #8b9099;
+      .oy-flow-svg text {
+        fill: #ffd700;
         font-family: var(--mono, "JetBrains Mono", monospace);
         font-size: 12px;
-        font-weight: 500;
-        line-height: 1.72;
-      }
-
-      .oyp-separator {
-        width: 100%;
-        height: 1px;
-        margin: 25px 0 18px;
-        background: rgba(255,255,255,.09);
-      }
-
-      .oyp-output {
-        display: grid;
-        grid-template-columns: 88px 1fr;
-        gap: 16px;
-        align-items: center;
-        font-family: var(--mono, "JetBrains Mono", monospace);
-        font-size: 9px;
         font-weight: 700;
-        letter-spacing: .1em;
+        letter-spacing: .2em;
         text-transform: uppercase;
+        text-shadow: 0 0 14px rgba(255,215,0,.26);
       }
 
-      .oyp-output span { color: #565c65; }
-      .oyp-output b { color: #bfc2c7; }
-
-      .oyp-pills {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 9px;
-        margin-top: 19px;
-      }
-
-      .oyp-pill {
-        padding: 8px 14px;
-        border: 1px solid rgba(255,215,0,.52);
-        border-radius: 999px;
-        background: rgba(255,215,0,.025);
-        color: #ffd700;
-        font-family: var(--mono, "JetBrains Mono", monospace);
-        font-size: 8px;
-        font-weight: 700;
-        letter-spacing: .11em;
-        text-transform: uppercase;
-      }
-
-      .oyp-number {
-        position: absolute;
-        z-index: 1;
-        right: 42px;
-        bottom: -18px;
-        color: rgba(255,255,255,.052);
-        font-family: "Manrope", sans-serif;
-        font-size: clamp(190px, 22vw, 325px);
-        font-weight: 800;
-        line-height: .82;
-        letter-spacing: -.085em;
-        user-select: none;
-      }
+      .oy-flow-svg text.flow-dim { fill: rgba(255,215,0,.66); }
+      .oy-flow-svg text.flow-soft { fill: rgba(255,215,0,.42); }
 
       @media (max-width: 899px) {
         #process {
           width: min(100% - 24px, 720px) !important;
-          margin-top: 32px !important;
+          margin: 32px auto 56px !important;
         }
-
-        .oyp-static { height: 650px; border-radius: 22px; }
-        .oyp-head { padding: 0 18px; font-size: 8px; }
-        .oyp-guide { left: 18px; right: 18px; top: 94px; }
-        .oyp-card { left: 18px; right: 18px; top: 152px; bottom: 82px; }
-        .oyp-content { width: 100%; padding: 32px 26px; }
-        .oyp-title { font-size: clamp(28px, 7vw, 42px); }
-        .oyp-copy { font-size: 11px; }
-        .oyp-number { right: 16px; bottom: -5px; font-size: 160px; }
-        .oyp-flow { opacity: .62; }
-        .oyp-pipe-shadow { stroke-width: 25; }
-        .oyp-pipe-edge { stroke-width: 21; }
-        .oyp-pipe-core { stroke-width: 7; }
-        .oyp-flow text { font-size: 8px; }
+        .oy-process-flow-only { height: 420px; }
+        .oy-process-flow-only::before,
+        .oy-process-flow-only::after { width: 56px; }
+        .oy-flow-svg text { font-size: 10px; letter-spacing: .16em; }
       }
 
       @media (max-width: 560px) {
-        .oyp-static { height: 620px; }
-        .oyp-head-right span { display: none; }
-        .oyp-card { top: 142px; bottom: 70px; }
-        .oyp-content { padding: 28px 22px; }
-        .oyp-output { grid-template-columns: 1fr; gap: 7px; }
-        .oyp-number { font-size: 132px; }
+        .oy-process-flow-only { height: 360px; }
+        .oy-flow-svg text { font-size: 9px; }
       }
 
       @media (prefers-reduced-motion: reduce) {
-        .oyp-flow animate { display: none; }
+        .oy-flow-svg animate { display: none; }
       }
     `;
     document.head.appendChild(style);
 
     section.innerHTML = `
-      <div class="oyp-static">
-        <div class="oyp-head">
-          <div class="oyp-head-left">PROCESS / BUILD SYSTEM</div>
-          <div class="oyp-head-right"><b>04 / 04</b><span>— LAUNCH</span></div>
-        </div>
-        <div class="oyp-guide"></div>
-
-        <svg class="oyp-flow" viewBox="0 0 1130 656" preserveAspectRatio="none" aria-hidden="true">
+      <div class="oy-process-flow-only" aria-label="Build system signal flow">
+        <svg class="oy-flow-svg" viewBox="0 0 1180 500" preserveAspectRatio="none" aria-hidden="true">
           <defs>
-            <path id="oypPathTop" d="M -120 105 H 660 Q 735 105 735 165 H 1130" />
-            <path id="oypPathRight" d="M 960 -60 V 80 Q 960 135 1015 135 H 1055 Q 1110 135 1110 190 V 455 Q 1110 515 1050 515 H 815 Q 760 515 760 570 V 720" />
-            <path id="oypPathLower" d="M 1190 405 H 1030 Q 960 405 960 475 Q 960 535 900 535 H 690" />
+            <path id="oyFlowA" d="M -260 105 C 40 105 170 105 360 105 S 720 105 930 105 S 1190 105 1440 105" />
+            <path id="oyFlowB" d="M -220 220 C 80 220 190 220 330 220 C 500 220 500 300 675 300 C 850 300 850 220 1020 220 C 1140 220 1250 220 1400 220" />
+            <path id="oyFlowC" d="M -220 385 C 20 385 150 385 310 385 C 470 385 500 330 650 330 C 790 330 850 385 1020 385 C 1160 385 1260 385 1420 385" />
+            <path id="oyFlowD" d="M 980 -140 C 980 30 980 90 980 150 C 980 245 1065 245 1065 340 C 1065 405 1065 470 1065 620" />
           </defs>
 
-          <use href="#oypPathTop" class="oyp-pipe-shadow" />
-          <use href="#oypPathRight" class="oyp-pipe-shadow" />
-          <use href="#oypPathLower" class="oyp-pipe-shadow" />
-          <use href="#oypPathTop" class="oyp-pipe-edge" />
-          <use href="#oypPathRight" class="oyp-pipe-edge" />
-          <use href="#oypPathLower" class="oyp-pipe-edge" />
-          <use href="#oypPathTop" class="oyp-pipe-core" />
-          <use href="#oypPathRight" class="oyp-pipe-core" />
-          <use href="#oypPathLower" class="oyp-pipe-core" />
+          <use href="#oyFlowA" class="oy-flow-guide" />
+          <use href="#oyFlowB" class="oy-flow-guide" />
+          <use href="#oyFlowC" class="oy-flow-guide" />
+          <use href="#oyFlowD" class="oy-flow-guide" />
 
           <text>
-            <textPath href="#oypPathTop" startOffset="-100%">QA · DOMAIN · MONITORING · HANDOVER · LIVE PROOF · SUPPORT · QA · DOMAIN · MONITORING · HANDOVER · LIVE PROOF · SUPPORT ·
+            <textPath href="#oyFlowA" startOffset="-100%">STRATEGY · OFFER CLARITY · USER JOURNEY · TRUST SIGNALS · STRATEGY · OFFER CLARITY · USER JOURNEY · TRUST SIGNALS ·
+              <animate attributeName="startOffset" from="-100%" to="0%" dur="20s" repeatCount="indefinite" />
+            </textPath>
+          </text>
+
+          <text class="flow-dim">
+            <textPath href="#oyFlowB" startOffset="0%">INTERFACE · PROOF · RESPONSIVE · ACCESSIBILITY · INTERFACE · PROOF · RESPONSIVE · ACCESSIBILITY ·
+              <animate attributeName="startOffset" from="0%" to="-100%" dur="24s" repeatCount="indefinite" />
+            </textPath>
+          </text>
+
+          <text>
+            <textPath href="#oyFlowC" startOffset="-100%">DEVELOPMENT · PERFORMANCE · SEO · ANALYTICS · DEVELOPMENT · PERFORMANCE · SEO · ANALYTICS ·
+              <animate attributeName="startOffset" from="-100%" to="0%" dur="18s" repeatCount="indefinite" />
+            </textPath>
+          </text>
+
+          <text class="flow-soft">
+            <textPath href="#oyFlowD" startOffset="-100%">QA · DOMAIN · MONITORING · HANDOVER · LIVE · QA · DOMAIN · MONITORING · HANDOVER · LIVE ·
               <animate attributeName="startOffset" from="-100%" to="0%" dur="22s" repeatCount="indefinite" />
             </textPath>
           </text>
-          <text class="oyp-flow-soft">
-            <textPath href="#oypPathRight" startOffset="-100%">INTERFACE · PROOF · PERFORMANCE · LAUNCH READY · RESPONSIVE QA · USER FLOW · INTERFACE · PROOF · PERFORMANCE · LAUNCH READY ·
-              <animate attributeName="startOffset" from="-100%" to="0%" dur="25s" repeatCount="indefinite" />
-            </textPath>
-          </text>
-          <text>
-            <textPath href="#oypPathLower" startOffset="100%">DESKTOP QA · MOBILE QA · FINAL CHECK · DEPLOYMENT · DESKTOP QA · MOBILE QA · FINAL CHECK · DEPLOYMENT ·
-              <animate attributeName="startOffset" from="100%" to="0%" dur="19s" repeatCount="indefinite" />
-            </textPath>
-          </text>
         </svg>
-
-        <div class="oyp-card">
-          <div class="oyp-content">
-            <div class="oyp-kicker">04 / LAUNCH</div>
-            <h3 class="oyp-title">LIVE PROJECT PROOF</h3>
-            <p class="oyp-copy">The system finishes as real work: tested on desktop and phone, connected to the domain, monitored, and prepared for handover.</p>
-            <div class="oyp-separator"></div>
-            <div class="oyp-output"><span>OUTPUT</span><b>QA · DOMAIN · MONITORING · HANDOVER</b></div>
-            <div class="oyp-pills">
-              <span class="oyp-pill">DESKTOP QA</span>
-              <span class="oyp-pill">MOBILE QA</span>
-              <span class="oyp-pill">LIVE LAUNCH</span>
-            </div>
-          </div>
-          <div class="oyp-number" aria-hidden="true">04</div>
-        </div>
       </div>
     `;
   }
