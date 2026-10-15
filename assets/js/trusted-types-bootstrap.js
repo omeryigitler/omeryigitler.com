@@ -55,15 +55,12 @@
 })();
 
 /*
- * Philosophy legacy composition repair.
+ * Philosophy composition repair.
  *
- * The original portfolio did not center the TAURUS watermark against the whole
- * section. It belonged to a dedicated manifesto group containing only the three
- * BALANCE / SYMMETRY / QUALITY lines. Later CSS overrides lost that containing
- * block and centered the watermark against the subtitle + rule + CTA as well,
- * making the word look low, clipped and partially covered. Rebuild that original
- * layer relationship after the document has parsed, then apply a final local
- * cascade that cannot be displaced by the branch-wide refinements stylesheet.
+ * The section's legacy `overflow: hidden` clips the TAURUS watermark exactly at
+ * the shared 1180px section boundary. The watermark is intentionally wider than
+ * that content column, so it must live on a viewport-wide visual layer while the
+ * manifesto copy stays in the normal section column.
  */
 (function restorePhilosophyComposition() {
   'use strict';
@@ -85,9 +82,14 @@
     style.id = 'philosophy-legacy-layer-fix';
     style.textContent = `
       @media (min-width: 900px) {
+        #philosophy.philosophy {
+          overflow: visible !important;
+        }
+
         .philosophy-manifesto {
           position: relative;
           isolation: isolate;
+          overflow: visible !important;
         }
 
         .philosophy-manifesto .taurus-mark {
@@ -97,15 +99,19 @@
           left: 50% !important;
           right: auto !important;
           bottom: auto !important;
-          width: max-content !important;
+          width: 100vw !important;
           max-width: none !important;
           height: auto !important;
           display: block !important;
+          overflow: visible !important;
           transform: translate(-50%, -50%) !important;
           transform-origin: center !important;
           z-index: 0 !important;
-          overflow: visible !important;
           white-space: nowrap !important;
+          text-align: center !important;
+          clip-path: none !important;
+          -webkit-mask-image: none !important;
+          mask-image: none !important;
           font-family: "Syncopate", sans-serif !important;
           font-weight: 700 !important;
           font-size: clamp(160px, 15vw, 240px) !important;
