@@ -1,0 +1,177 @@
+/* Final visual refinements for the project archive and process system. */
+
+/* PROCESS — keep the sliding sheets, remove the awkward left rail, and make every state readable. */
+@media (min-width: 900px) {
+  .process-system-body {
+    display: block;
+    position: relative;
+    height: calc(100% - 68px);
+  }
+
+  .process-rail {
+    position: absolute;
+    z-index: 20;
+    top: 18px;
+    left: 6%;
+    right: 6%;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0;
+    padding: 0;
+    border: 1px solid rgba(255,255,255,.09);
+    background: #070707;
+  }
+
+  .process-rail-line {
+    display: none;
+  }
+
+  .process-rail-step {
+    min-height: 52px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 0 14px;
+    border-right: 1px solid rgba(255,255,255,.08);
+    color: #676e79;
+    transform: none !important;
+  }
+
+  .process-rail-step:last-child {
+    border-right: 0;
+  }
+
+  .process-rail-step::before {
+    position: static;
+    width: 7px;
+    height: 7px;
+    flex: 0 0 7px;
+    transform: none;
+  }
+
+  .process-rail-step.is-active {
+    color: #f4f4f5;
+    background: rgba(255,215,0,.055);
+    box-shadow: inset 0 -2px 0 #FFD700;
+  }
+
+  .process-rail-number {
+    font-size: 9px;
+  }
+
+  .process-sheet-stage {
+    position: absolute;
+    z-index: 3;
+    left: 0;
+    right: 0;
+    top: 78px;
+    bottom: 0;
+    min-width: 0;
+    overflow: hidden;
+  }
+
+  .process-sheet-stage::before,
+  .process-sheet-stage::after {
+    opacity: .55;
+  }
+
+  .process-sheet {
+    left: 6%;
+    right: 6%;
+    min-height: 400px;
+    background: #070707;
+    opacity: 1 !important;
+    z-index: 1;
+  }
+
+  .process-sheet.is-active {
+    z-index: 4;
+    border-color: rgba(255,215,0,.72);
+    box-shadow:
+      0 32px 90px rgba(0,0,0,.62),
+      0 0 70px -34px rgba(255,215,0,.8),
+      inset 0 0 0 1px rgba(255,215,0,.04);
+  }
+
+  .process-sheet-content {
+    width: min(760px, 82%);
+    padding: 48px 54px 44px;
+  }
+
+  .process-sheet h3 {
+    max-width: 700px;
+    font-size: clamp(22px, 2.25vw, 36px);
+    line-height: 1.16;
+  }
+
+  .process-sheet p {
+    max-width: 640px;
+    margin-top: 20px;
+    line-height: 1.8;
+  }
+
+  .process-output {
+    margin-top: 26px;
+  }
+
+  .process-tags {
+    margin-top: 20px;
+  }
+
+  .process-sheet-ghost {
+    color: rgba(255,255,255,.018);
+  }
+
+  .process-system-progress {
+    left: 0;
+  }
+}
+
+/* Keep the mobile process intentionally linear and readable. */
+@media (max-width: 899px) {
+  .process-rail {
+    display: none !important;
+  }
+
+  .process-sheet {
+    opacity: 1 !important;
+    background: #070707;
+  }
+}
+
+/* PROJECT ARCHIVE — cards should read like screens, not squares. */
+@media (min-width: 1100px) {
+  .archive-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .archive-card {
+    min-height: 330px;
+    aspect-ratio: 16 / 9;
+  }
+
+  .archive-card-main {
+    margin-top: 44px;
+  }
+
+  .archive-card-meta {
+    margin-top: 22px;
+    padding-top: 14px;
+  }
+
+  .archive-card-bottom {
+    padding-top: 22px;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1099px) {
+  .archive-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .archive-card {
+    min-height: 340px;
+    aspect-ratio: 16 / 9;
+  }
+}
