@@ -136,326 +136,120 @@
     if (!section || section.dataset.technicalSignalReady === 'true') return;
     section.dataset.technicalSignalReady = 'true';
 
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
     const style = document.createElement('style');
     style.id = 'oy-technical-signal-style';
     style.textContent = `
-      #process {
-        position: relative !important;
-        width: min(1180px, calc(100% - 48px)) !important;
-        max-width: 1180px !important;
-        min-height: 0 !important;
-        height: auto !important;
-        margin: 54px auto 86px !important;
-        padding: 0 !important;
-        overflow: visible !important;
+      #process { position:relative!important; width:min(1180px,calc(100% - 48px))!important; max-width:1180px!important; min-height:0!important; height:auto!important; margin:70px auto 86px!important; padding:0!important; overflow:visible!important; }
+      #process > :not(.oy-signal-system) { display:none!important; }
+      .oy-signal-system { container-type:inline-size; position:relative; color:#f3f4f6; }
+      .oy-signal-label { display:flex; align-items:center; flex-wrap:wrap; gap:10px; margin:0 0 28px; color:#9ca3af; font:400 13px/1.6 var(--mono,"JetBrains Mono",monospace); }
+      .oy-signal-label .prompt { color:#ffd700; font-weight:700; }
+      .oy-signal-label .arrow { color:#6b7280; }
+      .oy-signal-label strong { color:#d1d5db; font-weight:400; }
+      .oy-signal-stage { position:relative; aspect-ratio:1180/600; overflow:hidden; border-block:1px solid #ffffff14; background:radial-gradient(ellipse at center,#ffd70006,transparent 70%); }
+      .oy-signal-svg { position:absolute; inset:0; width:100%; height:100%; pointer-events:none; }
+      .oy-signal-mobile { display:none; }
+      .oy-pipe-edge,.oy-pipe-body { fill:none; stroke-linejoin:round; stroke-linecap:round; }
+      .oy-pipe-edge { stroke:#ffd70026; stroke-width:46; }
+      .oy-pipe-body { stroke:#282407; stroke-width:40; }
+      .oy-signal-svg text { fill:#b6a129; font:500 12px var(--mono,"JetBrains Mono",monospace); letter-spacing:1px; }
+      .oy-signal-title { margin:0; font:700 5.6cqw/1.12 "Syncopate",sans-serif; letter-spacing:-.055em; text-transform:uppercase; }
+      .oy-signal-title .word { position:absolute; display:block; white-space:nowrap; }
+      .oy-signal-looks { left:14%; top:9%; }
+      .oy-signal-good { left:53%; top:9%; }
+      .oy-signal-why { left:9%; top:37%; }
+      .oy-signal-isnt { left:44%; top:37%; }
+      .oy-signal-ending { left:16%; top:68%; color:#ffd700; font-style:normal; min-height:1.2em; }
+      .oy-signal-cursor { display:inline-block; width:.12em; height:.85em; margin-left:.1em; background:#ffd700; animation:oySignalBlink 1s steps(1) infinite; }
+      @keyframes oySignalBlink { 50% { opacity:0; } }
+      .oy-signal-sub { max-width:650px; margin:28px auto 34px; text-align:center; color:#9ca3af; font:400 12px/1.9 var(--mono,"JetBrains Mono",monospace); }
+      .oy-signal-status { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:24px; }
+      .oy-signal-status div { border-top:1px solid #ffd70033; padding-top:14px; color:#9ca3af; font:400 10px/1.6 var(--mono,"JetBrains Mono",monospace); letter-spacing:.12em; }
+      .oy-signal-status strong { display:block; margin-top:6px; color:#ffd700; font:700 clamp(10px,1.2cqw,14px)/1.5 "Syncopate",sans-serif; letter-spacing:0; }
+      @media(max-width:600px) {
+        #process { width:calc(100% - 32px)!important; margin:44px auto 60px!important; }
+        .oy-signal-label { gap:7px; font-size:11px; margin-bottom:22px; }
+        .oy-signal-stage { aspect-ratio:600/640; }
+        .oy-signal-desktop { display:none; } .oy-signal-mobile { display:block; }
+        .oy-signal-title { font-size:7cqw; }
+        .oy-signal-looks { left:7%; top:11%; }
+        .oy-signal-good { left:44%; top:31%; }
+        .oy-signal-why { left:6%; top:51%; }
+        .oy-signal-isnt { left:45%; top:51%; font-size:6cqw; }
+        .oy-signal-ending { left:5%; top:78%; font-size:7.2cqw; }
+        .oy-signal-sub { margin:22px 0 26px; text-align:left; font-size:11px; }
+        .oy-signal-status { gap:12px; }
+        .oy-signal-status div { font-size:8px; letter-spacing:.05em; }
       }
-
-      #process > :not(.oy-signal-system) { display: none !important; }
-
-      .oy-signal-system {
-        position: relative;
-        width: 100%;
-        height: 620px;
-        overflow: hidden;
-        border: 1px solid rgba(255,255,255,.08);
-        border-radius: 26px;
-        background:
-          radial-gradient(circle at 50% 44%, rgba(255,215,0,.07), transparent 28%),
-          linear-gradient(rgba(255,215,0,.025) 1px, transparent 1px),
-          linear-gradient(90deg, rgba(255,215,0,.025) 1px, transparent 1px),
-          #050505;
-        background-size: 100% 100%, 48px 48px, 48px 48px, auto;
-        isolation: isolate;
-        box-shadow: inset 0 0 0 1px rgba(255,215,0,.025);
-      }
-
-      .oy-signal-system::after {
-        content: '';
-        position: absolute;
-        inset: 0;
-        z-index: 1;
-        pointer-events: none;
-        background:
-          linear-gradient(90deg, rgba(5,5,5,.88), transparent 14%, transparent 86%, rgba(5,5,5,.88)),
-          linear-gradient(180deg, rgba(5,5,5,.7), transparent 12%, transparent 88%, rgba(5,5,5,.7));
-      }
-
-      .oy-signal-svg {
-        position: absolute;
-        inset: 0;
-        z-index: 2;
-        width: 100%;
-        height: 100%;
-        overflow: visible;
-        pointer-events: none;
-      }
-
-      .oy-signal-svg-front {
-        z-index: 6;
-      }
-
-      .oy-pipe-shadow,
-      .oy-pipe-body,
-      .oy-pipe-core {
-        fill: none;
-        stroke-linecap: round;
-        stroke-linejoin: round;
-      }
-
-      .oy-pipe-shadow { stroke: rgba(255,215,0,.055); stroke-width: 46; }
-      .oy-pipe-body { stroke: rgba(255,215,0,.19); stroke-width: 38; }
-      .oy-pipe-core { stroke: rgba(255,215,0,.075); stroke-width: 13; }
-
-      .oy-signal-svg text {
-        fill: rgba(255,215,0,.92);
-        font-family: var(--mono, "JetBrains Mono", monospace);
-        font-size: 11px;
-        font-weight: 700;
-        letter-spacing: .11em;
-        text-transform: uppercase;
-        text-shadow: 0 0 12px rgba(255,215,0,.3);
-      }
-
-      .oy-signal-svg text.oy-dim { fill: rgba(255,215,0,.62); }
-
-      .oy-signal-dot {
-        fill: #ffd700;
-        filter: drop-shadow(0 0 8px rgba(255,215,0,.9));
-      }
-
-      .oy-signal-label {
-        position: absolute;
-        z-index: 8;
-        left: 30px;
-        top: 27px;
-        display: inline-flex;
-        align-items: center;
-        min-height: 24px;
-        padding: 0 9px 0 11px;
-        border-left: 2px solid #ffd700;
-        background: rgba(5,5,5,.78);
-        color: #a1a6ae;
-        font-family: var(--mono, "JetBrains Mono", monospace);
-        font-size: 9px;
-        font-weight: 700;
-        letter-spacing: .17em;
-        text-transform: uppercase;
-        backdrop-filter: blur(5px);
-      }
-
-      .oy-signal-label::before {
-        content: '$';
-        margin-right: 9px;
-        color: #ffd700;
-      }
-
-      .oy-signal-copy {
-        position: absolute;
-        z-index: 5;
-        left: 50%;
-        top: 49%;
-        width: min(790px, calc(100% - 150px));
-        transform: translate(-50%, -50%);
-        text-align: center;
-      }
-
-      .oy-signal-title {
-        position: relative;
-        margin: 0;
-        color: #f3f3ef;
-        font-family: "Syncopate", sans-serif;
-        font-size: clamp(34px, 5.1vw, 64px);
-        font-weight: 700;
-        line-height: .98;
-        letter-spacing: -.045em;
-        text-transform: uppercase;
-      }
-
-      .oy-signal-title span,
-      .oy-signal-title em {
-        display: block;
-      }
-
-      .oy-signal-title em {
-        color: #ffd700;
-        font-style: normal;
-      }
-
-      .oy-signal-sub {
-        position: relative;
-        z-index: 7;
-        max-width: 650px;
-        margin: 22px auto 0;
-        color: #90959d;
-        font-family: var(--mono, "JetBrains Mono", monospace);
-        font-size: 11px;
-        line-height: 1.7;
-      }
-
-      .oy-signal-status {
-        position: absolute;
-        z-index: 8;
-        left: 30px;
-        right: 30px;
-        bottom: 24px;
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 24px;
-      }
-
-      .oy-signal-status div {
-        padding-top: 13px;
-        border-top: 1px solid rgba(255,215,0,.2);
-        color: #858a92;
-        font-family: var(--mono, "JetBrains Mono", monospace);
-        font-size: 9px;
-        font-weight: 700;
-        letter-spacing: .15em;
-        text-transform: uppercase;
-      }
-
-      .oy-signal-status strong {
-        display: block;
-        margin-top: 6px;
-        color: #ffd700;
-        font-family: "Syncopate", sans-serif;
-        font-size: 13px;
-        letter-spacing: .04em;
-      }
-
-      @media (max-width: 899px) {
-        #process {
-          width: min(100% - 24px, 720px) !important;
-          margin: 36px auto 60px !important;
-        }
-        .oy-signal-system { height: 590px; border-radius: 22px; }
-        .oy-signal-label { left: 20px; top: 20px; font-size: 8px; }
-        .oy-signal-copy { width: calc(100% - 72px); }
-        .oy-signal-title { font-size: clamp(30px, 8vw, 48px); }
-        .oy-pipe-shadow { stroke-width: 35; }
-        .oy-pipe-body { stroke-width: 29; }
-        .oy-pipe-core { stroke-width: 10; }
-        .oy-signal-svg text { font-size: 9px; }
-        .oy-signal-svg-front { opacity: .88; }
-      }
-
-      @media (max-width: 560px) {
-        .oy-signal-system { height: 560px; }
-        .oy-signal-label {
-          left: 16px;
-          top: 16px;
-          max-width: calc(100% - 32px);
-          font-size: 7px;
-          letter-spacing: .12em;
-        }
-        .oy-signal-copy { width: calc(100% - 44px); top: 46%; }
-        .oy-signal-title { font-size: 30px; line-height: 1.02; }
-        .oy-signal-sub { font-size: 10px; }
-        .oy-signal-svg-front { display: none; }
-        .oy-signal-status {
-          left: 18px;
-          right: 18px;
-          bottom: 17px;
-          gap: 10px;
-        }
-        .oy-signal-status div { font-size: 7px; letter-spacing: .1em; }
-        .oy-signal-status strong { font-size: 9px; }
-      }
-
-      @media (prefers-reduced-motion: reduce) {
-        .oy-signal-svg animate,
-        .oy-signal-svg animateMotion { display: none; }
-      }
+      @media(prefers-reduced-motion:reduce) { .oy-signal-cursor { animation:none; } }
     `;
     document.head.appendChild(style);
 
+    // The headline and the pipes share a coordinate system. Pipes occupy the
+    // gaps between words and lines, so no foreground mask can obscure letters.
+    function pipes(mobile) {
+      const paths = mobile ? [
+        'M 370 -30 V 105 Q 370 160 425 160 H 650',
+        'M -40 190 H 140 Q 195 190 195 245 Q 195 290 250 290 H 650',
+        'M -40 425 H 550 Q 590 425 590 465 Q 590 600 550 600 H 280 V 680'
+      ] : [
+        'M 555 -40 V 120 Q 555 185 620 185 H 1230',
+        'M -50 185 H 345 Q 410 185 410 250 V 280 Q 410 345 475 345 H 970 Q 1040 345 1040 415 V 650',
+        'M -50 345 H 190 Q 250 345 250 405 V 470 Q 250 540 320 540 H 1230'
+      ];
+      // Desktop's lower left turn sits left of the final word, not behind it.
+      if (!mobile) paths[2] = 'M -50 345 H 65 Q 125 345 125 405 V 470 Q 125 540 195 540 H 1230';
+      const labels = ['OFFER CLARITY · TRUST SIGNALS · USER JOURNEY · ', 'MOBILE FRICTION · PERFORMANCE · CTA ROUTING · ', 'ANALYTICS · CONVERSION PATH · LIVE HEALTH · '];
+      const prefix = mobile ? 'oyMobilePipe' : 'oyDesktopPipe';
+      return `<svg class="oy-signal-svg oy-signal-${mobile ? 'mobile' : 'desktop'}" viewBox="0 0 ${mobile ? '600 640' : '1180 600'}" aria-hidden="true"><defs>${paths.map((d,i) => `<path id="${prefix}${i}" d="${d}"/>`).join('')}</defs>${paths.map((_,i) => `<use href="#${prefix}${i}" class="oy-pipe-edge"/><use href="#${prefix}${i}" class="oy-pipe-body"/><text dy="4"><textPath href="#${prefix}${i}" startOffset="0">${labels[i].repeat(9)}${reducedMotion.matches ? '' : `<animate attributeName="startOffset" from="0" to="-600" dur="${24+i*5}s" repeatCount="indefinite"/>`}</textPath></text>`).join('')}</svg>`;
+    }
     section.innerHTML = `
-      <div class="oy-signal-system" aria-label="Technical conversion system diagnostics">
-        <svg class="oy-signal-svg" viewBox="0 0 1180 620" preserveAspectRatio="none" aria-hidden="true">
-          <defs>
-            <path id="oyTechA" d="M -90 150 H 210 Q 280 150 280 82 Q 280 38 330 38 H 650 Q 708 38 708 96 V 132 Q 708 192 770 192 H 1260" />
-            <path id="oyTechB" d="M 60 410 H 300 Q 365 410 365 350 V 300 Q 365 240 425 240 H 520 Q 580 240 580 300 V 390 Q 580 452 642 452 H 838 Q 900 452 900 390 V 340 Q 900 280 960 280 H 1240" />
-            <path id="oyTechC" d="M 1005 -40 V 130 Q 1005 186 1060 186 H 1092 Q 1148 186 1148 242 V 458 Q 1148 514 1092 514 H 980 Q 924 514 924 570 V 680" />
-          </defs>
-
-          <use href="#oyTechA" class="oy-pipe-shadow" />
-          <use href="#oyTechB" class="oy-pipe-shadow" />
-          <use href="#oyTechC" class="oy-pipe-shadow" />
-          <use href="#oyTechA" class="oy-pipe-body" />
-          <use href="#oyTechB" class="oy-pipe-body" />
-          <use href="#oyTechC" class="oy-pipe-body" />
-          <use href="#oyTechA" class="oy-pipe-core" />
-          <use href="#oyTechB" class="oy-pipe-core" />
-          <use href="#oyTechC" class="oy-pipe-core" />
-
-          <text>
-            <textPath href="#oyTechA" startOffset="-100%">INFORMATION ARCHITECTURE · OFFER CLARITY · VALUE PROPOSITION · TRUST SIGNALS · CTA ROUTING · USER JOURNEY · CONTENT HIERARCHY · CONVERSION PATH · INFORMATION ARCHITECTURE · OFFER CLARITY · VALUE PROPOSITION · TRUST SIGNALS · CTA ROUTING · USER JOURNEY · CONTENT HIERARCHY · CONVERSION PATH ·
-              <animate attributeName="startOffset" from="-100%" to="0%" dur="13.5s" repeatCount="indefinite" />
-            </textPath>
-          </text>
-
-          <text class="oy-dim">
-            <textPath href="#oyTechB" startOffset="0%">MOBILE FRICTION · RESPONSIVE STATE · ACCESSIBILITY · INTERACTION STATE · PERFORMANCE BUDGET · SEO SIGNALS · ANALYTICS · CORE WEB VITALS · MOBILE FRICTION · RESPONSIVE STATE · ACCESSIBILITY · INTERACTION STATE · PERFORMANCE BUDGET · SEO SIGNALS · ANALYTICS · CORE WEB VITALS ·
-              <animate attributeName="startOffset" from="0%" to="-100%" dur="19s" repeatCount="indefinite" />
-            </textPath>
-          </text>
-
-          <text>
-            <textPath href="#oyTechC" startOffset="-100%">QA PIPELINE · DOMAIN · DNS · DEPLOYMENT · MONITORING · HANDOVER · PRODUCTION · ERROR WATCH · LIVE HEALTH · QA PIPELINE · DOMAIN · DNS · DEPLOYMENT · MONITORING · HANDOVER · PRODUCTION · ERROR WATCH · LIVE HEALTH ·
-              <animate attributeName="startOffset" from="-100%" to="0%" dur="11.5s" repeatCount="indefinite" />
-            </textPath>
-          </text>
-
-          <circle class="oy-signal-dot" r="4.5">
-            <animateMotion dur="6.2s" repeatCount="indefinite"><mpath href="#oyTechA" /></animateMotion>
-          </circle>
-          <circle class="oy-signal-dot" r="4.5">
-            <animateMotion dur="8.7s" repeatCount="indefinite"><mpath href="#oyTechB" /></animateMotion>
-          </circle>
-          <circle class="oy-signal-dot" r="4.5">
-            <animateMotion dur="5.6s" repeatCount="indefinite"><mpath href="#oyTechC" /></animateMotion>
-          </circle>
-        </svg>
-
-        <div class="oy-signal-label">conversion system diagnostics</div>
-
-        <div class="oy-signal-copy">
-          <h3 class="oy-signal-title">
-            <span>LOOKS GOOD.</span>
-            <span>WHY ISN'T IT</span>
-            <em>CONVERTING?</em>
+      <div class="oy-signal-system">
+        <div class="oy-signal-label"><span class="prompt">$</span><strong>conversion system diagnostics</strong><span class="arrow" aria-hidden="true">→</span></div>
+        <div class="oy-signal-stage">
+          ${pipes(false)}${pipes(true)}
+          <h3 class="oy-signal-title" aria-label="Looks good. Why isn't it converting, selling or growing?">
+            <span class="word oy-signal-looks" aria-hidden="true">LOOKS</span>
+            <span class="word oy-signal-good" aria-hidden="true">GOOD.</span>
+            <span class="word oy-signal-why" aria-hidden="true">WHY</span>
+            <span class="word oy-signal-isnt" aria-hidden="true">ISN'T IT</span>
+            <em class="word oy-signal-ending" aria-hidden="true"><span data-signal-word>CONVERTING?</span><span class="oy-signal-cursor"></span></em>
           </h3>
-          <p class="oy-signal-sub">I trace the route from first impression to enquiry and isolate the friction that stops a good-looking site from driving business.</p>
         </div>
-
-        <svg class="oy-signal-svg oy-signal-svg-front" viewBox="0 0 1180 620" preserveAspectRatio="none" aria-hidden="true">
-          <defs>
-            <path id="oyTechBFront" d="M 60 410 H 300 Q 365 410 365 350 V 300 Q 365 240 425 240 H 520 Q 580 240 580 300 V 390 Q 580 452 642 452 H 838 Q 900 452 900 390 V 340 Q 900 280 960 280 H 1240" />
-            <clipPath id="oyTitleWeaveClips">
-              <rect x="326" y="282" width="80" height="145" rx="18" />
-              <rect x="548" y="286" width="66" height="158" rx="18" />
-              <rect x="870" y="305" width="62" height="126" rx="18" />
-            </clipPath>
-          </defs>
-          <g clip-path="url(#oyTitleWeaveClips)">
-            <use href="#oyTechBFront" class="oy-pipe-shadow" />
-            <use href="#oyTechBFront" class="oy-pipe-body" />
-            <use href="#oyTechBFront" class="oy-pipe-core" />
-            <text class="oy-dim">
-              <textPath href="#oyTechBFront" startOffset="0%">MOBILE FRICTION · RESPONSIVE STATE · ACCESSIBILITY · INTERACTION STATE · PERFORMANCE BUDGET · SEO SIGNALS · ANALYTICS · CORE WEB VITALS · MOBILE FRICTION · RESPONSIVE STATE · ACCESSIBILITY · INTERACTION STATE · PERFORMANCE BUDGET · SEO SIGNALS · ANALYTICS · CORE WEB VITALS ·
-                <animate attributeName="startOffset" from="0%" to="-100%" dur="19s" repeatCount="indefinite" />
-              </textPath>
-            </text>
-          </g>
-        </svg>
-
-        <div class="oy-signal-status">
-          <div>INPUT<strong>VISITOR INTENT</strong></div>
-          <div>DIAGNOSIS<strong>ROOT CAUSE</strong></div>
-          <div>OUTPUT<strong>CONVERSION FIX</strong></div>
-        </div>
+        <p class="oy-signal-sub">I trace the route from first impression to enquiry and isolate the friction that stops a good-looking site from driving business.</p>
+        <div class="oy-signal-status"><div>INPUT<strong>VISITOR INTENT</strong></div><div>DIAGNOSIS<strong>ROOT CAUSE</strong></div><div>OUTPUT<strong>CONVERSION FIX</strong></div></div>
       </div>
     `;
+    const word = section.querySelector('[data-signal-word]');
+    const words = ['CONVERTING?', 'SELLING?', 'GROWING?'];
+    let index = 0, length = words[0].length, deleting = true, timer;
+    let visible = false;
+    function tick() {
+      if (!visible || document.hidden || reducedMotion.matches) return;
+      length += deleting ? -1 : 1;
+      word.textContent = words[index].slice(0, length);
+      let delay = deleting ? 55 : 105;
+      if (length === 0) { deleting = false; index = (index + 1) % words.length; delay = 240; }
+      else if (length === words[index].length && !deleting) { deleting = true; delay = 2400; }
+      timer = window.setTimeout(tick, delay);
+    }
+    function syncMotion() {
+      clearTimeout(timer);
+      section.querySelectorAll('svg').forEach(svg => {
+        if (reducedMotion.matches || !visible || document.hidden) svg.pauseAnimations();
+        else svg.unpauseAnimations();
+      });
+      if (reducedMotion.matches) { index=0; length=words[0].length; deleting=true; word.textContent=words[0]; }
+      else if (visible && !document.hidden) timer=window.setTimeout(tick, 1400);
+    }
+    if ('IntersectionObserver' in window) {
+      const observer = new IntersectionObserver(entries => { visible=entries[0].isIntersecting; syncMotion(); }, {threshold:0.1});
+      observer.observe(section);
+    } else { visible=true; syncMotion(); }
+    reducedMotion.addEventListener('change', syncMotion);
+    document.addEventListener('visibilitychange', syncMotion);
+
   }
 
   if (document.readyState === 'loading') {
@@ -464,3 +258,4 @@
     apply();
   }
 })();
+
