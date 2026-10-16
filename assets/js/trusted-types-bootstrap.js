@@ -207,7 +207,7 @@
         font-family: var(--mono, "JetBrains Mono", monospace);
         font-size: 11px;
         font-weight: 700;
-        letter-spacing: .16em;
+        letter-spacing: .11em;
         text-transform: uppercase;
         text-shadow: 0 0 12px rgba(255,215,0,.3);
       }
@@ -357,31 +357,31 @@
           <use href="#oyTechC" class="oy-pipe-core" />
 
           <text>
-            <textPath href="#oyTechA" startOffset="-100%">INFORMATION ARCHITECTURE · OFFER CLARITY · TRUST SIGNALS · CTA ROUTING · CONTENT HIERARCHY ·
-              <animate attributeName="startOffset" from="-100%" to="0%" dur="18s" repeatCount="indefinite" />
+            <textPath href="#oyTechA" startOffset="-100%">INFORMATION ARCHITECTURE · OFFER CLARITY · VALUE PROPOSITION · TRUST SIGNALS · CTA ROUTING · USER JOURNEY · CONTENT HIERARCHY · CONVERSION PATH · INFORMATION ARCHITECTURE · OFFER CLARITY · VALUE PROPOSITION · TRUST SIGNALS · CTA ROUTING · USER JOURNEY · CONTENT HIERARCHY · CONVERSION PATH ·
+              <animate attributeName="startOffset" from="-100%" to="0%" dur="13.5s" repeatCount="indefinite" />
             </textPath>
           </text>
 
           <text class="oy-dim">
-            <textPath href="#oyTechB" startOffset="0%">MOBILE FRICTION · RESPONSIVE STATE · ACCESSIBILITY · PERFORMANCE BUDGET · SEO SIGNALS · ANALYTICS ·
-              <animate attributeName="startOffset" from="0%" to="-100%" dur="22s" repeatCount="indefinite" />
+            <textPath href="#oyTechB" startOffset="0%">MOBILE FRICTION · RESPONSIVE STATE · ACCESSIBILITY · INTERACTION STATE · PERFORMANCE BUDGET · SEO SIGNALS · ANALYTICS · CORE WEB VITALS · MOBILE FRICTION · RESPONSIVE STATE · ACCESSIBILITY · INTERACTION STATE · PERFORMANCE BUDGET · SEO SIGNALS · ANALYTICS · CORE WEB VITALS ·
+              <animate attributeName="startOffset" from="0%" to="-100%" dur="19s" repeatCount="indefinite" />
             </textPath>
           </text>
 
           <text>
-            <textPath href="#oyTechC" startOffset="-100%">QA PIPELINE · DOMAIN · DEPLOYMENT · MONITORING · HANDOVER · PRODUCTION ·
-              <animate attributeName="startOffset" from="-100%" to="0%" dur="16s" repeatCount="indefinite" />
+            <textPath href="#oyTechC" startOffset="-100%">QA PIPELINE · DOMAIN · DNS · DEPLOYMENT · MONITORING · HANDOVER · PRODUCTION · ERROR WATCH · LIVE HEALTH · QA PIPELINE · DOMAIN · DNS · DEPLOYMENT · MONITORING · HANDOVER · PRODUCTION · ERROR WATCH · LIVE HEALTH ·
+              <animate attributeName="startOffset" from="-100%" to="0%" dur="11.5s" repeatCount="indefinite" />
             </textPath>
           </text>
 
           <circle class="oy-signal-dot" r="4.5">
-            <animateMotion dur="7.5s" repeatCount="indefinite"><mpath href="#oyTechA" /></animateMotion>
+            <animateMotion dur="6.2s" repeatCount="indefinite"><mpath href="#oyTechA" /></animateMotion>
           </circle>
           <circle class="oy-signal-dot" r="4.5">
-            <animateMotion dur="9s" repeatCount="indefinite"><mpath href="#oyTechB" /></animateMotion>
+            <animateMotion dur="8.7s" repeatCount="indefinite"><mpath href="#oyTechB" /></animateMotion>
           </circle>
           <circle class="oy-signal-dot" r="4.5">
-            <animateMotion dur="8s" repeatCount="indefinite"><mpath href="#oyTechC" /></animateMotion>
+            <animateMotion dur="5.6s" repeatCount="indefinite"><mpath href="#oyTechC" /></animateMotion>
           </circle>
         </svg>
 
