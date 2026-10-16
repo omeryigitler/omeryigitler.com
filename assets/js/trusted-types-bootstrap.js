@@ -156,6 +156,21 @@
       .oy-signal-svg text { fill:#b6a129; font:500 12px var(--mono,"JetBrains Mono",monospace); letter-spacing:1px; }
       .oy-signal-title { margin:0; font:700 5.6cqw/1.12 "Syncopate",sans-serif; letter-spacing:-.055em; text-transform:uppercase; }
       .oy-signal-title .word { position:absolute; display:block; white-space:nowrap; }
+      /* Match the hero's soft white fade and illuminated gold highlight. */
+      .oy-signal-title .word:not(.oy-signal-ending) {
+        background:linear-gradient(to right,#f3f4f6 30%,#6b7280);
+        -webkit-background-clip:text;
+        background-clip:text;
+        color:transparent;
+      }
+      .oy-signal-ending [data-signal-word] {
+        color:#ffd700;
+        background:rgba(255,215,0,.10);
+        box-shadow:0 0 44px rgba(255,215,0,.18);
+        padding:0 .18em;
+        -webkit-box-decoration-break:clone;
+        box-decoration-break:clone;
+      }
       .oy-signal-looks { left:14%; top:9%; }
       .oy-signal-good { left:53%; top:9%; }
       .oy-signal-why { left:9%; top:37%; }
