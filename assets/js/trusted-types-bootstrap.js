@@ -163,21 +163,11 @@
         background-clip:text;
         color:transparent;
       }
-      .oy-signal-ending [data-signal-word] {
-        color:#ffd700;
-        background:rgba(255,215,0,.10);
-        box-shadow:0 0 44px rgba(255,215,0,.18);
-        padding:0 .18em;
-        -webkit-box-decoration-break:clone;
-        box-decoration-break:clone;
-      }
       .oy-signal-looks { left:14%; top:9%; }
       .oy-signal-good { left:53%; top:9%; }
       .oy-signal-why { left:9%; top:37%; }
       .oy-signal-isnt { left:44%; top:37%; }
-      .oy-signal-ending { left:16%; top:68%; color:#ffd700; font-style:normal; min-height:1.2em; }
-      .oy-signal-cursor { display:inline-block; width:.12em; height:.85em; margin-left:.1em; background:#ffd700; animation:oySignalBlink 1s steps(1) infinite; }
-      @keyframes oySignalBlink { 50% { opacity:0; } }
+      .oy-signal-ending.typed-line { left:16%; top:68%; color:#ffd700; font-style:normal; margin:0; min-height:1.3em; font-family:var(--mono,"JetBrains Mono",monospace); font-weight:700; text-transform:lowercase; letter-spacing:-.01em; }
       .oy-signal-sub { max-width:650px; margin:28px auto 34px; text-align:center; color:#9ca3af; font:400 12px/1.9 var(--mono,"JetBrains Mono",monospace); }
       .oy-signal-status { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:24px; }
       .oy-signal-status div { border-top:1px solid #ffd70033; padding-top:14px; color:#9ca3af; font:400 10px/1.6 var(--mono,"JetBrains Mono",monospace); letter-spacing:.12em; }
@@ -192,12 +182,12 @@
         .oy-signal-good { left:44%; top:31%; }
         .oy-signal-why { left:6%; top:51%; }
         .oy-signal-isnt { left:45%; top:51%; font-size:6cqw; }
-        .oy-signal-ending { left:5%; top:78%; font-size:7.2cqw; }
+        .oy-signal-ending.typed-line { left:5%; top:78%; font-size:7.2cqw; }
         .oy-signal-sub { margin:22px 0 26px; text-align:left; font-size:11px; }
         .oy-signal-status { gap:12px; }
         .oy-signal-status div { font-size:8px; letter-spacing:.05em; }
       }
-      @media(prefers-reduced-motion:reduce) { .oy-signal-cursor { animation:none; } }
+      @media(prefers-reduced-motion:reduce) { .oy-signal-ending .cursor { animation:none; } }
     `;
     document.head.appendChild(style);
 
@@ -229,7 +219,7 @@
             <span class="word oy-signal-good" aria-hidden="true">GOOD.</span>
             <span class="word oy-signal-why" aria-hidden="true">WHY</span>
             <span class="word oy-signal-isnt" aria-hidden="true">ISN'T IT</span>
-            <em class="word oy-signal-ending" aria-hidden="true"><span data-signal-word>CONVERTING?</span><span class="oy-signal-cursor"></span></em>
+            <em class="word oy-signal-ending typed-line" aria-hidden="true"><span class="highlight"><span data-signal-word>converting?</span><span class="cursor"></span></span></em>
           </h3>
         </div>
         <p class="oy-signal-sub">I trace the route from first impression to enquiry and isolate the friction that stops a good-looking site from driving business.</p>
@@ -237,7 +227,7 @@
       </div>
     `;
     const word = section.querySelector('[data-signal-word]');
-    const words = ['CONVERTING?', 'SELLING?', 'GROWING?'];
+    const words = ['converting?', 'selling?', 'growing?'];
     let index = 0, length = words[0].length, deleting = true, timer;
     let visible = false;
     function tick() {
