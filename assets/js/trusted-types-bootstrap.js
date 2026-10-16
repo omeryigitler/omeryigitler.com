@@ -137,6 +137,7 @@
     section.dataset.technicalSignalReady = 'true';
 
     const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const mobileViewport = window.matchMedia('(max-width:600px)');
     const style = document.createElement('style');
     style.id = 'oy-technical-signal-style';
     style.textContent = `
@@ -207,7 +208,17 @@
       if (!mobile) paths[2] = 'M -50 345 H 65 Q 125 345 125 405 V 470 Q 125 540 195 540 H 1230';
       const labels = ['OFFER CLARITY · TRUST SIGNALS · USER JOURNEY · ', 'MOBILE FRICTION · PERFORMANCE · CTA ROUTING · ', 'ANALYTICS · CONVERSION PATH · LIVE HEALTH · '];
       const prefix = mobile ? 'oyMobilePipe' : 'oyDesktopPipe';
-      return `<svg class="oy-signal-svg oy-signal-${mobile ? 'mobile' : 'desktop'}" viewBox="0 0 ${mobile ? '600 640' : '1180 600'}" aria-hidden="true"><defs>${paths.map((d,i) => `<path id="${prefix}${i}" d="${d}"/>`).join('')}</defs>${paths.map((_,i) => `<use href="#${prefix}${i}" class="oy-pipe-edge"/><use href="#${prefix}${i}" class="oy-pipe-body"/><text dy="4"><textPath href="#${prefix}${i}" startOffset="0">${labels[i].repeat(9)}${reducedMotion.matches ? '' : `<animate attributeName="startOffset" from="0" to="-600" dur="${24+i*5}s" repeatCount="indefinite"/>`}</textPath></text>`).join('')}</svg>`;
+      const streams = paths.map((_, i) => {
+        // Every repeat has the same explicit advance, including the separator.
+        // Moving exactly one repeat makes the final frame identical to the first.
+        const advance = labels[i].length * 8.2;
+        const count = Math.ceil((mobile ? 1300 : 1800) / advance) + 2;
+        const copies = Array.from({length:count}, () =>
+          `<tspan textLength="${advance}" lengthAdjust="spacingAndGlyphs">${labels[i]}</tspan>`).join('');
+        const duration = advance / [25, 20, 16][i];
+        return `<use href="#${prefix}${i}" class="oy-pipe-edge"/><use href="#${prefix}${i}" class="oy-pipe-body"/><text dy="4" xml:space="preserve" style="white-space:pre"><textPath href="#${prefix}${i}" startOffset="0">${copies}${reducedMotion.matches ? '' : `<animate attributeName="startOffset" from="0" to="-${advance}" dur="${duration}s" calcMode="linear" repeatCount="indefinite"/>`}</textPath></text>`;
+      }).join('');
+      return `<svg class="oy-signal-svg oy-signal-${mobile ? 'mobile' : 'desktop'}" viewBox="0 0 ${mobile ? '600 640' : '1180 600'}" aria-hidden="true"><defs>${paths.map((d,i) => `<path id="${prefix}${i}" d="${d}"/>`).join('')}</defs>${streams}</svg>`;
     }
     section.innerHTML = `
       <div class="oy-signal-system">
@@ -242,7 +253,8 @@
     function syncMotion() {
       clearTimeout(timer);
       section.querySelectorAll('svg').forEach(svg => {
-        if (reducedMotion.matches || !visible || document.hidden) svg.pauseAnimations();
+        const activeLayout = svg.classList.contains('oy-signal-mobile') === mobileViewport.matches;
+        if (reducedMotion.matches || !visible || document.hidden || !activeLayout) svg.pauseAnimations();
         else svg.unpauseAnimations();
       });
       if (reducedMotion.matches) { index=0; length=words[0].length; deleting=true; word.textContent=words[0]; }
@@ -252,6 +264,7 @@
       const observer = new IntersectionObserver(entries => { visible=entries[0].isIntersecting; syncMotion(); }, {threshold:0.1});
       observer.observe(section);
     } else { visible=true; syncMotion(); }
+    mobileViewport.addEventListener('change', syncMotion);
     reducedMotion.addEventListener('change', syncMotion);
     document.addEventListener('visibilitychange', syncMotion);
 
