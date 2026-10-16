@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const { createHash } = require('node:crypto');
 
 const indexPath = path.join(process.cwd(), 'index.html');
 const trackerPath = path.join(process.cwd(), 'assets/js/tracker/taurus-tracker.js');
@@ -51,10 +52,16 @@ const instagramSection = `
             </section>
 `;
 
-// Trusted Types must be installed before any inline application script executes.
+// Version the immutable bootstrap by content so returning visitors receive UI updates.
+const bootstrapHash = createHash('sha256')
+  .update(fs.readFileSync(path.join(process.cwd(), 'assets/js/trusted-types-bootstrap.js')))
+  .digest('hex').slice(0, 16);
+const bootstrapTag = `    <script src="/assets/js/trusted-types-bootstrap.js?v=${bootstrapHash}"></script>\n`;
+html = html.replace(/^[ \t]*<script src="\/assets\/js\/trusted-types-bootstrap\.js(?:\?[^"\s]*)?"><\/script>\r?\n?/gm, '');
+// Trusted Types must still execute before any inline application script.
 addBefore(
   '    <script>\n        /* Hide CookieYes during the globe intro;',
-  '    <script src="/assets/js/trusted-types-bootstrap.js"></script>\n'
+  bootstrapTag
 );
 optimizePrimaryFonts();
 addBefore('</head>', '    <link rel="stylesheet" href="/assets/css/instagram-feed.css">\n');
