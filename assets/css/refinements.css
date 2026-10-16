@@ -361,8 +361,17 @@
 .projects-page-archive .archive-status strong { color:#d1d5db; font-weight:400; }
 .projects-page-archive .archive-intro { padding-top:54px; }
 .projects-page-archive .archive-eyebrow { color:#9ca3af; font:400 11px/1.8 var(--mono); letter-spacing:.12em; margin-bottom:22px; }
-.projects-page-archive .archive-title { font-family:"Syncopate",sans-serif; font-size:clamp(32px,5.4vw,80px); font-weight:700; line-height:1.18; letter-spacing:-.045em; text-transform:uppercase; color:#f3f4f6; opacity:1; }
-.projects-page-archive .archive-title .archive-title-secondary { color:#9ca3af; }
+.projects-page-archive .archive-title { font-family:"Syncopate",sans-serif; font-size:clamp(34px,5.2vw,72px); font-weight:700; line-height:1.14; letter-spacing:.02em; text-transform:uppercase; color:#f3f4f6; opacity:1; }
+.projects-page-archive .archive-title .line-soft {
+  display:block;
+  width:fit-content;
+  max-width:100%;
+  background:linear-gradient(to right,#f3f4f6 30%,#6b7280);
+  -webkit-background-clip:text;
+  background-clip:text;
+  color:transparent;
+}
+.projects-page-archive .archive-title .accent { -webkit-text-fill-color:#ffd700; }
 .projects-page-archive .archive-title .accent { color:#ffd700; }
 @media(max-width:700px) {
   .projects-page-archive .archive-header { align-items:flex-start; flex-direction:column; gap:18px; }
