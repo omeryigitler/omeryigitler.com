@@ -125,8 +125,8 @@
 })();
 
 /*
- * Process section inspired by AppSignal's animated pipe typography,
- * translated into the Taurus engineering / conversion language.
+ * Process section inspired by AppSignal's animated diagnostic-pipe typography,
+ * translated into the site's conversion / business-performance language.
  */
 (function installTechnicalSignalSection() {
   'use strict';
@@ -190,6 +190,10 @@
         pointer-events: none;
       }
 
+      .oy-signal-svg-front {
+        z-index: 6;
+      }
+
       .oy-pipe-shadow,
       .oy-pipe-body,
       .oy-pipe-core {
@@ -219,41 +223,57 @@
         filter: drop-shadow(0 0 8px rgba(255,215,0,.9));
       }
 
+      .oy-signal-label {
+        position: absolute;
+        z-index: 8;
+        left: 30px;
+        top: 27px;
+        display: inline-flex;
+        align-items: center;
+        min-height: 24px;
+        padding: 0 9px 0 11px;
+        border-left: 2px solid #ffd700;
+        background: rgba(5,5,5,.78);
+        color: #a1a6ae;
+        font-family: var(--mono, "JetBrains Mono", monospace);
+        font-size: 9px;
+        font-weight: 700;
+        letter-spacing: .17em;
+        text-transform: uppercase;
+        backdrop-filter: blur(5px);
+      }
+
+      .oy-signal-label::before {
+        content: '$';
+        margin-right: 9px;
+        color: #ffd700;
+      }
+
       .oy-signal-copy {
         position: absolute;
         z-index: 5;
         left: 50%;
         top: 49%;
-        width: min(720px, calc(100% - 180px));
+        width: min(790px, calc(100% - 150px));
         transform: translate(-50%, -50%);
         text-align: center;
       }
 
-      .oy-signal-label {
-        margin-bottom: 16px;
-        color: #8e939b;
-        font-family: var(--mono, "JetBrains Mono", monospace);
-        font-size: 10px;
-        font-weight: 700;
-        letter-spacing: .2em;
-        text-transform: uppercase;
-      }
-
-      .oy-signal-label::before {
-        content: '$';
-        margin-right: 10px;
-        color: #ffd700;
-      }
-
       .oy-signal-title {
+        position: relative;
         margin: 0;
         color: #f3f3ef;
         font-family: "Syncopate", sans-serif;
-        font-size: clamp(34px, 5.3vw, 66px);
+        font-size: clamp(34px, 5.1vw, 64px);
         font-weight: 700;
         line-height: .98;
         letter-spacing: -.045em;
         text-transform: uppercase;
+      }
+
+      .oy-signal-title span,
+      .oy-signal-title em {
+        display: block;
       }
 
       .oy-signal-title em {
@@ -262,9 +282,11 @@
       }
 
       .oy-signal-sub {
-        max-width: 620px;
+        position: relative;
+        z-index: 7;
+        max-width: 650px;
         margin: 22px auto 0;
-        color: #8f949c;
+        color: #90959d;
         font-family: var(--mono, "JetBrains Mono", monospace);
         font-size: 11px;
         line-height: 1.7;
@@ -272,7 +294,7 @@
 
       .oy-signal-status {
         position: absolute;
-        z-index: 5;
+        z-index: 8;
         left: 30px;
         right: 30px;
         bottom: 24px;
@@ -307,19 +329,29 @@
           margin: 36px auto 60px !important;
         }
         .oy-signal-system { height: 590px; border-radius: 22px; }
+        .oy-signal-label { left: 20px; top: 20px; font-size: 8px; }
         .oy-signal-copy { width: calc(100% - 72px); }
         .oy-signal-title { font-size: clamp(30px, 8vw, 48px); }
         .oy-pipe-shadow { stroke-width: 35; }
         .oy-pipe-body { stroke-width: 29; }
         .oy-pipe-core { stroke-width: 10; }
         .oy-signal-svg text { font-size: 9px; }
+        .oy-signal-svg-front { opacity: .88; }
       }
 
       @media (max-width: 560px) {
         .oy-signal-system { height: 560px; }
+        .oy-signal-label {
+          left: 16px;
+          top: 16px;
+          max-width: calc(100% - 32px);
+          font-size: 7px;
+          letter-spacing: .12em;
+        }
         .oy-signal-copy { width: calc(100% - 44px); top: 46%; }
-        .oy-signal-title { font-size: 31px; }
+        .oy-signal-title { font-size: 30px; line-height: 1.02; }
         .oy-signal-sub { font-size: 10px; }
+        .oy-signal-svg-front { display: none; }
         .oy-signal-status {
           left: 18px;
           right: 18px;
@@ -338,7 +370,7 @@
     document.head.appendChild(style);
 
     section.innerHTML = `
-      <div class="oy-signal-system" aria-label="Technical conversion signal system">
+      <div class="oy-signal-system" aria-label="Technical conversion system diagnostics">
         <svg class="oy-signal-svg" viewBox="0 0 1180 620" preserveAspectRatio="none" aria-hidden="true">
           <defs>
             <path id="oyTechA" d="M -90 150 H 210 Q 280 150 280 82 Q 280 38 330 38 H 650 Q 708 38 708 96 V 132 Q 708 192 770 192 H 1260" />
@@ -385,16 +417,42 @@
           </circle>
         </svg>
 
+        <div class="oy-signal-label">conversion system diagnostics</div>
+
         <div class="oy-signal-copy">
-          <div class="oy-signal-label">conversion system diagnostics</div>
-          <h3 class="oy-signal-title">WHERE DOES THE<br><em>SIGNAL BREAK?</em></h3>
-          <p class="oy-signal-sub">I trace the path from first impression to enquiry: structure, trust, interaction, performance and the final contact route.</p>
+          <h3 class="oy-signal-title">
+            <span>LOOKS GOOD.</span>
+            <span>WHY ISN'T IT</span>
+            <em>CONVERTING?</em>
+          </h3>
+          <p class="oy-signal-sub">I trace the route from first impression to enquiry and isolate the friction that stops a good-looking site from driving business.</p>
         </div>
 
+        <svg class="oy-signal-svg oy-signal-svg-front" viewBox="0 0 1180 620" preserveAspectRatio="none" aria-hidden="true">
+          <defs>
+            <path id="oyTechBFront" d="M 60 410 H 300 Q 365 410 365 350 V 300 Q 365 240 425 240 H 520 Q 580 240 580 300 V 390 Q 580 452 642 452 H 838 Q 900 452 900 390 V 340 Q 900 280 960 280 H 1240" />
+            <clipPath id="oyTitleWeaveClips">
+              <rect x="326" y="282" width="80" height="145" rx="18" />
+              <rect x="548" y="286" width="66" height="158" rx="18" />
+              <rect x="870" y="305" width="62" height="126" rx="18" />
+            </clipPath>
+          </defs>
+          <g clip-path="url(#oyTitleWeaveClips)">
+            <use href="#oyTechBFront" class="oy-pipe-shadow" />
+            <use href="#oyTechBFront" class="oy-pipe-body" />
+            <use href="#oyTechBFront" class="oy-pipe-core" />
+            <text class="oy-dim">
+              <textPath href="#oyTechBFront" startOffset="0%">MOBILE FRICTION · RESPONSIVE STATE · ACCESSIBILITY · INTERACTION STATE · PERFORMANCE BUDGET · SEO SIGNALS · ANALYTICS · CORE WEB VITALS · MOBILE FRICTION · RESPONSIVE STATE · ACCESSIBILITY · INTERACTION STATE · PERFORMANCE BUDGET · SEO SIGNALS · ANALYTICS · CORE WEB VITALS ·
+                <animate attributeName="startOffset" from="0%" to="-100%" dur="19s" repeatCount="indefinite" />
+              </textPath>
+            </text>
+          </g>
+        </svg>
+
         <div class="oy-signal-status">
-          <div>INPUT<strong>SIGNAL LOSS</strong></div>
+          <div>INPUT<strong>VISITOR INTENT</strong></div>
           <div>DIAGNOSIS<strong>ROOT CAUSE</strong></div>
-          <div>OUTPUT<strong>SYSTEM FIX</strong></div>
+          <div>OUTPUT<strong>CONVERSION FIX</strong></div>
         </div>
       </div>
     `;
