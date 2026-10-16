@@ -356,6 +356,7 @@
 
 
 /* Archive headings follow the homepage's Syncopate / terminal hierarchy. */
+.projects-page-archive { position:relative; z-index:5; }
 .projects-page-archive .archive-header { align-items:center; gap:24px; opacity:1; }
 .projects-page-archive .archive-status { color:#9ca3af; opacity:1; font-size:13px; flex-wrap:wrap; line-height:1.7; }
 .projects-page-archive .archive-status strong { color:#d1d5db; font-weight:400; }
