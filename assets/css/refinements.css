@@ -515,7 +515,7 @@ a:focus-visible, button:focus-visible { outline:2px solid #ffd700; outline-offse
 #expertise .v-line { display:none; }
 #expertise .badge.section-terminal { margin:0 0 28px; }
 .philosophy-kicker.section-terminal { max-width:1132px; margin:0 auto 40px; }
-.next-steps .section-terminal { font-size:11px; gap:7px; }
+.next-steps .section-terminal { font-size:13px; gap:9px; }
 footer.signal-footer { position:relative; z-index:5; max-width:none; width:100%; padding:0; margin:40px 0 0; background:#ffd700; color:#080808; text-align:left; content-visibility:visible; overflow:hidden; }
 .footer-top { max-width:1180px; margin:auto; padding:64px 24px; display:grid; grid-template-columns:1.5fr 1fr; gap:48px; }
 .footer-eyebrow { font:12px/1.8 var(--mono); letter-spacing:.08em; margin:0 0 20px; }
@@ -536,7 +536,7 @@ footer.signal-footer { position:relative; z-index:5; max-width:none; width:100%;
  input,textarea { cursor:text; }
 }
 @media(max-width:700px) {
- .section-terminal, #expertise .badge.section-terminal, .oy-signal-label.section-terminal, .archive-status.section-terminal { font-size:11px; gap:6px; }
+ .section-terminal, .next-steps .section-terminal, #expertise .badge.section-terminal, .oy-signal-label.section-terminal, .archive-status.section-terminal { font-size:11px; gap:6px; }
  .section-terminal .section-type { max-width:100%; }
  .footer-top { padding:44px 20px; grid-template-columns:1fr; gap:32px; }
  .footer-navigation { border-left:0; border-top:1px solid #08080830; padding:24px 0 0; gap:18px; }
