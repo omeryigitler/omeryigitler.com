@@ -401,30 +401,12 @@ section[id] { scroll-margin-top:112px; }
 .hero-capabilities li::before { content:'·'; color:#ffd700; margin-right:10px; }
 .section-kicker { font:400 12px/1.7 var(--mono); letter-spacing:.1em; text-transform:uppercase; color:#a9adb6; margin:0 0 16px; }
 .status-line, .oy-signal-label { font-size:13px; }
-#expertise, #contact, .philosophy { padding-top:var(--section-space); padding-bottom:var(--section-space); }
-#expertise .center-head { text-align:left; margin-bottom:32px; }
-#expertise .v-line { display:none; }
-#expertise .badge { padding:0; border:0; background:none; color:#a9adb6; font:400 12px/1.7 var(--mono); letter-spacing:.1em; margin-bottom:12px; }
-#expertise h2, #contact > h2, .selected-work h2 { font-size:clamp(28px,3.5vw,46px); line-height:1.2; letter-spacing:-.02em; }
-#expertise .section-sub { margin:20px 0 0; font-size:16px; line-height:1.75; }
-#expertise .ecard-grid { margin-top:32px; gap:20px; perspective:none; transform-style:flat; }
-#expertise .ecard { transform:none!important; will-change:auto; transform-style:flat; }
-#expertise .ecard-in { min-height:0; height:100%; padding:28px; border-radius:16px; box-shadow:none; }
-#expertise .ecard h3 { font-size:24px; }
-#expertise .ecard p { font-size:16px; line-height:1.65; color:#b5b8c0; }
-#expertise .ecard .corner-glow { opacity:.12; }
-#expertise .ecard:hover .corner-glow { opacity:.25; }
+#contact { padding-top:var(--section-space); padding-bottom:var(--section-space); }
+#contact > h2, .selected-work h2 { font-size:clamp(28px,3.5vw,46px); line-height:1.2; letter-spacing:-.02em; }
 #process { scroll-margin-top:112px; }
 #process .oy-signal-sub { font-family:"Manrope",sans-serif; font-size:16px; line-height:1.75; max-width:660px; margin:24px auto 28px; }
 #process .oy-signal-status { gap:20px; }
 #process .oy-signal-status div { padding-top:12px; font-size:11px; }
-.philosophy { padding-top:64px; padding-bottom:64px; }
-.philosophy .phil-line { font-size:clamp(26px,4vw,52px)!important; margin:16px 0!important; line-height:1.25!important; transform:none!important; opacity:.78!important; }
-.philosophy .phil-line.lit { opacity:1!important; }
-.philosophy .phil-line.lit em { text-shadow:none!important; }
-.philosophy .phil-sub { margin-top:28px; }
-.philosophy .phil-rule { margin:22px auto; }
-.philosophy .phil-cta { font-size:12px; letter-spacing:.2em; text-shadow:none; }
 .contact-grid { margin-top:32px; gap:24px; }
 .contact-card { padding:32px; border-radius:16px; }
 .contact-card:hover { box-shadow:none; }
@@ -468,7 +450,6 @@ a:focus-visible, button:focus-visible { outline:2px solid #ffd700; outline-offse
 .projects-page-archive .archive-controls { top:100px; }
 @media(max-width:900px) {
   .selected-work-head { align-items:flex-start; flex-direction:column; gap:16px; }
-  #expertise .ecard-grid { grid-template-columns:1fr; }
   .selected-work-grid { gap:16px; }
   .selected-project-info { padding:18px; }
   .selected-project h3 { font-size:20px; }
@@ -489,10 +470,7 @@ a:focus-visible, button:focus-visible { outline:2px solid #ffd700; outline-offse
   .selected-project-image { aspect-ratio:16/10; }
   .selected-project-info { padding:22px; }
   .selected-project h3 { font-size:24px; }
-  #expertise, #contact { padding-inline:20px; }
-  #expertise .ecard-in { padding:24px; }
-  .philosophy { padding:48px 20px; }
-  .philosophy .phil-line { font-size:clamp(21px,5.4vw,34px)!important; gap:.25em; }
+  #contact { padding-inline:20px; }
   .contact-card { padding:24px; }
   .contact-grid { gap:20px; }
   .form-grid { grid-template-columns:1fr; gap:18px; }
@@ -507,3 +485,21 @@ a:focus-visible, button:focus-visible { outline:2px solid #ffd700; outline-offse
   footer { padding:32px 20px; }
 }
 @media(prefers-reduced-motion:reduce) { .selected-project-image img { transition:none; } }
+/* Interactive next steps and stable terminal labels. */
+.section-type { display:inline-grid; vertical-align:bottom; }
+.section-type::before { content:attr(data-label); visibility:hidden; grid-area:1/1; }
+.section-type-text { grid-area:1/1; }
+.section-type-text::after { content:'▌'; color:#ffd700; margin-left:3px; }
+.philosophy-kicker { position:relative; z-index:1; margin-bottom:28px; }
+.next-step-list li { display:block; }
+.next-step-list details { width:100%; }
+.next-step-list summary { display:flex; align-items:baseline; gap:16px; cursor:pointer; list-style:none; font:600 17px/1.5 "Manrope",sans-serif; color:#f3f4f6; }
+.next-step-list summary::-webkit-details-marker { display:none; }
+.next-step-list summary > span:first-child { color:#ffd700; font:12px/1.8 var(--mono); }
+.next-step-list .step-toggle { margin-left:auto; color:#ffd700; transition:transform .2s; }
+.next-step-list details[open] .step-toggle { transform:rotate(45deg); }
+.next-step-list details p { padding:12px 0 0 34px; }
+.next-step-list summary:hover { color:#ffd700; }
+.next-step-list summary:focus-visible { outline:2px solid #ffd700; outline-offset:6px; }
+.brief-start { width:100%; margin-bottom:16px; cursor:pointer; white-space:normal; }
+@media(prefers-reduced-motion:reduce) { .section-type-text::after { display:none; } .step-toggle { transition:none!important; } }

@@ -2303,7 +2303,7 @@
             <section id="expertise">
                 <div class="center-head">
                     <div class="v-line"></div>
-                    <span class="badge">What I Do</span>
+                    <span class="badge"><span class="section-type">What I Do</span></span>
                     <h2>Complete Digital<br><span class="soft">Solutions</span></h2>
                     <p class="section-sub">A holistic approach to digital product creation, ensuring every layer from design to deployment is crafted to perfection.</p>
                 </div>
@@ -2410,6 +2410,7 @@
             </section>
 
             <section id="philosophy" class="philosophy">
+                <p class="section-kicker philosophy-kicker"><span class="section-type">Design principles</span></p>
                 <div class="taurus-mark" aria-hidden="true">TAURUS</div>
                 <h2 class="phil-line"><span class="w">Balance</span> <em>over</em> <span class="w">Chaos<span class="gdot">.</span></span></h2>
                 <h2 class="phil-line"><span class="w">Symmetry</span> <em>over</em> <span class="w">Noise<span class="gdot">.</span></span></h2>
@@ -2444,7 +2445,7 @@
                 </div>
             </section>
             <section id="contact">
-                <div class="status-line section-status"><span class="prompt">$</span><span>status</span><span class="arrow">→</span><span class="status-value">ready for new projects</span></div>
+                <div class="status-line section-status"><span class="prompt">$</span><span>status</span><span class="arrow">→</span><span class="status-value section-type">ready for new projects</span></div>
                 <h2><span class="soft">Ready when you are</span></h2>
 
                 <div class="contact-grid">
@@ -2465,13 +2466,14 @@
                     </div>
 
                     <aside class="contact-card next-steps">
-                        <p class="section-kicker">A CLEAR WAY FORWARD</p>
+                        <p class="section-kicker"><span class="section-type">A CLEAR WAY FORWARD</span></p>
                         <h3>What happens next?</h3>
                         <ol class="next-step-list">
-                            <li><span>01</span><div><h4>Understand the brief</h4><p>I review your goals, audience and what the website needs to do.</p></div></li>
-                            <li><span>02</span><div><h4>Define the scope</h4><p>We clarify the features, priorities and approach together.</p></div></li>
-                            <li><span>03</span><div><h4>Plan the build</h4><p>You receive a proposal and a clear plan for the work ahead.</p></div></li>
+                            <li><details open><summary><span>01</span>Understand the brief<span class="step-toggle" aria-hidden="true">+</span></summary><p>I review your goals, audience and what the website needs to do.</p></details></li>
+                            <li><details><summary><span>02</span>Define the scope<span class="step-toggle" aria-hidden="true">+</span></summary><p>We clarify the features, priorities and approach together.</p></details></li>
+                            <li><details><summary><span>03</span>Plan the build<span class="step-toggle" aria-hidden="true">+</span></summary><p>You receive a proposal and a clear plan for the work ahead.</p></details></li>
                         </ol>
+                        <button class="btn btn-primary brief-start" type="button">Let’s start with your brief ↗</button>
                         <a class="next-email" href="mailto:info@omeryigitler.com">Prefer email? Get in touch ↗</a>
                     </aside>
                 </div>
@@ -3199,6 +3201,82 @@
 
 
 
+        (function () {
+            const grid = document.getElementById("expertiseCards");
+            if (!grid) return;
+
+            const desktop = window.matchMedia("(min-width: 768px)");
+            const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+            const lerp = (a, b, t) => a + (b - a) * t;
+
+            const cards = ["left", "center", "right"].map((pos) => {
+                const el = grid.querySelector('[data-pos="' + pos + '"]');
+                return { pos, el, hover: 0, hoverTarget: 0 };
+            });
+
+            document.addEventListener("pointermove", (event) => {
+                const overEl = event.target && event.target.closest ? event.target.closest(".ecard") : null;
+
+                cards.forEach((card) => {
+                    const over = overEl === card.el;
+                    if (over !== (card.hoverTarget === 1)) {
+                        card.hoverTarget = over ? 1 : 0;
+                        card.el.classList.toggle("is-hover", over);
+                    }
+                });
+            }, { passive: true });
+
+            console.log("[expertise-3d] ready — desktop:", desktop.matches, "| reduced:", reduced, "| viewport:", window.innerWidth + "x" + window.innerHeight);
+
+            if (reduced) return;
+
+            let last = performance.now();
+
+            function frame(now) {
+                const dt = Math.min(0.05, (now - last) / 1000);
+                last = now;
+
+                if (!desktop.matches) {
+                    cards.forEach((card) => { card.el.style.transform = ""; });
+                    requestAnimationFrame(frame);
+                    return;
+                }
+
+                const rect = grid.getBoundingClientRect();
+                const vh = window.innerHeight;
+                let p = (vh - rect.top) / (vh / 2 + rect.height / 2);
+                p = Math.max(0, Math.min(1, p));
+
+                cards.forEach((card) => {
+                    card.hover += (card.hoverTarget - card.hover) * Math.min(1, dt * 9);
+                    const h = card.hover;
+
+                    if (card.pos === "center") {
+                        const y = lerp(100, 0, p);
+                        const zBase = lerp(-50, 50, p);
+                        const sBase = lerp(0.8, 1.05, p);
+                        const z = lerp(zBase, 80, h);
+                        const s = lerp(sBase, 1.1, h);
+                        card.el.style.transform =
+                            "translateY(" + y.toFixed(1) + "px) translateZ(" + z.toFixed(1) + "px) scale(" + s.toFixed(3) + ")";
+                    } else {
+                        const sign = card.pos === "left" ? 1 : -1;
+                        const x = lerp(-100 * sign, 0, p);
+                        const zBase = lerp(-200, -50, p);
+                        const rotBase = lerp(45 * sign, 15 * sign, p);
+                        const z = lerp(zBase, 20, h);
+                        const rot = lerp(rotBase, 0, h);
+                        const s = lerp(1, 1.02, h);
+                        card.el.style.transform =
+                            "translateX(" + x.toFixed(1) + "px) translateZ(" + z.toFixed(1) + "px) rotateY(" + rot.toFixed(2) + "deg) scale(" + s.toFixed(3) + ")";
+                    }
+                });
+
+                requestAnimationFrame(frame);
+            }
+
+            requestAnimationFrame(frame);
+        })();
     </script>
 <script>
 /* 3D Globe Preloader Intro */
