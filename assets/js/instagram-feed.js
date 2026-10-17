@@ -420,8 +420,8 @@
     const paint = () => {
       frame = 0;
       const rect = footer.getBoundingClientRect();
-      const progress = Math.max(0, Math.min(1, (innerHeight - rect.top) / (innerHeight + rect.height)));
-      word.style.transform = `translate3d(${-progress * 12}%,0,0)`;
+      const progress = Math.max(0, Math.min(1, (innerHeight - rect.top) / Math.max(1, rect.height)));
+      word.style.transform = `translate3d(${(1 - progress) * 12}%,0,0)`;
     };
     const update = () => { if (!frame) frame = requestAnimationFrame(paint); };
     addEventListener('scroll', update, {passive:true});

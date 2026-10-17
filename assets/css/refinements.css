@@ -549,3 +549,5 @@ footer.signal-footer { display:block; }
 .footer-top, .footer-bottom { width:100%; box-sizing:border-box; }
 .footer-word-window { width:100%; }
 .signal-footer .foot-credit, .signal-footer .foot-copy { color:#080808; opacity:1; }
+
+.signal-footer .footer-word { width:96%; }
