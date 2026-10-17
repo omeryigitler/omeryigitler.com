@@ -416,19 +416,88 @@
     const word = footer?.querySelector('.footer-word');
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)');
     if (!word || reduced.matches) return;
-    let frame = 0;
+    const veil = document.createElement('canvas');
+    veil.className = 'footer-pixel-veil';
+    veil.setAttribute('aria-hidden', 'true');
+    const ctx = veil.getContext('2d');
+    if (!ctx) return;
+    footer.append(veil);
+    let frame = 0, width = 0, height = 0;
     const paint = () => {
       frame = 0;
       const rect = footer.getBoundingClientRect();
-      const progress = Math.max(0, Math.min(1, (innerHeight - rect.top) / Math.max(1, rect.height)));
-      word.style.transform = `translate3d(${(1 - progress) * 12}%,0,0)`;
+      const progress = Math.max(0, Math.min(1, (innerHeight - rect.top) / Math.max(1, Math.min(rect.height, innerHeight * .85))));
+      word.style.transform = `translate3d(${(1 - progress) * 8}%,0,0)`;
+      const w = Math.ceil(rect.width), h = Math.ceil(rect.height);
+      if (w !== width || h !== height) { width = veil.width = w; height = veil.height = h; }
+      ctx.clearRect(0, 0, width, height);
+      if (reduced.matches) return;
+      const cell = width < 700 ? 22 : 32;
+      const rows = Math.ceil(height / cell);
+      ctx.fillStyle = '#050505';
+      for (let row = 0; row < rows; row++) {
+        for (let col = 0; col < Math.ceil(width / cell); col++) {
+          const noise = ((col * 73 + row * 137 + col * row * 19) % 101) / 100;
+          const threshold = .04 + .94 * ((row / Math.max(1, rows - 1)) * .68 + noise * .32);
+          if (progress < threshold) ctx.fillRect(col * cell, row * cell, cell, cell);
+        }
+      }
+      footer.dataset.reveal = progress.toFixed(3);
     };
     const update = () => { if (!frame) frame = requestAnimationFrame(paint); };
     addEventListener('scroll', update, {passive:true});
     addEventListener('resize', update, {passive:true});
+    reduced.addEventListener('change', update);
+    new ResizeObserver(update).observe(footer);
     paint();
   }
+  function setupMagneticPointer() {
+    const fine = matchMedia('(pointer:fine)');
+    const reduced = matchMedia('(prefers-reduced-motion:reduce)');
+    if (!fine.matches || reduced.matches) return;
+    const pointer = document.createElement('div');
+    pointer.className = 'magnetic-pointer';
+    pointer.setAttribute('aria-hidden', 'true');
+    document.body.append(pointer);
+    let x = 0, y = 0, targetX = 0, targetY = 0, frame = 0, shown = false;
+    const paint = () => {
+      x += (targetX - x) * .38; y += (targetY - y) * .38;
+      pointer.style.transform = `translate3d(${x}px,${y}px,0)`;
+      frame = Math.abs(targetX-x) + Math.abs(targetY-y) > .15 ? requestAnimationFrame(paint) : 0;
+    };
+    const hide = () => { shown = false; pointer.hidden = true; document.documentElement.classList.remove('magnetic-pointer-active'); cancelAnimationFrame(frame); frame = 0; };
+    document.addEventListener('pointermove', event => {
+      if (event.pointerType === 'touch' || reduced.matches || !fine.matches || event.target.closest('input,textarea,[contenteditable],.project-finder-section')) { hide(); return; }
+      let nearest = null, distance = 70;
+      document.querySelectorAll('a,button,summary').forEach(el => {
+        if (el.matches(':disabled') || !el.getClientRects().length) return;
+        const r = el.getBoundingClientRect();
+        if (r.width > 400 || r.height > 160) return;
+        const dx = Math.max(r.left-event.clientX, 0, event.clientX-r.right);
+        const dy = Math.max(r.top-event.clientY, 0, event.clientY-r.bottom);
+        const d = Math.hypot(dx,dy);
+        if (d < distance) { distance = d; nearest = r; }
+      });
+      targetX = event.clientX; targetY = event.clientY;
+      if (nearest) {
+        const pull = .32 * (1-distance/70);
+        targetX += (nearest.left + nearest.width/2 - targetX) * pull;
+        targetY += (nearest.top + nearest.height/2 - targetY) * pull;
+      }
+      pointer.classList.toggle('is-attracted', !!nearest);
+      pointer.classList.toggle('on-yellow', !!event.target.closest('.signal-footer'));
+      if (!shown) { x=targetX; y=targetY; shown=true; }
+      pointer.hidden = false;
+      document.documentElement.classList.add('magnetic-pointer-active');
+      if (!frame) frame = requestAnimationFrame(paint);
+    }, {passive:true});
+    document.documentElement.addEventListener('pointerleave', hide);
+    addEventListener('blur', hide);
+    document.addEventListener('keydown', event => { if (event.key === 'Tab') hide(); });
+    fine.addEventListener('change', hide); reduced.addEventListener('change', hide);
+  }
   setupFooterMotion();
+  setupMagneticPointer();
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', setupSectionActions, {once:true});
   else setupSectionActions();
 })();
