@@ -2256,13 +2256,11 @@
         <div id="signal-overlay">[ SIGNAL ACQUIRED: UNKNOWN NODE ]</div>
     </div>
 
-    <div class="ticker" aria-label="System status band">
-        <div class="ticker-track" id="tickerTrack"></div>
-    </div>
+
 
     <div class="stage">
         <div class="bg-grid"></div>
-        <div class="bg-centerline"></div>
+
         <div class="bg-glow"></div>
 
         <nav>
@@ -2288,7 +2286,7 @@
 
                 <h1>
                     <span class="line-soft">Websites that</span>
-                    <span class="typed-line"><span class="highlight"><span id="typed">drive business</span><span class="cursor"></span></span><span class="comma">,</span></span>
+                    <span class="typed-line"><span class="highlight"><span id="typed">drive business</span><span class="cursor"></span></span></span>
                     <span class="line-soft">not just look good.</span>
                 </h1>
 
@@ -2299,20 +2297,7 @@
                     <a class="btn btn-ghost" href="projects.html">Explore Work</a>
                 </div>
 
-                <div class="stats">
-                    <div class="stat">
-                        <div class="num">100%</div>
-                        <div class="label">hand-coded</div>
-                    </div>
-                    <div class="stat">
-                        <div class="num">24</div>
-                        <div class="label">/7 uptime monitor</div>
-                    </div>
-                    <div class="stat">
-                        <div class="num">3</div>
-                        <div class="label">device tiers</div>
-                    </div>
-                </div>
+                <ul class="hero-capabilities" aria-label="Services"><li>Custom development</li><li>Responsive design</li><li>Ongoing support</li></ul>
             </section>
 
             <section id="expertise">
@@ -2459,7 +2444,7 @@
                 </div>
             </section>
             <section id="contact">
-                <div class="status-line section-status"><span class="prompt">$</span><span>status</span><span class="arrow">→</span><span class="status-value type-target" data-text="ready for new projects"></span><span class="cursor" style="height: 0.95em;"></span></div>
+                <div class="status-line section-status"><span class="prompt">$</span><span>status</span><span class="arrow">→</span><span class="status-value">ready for new projects</span></div>
                 <h2><span class="soft">Ready when you are</span></h2>
 
                 <div class="contact-grid">
@@ -2468,45 +2453,27 @@
                         <p class="lede">Ready to build? Fill out the form below.</p>
                         <form id="contactForm" novalidate>
                             <div class="form-grid">
-                                <input type="text" name="name" placeholder="Your Name" required autocomplete="name">
-                                <input type="email" name="email" placeholder="Email Address" required autocomplete="email" autocapitalize="none" autocorrect="off" spellcheck="false" inputmode="email">
+                                <label class="form-field">Your name<input type="text" name="name" placeholder="Name" required autocomplete="name"></label>
+                                <label class="form-field">Email address<input type="email" name="email" placeholder="you@company.com" required autocomplete="email" autocapitalize="none" autocorrect="off" spellcheck="false" inputmode="email"></label>
                             </div>
-                            <textarea name="message" id="projectMessage" placeholder="Tell us about the project..." required></textarea>
+                            <label class="form-field">About your project<textarea name="message" id="projectMessage" placeholder="Your goals, ideas and what you need..." required></textarea></label>
                             <!-- honeypot: hidden from humans, bots fill it -->
                             <input type="text" name="website" id="hpField" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0;pointer-events:none;">
-                            <button class="send-btn" type="submit">Configure Project &amp; Request Quote</button>
+                            <button class="send-btn" type="submit">Continue to project details</button>
                             <p class="form-status" id="contactStatus" role="status" aria-live="polite"></p>
                         </form>
                     </div>
 
-                    <div class="contact-card status-card" id="statusCard">
-                        <div class="status-3d" id="status3d">
-                            <div class="status-grid" aria-hidden="true"></div>
-                            <div class="status-head" style="transform: translateZ(22px);">
-                                <span class="label">System Status</span>
-                                <span class="nominal">Nominal</span>
-                            </div>
-                            <div class="bars" aria-hidden="true" style="transform: translateZ(46px);">
-                                <span style="height: 34%;"></span>
-                                <span style="height: 62%;"></span>
-                                <span style="height: 48%;"></span>
-                                <span style="height: 88%;"></span>
-                                <span style="height: 58%;"></span>
-                                <span style="height: 42%;"></span>
-                                <span style="height: 76%;"></span>
-                                <div class="bars-scan"></div>
-                            </div>
-                            <div class="metrics" style="transform: translateZ(30px);">
-                                <div class="metric"><span class="m-val" id="pingVal">36ms</span><span class="m-label">Response</span></div>
-                                <div class="metric"><span class="m-val">99.98%</span><span class="m-label">Uptime</span></div>
-                                <div class="metric"><span class="m-val" id="reqVal">1,204</span><span class="m-label">Requests</span></div>
-                            </div>
-                            <div class="uptime" style="transform: translateZ(16px);">
-                                <span class="big">24/7</span>
-                                <span class="label">Uptime monitor</span>
-                            </div>
-                        </div>
-                    </div>
+                    <aside class="contact-card next-steps">
+                        <p class="section-kicker">A CLEAR WAY FORWARD</p>
+                        <h3>What happens next?</h3>
+                        <ol class="next-step-list">
+                            <li><span>01</span><div><h4>Understand the brief</h4><p>I review your goals, audience and what the website needs to do.</p></div></li>
+                            <li><span>02</span><div><h4>Define the scope</h4><p>We clarify the features, priorities and approach together.</p></div></li>
+                            <li><span>03</span><div><h4>Plan the build</h4><p>You receive a proposal and a clear plan for the work ahead.</p></div></li>
+                        </ol>
+                        <a class="next-email" href="mailto:info@omeryigitler.com">Prefer email? Get in touch ↗</a>
+                    </aside>
                 </div>
 
                 <div class="support-strip">
@@ -2662,37 +2629,7 @@
     </div>
 
     <script>
-        (function () {
-            const MESSAGES = [
-                "[SYSTEM INIT] LOADING CORE MODULES...",
-                "[STATUS] 200 OK",
-                "[NETWORK] SECURE CONNECTION ESTABLISHED",
-                "[DEPLOYMENT] SUCCESS",
-                "[PERFORMANCE] LCP 0.8s : FID 2ms : CLS 0.01",
-                "[OPTIMIZATION] ASSETS MINIFIED",
-                "[CACHE] HIT RATE 98%",
-                "[SEO] SCHEMA VALIDATED",
-                "[CRAWLER] INDEXING ENABLED",
-                "[SECURITY] SSL/TLS 1.3 ACTIVE",
-                "[ROUTING] GLOBAL CDN ENGAGED"
-            ];
 
-            const track = document.getElementById("tickerTrack");
-            if (track) {
-                for (let copy = 0; copy < 2; copy += 1) {
-                    MESSAGES.forEach((msg) => {
-                        const item = document.createElement("span");
-                        item.className = "ticker-item";
-                        item.innerHTML = '<span class="msg">' + msg + '</span><span class="sep">\u2588</span>';
-                        track.appendChild(item);
-                    });
-                }
-                requestAnimationFrame(() => {
-                    const distance = track.scrollWidth / 2;
-                    track.style.animationDuration = Math.max(40, distance / 60) + "s";
-                });
-            }
-        })();
 
         (function () {
             const phrases = [
@@ -2730,7 +2667,7 @@
                 el.textContent = phrase.slice(0, charIndex);
                 if (charIndex === phrase.length) {
                     deleting = true;
-                    setTimeout(tick, 2600);
+                    setTimeout(tick, 3600);
                     return;
                 }
                 setTimeout(tick, 64 + Math.random() * 70);
@@ -2739,7 +2676,7 @@
             setTimeout(function () {
                 deleting = true;
                 tick();
-            }, 2200);
+            }, 3200);
         })();
 
         (function () {
@@ -2840,67 +2777,9 @@
             updatePhilosophy();
         })();
 
-        (function () {
-            const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-            if (reduced) return;
 
-            const bars = document.querySelectorAll(".bars span");
-            const pingEl = document.getElementById("pingVal");
-            const reqEl = document.getElementById("reqVal");
-            let requests = 1204;
-            let timer = null;
 
-            function tick() {
-                bars.forEach((bar) => {
-                    bar.style.height = (30 + Math.random() * 65).toFixed(0) + "%";
-                });
 
-                if (pingEl) pingEl.textContent = (28 + Math.floor(Math.random() * 18)) + "ms";
-
-                requests += Math.floor(Math.random() * 4);
-                if (reqEl) reqEl.textContent = requests.toLocaleString("en-US");
-            }
-
-            // The dashboard only animates while its card is on screen, so the
-            // recurring layout work never runs for a section nobody can see.
-            const host = bars.length ? bars[0].closest("section") || bars[0].parentElement : null;
-            if (host && "IntersectionObserver" in window) {
-                const observer = new IntersectionObserver((entries) => {
-                    const visible = entries.some((entry) => entry.isIntersecting);
-                    if (visible && timer === null) {
-                        tick();
-                        timer = setInterval(tick, 1500);
-                    } else if (!visible && timer !== null) {
-                        clearInterval(timer);
-                        timer = null;
-                    }
-                });
-                observer.observe(host);
-            } else {
-                timer = setInterval(tick, 1500);
-            }
-        })();
-
-        (function () {
-            const card = document.getElementById("statusCard");
-            const inner = document.getElementById("status3d");
-            if (!card || !inner) return;
-            if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-            if (!window.matchMedia("(min-width: 768px)").matches) return;
-
-            const MAX = 9;
-            card.addEventListener("pointermove", (e) => {
-                const rect = card.getBoundingClientRect();
-                const px = (e.clientX - rect.left) / rect.width - 0.5;
-                const py = (e.clientY - rect.top) / rect.height - 0.5;
-                inner.style.transition = "transform 0.12s ease-out";
-                inner.style.transform = "rotateX(" + (-py * MAX).toFixed(2) + "deg) rotateY(" + (px * MAX).toFixed(2) + "deg)";
-            });
-            card.addEventListener("pointerleave", () => {
-                inner.style.transition = "transform 0.6s cubic-bezier(0.22, 1, 0.36, 1)";
-                inner.style.transform = "rotateX(0deg) rotateY(0deg)";
-            });
-        })();
 
         (function () {
             const form = document.getElementById("contactForm");
@@ -3317,111 +3196,9 @@
             update();
         })();
 
-        (function () {
-            const area = document.getElementById("projectMessage");
-            if (!area) return;
-            if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
-            const phrases = [
-                "Tell us about the project...",
-                "A new website for my business...",
-                "Redesign + SEO for my store...",
-                "An online booking system..."
-            ];
-            let phraseIndex = 0;
-            let charIndex = phrases[0].length;
-            let deleting = true;
 
-            setTimeout(function step() {
-                const phrase = phrases[phraseIndex];
-                area.setAttribute("placeholder", phrase.slice(0, charIndex));
 
-                if (deleting) {
-                    if (charIndex > 0) { charIndex -= 1; setTimeout(step, 30); }
-                    else { deleting = false; phraseIndex = (phraseIndex + 1) % phrases.length; setTimeout(step, 500); }
-                } else {
-                    if (charIndex < phrase.length) { charIndex += 1; setTimeout(step, 46 + Math.random() * 40); }
-                    else { deleting = true; setTimeout(step, 2800); }
-                }
-            }, 3000);
-        })();
-
-        (function () {
-            const grid = document.getElementById("expertiseCards");
-            if (!grid) return;
-
-            const desktop = window.matchMedia("(min-width: 768px)");
-            const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-            const lerp = (a, b, t) => a + (b - a) * t;
-
-            const cards = ["left", "center", "right"].map((pos) => {
-                const el = grid.querySelector('[data-pos="' + pos + '"]');
-                return { pos, el, hover: 0, hoverTarget: 0 };
-            });
-
-            document.addEventListener("pointermove", (event) => {
-                const overEl = event.target && event.target.closest ? event.target.closest(".ecard") : null;
-
-                cards.forEach((card) => {
-                    const over = overEl === card.el;
-                    if (over !== (card.hoverTarget === 1)) {
-                        card.hoverTarget = over ? 1 : 0;
-                        card.el.classList.toggle("is-hover", over);
-                    }
-                });
-            }, { passive: true });
-
-            console.log("[expertise-3d] ready — desktop:", desktop.matches, "| reduced:", reduced, "| viewport:", window.innerWidth + "x" + window.innerHeight);
-
-            if (reduced) return;
-
-            let last = performance.now();
-
-            function frame(now) {
-                const dt = Math.min(0.05, (now - last) / 1000);
-                last = now;
-
-                if (!desktop.matches) {
-                    cards.forEach((card) => { card.el.style.transform = ""; });
-                    requestAnimationFrame(frame);
-                    return;
-                }
-
-                const rect = grid.getBoundingClientRect();
-                const vh = window.innerHeight;
-                let p = (vh - rect.top) / (vh / 2 + rect.height / 2);
-                p = Math.max(0, Math.min(1, p));
-
-                cards.forEach((card) => {
-                    card.hover += (card.hoverTarget - card.hover) * Math.min(1, dt * 9);
-                    const h = card.hover;
-
-                    if (card.pos === "center") {
-                        const y = lerp(100, 0, p);
-                        const zBase = lerp(-50, 50, p);
-                        const sBase = lerp(0.8, 1.05, p);
-                        const z = lerp(zBase, 80, h);
-                        const s = lerp(sBase, 1.1, h);
-                        card.el.style.transform =
-                            "translateY(" + y.toFixed(1) + "px) translateZ(" + z.toFixed(1) + "px) scale(" + s.toFixed(3) + ")";
-                    } else {
-                        const sign = card.pos === "left" ? 1 : -1;
-                        const x = lerp(-100 * sign, 0, p);
-                        const zBase = lerp(-200, -50, p);
-                        const rotBase = lerp(45 * sign, 15 * sign, p);
-                        const z = lerp(zBase, 20, h);
-                        const rot = lerp(rotBase, 0, h);
-                        const s = lerp(1, 1.02, h);
-                        card.el.style.transform =
-                            "translateX(" + x.toFixed(1) + "px) translateZ(" + z.toFixed(1) + "px) rotateY(" + rot.toFixed(2) + "deg) scale(" + s.toFixed(3) + ")";
-                    }
-                });
-
-                requestAnimationFrame(frame);
-            }
-
-            requestAnimationFrame(frame);
-        })();
     </script>
 <script>
 /* 3D Globe Preloader Intro */
@@ -4104,3 +3881,4 @@
     <script src="/assets/js/instagram-feed.js" defer></script>
 </body>
 </html>
+

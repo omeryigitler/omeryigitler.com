@@ -65,9 +65,19 @@ addBefore(
 );
 optimizePrimaryFonts();
 addBefore('</head>', '    <link rel="stylesheet" href="/assets/css/instagram-feed.css">\n');
-addBefore('</head>', '    <link rel="stylesheet" href="/assets/css/refinements.css?v=V3">\n');
+const refinementVersion = createHash('sha256').update(fs.readFileSync(path.join(process.cwd(), 'assets/css/refinements.css'))).digest('hex').slice(0,16);
+const portfolioVersion = createHash('sha256').update(fs.readFileSync(path.join(process.cwd(), 'assets/js/instagram-feed.js'))).digest('hex').slice(0,16);
+html = html.replace(/^[ \t]*<link rel="stylesheet" href="\/assets\/css\/refinements\.css(?:\?[^"\s]*)?">\r?\n?/gm, '');
+html = html.replace(/^[ \t]*<script src="\/assets\/js\/instagram-feed\.js(?:\?[^"\s]*)?" defer><\/script>\r?\n?/gm, '');
+addBefore('</head>', `    <link rel="stylesheet" href="/assets/css/refinements.css?v=${refinementVersion}">\n`);
 addBefore('            <section id="contact">', instagramSection);
-addBefore('</body>', '    <script src="/assets/js/instagram-feed.js" defer></script>\n');
+addBefore('</body>', `    <script src="/assets/js/instagram-feed.js?v=${portfolioVersion}" defer></script>\n`);
+const projectsPath = path.join(process.cwd(), 'projects.html');
+let archive = fs.readFileSync(projectsPath, 'utf8');
+archive = archive.replace(/assets\/css\/refinements\.css(?:\?[^"\s]*)?/g, `assets/css/refinements.css?v=${refinementVersion}`)
+  .replace(/assets\/js\/instagram-feed\.js(?:\?[^"\s]*)?/g, `assets/js/instagram-feed.js?v=${portfolioVersion}`);
+fs.writeFileSync(projectsPath, archive);
+
 
 fs.writeFileSync(indexPath, html);
 

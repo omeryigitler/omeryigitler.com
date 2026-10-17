@@ -51,115 +51,22 @@
   function setupArchiveLauncher() {
     const root = document.querySelector('[data-instagram-feed]');
     if (!root) return;
-
-    let query = '';
-    let lensReady = false;
-    const LENS_SIZE = 72;
-    const LENS_ZOOM = 1.42;
-
-    const openArchive = (filter = 'all', search = query) => {
-      const params = new URLSearchParams();
-      if (filter !== 'all') params.set('filter', filter);
-      if (search.trim()) params.set('q', search.trim());
-      window.location.href = `${PROJECTS_URL}${params.toString() ? `?${params}` : ''}`;
-    };
-
+    const selected = projects.slice(0, 3);
+    const preview = (repo) => `https://raw.githubusercontent.com/omeryigitler/Portfolio/main/public/project-previews/${repo.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'')}.png`;
     root.id = 'selected-work';
-    root.className = 'instagram-feed-section project-finder-section portfolio-launcher';
+    root.className = 'selected-work';
     root.removeAttribute('data-instagram-feed');
     root.removeAttribute('data-limit');
-    root.setAttribute('aria-label', 'Project index');
-    root.innerHTML = `
-      <div class="project-finder-shell" data-project-finder-content>
-        <div class="project-finder-head">
-          <span>PROJECT INDEX <span class="project-finder-sep">—</span> ${String(projects.length).padStart(2,'0')} GITHUB PROJECTS</span>
-          <a class="project-finder-all" href="${PROJECTS_URL}">EXPLORE ALL ${arrowIcon}</a>
-        </div>
-        <form class="project-finder-search" data-project-search>
-          ${searchIcon}
-          <input class="project-finder-input" data-project-input type="search" autocomplete="off" spellcheck="false" placeholder="Search projects, tools, experiments..." aria-label="Search all projects">
-        </form>
-        <div class="project-finder-foot">
-          <div class="project-finder-chips" aria-label="Project categories">
-            ${filters.map((filter) => `<button class="project-finder-chip${filter.value === 'all' ? ' is-active' : ''}" type="button" data-filter="${filter.value}">${filter.label}</button>`).join('')}
-          </div>
-        </div>
-      </div>
-      <div class="project-magnifier" data-project-magnifier aria-hidden="true">
-        <div class="project-magnifier-clone" data-project-magnifier-clone></div>
-        <span class="project-magnifier-ring"></span>
-        <span class="project-magnifier-glint"></span>
-      </div>`;
-
+    root.setAttribute('aria-labelledby', 'selected-work-heading');
+    root.innerHTML = `<div class="selected-work-head"><div><p class="section-kicker">SELECTED WORK</p><h2 id="selected-work-heading">Built for real <span class="soft">businesses.</span></h2></div><a class="work-all" href="${PROJECTS_URL}">View all ${projects.length} projects ${arrowIcon}</a></div>
+      <div class="selected-work-grid">${selected.map((project,i) => `<a class="selected-project" href="${project.siteUrl}" target="_blank" rel="noopener noreferrer"><div class="selected-project-image"><img src="${preview(project.repo)}" alt="${project.title} website preview" loading="lazy" decoding="async" width="1200" height="800"><span class="preview-unavailable" hidden>Preview unavailable · Open project ↗</span></div><div class="selected-project-info"><span class="section-kicker">0${i+1} / ${project.category}</span><h3>${project.title}</h3><p>${project.kind}</p><span class="project-visit">Visit website ↗</span></div></a>`).join('')}</div>`;
+    root.querySelectorAll('img').forEach(img => {
+      const failed = () => { img.hidden = true; img.nextElementSibling.hidden = false; };
+      img.addEventListener('error', failed, {once:true});
+      if (img.complete && !img.naturalWidth) failed();
+    });
     const hero = document.querySelector('.hero');
-    if (hero && root.previousElementSibling !== hero) hero.insertAdjacentElement('afterend', root);
-
-    const form = root.querySelector('[data-project-search]');
-    const input = root.querySelector('[data-project-input]');
-    input?.addEventListener('input', () => {
-      query = input.value || '';
-      syncLensContent();
-    });
-    form?.addEventListener('submit', (event) => {
-      event.preventDefault();
-      openArchive();
-    });
-    root.querySelectorAll('[data-filter]').forEach((button) => {
-      button.addEventListener('click', () => openArchive(button.dataset.filter || 'all', ''));
-    });
-    root.addEventListener('click', (event) => {
-      if (!event.target.closest('input,button,a')) openArchive();
-    });
-
-    function syncLensContent() {
-      if (!lensReady) return;
-      const source = root.querySelector('[data-project-finder-content]');
-      const clone = root.querySelector('[data-project-magnifier-clone]');
-      if (!source || !clone) return;
-      clone.innerHTML = source.innerHTML;
-      clone.querySelectorAll('input,button,a').forEach((element) => {
-        element.tabIndex = -1;
-        element.setAttribute('aria-hidden','true');
-        element.style.pointerEvents = 'none';
-      });
-      const clonedInput = clone.querySelector('[data-project-input]');
-      if (clonedInput) clonedInput.value = query;
-    }
-
-    function setupMagnifier() {
-      if (!window.matchMedia('(pointer: fine)').matches) return;
-      const lens = root.querySelector('[data-project-magnifier]');
-      const clone = root.querySelector('[data-project-magnifier-clone]');
-      const source = root.querySelector('[data-project-finder-content]');
-      if (!lens || !clone || !source) return;
-      lensReady = true;
-      syncLensContent();
-
-      const move = (event) => {
-        if (event.pointerType === 'touch') return;
-        const sectionRect = root.getBoundingClientRect();
-        const sourceRect = source.getBoundingClientRect();
-        const sectionX = event.clientX - sectionRect.left;
-        const sectionY = event.clientY - sectionRect.top;
-        const sourceX = event.clientX - sourceRect.left;
-        const sourceY = event.clientY - sourceRect.top;
-
-        lens.style.opacity = '1';
-        lens.style.transform = `translate3d(${sectionX - LENS_SIZE / 2}px, ${sectionY - LENS_SIZE / 2}px, 0)`;
-        clone.style.width = `${sourceRect.width}px`;
-        clone.style.height = `${sourceRect.height}px`;
-        clone.style.transform = `translate3d(${LENS_SIZE / 2 - sourceX * LENS_ZOOM}px, ${LENS_SIZE / 2 - sourceY * LENS_ZOOM}px, 0) scale(${LENS_ZOOM})`;
-      };
-
-      root.addEventListener('pointerenter', (event) => {
-        syncLensContent();
-        move(event);
-      });
-      root.addEventListener('pointermove', move);
-      root.addEventListener('pointerleave', () => { lens.style.opacity = '0'; });
-    }
-
-    setupMagnifier();
+    if (hero) hero.insertAdjacentElement('afterend', root);
   }
 
   function addLocationCue() {
@@ -188,7 +95,7 @@
       if (heading) heading.textContent = 'Start a Project';
       if (lede) lede.textContent = 'Tell me what you’re building. I’ll turn the brief into a clear project scope.';
       if (textarea) textarea.setAttribute('placeholder', 'Tell me about the project...');
-      if (submit) submit.textContent = 'Configure Project & Request Quote';
+      if (submit) submit.textContent = 'Continue to project details';
 
       if (!contactCard.querySelector('.contact-flow-hint')) {
         const hint = document.createElement('p');
