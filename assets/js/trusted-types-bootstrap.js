@@ -154,10 +154,9 @@
       .oy-pipe-edge,.oy-pipe-body { fill:none; stroke-linejoin:round; stroke-linecap:round; }
       .oy-pipe-edge { stroke:#ffd70026; stroke-width:46; }
       .oy-pipe-body { stroke:#282407; stroke-width:40; }
-      .oy-signal-svg text { fill:#b6a129; font:500 12px var(--mono,"JetBrains Mono",monospace); letter-spacing:1px; }
+      .oy-signal-svg text { fill:#b6a129; font:500 12px var(--mono,"JetBrains Mono",monospace); letter-spacing:.45px; }
       .oy-signal-title { margin:0; font:700 5.6cqw/1.12 "Syncopate",sans-serif; letter-spacing:-.055em; text-transform:uppercase; }
       .oy-signal-title .word { position:absolute; display:block; white-space:nowrap; }
-      /* Match the hero's soft white fade and illuminated gold highlight. */
       .oy-signal-title .word:not(.oy-signal-ending) {
         background:linear-gradient(to right,#f3f4f6 30%,#6b7280);
         -webkit-background-clip:text;
@@ -192,8 +191,6 @@
     `;
     document.head.appendChild(style);
 
-    // The headline and the pipes share a coordinate system. Pipes occupy the
-    // gaps between words and lines, so no foreground mask can obscure letters.
     function pipes(mobile) {
       const paths = mobile ? [
         'M 370 -30 V 105 Q 370 160 425 160 H 650',
@@ -204,22 +201,28 @@
         'M -50 185 H 345 Q 410 185 410 250 V 280 Q 410 345 475 345 H 970 Q 1040 345 1040 415 V 650',
         'M -50 345 H 190 Q 250 345 250 405 V 470 Q 250 540 320 540 H 1230'
       ];
-      // Desktop's lower left turn sits left of the final word, not behind it.
       if (!mobile) paths[2] = 'M -50 345 H 65 Q 125 345 125 405 V 470 Q 125 540 195 540 H 1230';
-      const labels = ['OFFER CLARITY · TRUST SIGNALS · USER JOURNEY · ', 'MOBILE FRICTION · PERFORMANCE · CTA ROUTING · ', 'ANALYTICS · CONVERSION PATH · LIVE HEALTH · '];
+
+      const labels = [
+        'INFORMATION ARCHITECTURE · OFFER CLARITY · VALUE PROPOSITION · TRUST SIGNALS · USER JOURNEY · CONTENT HIERARCHY · CTA ROUTING · ',
+        'INTERACTION STATE · MOBILE FRICTION · RESPONSIVE SYSTEM · ACCESSIBILITY · PERFORMANCE BUDGET · SEO SIGNALS · ANALYTICS · ',
+        'QA PIPELINE · DEPLOYMENT · MONITORING · HANDOVER · PRODUCTION · LIVE HEALTH · ERROR BUDGET · CONVERSION PATH · '
+      ];
+      const speeds = mobile ? [18, 13, 10] : [31, 21, 15];
       const prefix = mobile ? 'oyMobilePipe' : 'oyDesktopPipe';
       const streams = paths.map((_, i) => {
-        // Every repeat has the same explicit advance, including the separator.
-        // Moving exactly one repeat makes the final frame identical to the first.
-        const advance = labels[i].length * 8.2;
-        const count = Math.ceil((mobile ? 1300 : 1800) / advance) + 2;
+        const advance = labels[i].length * 6.65;
+        const count = Math.ceil((mobile ? 1800 : 2600) / advance) + 4;
         const copies = Array.from({length:count}, () =>
           `<tspan textLength="${advance}" lengthAdjust="spacingAndGlyphs">${labels[i]}</tspan>`).join('');
-        const duration = advance / [25, 20, 16][i];
-        return `<use href="#${prefix}${i}" class="oy-pipe-edge"/><use href="#${prefix}${i}" class="oy-pipe-body"/><text dy="4" xml:space="preserve" style="white-space:pre"><textPath href="#${prefix}${i}" startOffset="0">${copies}${reducedMotion.matches ? '' : `<animate attributeName="startOffset" from="0" to="-${advance}" dur="${duration}s" calcMode="linear" repeatCount="indefinite"/>`}</textPath></text>`;
+        const duration = advance / speeds[i];
+        const direction = i === 1 ? 1 : -1;
+        const to = direction < 0 ? -advance : advance;
+        return `<use href="#${prefix}${i}" class="oy-pipe-edge"/><use href="#${prefix}${i}" class="oy-pipe-body"/><text dy="4" xml:space="preserve" style="white-space:pre"><textPath href="#${prefix}${i}" startOffset="0">${copies}${reducedMotion.matches ? '' : `<animate attributeName="startOffset" from="0" to="${to}" dur="${duration}s" calcMode="linear" repeatCount="indefinite"/>`}</textPath></text>`;
       }).join('');
       return `<svg class="oy-signal-svg oy-signal-${mobile ? 'mobile' : 'desktop'}" viewBox="0 0 ${mobile ? '600 640' : '1180 600'}" aria-hidden="true"><defs>${paths.map((d,i) => `<path id="${prefix}${i}" d="${d}"/>`).join('')}</defs>${streams}</svg>`;
     }
+
     section.innerHTML = `
       <div class="oy-signal-system">
         <div class="oy-signal-label"><span class="prompt">$</span><strong>conversion system diagnostics</strong><span class="arrow" aria-hidden="true">→</span></div>
@@ -237,6 +240,7 @@
         <div class="oy-signal-status"><div>INPUT<strong>VISITOR INTENT</strong></div><div>DIAGNOSIS<strong>ROOT CAUSE</strong></div><div>OUTPUT<strong>CONVERSION FIX</strong></div></div>
       </div>
     `;
+
     const word = section.querySelector('[data-signal-word]');
     const words = ['converting?', 'selling?', 'growing?'];
     let index = 0, length = words[0].length, deleting = true, timer;
@@ -267,7 +271,6 @@
     mobileViewport.addEventListener('change', syncMotion);
     reducedMotion.addEventListener('change', syncMotion);
     document.addEventListener('visibilitychange', syncMotion);
-
   }
 
   if (document.readyState === 'loading') {
@@ -276,4 +279,3 @@
     apply();
   }
 })();
-
