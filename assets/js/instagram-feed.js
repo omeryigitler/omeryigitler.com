@@ -496,6 +496,72 @@
     document.addEventListener('keydown', event => { if (event.key === 'Tab') hide(); });
     fine.addEventListener('change', hide); reduced.addEventListener('change', hide);
   }
+  function setupPixelMagnets() {
+    const oldWord = document.querySelector('.footer-word');
+    const svg = oldWord?.querySelector('svg');
+    if (!svg) return;
+    // The wordmark is an interactive field, not one large home link.
+    const word = document.createElement('div');
+    word.className = oldWord.className;
+    word.setAttribute('role', 'img');
+    word.setAttribute('aria-label', 'omeryigitler.com');
+    word.append(svg);
+    oldWord.replaceWith(word);
+    const reduced = matchMedia('(prefers-reduced-motion:reduce)');
+    const fine = matchMedia('(pointer:fine)');
+    if (reduced.matches || !fine.matches) return;
+    const field = word.closest('.footer-word-window');
+    const cells = [...svg.querySelectorAll('rect')].map(el => ({
+      el, cx:Number(el.getAttribute('x'))+.39, cy:Number(el.getAttribute('y'))+.39,
+      x:0, y:0, vx:0, vy:0, scale:1, dirty:false
+    }));
+    let pointer = null, pressed = false, frame = 0, last = 0;
+    const paint = now => {
+      const step = Math.min(2, (now-last)/16.67 || 1); last=now;
+      let moving = false, affected = 0;
+      const bounds = svg.getBoundingClientRect();
+      const unit = bounds.width / 288;
+      const px = pointer ? (pointer.x-bounds.left)/unit : 0;
+      const py = pointer ? (pointer.y-bounds.top)/unit : 0;
+      const radius = 86/unit;
+      cells.forEach(cell => {
+        const dx=px-cell.cx, dy=py-cell.cy;
+        const distance=Math.hypot(dx,dy);
+        const strength=pointer ? Math.max(0,1-distance/radius) ** 2 : 0;
+        const pull=pressed ? 1.1 : .72;
+        const tx=dx*strength*pull, ty=dy*strength*pull;
+        const scale=1+strength*(pressed ? -.5 : .65);
+        if (strength>0) affected++;
+        if (!strength && !cell.dirty) return;
+        cell.vx=(cell.vx+(tx-cell.x)*.13*step)*(.72**step);
+        cell.vy=(cell.vy+(ty-cell.y)*.13*step)*(.72**step);
+        cell.x+=cell.vx*step; cell.y+=cell.vy*step;
+        cell.scale+=(scale-cell.scale)*Math.min(1,.22*step);
+        const unsettled=Math.abs(tx-cell.x)+Math.abs(ty-cell.y)+Math.abs(cell.vx)+Math.abs(cell.vy)+Math.abs(scale-cell.scale)>.004;
+        moving ||= unsettled;
+        cell.dirty=strength>0 || unsettled;
+        if (!cell.dirty) { cell.el.removeAttribute('transform'); cell.x=cell.y=cell.vx=cell.vy=0; cell.scale=1; }
+        else cell.el.setAttribute('transform',`translate(${cell.x.toFixed(3)} ${cell.y.toFixed(3)}) translate(${cell.cx} ${cell.cy}) scale(${cell.scale.toFixed(3)}) translate(${-cell.cx} ${-cell.cy})`);
+      });
+      field.dataset.activePixels=String(affected);
+      frame=moving ? requestAnimationFrame(paint) : 0;
+    };
+    const wake=()=>{ if (!frame) { last=performance.now(); frame=requestAnimationFrame(paint); } };
+    const reset=()=>{ pointer=null; pressed=false; wake(); };
+    field.addEventListener('pointermove',e=>{
+      if(e.pointerType==='touch' || reduced.matches || !fine.matches) return;
+      pointer={x:e.clientX,y:e.clientY}; wake();
+    },{passive:true});
+    field.addEventListener('pointerdown',e=>{ if(e.pointerType!=='touch' && !reduced.matches) { pressed=true; wake(); } });
+    addEventListener('pointerup',()=>{ if(pressed) { pressed=false; wake(); } });
+    field.addEventListener('pointerleave',reset);
+    addEventListener('scroll',reset,{passive:true});
+    addEventListener('blur',reset);
+    document.addEventListener('visibilitychange',reset);
+    reduced.addEventListener('change',reset); fine.addEventListener('change',reset);
+  }
+
+  setupPixelMagnets();
   setupFooterMotion();
   setupMagneticPointer();
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', setupSectionActions, {once:true});

@@ -562,3 +562,8 @@ footer.signal-footer { display:block; }
 .magnetic-pointer[hidden] { display:none; }
 @media(pointer:fine) { html.magnetic-pointer-active, html.magnetic-pointer-active body, html.magnetic-pointer-active a, html.magnetic-pointer-active button, html.magnetic-pointer-active summary { cursor:none!important; } }
 @media(prefers-reduced-motion:reduce) { .footer-pixel-veil, .magnetic-pointer { display:none; } }
+/* Each wordmark cell reacts independently to the nearby pointer. */
+.footer-word-window { position:relative; }
+.signal-footer .footer-word svg { overflow:visible; }
+.footer-word-window .footer-word { user-select:none; }
+.footer-word rect { pointer-events:none; }
