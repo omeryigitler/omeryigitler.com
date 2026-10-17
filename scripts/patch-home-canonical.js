@@ -7,7 +7,9 @@ let html = fs.readFileSync(indexPath, "utf8");
 const previousCredit = "            <p class=\"foot-credit\">Designed &amp; Developed by <b>Ömer Yiğitler</b></p>";
 const canonicalCredit = "            <p class=\"foot-credit\">Designed &amp; Developed by <b>ÖMER YİĞİTLER</b></p>";
 
-if (!html.includes(canonicalCredit)) {
+if (html.includes('data-credit="omitted"')) {
+  console.log("Homepage footer intentionally omits the developer credit");
+} else if (!html.includes(canonicalCredit)) {
   if (!html.includes(previousCredit)) {
     throw new Error("Could not find the homepage footer credit in index.html");
   }
@@ -18,3 +20,4 @@ if (!html.includes(canonicalCredit)) {
 } else {
   console.log("Homepage footer credit is already canonical");
 }
+

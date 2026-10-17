@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const { createHash } = require('node:crypto');
 
 const indexPath = path.join(process.cwd(), 'index.html');
 const trackerPath = path.join(process.cwd(), 'assets/js/tracker/taurus-tracker.js');
@@ -51,15 +52,32 @@ const instagramSection = `
             </section>
 `;
 
-// Trusted Types must be installed before any inline application script executes.
+// Version the immutable bootstrap by content so returning visitors receive UI updates.
+const bootstrapHash = createHash('sha256')
+  .update(fs.readFileSync(path.join(process.cwd(), 'assets/js/trusted-types-bootstrap.js')))
+  .digest('hex').slice(0, 16);
+const bootstrapTag = `    <script src="/assets/js/trusted-types-bootstrap.js?v=${bootstrapHash}"></script>\n`;
+html = html.replace(/^[ \t]*<script src="\/assets\/js\/trusted-types-bootstrap\.js(?:\?[^"\s]*)?"><\/script>\r?\n?/gm, '');
+// Trusted Types must still execute before any inline application script.
 addBefore(
   '    <script>\n        /* Hide CookieYes during the globe intro;',
-  '    <script src="/assets/js/trusted-types-bootstrap.js"></script>\n'
+  bootstrapTag
 );
 optimizePrimaryFonts();
 addBefore('</head>', '    <link rel="stylesheet" href="/assets/css/instagram-feed.css">\n');
+const refinementVersion = createHash('sha256').update(fs.readFileSync(path.join(process.cwd(), 'assets/css/refinements.css'))).digest('hex').slice(0,16);
+const portfolioVersion = createHash('sha256').update(fs.readFileSync(path.join(process.cwd(), 'assets/js/instagram-feed.js'))).digest('hex').slice(0,16);
+html = html.replace(/^[ \t]*<link rel="stylesheet" href="\/assets\/css\/refinements\.css(?:\?[^"\s]*)?">\r?\n?/gm, '');
+html = html.replace(/^[ \t]*<script src="\/assets\/js\/instagram-feed\.js(?:\?[^"\s]*)?" defer><\/script>\r?\n?/gm, '');
+addBefore('</head>', `    <link rel="stylesheet" href="/assets/css/refinements.css?v=${refinementVersion}">\n`);
 addBefore('            <section id="contact">', instagramSection);
-addBefore('</body>', '    <script src="/assets/js/instagram-feed.js" defer></script>\n');
+addBefore('</body>', `    <script src="/assets/js/instagram-feed.js?v=${portfolioVersion}" defer></script>\n`);
+const projectsPath = path.join(process.cwd(), 'projects.html');
+let archive = fs.readFileSync(projectsPath, 'utf8');
+archive = archive.replace(/assets\/css\/refinements\.css(?:\?[^"\s]*)?/g, `assets/css/refinements.css?v=${refinementVersion}`)
+  .replace(/assets\/js\/instagram-feed\.js(?:\?[^"\s]*)?/g, `assets/js/instagram-feed.js?v=${portfolioVersion}`);
+fs.writeFileSync(projectsPath, archive);
+
 
 fs.writeFileSync(indexPath, html);
 
