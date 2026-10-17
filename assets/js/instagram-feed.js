@@ -350,9 +350,21 @@
   alignContactWithAdminPipeline();
   setupProcessBlueprint();
   function setupSectionActions() {
-    const searchLabel = document.querySelector('.project-finder-head > span');
-    const processLabel = document.querySelector('.oy-signal-label strong');
-    [searchLabel, processLabel].forEach(el => el?.classList.add('section-type'));
+    const labels = [
+      ['.project-finder-head > span', 'project archive', '31 projects indexed'],
+      ['#expertise .badge', 'expertise', 'complete digital solutions'],
+      ['.oy-signal-label', 'diagnostics', 'conversion system diagnostics'],
+      ['.philosophy-kicker', 'principles', 'just work that lasts'],
+      ['#contact > .section-status', 'contact', 'ready for new projects'],
+      ['.next-steps > .section-kicker', 'next steps', 'a clear way forward'],
+      ['.archive-status', 'project archive', '31 projects indexed']
+    ];
+    labels.forEach(([selector, key, value]) => {
+      const host = document.querySelector(selector);
+      if (!host) return;
+      host.classList.add('section-terminal');
+      host.innerHTML = `<span class="terminal-prompt" aria-hidden="true">$</span><span class="terminal-key">${key}</span><span class="terminal-arrow" aria-hidden="true">→</span><span class="section-type">${value}</span>`;
+    });
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)');
     document.querySelectorAll('.section-type').forEach(el => {
       const label = el.textContent.trim();
@@ -388,6 +400,24 @@
       field?.scrollIntoView({behavior:reduced.matches ? 'instant' : 'smooth',block:'center'});
     });
   }
+  function setupFooterMotion() {
+    const footer = document.querySelector('.signal-footer');
+    const word = footer?.querySelector('.footer-word');
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)');
+    if (!word || reduced.matches) return;
+    let frame = 0;
+    const paint = () => {
+      frame = 0;
+      const rect = footer.getBoundingClientRect();
+      const progress = Math.max(0, Math.min(1, (innerHeight - rect.top) / (innerHeight + rect.height)));
+      word.style.transform = `translate3d(${-progress * 12}%,0,0)`;
+    };
+    const update = () => { if (!frame) frame = requestAnimationFrame(paint); };
+    addEventListener('scroll', update, {passive:true});
+    addEventListener('resize', update, {passive:true});
+    paint();
+  }
+  setupFooterMotion();
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', setupSectionActions, {once:true});
   else setupSectionActions();
 })();
