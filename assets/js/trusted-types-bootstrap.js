@@ -63,6 +63,34 @@
     section.insertBefore(manifesto, mark);
     manifesto.append(mark, ...lines);
 
+    // Fit all three lines to the longest line using the loaded font metrics.
+    // Recalculate only when the available width changes, never on scroll.
+    let lastWidth = 0;
+    const fitMobileLines = () => {
+      const width = manifesto.clientWidth;
+      if (!width) return;
+      if (window.innerWidth >= 900) {
+        lines.forEach(line => line.style.removeProperty('font-size'));
+        lastWidth = 0;
+        return;
+      }
+      if (Math.abs(width - lastWidth) < 1) return;
+      lastWidth = width;
+      const base = 24;
+      lines.forEach(line => line.style.setProperty('font-size', `${base}px`, 'important'));
+      const widest = Math.max(...lines.map(line => {
+        const children = [...line.children];
+        const gap = parseFloat(getComputedStyle(line).columnGap) || 0;
+        return children.reduce((total, child) => total + child.getBoundingClientRect().width, 0) + gap * (children.length - 1);
+      }));
+      const size = base * (width * .97) / widest;
+      lines.forEach(line => line.style.setProperty('font-size', `${size}px`, 'important'));
+    };
+    document.fonts.ready.then(() => { lastWidth = 0; fitMobileLines(); });
+    new ResizeObserver(fitMobileLines).observe(manifesto);
+    window.addEventListener('resize', fitMobileLines, {passive:true});
+
+
     const style = document.createElement('style');
     style.id = 'philosophy-legacy-layer-fix';
     style.textContent = `
@@ -181,8 +209,8 @@
         .oy-signal-looks { left:6%; top:10%; }
         .oy-signal-good { left:55%; top:16%; }
         .oy-signal-why { left:7%; top:41%; }
-        .oy-signal-isnt { left:48%; top:42%; font-size:5.6cqw; }
-        .oy-signal-ending.typed-line { left:18%; top:75%; font-size:7.2cqw; }
+        .oy-signal-isnt { left:48%; top:45%; font-size:5.6cqw; }
+        .oy-signal-ending.typed-line { left:27%; top:69%; width:58%; font-size:7cqw; text-align:center; }
         .oy-signal-sub { margin:22px 0 26px; text-align:left; font-size:11px; }
         .oy-signal-status { gap:12px; }
         .oy-signal-status div { font-size:8px; letter-spacing:.05em; }

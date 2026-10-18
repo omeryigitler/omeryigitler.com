@@ -666,3 +666,32 @@ footer.signal-footer { display:block; }
  html.magnetic-pointer-active * { cursor:none!important; }
  .project-finder-section, .project-finder-section * { cursor:none!important; }
 }
+
+/* Scroll emphasis changes light only; glyphs keep a stable size and position. */
+#philosophy .philosophy-manifesto .phil-line,
+#philosophy .philosophy-manifesto .phil-line.lit {
+ transform:none!important; transition:opacity .5s ease;
+}
+@media(max-width:899px) {
+ #philosophy .philosophy-manifesto .phil-line { flex-wrap:nowrap; white-space:nowrap; gap:.28em; }
+}
+
+/* One heading followed by two equal footer actions on both pages. */
+.signal-footer .footer-top { grid-template-columns:repeat(2,minmax(0,1fr)); gap:20px; }
+.signal-footer .footer-top > div, .signal-footer .footer-navigation { display:contents; }
+.signal-footer .footer-eyebrow, .signal-footer .footer-top h2 { grid-column:1 / -1; margin:0; }
+.signal-footer .footer-top h2 { margin-bottom:12px; }
+.signal-footer .footer-action, .signal-footer .footer-navigation a {
+ display:flex; align-items:center; justify-content:center; width:100%; min-height:52px;
+ box-sizing:border-box; padding:14px 18px; border:1px solid #080808; border-radius:4px;
+ color:#080808; background:transparent; font:700 12px/1.5 var(--mono);
+ letter-spacing:.08em; text-align:center; text-transform:uppercase; text-decoration:none;
+}
+.signal-footer .footer-action:hover, .signal-footer .footer-action:focus-visible,
+.signal-footer .footer-navigation a:hover, .signal-footer .footer-navigation a:focus-visible {
+ color:#ffd700; background:#080808; text-decoration:none;
+}
+@media(max-width:700px) {
+ .signal-footer .footer-top { gap:14px 10px; }
+ .signal-footer .footer-action, .signal-footer .footer-navigation a { font-size:10px; letter-spacing:.02em; padding:12px 8px; }
+}

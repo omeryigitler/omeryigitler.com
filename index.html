@@ -2743,7 +2743,9 @@
                 philLines.forEach((line) => {
                     const rect = line.getBoundingClientRect();
                     const distance = Math.abs(rect.top + rect.height / 2 - center);
-                    line.classList.toggle("lit", distance < range);
+                    // A small dead band avoids flicker near the scroll activation edge.
+                    const threshold = range + (line.classList.contains("lit") ? 18 : -18);
+                    line.classList.toggle("lit", distance < threshold);
                 });
             }
 
