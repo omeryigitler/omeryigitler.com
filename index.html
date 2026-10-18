@@ -1414,6 +1414,33 @@
 
         .foot-copy { color: #808080; }
 
+        /* Desktop footer utilities: one row, with existing left/center/right positions. */
+        @media (min-width: 768px) {
+            .signal-footer .footer-bottom {
+                display: grid;
+                grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+                align-items: center;
+                column-gap: 24px;
+                width: 100%;
+            }
+            .signal-footer .footer-bottom .foot-copy {
+                grid-column: 1;
+                justify-self: start;
+                margin: 0;
+            }
+            .signal-footer .footer-bottom .foot-links {
+                grid-column: 2;
+                justify-self: center;
+                margin: 0;
+                flex-wrap: nowrap;
+            }
+            .signal-footer .footer-bottom .footer-top-link {
+                grid-column: 3;
+                justify-self: end;
+                white-space: nowrap;
+            }
+        }
+
         /* ---- project configurator modal ---- */
         .cfg-overlay, .ok-overlay {
             position: fixed;
