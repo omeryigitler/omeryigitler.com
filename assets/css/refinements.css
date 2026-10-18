@@ -532,10 +532,7 @@ footer.signal-footer { position:relative; z-index:5; max-width:none; width:100%;
 .footer-bottom { max-width:1180px; margin:auto; padding:24px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:20px; font:11px/1.7 var(--mono); }
 .signal-footer .foot-links { display:flex; gap:24px; }
 .signal-footer a:focus-visible { outline-color:#080808; }
-@media(pointer:fine) {
- body, body a, body button, body summary { cursor:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath fill='%23080808' stroke='%23ffd700' stroke-width='1.5' d='M4 4h10v10H4z'/%3E%3Cpath fill='none' stroke='%23ffd700' d='M18 10v8h-8'/%3E%3C/svg%3E") 8 8, auto; }
- input,textarea { cursor:text; }
-}
+
 @media(max-width:700px) {
  .section-terminal, .next-steps .section-terminal, #expertise .badge.section-terminal, .oy-signal-label.section-terminal, .archive-status.section-terminal { font-size:11px; gap:6px; }
  .section-terminal .section-type { max-width:100%; }
@@ -558,7 +555,7 @@ footer.signal-footer { display:block; }
 .magnetic-pointer { position:fixed; top:0; left:0; width:0; height:0; z-index:2147483646; pointer-events:none; color:#ffd700; }
 .magnetic-pointer::before { content:''; position:absolute; width:9px; height:9px; left:-4.5px; top:-4.5px; background:currentColor; transition:width .18s,height .18s,left .18s,top .18s; }
 .magnetic-pointer::after { content:''; position:absolute; inset:-14px; width:28px; height:28px; border:1px solid currentColor; opacity:0; transition:opacity .18s; }
-.magnetic-pointer.is-attracted::after { opacity:.65; }
+.magnetic-pointer.is-attracted::after { opacity:0; }
 .magnetic-pointer.on-yellow { color:#080808; }
 .magnetic-pointer[hidden] { display:none; }
 @media(pointer:fine) { html.magnetic-pointer-active, html.magnetic-pointer-active body, html.magnetic-pointer-active a, html.magnetic-pointer-active button, html.magnetic-pointer-active summary { cursor:none!important; } }
@@ -634,4 +631,38 @@ footer.signal-footer { display:block; }
 @media(prefers-reduced-motion:reduce) {
   .archive-card.preview-loaded .archive-card-mobile-preview img { opacity:1; transform:none; transition:none; }
   .archive-card.preview-loaded .preview-placeholder { visibility:hidden; }
+}
+
+/* Footer typography and controls must not inherit page-specific defaults. */
+.signal-footer h2 { font-family:"Syncopate",sans-serif; font-weight:700; text-transform:uppercase; letter-spacing:normal; }
+.signal-footer .footer-action, .signal-footer .foot-links a {
+ display:inline-flex; align-items:center; justify-content:center; gap:10px;
+ min-height:48px; padding:14px 22px; box-sizing:border-box; border:1px solid #080808;
+ border-radius:4px; background:transparent; color:#080808; font:700 12px/1.5 var(--mono);
+ letter-spacing:.08em; text-transform:uppercase; text-decoration:none; box-shadow:none;
+}
+.signal-footer .foot-links a::after { content:' ↗'; opacity:1; transform:none; }
+.signal-footer .footer-action:hover, .signal-footer .footer-action:focus-visible,
+.signal-footer .foot-links a:hover, .signal-footer .foot-links a:focus-visible {
+ background:#080808; color:#ffd700; text-decoration:none; border-color:#080808; box-shadow:none;
+}
+@media(min-width:701px) {
+ .signal-footer .footer-bottom { grid-template-columns:minmax(0,1fr) auto minmax(0,1fr); }
+ .signal-footer .footer-bottom .foot-copy { grid-column:1; grid-row:1; }
+ .signal-footer .footer-bottom .foot-links { grid-column:2; grid-row:1; justify-self:center; flex-wrap:nowrap; }
+ .signal-footer .footer-bottom .footer-top-link { grid-column:3; grid-row:1; }
+}
+@media(max-width:700px) {
+ .signal-footer .footer-bottom .foot-links { width:100%; display:grid; grid-template-columns:1fr 1fr; }
+ .signal-footer .foot-links a { padding:12px 8px; font-size:10px; letter-spacing:.03em; }
+}
+.contact-grid > .contact-card { display:flex; flex-direction:column; }
+#contactForm { display:flex; flex-direction:column; flex:1; }
+#contactForm .send-btn { margin-top:auto; }
+#contactForm .form-status { margin-bottom:0; }
+.next-steps .brief-start { margin:auto 0 0; }
+.next-steps::after { content:''; display:block; min-height:1.2em; margin-top:12px; font-size:12px; }
+@media(pointer:fine) {
+ html.magnetic-pointer-active * { cursor:none!important; }
+ .project-finder-section, .project-finder-section * { cursor:none!important; }
 }

@@ -217,8 +217,9 @@
           `<tspan textLength="${advance}" lengthAdjust="spacingAndGlyphs">${labels[i]}</tspan>`).join('');
         const duration = advance / speeds[i];
         const direction = i === 1 ? 1 : -1;
-        const to = direction < 0 ? -advance : advance;
-        return `<use href="#${prefix}${i}" class="oy-pipe-edge"/><use href="#${prefix}${i}" class="oy-pipe-body"/><text dy="4" xml:space="preserve" style="white-space:pre"><textPath href="#${prefix}${i}" startOffset="0">${copies}${reducedMotion.matches ? '' : `<animate attributeName="startOffset" from="0" to="${to}" dur="${duration}s" calcMode="linear" repeatCount="indefinite"/>`}</textPath></text>`;
+        const from = direction < 0 ? 0 : -advance;
+        const to = direction < 0 ? -advance : 0;
+        return `<use href="#${prefix}${i}" class="oy-pipe-edge"/><use href="#${prefix}${i}" class="oy-pipe-body"/><text dy="4" xml:space="preserve" style="white-space:pre"><textPath href="#${prefix}${i}" startOffset="${from}">${copies}${reducedMotion.matches ? '' : `<animate attributeName="startOffset" from="${from}" to="${to}" dur="${duration}s" calcMode="linear" repeatCount="indefinite"/>`}</textPath></text>`;
       }).join('');
       return `<svg class="oy-signal-svg oy-signal-${mobile ? 'mobile' : 'desktop'}" viewBox="0 0 ${mobile ? '600 440' : '1180 600'}" aria-hidden="true"><defs>${paths.map((d,i) => `<path id="${prefix}${i}" d="${d}"/>`).join('')}</defs>${streams}</svg>`;
     }

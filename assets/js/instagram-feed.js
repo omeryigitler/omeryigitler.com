@@ -457,6 +457,7 @@
     if (!fine.matches || reduced.matches) return;
     const pointer = document.createElement('div');
     pointer.className = 'magnetic-pointer';
+    pointer.hidden = true;
     pointer.setAttribute('aria-hidden', 'true');
     document.body.append(pointer);
     let x = 0, y = 0, targetX = 0, targetY = 0, frame = 0, shown = false;
@@ -467,7 +468,7 @@
     };
     const hide = () => { shown = false; pointer.hidden = true; document.documentElement.classList.remove('magnetic-pointer-active'); cancelAnimationFrame(frame); frame = 0; };
     document.addEventListener('pointermove', event => {
-      if (event.pointerType === 'touch' || reduced.matches || !fine.matches || event.target.closest('input,textarea,[contenteditable],.project-finder-section')) { hide(); return; }
+      if (event.pointerType === 'touch' || reduced.matches || !fine.matches || event.target.closest('.project-finder-section')) { hide(); return; }
       let nearest = null, distance = 70;
       document.querySelectorAll('a,button,summary').forEach(el => {
         if (el.matches(':disabled') || !el.getClientRects().length) return;
@@ -485,7 +486,17 @@
         targetY += (nearest.top + nearest.height/2 - targetY) * pull;
       }
       pointer.classList.toggle('is-attracted', !!nearest);
-      pointer.classList.toggle('on-yellow', !!event.target.closest('.signal-footer'));
+      // Resolve the actual painted background, including black buttons on yellow.
+      let surface = event.target, onYellow = false;
+      while (surface instanceof Element) {
+        const rgba = getComputedStyle(surface).backgroundColor.match(/[\d.]+/g)?.map(Number);
+        if (rgba && (rgba.length < 4 || rgba[3] > .8)) {
+          onYellow = rgba[0] > 150 && rgba[1] > 110 && rgba[2] < 140;
+          break;
+        }
+        surface = surface.parentElement;
+      }
+      pointer.classList.toggle('on-yellow', onYellow);
       if (!shown) { x=targetX; y=targetY; shown=true; }
       pointer.hidden = false;
       document.documentElement.classList.add('magnetic-pointer-active');
@@ -567,3 +578,4 @@
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', setupSectionActions, {once:true});
   else setupSectionActions();
 })();
+
