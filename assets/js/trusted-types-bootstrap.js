@@ -81,7 +81,7 @@
       const widest = Math.max(...lines.map(line => {
         const children = [...line.children];
         const gap = parseFloat(getComputedStyle(line).columnGap) || 0;
-        return children.reduce((total, child) => total + child.getBoundingClientRect().width, 0) + gap * (children.length - 1);
+        return children.reduce((total, child) => total + child.offsetWidth, 0) + gap * (children.length - 1);
       }));
       const size = base * (width * .97) / widest;
       lines.forEach(line => line.style.setProperty('font-size', `${size}px`, 'important'));
@@ -247,7 +247,7 @@
         const direction = i === 1 ? 1 : -1;
         const from = direction < 0 ? 0 : -advance;
         const to = direction < 0 ? -advance : 0;
-        return `<use href="#${prefix}${i}" class="oy-pipe-edge"/><use href="#${prefix}${i}" class="oy-pipe-body"/><text dy="4" xml:space="preserve" style="white-space:pre"><textPath href="#${prefix}${i}" startOffset="${from}">${copies}${reducedMotion.matches ? '' : `<animate attributeName="startOffset" from="${from}" to="${to}" dur="${duration}s" calcMode="linear" repeatCount="indefinite"/>`}</textPath></text>`;
+        return `<use href="#${prefix}${i}" class="oy-pipe-edge"/><use href="#${prefix}${i}" class="oy-pipe-body"/><text dy="4" xml:space="preserve" style="white-space:pre"><textPath href="#${prefix}${i}" data-speed="${speeds[i]}" data-direction="${direction}" startOffset="${from}">${copies}${reducedMotion.matches ? '' : `<animate attributeName="startOffset" from="${from}" to="${to}" dur="${duration}s" calcMode="linear" repeatCount="indefinite"/>`}</textPath></text>`;
       }).join('');
       return `<svg class="oy-signal-svg oy-signal-${mobile ? 'mobile' : 'desktop'}" viewBox="0 0 ${mobile ? '600 440' : '1180 600'}" aria-hidden="true"><defs>${paths.map((d,i) => `<path id="${prefix}${i}" d="${d}"/>`).join('')}</defs>${streams}</svg>`;
     }
@@ -283,6 +283,26 @@
       else if (length === words[index].length && !deleting) { deleting = true; delay = 2400; }
       timer = window.setTimeout(tick, delay);
     }
+    // Use actual loaded glyph advances for a seamless loop boundary.
+    document.fonts.ready.then(() => {
+      section.querySelectorAll('textPath[data-speed]').forEach(track => {
+        const spans = [...track.querySelectorAll('tspan')];
+        spans.forEach(span => { span.removeAttribute('textLength'); span.removeAttribute('lengthAdjust'); });
+        const advance = spans[0]?.getComputedTextLength();
+        if (!advance) return;
+        const reverse = Number(track.dataset.direction) < 0;
+        const from = reverse ? 0 : -advance, to = reverse ? -advance : 0;
+        track.setAttribute('startOffset', from);
+        const animation = track.querySelector('animate');
+        if (animation) {
+          animation.setAttribute('from', from);
+          animation.setAttribute('to', to);
+          animation.setAttribute('dur', `${advance / Number(track.dataset.speed)}s`);
+          animation.beginElement();
+        }
+      });
+      syncMotion();
+    });
     function syncMotion() {
       clearTimeout(timer);
       section.querySelectorAll('svg').forEach(svg => {

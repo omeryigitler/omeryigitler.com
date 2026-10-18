@@ -667,10 +667,13 @@ footer.signal-footer { display:block; }
  .project-finder-section, .project-finder-section * { cursor:none!important; }
 }
 
-/* Scroll emphasis changes light only; glyphs keep a stable size and position. */
-#philosophy .philosophy-manifesto .phil-line,
-#philosophy .philosophy-manifesto .phil-line.lit {
- transform:none!important; transition:opacity .5s ease;
+/* Original scroll emphasis, preserving the fitted mobile typography. */
+#philosophy .philosophy-manifesto .phil-line {
+ transform:scale(.94)!important; transition:opacity .5s ease,transform .5s ease;
+}
+#philosophy .philosophy-manifesto .phil-line.lit { transform:scale(1)!important; }
+@media(prefers-reduced-motion:reduce) {
+ #philosophy .philosophy-manifesto .phil-line { transform:none!important; transition:none; }
 }
 @media(max-width:899px) {
  #philosophy .philosophy-manifesto .phil-line { flex-wrap:nowrap; white-space:nowrap; gap:.28em; }

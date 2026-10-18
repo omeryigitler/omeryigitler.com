@@ -2438,8 +2438,8 @@
                         <p class="lede">Ready to build? Fill out the form below.</p>
                         <form id="contactForm" novalidate>
                             <div class="form-grid">
-                                <label class="form-field">Your name<input type="text" name="name" placeholder="Name" required autocomplete="name"></label>
-                                <label class="form-field">Email address<input type="email" name="email" placeholder="you@company.com" required autocomplete="email" autocapitalize="none" autocorrect="off" spellcheck="false" inputmode="email"></label>
+                                <label class="form-field">Your name<input type="text" name="name" placeholder="Your Name" required autocomplete="name"></label>
+                                <label class="form-field">Email address<input type="email" name="email" placeholder="Email Address" required autocomplete="email" autocapitalize="none" autocorrect="off" spellcheck="false" inputmode="email"></label>
                             </div>
                             <label class="form-field">About your project<textarea name="message" id="projectMessage" placeholder="Your goals, ideas and what you need..." required></textarea></label>
                             <!-- honeypot: hidden from humans, bots fill it -->
@@ -2743,9 +2743,7 @@
                 philLines.forEach((line) => {
                     const rect = line.getBoundingClientRect();
                     const distance = Math.abs(rect.top + rect.height / 2 - center);
-                    // A small dead band avoids flicker near the scroll activation edge.
-                    const threshold = range + (line.classList.contains("lit") ? 18 : -18);
-                    line.classList.toggle("lit", distance < threshold);
+                    line.classList.toggle("lit", distance < range);
                 });
             }
 

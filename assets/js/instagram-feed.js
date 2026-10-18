@@ -187,7 +187,32 @@
 
       if (heading) heading.textContent = 'Start a Project';
       if (lede) lede.textContent = 'Tell me what you’re building. I’ll turn the brief into a clear project scope.';
-      if (textarea) textarea.setAttribute('placeholder', 'Tell me about the project...');
+      if (textarea) {
+        const phrases = ['Tell us about the project...', 'A new website for my business...', 'Redesign + SEO for my store...', 'An online booking system...'];
+        textarea.placeholder = phrases[0];
+        if (!textarea.dataset.rotatingPlaceholder) {
+          textarea.dataset.rotatingPlaceholder = 'true';
+          const reduced = matchMedia('(prefers-reduced-motion:reduce)');
+          let phrase = 0, char = phrases[0].length, deleting = true, timer;
+          const step = () => {
+            if (document.hidden || reduced.matches || document.activeElement === textarea || textarea.value) return;
+            textarea.placeholder = phrases[phrase].slice(0, char);
+            let delay;
+            if (deleting && char > 0) { char--; delay = 30; }
+            else if (deleting) { deleting = false; phrase = (phrase + 1) % phrases.length; delay = 500; }
+            else if (char < phrases[phrase].length) { char++; delay = 65; }
+            else { deleting = true; delay = 2800; }
+            timer = setTimeout(step, delay);
+          };
+          const resume = () => { clearTimeout(timer); timer = setTimeout(step, 3000); };
+          textarea.addEventListener('focus', () => { clearTimeout(timer); textarea.placeholder = phrases[phrase]; });
+          textarea.addEventListener('blur', resume);
+          textarea.addEventListener('input', resume);
+          document.addEventListener('visibilitychange', resume);
+          reduced.addEventListener('change', resume);
+          resume();
+        }
+      }
       if (submit) submit.textContent = 'Continue to project details';
 
       if (!contactCard.querySelector('.contact-flow-hint')) {
