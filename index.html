@@ -1947,48 +1947,6 @@
             z-index: 3;
         }
 
-        .globe-preloader-scan {
-            position: absolute;
-            left: 50%;
-            top: 0;
-            width: 1px;
-            height: 100%;
-            transform: translateX(-50%);
-            overflow: hidden;
-            background: rgba(255, 215, 0, 0.08);
-            box-shadow: 0 0 18px rgba(255, 215, 0, 0.26);
-            opacity: 0.9;
-            pointer-events: none;
-            z-index: 2;
-        }
-
-        .globe-preloader-scan::before {
-            content: "";
-            position: absolute;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 42%;
-            background: linear-gradient(to bottom, transparent, #FFD700, transparent);
-            box-shadow: 0 0 24px rgba(255, 215, 0, 0.7);
-            animation: globePreloaderScan 2.8s linear infinite;
-        }
-
-        @keyframes globePreloaderScan {
-            0% {
-                transform: translateY(-120%);
-                opacity: 0;
-            }
-
-            18%, 78% {
-                opacity: 0.85;
-            }
-
-            100% {
-                transform: translateY(260%);
-                opacity: 0;
-            }
-        }
 
     </style>
     <style>
@@ -2252,7 +2210,6 @@
         <div id="globe-container" aria-hidden="true"></div>
         <div class="intro-corners" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
         <div class="globe-preloader-status"><span class="prompt">$</span><span class="dim">status</span><span class="arrow">→</span><span class="sval" id="introStatusVal">scanning orbital nodes</span><span class="scur"></span></div>
-        <div class="globe-preloader-scan"></div>
         <div id="signal-overlay">[ SIGNAL ACQUIRED: UNKNOWN NODE ]</div>
     </div>
 
