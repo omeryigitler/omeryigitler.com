@@ -695,3 +695,15 @@ footer.signal-footer { display:block; }
  .signal-footer .footer-top { gap:14px 10px; }
  .signal-footer .footer-action, .signal-footer .footer-navigation a { font-size:10px; letter-spacing:.02em; padding:12px 8px; }
 }
+/* Center the policy pair as one unit with exactly equal button columns. */
+.signal-footer .footer-bottom .foot-links {
+ display:grid; grid-template-columns:repeat(2,minmax(0,1fr));
+ width:100%; max-width:420px; margin-inline:auto; justify-self:center; gap:12px;
+}
+.signal-footer .footer-bottom .foot-links a { width:100%; min-width:0; text-align:center; }
+@media(min-width:701px) {
+ .signal-footer .footer-bottom { grid-template-columns:minmax(0,1fr) minmax(0,420px) minmax(0,1fr); }
+}
+@media(max-width:700px) {
+ .signal-footer .footer-bottom .foot-links { grid-column:1 / -1; grid-row:1; }
+}
