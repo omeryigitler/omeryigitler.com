@@ -72,10 +72,16 @@ html = html.replace(/^[ \t]*<script src="\/assets\/js\/instagram-feed\.js(?:\?[^
 addBefore('</head>', `    <link rel="stylesheet" href="/assets/css/refinements.css?v=${refinementVersion}">\n`);
 addBefore('            <section id="contact">', instagramSection);
 addBefore('</body>', `    <script src="/assets/js/instagram-feed.js?v=${portfolioVersion}" defer></script>\n`);
+const archiveVersion = createHash('sha256').update(fs.readFileSync(path.join(process.cwd(), 'assets/js/projects-archive.js'))).digest('hex').slice(0,16);
 const projectsPath = path.join(process.cwd(), 'projects.html');
 let archive = fs.readFileSync(projectsPath, 'utf8');
 archive = archive.replace(/assets\/css\/refinements\.css(?:\?[^"\s]*)?/g, `assets/css/refinements.css?v=${refinementVersion}`)
-  .replace(/assets\/js\/instagram-feed\.js(?:\?[^"\s]*)?/g, `assets/js/instagram-feed.js?v=${portfolioVersion}`);
+  .replace(/assets\/js\/instagram-feed\.js(?:\?[^"\s]*)?/g, `assets/js/instagram-feed.js?v=${portfolioVersion}`)
+  .replace(/assets\/js\/projects-archive\.js(?:\?[^"\s]*)?/g, `assets/js/projects-archive.js?v=${archiveVersion}`);
+// Keep the project archive footer identical to the homepage on every build.
+const sharedFooter = html.match(/<footer class="signal-footer"[\s\S]*?<\/footer>/);
+if (!sharedFooter) throw new Error('Shared signal footer is missing');
+archive = archive.replace(/<footer[\s\S]*?<\/footer>/, () => sharedFooter[0].replaceAll('href="#contact"', 'href="/#contact"'));
 fs.writeFileSync(projectsPath, archive);
 
 
@@ -114,3 +120,4 @@ tracker = tracker.replace(
 
 fs.writeFileSync(trackerPath, tracker);
 console.log('Site integrations, font loading, security bootstrap and tracker hardening applied.');
+

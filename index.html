@@ -2255,7 +2255,7 @@
                 <a href="#process">Process</a>
                 <a href="#contact">Contact</a>
             </div>
-            <button class="nav-cta" type="button" id="navStartProject">Start Project ↗</button>
+            <a class="nav-cta" href="#contact" id="navStartProject">Start Project ↗</a>
         </nav>
 
         <main>
@@ -2935,7 +2935,7 @@
                 navStart.addEventListener("click", () => {
                     const contact = document.getElementById("contact");
                     if (contact) contact.scrollIntoView({ behavior: "smooth", block: "start" });
-                    setTimeout(() => { try { form.name.focus({ preventScroll: true }); } catch (error) {} }, 650);
+                    setTimeout(() => { try { form.elements.namedItem("name").focus({ preventScroll: true }); } catch (error) {} }, 650);
                 });
             }
 
@@ -2948,7 +2948,7 @@
                     form.reset();
                     return;
                 }
-                if (!form.name.value.trim() || !form.email.value.trim() || !form.message.value.trim()) {
+                if (!form.elements.namedItem("name").value.trim() || !form.email.value.trim() || !form.message.value.trim()) {
                     setStatus("Please fill in name, email and project details first.", "err");
                     return;
                 }
@@ -3030,7 +3030,7 @@
             // final submit
             async function doSubmit(token) {
                 const payload = {
-                    name: form.name.value.trim(),
+                    name: form.elements.namedItem("name").value.trim(),
                     email: form.email.value.replace(/\s+/g, ""),
                     message: form.message.value.trim(),
                     website: form.website ? form.website.value : "",
@@ -3937,4 +3937,5 @@
     <script src="/assets/js/instagram-feed.js" defer></script>
 </body>
 </html>
+
 

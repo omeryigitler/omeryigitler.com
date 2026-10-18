@@ -31,7 +31,7 @@
       <div class="archive-card-content">
         <div class="archive-card-top"><span>${String(index+1).padStart(2,'0')}</span><span>${esc(project.category)}</span></div>
         <div class="archive-card-main"><h2 class="archive-card-title">${esc(project.title)}</h2><p class="archive-card-url">${esc(label)}</p>
-          ${live?`<div class="archive-card-mobile-preview"><img data-mobile-preview src="${esc(purl)}" alt="" loading="lazy" decoding="async"></div>`:''}
+          ${live?`<div class="archive-card-mobile-preview"><span class="preview-placeholder" aria-hidden="true">Project preview</span><img data-mobile-preview src="${esc(purl)}" alt="" loading="lazy" decoding="async"></div>`:''}
           <div class="archive-card-meta"><div class="archive-card-meta-row"><span>PROJECT</span><span>${esc(project.kind)}</span></div><div class="archive-card-meta-row"><span>STACK</span><span>${esc((project.stack||[]).join(' · '))}</span></div></div>
         </div>
         <div class="archive-card-bottom"><span>${live?'LIVE PROJECT':'REPOSITORY'}</span><span>${live?'LIVE SITE':'GITHUB'} ${upIcon}</span></div>
@@ -44,16 +44,32 @@
     grid.innerHTML=results.length?results.map(card).join(''):'<div class="archive-empty">NO MATCHING PROJECTS</div>';
     grid.querySelectorAll('.archive-card.has-live').forEach((cardEl)=>{
       const repo=cardEl.dataset.repo;const img=cardEl.querySelector('[data-preview-img]');const mobile=cardEl.querySelector('[data-mobile-preview]');
-      const mark=()=>{loaded.add(repo);cardEl.classList.add('preview-loaded')};const fail=()=>{failed.add(repo);cardEl.classList.remove('preview-loaded')};
+      const mark=()=>{loaded.add(repo);cardEl.classList.add('preview-loaded')};const fail=()=>{failed.add(repo);cardEl.classList.remove('preview-loaded');cardEl.classList.add('preview-failed')};
       if(img){if(img.complete&&img.naturalWidth)mark();img.addEventListener('load',mark,{once:true});img.addEventListener('error',fail,{once:true})}
       if(mobile){if(mobile.complete&&mobile.naturalWidth)mark();mobile.addEventListener('load',mark,{once:true});mobile.addEventListener('error',fail,{once:true})}
     });
     setupMobilePreview();
   }
 
+  let previewObserver;
+  const mobileMedia = matchMedia('(max-width:767px)');
   function setupMobilePreview(){
-    if(!matchMedia('(max-width:767px)').matches||!('IntersectionObserver'in window))return;const cards=[...root.querySelectorAll('.archive-card.has-live')];const observer=new IntersectionObserver((entries)=>{const visible=entries.filter(e=>e.isIntersecting).sort((a,b)=>{const c=innerHeight/2;return Math.abs(a.boundingClientRect.top+a.boundingClientRect.height/2-c)-Math.abs(b.boundingClientRect.top+b.boundingClientRect.height/2-c)});cards.forEach(c=>c.classList.remove('mobile-preview-active'));if(visible[0])visible[0].target.classList.add('mobile-preview-active')},{rootMargin:'-28% 0px -28% 0px',threshold:.01});cards.forEach(c=>observer.observe(c));
+    previewObserver?.disconnect();
+    const cards = [...root.querySelectorAll('.archive-card.has-live')];
+    cards.forEach(card => card.classList.remove('mobile-preview-active'));
+    if (!mobileMedia.matches || !('IntersectionObserver' in window)) return;
+    const visible = new Set();
+    previewObserver = new IntersectionObserver(entries => {
+      entries.forEach(entry => entry.isIntersecting ? visible.add(entry.target) : visible.delete(entry.target));
+      const nearest = [...visible].sort((a,b) => {
+        const distance = card => { const rect = card.getBoundingClientRect(); return Math.abs(rect.top + rect.height / 2 - innerHeight / 2); };
+        return distance(a) - distance(b);
+      })[0];
+      cards.forEach(card => card.classList.toggle('mobile-preview-active', card === nearest));
+    }, {rootMargin:'-28% 0px -28% 0px', threshold:.01});
+    cards.forEach(card => previewObserver.observe(card));
   }
+  mobileMedia.addEventListener('change', setupMobilePreview);
 
   root.className='projects-page-archive';
   root.innerHTML=`<div class="archive-shell">
@@ -69,3 +85,4 @@
   root.querySelectorAll('[data-filter]').forEach((button)=>button.addEventListener('click',()=>{filter=button.dataset.filter||'all';root.querySelectorAll('[data-filter]').forEach(b=>b.classList.toggle('is-active',b===button));syncUrl();render()}));
   render();
 })();
+

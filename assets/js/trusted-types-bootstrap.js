@@ -181,7 +181,7 @@
         .oy-signal-looks { left:6%; top:10%; }
         .oy-signal-good { left:55%; top:16%; }
         .oy-signal-why { left:7%; top:41%; }
-        .oy-signal-isnt { left:48%; top:47%; font-size:5.6cqw; }
+        .oy-signal-isnt { left:48%; top:42%; font-size:5.6cqw; }
         .oy-signal-ending.typed-line { left:18%; top:75%; font-size:7.2cqw; }
         .oy-signal-sub { margin:22px 0 26px; text-align:left; font-size:11px; }
         .oy-signal-status { gap:12px; }
@@ -195,7 +195,7 @@
       const paths = mobile ? [
         'M 290 -40 V 95 Q 290 140 335 140 H 640',
         'M -40 120 H 170 Q 220 120 220 170 V 210 Q 220 260 270 260 H 490 Q 540 260 540 310 V 480',
-        'M -40 260 H 20 Q 65 260 65 305 V 350 Q 65 400 115 400 H 640'
+        'M -40 260 H 80 Q 125 260 125 305 V 350 Q 125 400 175 400 H 640'
       ] : [
         'M 555 -40 V 120 Q 555 185 620 185 H 1230',
         'M -50 185 H 345 Q 410 185 410 250 V 280 Q 410 345 475 345 H 970 Q 1040 345 1040 415 V 650',
@@ -279,3 +279,4 @@
     apply();
   }
 })();
+
