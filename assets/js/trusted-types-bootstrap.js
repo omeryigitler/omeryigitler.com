@@ -175,14 +175,14 @@
       @media(max-width:600px) {
         #process { width:calc(100% - 32px)!important; margin:44px auto 60px!important; }
         .oy-signal-label { gap:7px; font-size:11px; margin-bottom:22px; }
-        .oy-signal-stage { aspect-ratio:600/640; }
+        .oy-signal-stage { aspect-ratio:600/720; }
         .oy-signal-desktop { display:none; } .oy-signal-mobile { display:block; }
         .oy-signal-title { font-size:7cqw; }
-        .oy-signal-looks { left:7%; top:11%; }
-        .oy-signal-good { left:44%; top:31%; }
-        .oy-signal-why { left:6%; top:51%; }
-        .oy-signal-isnt { left:45%; top:51%; font-size:6cqw; }
-        .oy-signal-ending.typed-line { left:5%; top:78%; font-size:7.2cqw; }
+        .oy-signal-looks { left:8%; top:7%; }
+        .oy-signal-good { left:40%; top:31%; }
+        .oy-signal-why { left:8%; top:55%; font-size:5.6cqw; }
+        .oy-signal-isnt { left:31%; top:55%; font-size:5.6cqw; }
+        .oy-signal-ending.typed-line { left:18%; top:80%; font-size:7.2cqw; }
         .oy-signal-sub { margin:22px 0 26px; text-align:left; font-size:11px; }
         .oy-signal-status { gap:12px; }
         .oy-signal-status div { font-size:8px; letter-spacing:.05em; }
@@ -193,9 +193,9 @@
 
     function pipes(mobile) {
       const paths = mobile ? [
-        'M 370 -30 V 105 Q 370 160 425 160 H 650',
-        'M -40 190 H 140 Q 195 190 195 245 Q 195 290 250 290 H 650',
-        'M -40 425 H 550 Q 590 425 590 465 Q 590 600 550 600 H 280 V 680'
+        'M 490 -40 V 95 Q 490 150 435 150 H -40',
+        'M -40 150 H 95 Q 150 150 150 205 V 270 Q 150 325 205 325 H 640',
+        'M 640 325 H 530 Q 475 325 475 380 V 455 Q 475 510 420 510 H 95 Q 40 510 40 565 V 650 Q 40 705 95 705 H 640'
       ] : [
         'M 555 -40 V 120 Q 555 185 620 185 H 1230',
         'M -50 185 H 345 Q 410 185 410 250 V 280 Q 410 345 475 345 H 970 Q 1040 345 1040 415 V 650',
@@ -220,7 +220,7 @@
         const to = direction < 0 ? -advance : advance;
         return `<use href="#${prefix}${i}" class="oy-pipe-edge"/><use href="#${prefix}${i}" class="oy-pipe-body"/><text dy="4" xml:space="preserve" style="white-space:pre"><textPath href="#${prefix}${i}" startOffset="0">${copies}${reducedMotion.matches ? '' : `<animate attributeName="startOffset" from="0" to="${to}" dur="${duration}s" calcMode="linear" repeatCount="indefinite"/>`}</textPath></text>`;
       }).join('');
-      return `<svg class="oy-signal-svg oy-signal-${mobile ? 'mobile' : 'desktop'}" viewBox="0 0 ${mobile ? '600 640' : '1180 600'}" aria-hidden="true"><defs>${paths.map((d,i) => `<path id="${prefix}${i}" d="${d}"/>`).join('')}</defs>${streams}</svg>`;
+      return `<svg class="oy-signal-svg oy-signal-${mobile ? 'mobile' : 'desktop'}" viewBox="0 0 ${mobile ? '600 720' : '1180 600'}" aria-hidden="true"><defs>${paths.map((d,i) => `<path id="${prefix}${i}" d="${d}"/>`).join('')}</defs>${streams}</svg>`;
     }
 
     section.innerHTML = `
