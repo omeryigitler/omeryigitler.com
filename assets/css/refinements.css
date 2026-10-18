@@ -568,3 +568,24 @@ footer.signal-footer { display:block; }
 .signal-footer .footer-word svg { overflow:visible; }
 .footer-word-window .footer-word { user-select:none; }
 .footer-word rect { pointer-events:none; }
+
+/* Keep footer utilities on a final left/right row at every viewport. */
+.signal-footer .footer-bottom {
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  align-items:end;
+  gap:24px 12px;
+}
+.signal-footer .footer-bottom .foot-links { grid-column:1 / -1; grid-row:1; flex-wrap:wrap; gap:12px; }
+.signal-footer .footer-bottom .foot-copy { grid-column:1; grid-row:2; margin:0; text-align:left; }
+.signal-footer .footer-bottom .footer-top-link { grid-column:2; grid-row:2; justify-self:end; white-space:nowrap; }
+@media(max-width:899px) {
+  .philosophy-manifesto { container-type:inline-size; }
+  .philosophy-manifesto .phil-line {
+    flex-wrap:nowrap;
+    white-space:nowrap;
+    font-size:clamp(12px,5cqw,40px);
+    letter-spacing:-.03em;
+    gap:.28em;
+  }
+}
