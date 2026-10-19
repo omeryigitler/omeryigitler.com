@@ -283,36 +283,111 @@
       else if (length === words[index].length && !deleting) { deleting = true; delay = 2400; }
       timer = window.setTimeout(tick, delay);
     }
-    // Use actual loaded glyph advances for a seamless loop boundary.
-    document.fonts.ready.then(() => {
-      section.querySelectorAll('textPath[data-speed]').forEach(track => {
-        const spans = [...track.querySelectorAll('tspan')];
-        spans.forEach(span => { span.removeAttribute('textLength'); span.removeAttribute('lengthAdjust'); });
-        const advance = spans[0]?.getComputedTextLength();
-        if (!advance) return;
+    // Rasterize glyphs once. Animation moves cached pixels, never SVG text layout.
+    const stage = section.querySelector('.oy-signal-stage');
+    const canvas = document.createElement('canvas');
+    canvas.className = 'oy-signal-canvas';
+    canvas.setAttribute('aria-hidden', 'true');
+    canvas.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;pointer-events:none';
+    const ctx = canvas.getContext('2d');
+    let tracks = [], frame = 0, previous = 0, elapsed = 0, ready = false;
+    let scale = 1, pixelRatio = 1, layoutKey = '';
+    function prepareTracks() {
+      if (!ctx) return;
+      const mobile = mobileViewport.matches;
+      const width = stage.clientWidth;
+      if (!width) return;
+      const ratio = Math.min(window.devicePixelRatio || 1, 2);
+      const key = `${mobile}:${width}:${ratio}`;
+      if (layoutKey === key) return;
+      layoutKey = key;
+      scale = width / (mobile ? 600 : 1180);
+      pixelRatio = ratio;
+      canvas.width = Math.round(width * ratio);
+      canvas.height = Math.round(stage.clientHeight * ratio);
+      const svg = section.querySelector(mobile ? '.oy-signal-mobile' : '.oy-signal-desktop');
+      tracks = [...svg.querySelectorAll('textPath')].map(track => {
         const path = section.querySelector(track.getAttribute('href'));
-        const needed = Math.ceil((path?.getTotalLength() || 2600) / advance) + 2;
-        spans.slice(needed).forEach(span => span.remove());
-        const reverse = Number(track.dataset.direction) < 0;
-        const from = reverse ? 0 : -advance, to = reverse ? -advance : 0;
-        track.setAttribute('startOffset', from);
-        const animation = track.querySelector('animate');
-        if (animation) {
-          animation.setAttribute('from', from);
-          animation.setAttribute('to', to);
-          animation.setAttribute('dur', `${advance / Number(track.dataset.speed)}s`);
-          animation.beginElement();
-        }
+        const total = path.getTotalLength();
+        const steps = Math.ceil(total * 2);
+        const points = Array.from({length:steps + 1}, (_, i) => path.getPointAtLength(i * total / steps));
+        const label = track.querySelector('tspan').textContent;
+        const font = '500 12px "JetBrains Mono", monospace';
+        ctx.font = font;
+        const glyphs = new Map();
+        const density = Math.max(2, scale * ratio);
+        let advance = 0;
+        const letters = [...label].map(char => {
+          if (!glyphs.has(char)) {
+            const width = ctx.measureText(char).width;
+            const sprite = document.createElement('canvas');
+            sprite.width = Math.ceil((width + 4) * density);
+            sprite.height = Math.ceil(22 * density);
+            const ink = sprite.getContext('2d');
+            ink.scale(density, density);
+            ink.font = font; ink.fillStyle = '#b6a129';
+            ink.fillText(char, 2, 15);
+            glyphs.set(char, {sprite, width, density});
+          }
+          const glyph = glyphs.get(char);
+          const offset = advance + glyph.width / 2;
+          advance += glyph.width + .45;
+          return {glyph, offset};
+        });
+        return {points, steps, total, letters, advance,
+          speed:Number(track.dataset.speed), direction:Number(track.dataset.direction)};
       });
+      if (!canvas.isConnected) stage.insertBefore(canvas, stage.querySelector('h3'));
+      section.querySelectorAll('.oy-signal-svg text').forEach(text => { text.style.display = 'none'; });
+      ready = true;
+      drawStreams();
+    }
+    function drawStreams() {
+      if (!ready) return;
+      ctx.setTransform(1,0,0,1,0,0);
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+      const unit = scale * pixelRatio;
+      for (const track of tracks) {
+        const phase = ((elapsed * track.speed * track.direction) % track.advance + track.advance) % track.advance;
+        for (let base = phase - track.advance; base < track.total; base += track.advance) {
+          for (const {glyph, offset} of track.letters) {
+            const distance = base + offset;
+            if (distance < 0 || distance > track.total) continue;
+            const sample = distance / track.total * track.steps;
+            const index = Math.min(track.steps - 1, Math.floor(sample));
+            const fraction = sample - index;
+            const a = track.points[index], b = track.points[index + 1];
+            const angle = Math.atan2(b.y - a.y, b.x - a.x);
+            const cos = Math.cos(angle), sin = Math.sin(angle);
+            ctx.setTransform(unit*cos,unit*sin,-unit*sin,unit*cos,
+              (a.x+(b.x-a.x)*fraction)*unit,(a.y+(b.y-a.y)*fraction)*unit);
+            ctx.drawImage(glyph.sprite, -glyph.width/2-2, -11,
+              glyph.sprite.width/glyph.density, glyph.sprite.height/glyph.density);
+          }
+        }
+      }
+    }
+    function animateStreams(now) {
+      frame = 0;
+      if (!visible || document.hidden || reducedMotion.matches || !ready) { previous=0; return; }
+      if (previous) elapsed += Math.min((now-previous)/1000, .05);
+      previous = now;
+      drawStreams();
+      frame = requestAnimationFrame(animateStreams);
+    }
+    document.fonts.ready.then(() => {
+      prepareTracks();
+      new ResizeObserver(() => { prepareTracks(); syncMotion(); }).observe(stage);
       syncMotion();
     });
     function syncMotion() {
       clearTimeout(timer);
-      section.querySelectorAll('svg').forEach(svg => {
-        const activeLayout = svg.classList.contains('oy-signal-mobile') === mobileViewport.matches;
-        if (reducedMotion.matches || !visible || document.hidden || !activeLayout) svg.pauseAnimations();
-        else svg.unpauseAnimations();
-      });
+      // Keep the SVG fallback static; only the independent canvas layer moves.
+      section.querySelectorAll('svg').forEach(svg => svg.pauseAnimations());
+      if (frame) cancelAnimationFrame(frame);
+      frame=0; previous=0;
+      if (ready && visible && !document.hidden && !reducedMotion.matches) frame=requestAnimationFrame(animateStreams);
+      else if (ready) drawStreams();
       if (reducedMotion.matches) { index=0; length=words[0].length; deleting=true; word.textContent=words[0]; }
       else if (visible && !document.hidden) timer=window.setTimeout(tick, 1400);
     }
@@ -325,7 +400,7 @@
       }, {threshold:0, rootMargin:'120px 0px'});
       observer.observe(section.querySelector('.oy-signal-stage'));
     } else { visible=true; syncMotion(); }
-    mobileViewport.addEventListener('change', syncMotion);
+    mobileViewport.addEventListener('change', () => { prepareTracks(); syncMotion(); });
     reducedMotion.addEventListener('change', syncMotion);
     document.addEventListener('visibilitychange', syncMotion);
   }

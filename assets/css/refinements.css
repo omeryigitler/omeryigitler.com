@@ -722,3 +722,7 @@ footer.signal-footer { display:block; }
  .signal-footer .footer-top { padding-block:56px; }
  .signal-footer .footer-word-window { padding-block:32px; }
 }
+
+/* A taller wordmark without cropping either end or changing its magnetic cells. */
+.signal-footer .footer-word { width:98%; margin-left:1%; }
+.signal-footer .footer-word svg { transform:scaleY(1.16); transform-origin:center; }

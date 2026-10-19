@@ -557,7 +557,8 @@
       const bounds = svg.getBoundingClientRect();
       const unit = bounds.width / 288;
       const px = pointer ? (pointer.x-bounds.left)/unit : 0;
-      const py = pointer ? (pointer.y-bounds.top)/unit : 0;
+      const unitY = bounds.height / 21;
+      const py = pointer ? (pointer.y-bounds.top)/unitY : 0;
       const radius = 86/unit;
       cells.forEach(cell => {
         const dx=px-cell.cx, dy=py-cell.cy;
