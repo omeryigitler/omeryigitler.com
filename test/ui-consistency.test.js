@@ -86,3 +86,9 @@ test('build wiring keeps a single versioned script and identical footers on both
   const footer=text=>text.match(/<footer class="signal-footer"[\s\S]*?<\/footer>/)[0];
   assert.equal(footer(archive),footer(home).replaceAll('href="#contact"','href="/#contact"'));
 });
+test('intro preparation still recognizes the original CSS source blocks',()=>{
+  const root=path.resolve(__dirname,'..'),writes=new Map();
+  const virtualFS={readFileSync(file,encoding){return writes.has(file)?writes.get(file):fs.readFileSync(file,encoding);},writeFileSync(file,value){writes.set(file,value);}};
+  vm.runInNewContext(read('scripts/patch-intro-hq.js'),{require(name){return name==='node:fs'||name==='fs'?virtualFS:require(name);},__dirname:path.join(root,'scripts'),console:{log(){}}});
+  assert.match(writes.get(path.join(root,'index.html')),/html\.intro-skip #intro-modal/);
+});
