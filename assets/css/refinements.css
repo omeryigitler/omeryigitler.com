@@ -710,3 +710,15 @@ footer.signal-footer { display:block; }
 @media(max-width:700px) {
  .signal-footer .footer-bottom .foot-links { grid-column:1 / -1; grid-row:1; }
 }
+
+/* Archive search stays in document flow, and the footer gains breathing room. */
+.projects-page-archive .archive-controls { position:relative; top:auto; backdrop-filter:none; }
+.signal-footer .footer-top { padding-block:80px; }
+.signal-footer .footer-word-window { padding-block:44px; }
+.signal-footer .footer-bottom { padding-block:32px; }
+#process .oy-signal-stage { contain:layout paint; isolation:isolate; }
+#process .oy-signal-ending .highlight { display:inline-block; min-width:11.5ch; }
+@media(max-width:700px) {
+ .signal-footer .footer-top { padding-block:56px; }
+ .signal-footer .footer-word-window { padding-block:32px; }
+}

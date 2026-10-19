@@ -290,6 +290,9 @@
         spans.forEach(span => { span.removeAttribute('textLength'); span.removeAttribute('lengthAdjust'); });
         const advance = spans[0]?.getComputedTextLength();
         if (!advance) return;
+        const path = section.querySelector(track.getAttribute('href'));
+        const needed = Math.ceil((path?.getTotalLength() || 2600) / advance) + 2;
+        spans.slice(needed).forEach(span => span.remove());
         const reverse = Number(track.dataset.direction) < 0;
         const from = reverse ? 0 : -advance, to = reverse ? -advance : 0;
         track.setAttribute('startOffset', from);
@@ -314,8 +317,13 @@
       else if (visible && !document.hidden) timer=window.setTimeout(tick, 1400);
     }
     if ('IntersectionObserver' in window) {
-      const observer = new IntersectionObserver(entries => { visible=entries[0].isIntersecting; syncMotion(); }, {threshold:0.1});
-      observer.observe(section);
+      const observer = new IntersectionObserver(entries => {
+        const nextVisible = entries[0].isIntersecting;
+        if (nextVisible === visible) return;
+        visible = nextVisible;
+        syncMotion();
+      }, {threshold:0, rootMargin:'120px 0px'});
+      observer.observe(section.querySelector('.oy-signal-stage'));
     } else { visible=true; syncMotion(); }
     mobileViewport.addEventListener('change', syncMotion);
     reducedMotion.addEventListener('change', syncMotion);

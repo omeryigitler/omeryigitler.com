@@ -381,7 +381,6 @@
       ['.oy-signal-label', 'diagnostics', 'conversion system diagnostics'],
       ['.philosophy-kicker', 'principles', 'just work that lasts'],
       ['#contact > .section-status', 'contact', 'ready for new projects'],
-      ['.next-steps > .section-kicker', 'next steps', 'a clear way forward'],
       ['.archive-status', 'project archive', '31 projects indexed']
     ];
     labels.forEach(([selector, key, value]) => {
