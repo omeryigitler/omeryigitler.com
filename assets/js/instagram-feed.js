@@ -451,7 +451,7 @@
       frame = 0;
       const rect = footer.getBoundingClientRect();
       const progress = Math.max(0, Math.min(1, (innerHeight - rect.top) / Math.max(1, Math.min(rect.height, innerHeight * .85))));
-      word.style.transform = `translate3d(${(1 - progress) * 8}%,0,0)`;
+      // The pixel veil reveals on scroll; the wordmark stays centered.
       const w = Math.ceil(rect.width), h = Math.ceil(rect.height);
       if (w !== width || h !== height) { width = veil.width = w; height = veil.height = h; }
       ctx.clearRect(0, 0, width, height);
@@ -535,6 +535,8 @@
     const oldWord = document.querySelector('.footer-word');
     const svg = oldWord?.querySelector('svg');
     if (!svg) return;
+    // Painted cells span 0..284.78; balance the 288-unit viewport gutters.
+    svg.setAttribute('viewBox', '-1.61 0 288 21');
     // The wordmark is an interactive field, not one large home link.
     const word = document.createElement('div');
     word.className = oldWord.className;
@@ -556,7 +558,7 @@
       let moving = false, affected = 0;
       const bounds = svg.getBoundingClientRect();
       const unit = bounds.width / 288;
-      const px = pointer ? (pointer.x-bounds.left)/unit : 0;
+      const px = pointer ? (pointer.x-bounds.left)/unit + svg.viewBox.baseVal.x : 0;
       const unitY = bounds.height / 21;
       const py = pointer ? (pointer.y-bounds.top)/unitY : 0;
       const radius = 86/unit;

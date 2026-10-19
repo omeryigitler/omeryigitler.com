@@ -724,5 +724,5 @@ footer.signal-footer { display:block; }
 }
 
 /* A taller wordmark without cropping either end or changing its magnetic cells. */
-.signal-footer .footer-word { width:98%; margin-left:1%; }
+.signal-footer .footer-word { width:98%; margin-inline:auto; transform:none; will-change:auto; }
 .signal-footer .footer-word svg { transform:scaleY(1.16); transform-origin:center; }
