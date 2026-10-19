@@ -8,8 +8,6 @@
   const allowed = new Set(filters.map((item) => item.value));
   let query = params.get('q') || '';
   let filter = allowed.has(params.get('filter')) ? params.get('filter') : 'all';
-  const loaded = new Set();
-  const failed = new Set();
 
   const searchIcon = `<svg class="archive-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.8"></circle><path d="m16.2 16.2 4.1 4.1"></path></svg>`;
   const leftIcon = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5"></path><path d="m11 6-6 6 6 6"></path></svg>`;
@@ -27,7 +25,7 @@
   function card(project,index){
     const repositoryUrl=project.githubUrl||githubFallback(project.repo);const targetUrl=project.siteUrl||repositoryUrl;const live=Boolean(project.siteUrl);const label=live?(project.siteLabel||displayUrl(project.siteUrl)):`github / omeryigitler / ${project.repo}`;const purl=previewUrl(project.repo);
     return `<a class="archive-card${live?' has-live':' no-live'}" data-repo="${esc(project.repo)}" href="${esc(targetUrl)}" target="_blank" rel="noreferrer">
-      ${live?`<div class="archive-card-preview" aria-hidden="true"><img data-preview-img src="${esc(purl)}" alt=""></div><div class="archive-card-cover" aria-hidden="true"></div>`:''}
+      ${live?`<div class="archive-card-preview" aria-hidden="true"><img data-preview-img loading="lazy" decoding="async" src="${esc(purl)}" alt=""></div><div class="archive-card-cover" aria-hidden="true"></div>`:''}
       <div class="archive-card-content">
         <div class="archive-card-top"><span>${String(index+1).padStart(2,'0')}</span><span>${esc(project.category)}</span></div>
         <div class="archive-card-main"><h2 class="archive-card-title">${esc(project.title)}</h2><p class="archive-card-url">${esc(label)}</p>
@@ -41,12 +39,19 @@
 
   function render(){
     const results=getResults();const grid=root.querySelector('[data-archive-grid]');const count=root.querySelector('[data-result-count]');if(count)count.textContent=`${String(results.length).padStart(2,'0')} RESULTS`;if(!grid)return;
-    grid.innerHTML=results.length?results.map(card).join(''):'<div class="archive-empty">NO MATCHING PROJECTS</div>';
+    grid.innerHTML=results.length?results.map(card).join(''):'<div class="archive-empty"><p>No matching projects.</p><button type="button" class="project-finder-chip" data-reset-search>Clear search and filters</button></div>';
     grid.querySelectorAll('.archive-card.has-live').forEach((cardEl)=>{
       const repo=cardEl.dataset.repo;const img=cardEl.querySelector('[data-preview-img]');const mobile=cardEl.querySelector('[data-mobile-preview]');
-      const mark=()=>{loaded.add(repo);cardEl.classList.add('preview-loaded')};const fail=()=>{failed.add(repo);cardEl.classList.remove('preview-loaded');cardEl.classList.add('preview-failed')};
+      const mark=()=>{cardEl.classList.add('preview-loaded')};const fail=()=>{cardEl.classList.remove('preview-loaded');cardEl.classList.add('preview-failed')};
       if(img){if(img.complete&&img.naturalWidth)mark();img.addEventListener('load',mark,{once:true});img.addEventListener('error',fail,{once:true})}
       if(mobile){if(mobile.complete&&mobile.naturalWidth)mark();mobile.addEventListener('load',mark,{once:true});mobile.addEventListener('error',fail,{once:true})}
+    });
+    grid.querySelector('[data-reset-search]')?.addEventListener('click', () => {
+      query=''; filter='all'; input.value=''; clear.style.display='none';
+      root.querySelectorAll('[data-filter]').forEach(button => {
+        const active=button.dataset.filter==='all'; button.classList.toggle('is-active',active); button.setAttribute('aria-pressed',active);
+      });
+      syncUrl(); render(); input.focus();
     });
     setupMobilePreview();
   }
@@ -75,14 +80,14 @@
   root.innerHTML=`<div class="archive-shell">
     <header class="archive-header"><div class="archive-header-left archive-status" aria-label="Project archive status"><span class="archive-prompt">$</span><span class="archive-status-key">project archive</span><span class="archive-status-arrow">→</span><strong>${String(projects.length).padStart(2,'0')} projects indexed</strong><span class="archive-status-cursor" aria-hidden="true"></span></div><a class="archive-back" href="/">${leftIcon} BACK HOME</a></header>
     <div class="archive-intro"><p class="archive-eyebrow">EVERYTHING I’VE BUILT / SHIPPED / TESTED</p><h1 class="archive-title"><span class="line-soft">All projects.</span><span class="line-soft">Experiments</span><span class="line-soft">&amp; tools<span class="accent">.</span></span></h1></div>
-    <div class="archive-controls"><div class="archive-search">${searchIcon}<input class="archive-search-input" data-archive-input value="${esc(query)}" placeholder="Search all projects..." aria-label="Search project archive"><div class="archive-search-right"><span data-result-count>${String(projects.length).padStart(2,'0')} RESULTS</span><button class="archive-clear" data-clear type="button" aria-label="Clear search" style="display:${query?'grid':'none'}">${closeIcon}</button></div></div><div class="archive-filter-row">${filters.map(item=>`<button class="project-finder-chip${item.value===filter?' is-active':''}" type="button" data-filter="${item.value}">${item.label}</button>`).join('')}</div></div>
+    <div class="archive-controls"><div class="archive-search">${searchIcon}<input class="archive-search-input" data-archive-input value="${esc(query)}" placeholder="Search all projects..." aria-label="Search project archive"><div class="archive-search-right"><span data-result-count role="status" aria-live="polite" aria-atomic="true">${String(projects.length).padStart(2,'0')} RESULTS</span><button class="archive-clear" data-clear type="button" aria-label="Clear search" style="display:${query?'grid':'none'}">${closeIcon}</button></div></div><div class="archive-filter-row">${filters.map(item=>`<button class="project-finder-chip${item.value===filter?' is-active':''}" type="button" aria-pressed="${item.value===filter}" data-filter="${item.value}">${item.label}</button>`).join('')}</div></div>
     <div class="archive-grid" data-archive-grid></div>
   </div>`;
 
   const input=root.querySelector('[data-archive-input]');const clear=root.querySelector('[data-clear]');
   input?.addEventListener('input',()=>{query=input.value||'';if(clear)clear.style.display=query?'grid':'none';syncUrl();render()});
   clear?.addEventListener('click',()=>{query='';input.value='';clear.style.display='none';syncUrl();render();input.focus()});
-  root.querySelectorAll('[data-filter]').forEach((button)=>button.addEventListener('click',()=>{filter=button.dataset.filter||'all';root.querySelectorAll('[data-filter]').forEach(b=>b.classList.toggle('is-active',b===button));syncUrl();render()}));
+  root.querySelectorAll('[data-filter]').forEach((button)=>button.addEventListener('click',()=>{filter=button.dataset.filter||'all';root.querySelectorAll('[data-filter]').forEach(b=>{b.classList.toggle('is-active',b===button);b.setAttribute('aria-pressed',b===button)});syncUrl();render()}));
   render();
 })();
 

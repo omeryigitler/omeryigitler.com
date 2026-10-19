@@ -46,6 +46,39 @@
   }
 })();
 
+/* Shared headline timing; the highlight follows text while its outer slot stays put. */
+window.oyTypewriter = function (element, phrases) {
+  if (!element || !phrases.length) return;
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)');
+  let index = 0, count = phrases[0].length, deleting = true, timer = 0, visible = false;
+  element.textContent = phrases[0];
+  const tick = () => {
+    timer = 0;
+    if (!visible || document.hidden || reduced.matches) return;
+    count += deleting ? -1 : 1;
+    element.textContent = phrases[index].slice(0, count);
+    let delay = deleting ? 38 : 64 + Math.random() * 70;
+    if (!count) { deleting = false; index = (index + 1) % phrases.length; delay = 420; }
+    else if (!deleting && count === phrases[index].length) { deleting = true; delay = 3600; }
+    timer = setTimeout(tick, delay);
+  };
+  const sync = () => {
+    clearTimeout(timer);
+    if (reduced.matches) {
+      index = 0; count = phrases[0].length; deleting = true;
+      element.textContent = phrases[0];
+    } else if (visible && !document.hidden) timer = setTimeout(tick, 3200);
+  };
+  if ('IntersectionObserver' in window) {
+    new IntersectionObserver(entries => {
+      const next = entries[0].isIntersecting;
+      if (next !== visible) { visible = next; sync(); }
+    }).observe(element.closest('.typed-line') || element);
+  } else { visible = true; sync(); }
+  document.addEventListener('visibilitychange', sync);
+  reduced.addEventListener('change', sync);
+};
+
 /* Keep the restored TAURUS composition on this branch. */
 (function restorePhilosophyComposition() {
   'use strict';
@@ -270,19 +303,8 @@
       </div>
     `;
 
-    const word = section.querySelector('[data-signal-word]');
-    const words = ['converting?', 'selling?', 'growing?'];
-    let index = 0, length = words[0].length, deleting = true, timer;
+    window.oyTypewriter(section.querySelector('[data-signal-word]'), ['converting?', 'selling?', 'growing?']);
     let visible = false;
-    function tick() {
-      if (!visible || document.hidden || reducedMotion.matches) return;
-      length += deleting ? -1 : 1;
-      word.textContent = words[index].slice(0, length);
-      let delay = deleting ? 55 : 105;
-      if (length === 0) { deleting = false; index = (index + 1) % words.length; delay = 240; }
-      else if (length === words[index].length && !deleting) { deleting = true; delay = 2400; }
-      timer = window.setTimeout(tick, delay);
-    }
     // Rasterize glyphs once. Animation moves cached pixels, never SVG text layout.
     const stage = section.querySelector('.oy-signal-stage');
     const canvas = document.createElement('canvas');
@@ -381,15 +403,13 @@
       syncMotion();
     });
     function syncMotion() {
-      clearTimeout(timer);
       // Keep the SVG fallback static; only the independent canvas layer moves.
       section.querySelectorAll('svg').forEach(svg => svg.pauseAnimations());
       if (frame) cancelAnimationFrame(frame);
       frame=0; previous=0;
       if (ready && visible && !document.hidden && !reducedMotion.matches) frame=requestAnimationFrame(animateStreams);
       else if (ready) drawStreams();
-      if (reducedMotion.matches) { index=0; length=words[0].length; deleting=true; word.textContent=words[0]; }
-      else if (visible && !document.hidden) timer=window.setTimeout(tick, 1400);
+
     }
     if ('IntersectionObserver' in window) {
       const observer = new IntersectionObserver(entries => {

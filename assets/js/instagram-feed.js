@@ -188,7 +188,7 @@
       if (heading) heading.textContent = 'Start a Project';
       if (lede) lede.textContent = 'Tell me what you’re building. I’ll turn the brief into a clear project scope.';
       if (textarea) {
-        const phrases = ['Tell us about the project...', 'A new website for my business...', 'Redesign + SEO for my store...', 'An online booking system...'];
+        const phrases = ['Tell me about the project...', 'A new website for my business...', 'Redesign + SEO for my store...', 'An online booking system...'];
         textarea.placeholder = phrases[0];
         if (!textarea.dataset.rotatingPlaceholder) {
           textarea.dataset.rotatingPlaceholder = 'true';
@@ -244,144 +244,17 @@
     }
   }
 
-  function setupProcessBlueprint() {
-    const process = document.getElementById('process');
-    const wrap = process?.querySelector('.warp-wrap');
-    if (!process || !wrap || wrap.dataset.blueprintReady === '1') return;
-    wrap.dataset.blueprintReady = '1';
-
-    const steps = [
-      {
-        label: 'Strategy',
-        title: 'From visitor to enquiry',
-        copy: 'We map how a local customer finds you, understands what you sell, trusts the business, and contacts you without friction.',
-        output: 'User journey · sitemap · conversion path',
-        tags: ['Google', 'Trust', 'Call / WhatsApp']
-      },
-      {
-        label: 'Interface',
-        title: 'A storefront people understand',
-        copy: 'Services, prices, photos, reviews, location, and contact actions are arranged so visitors instantly know what to do next.',
-        output: 'Responsive UI · content hierarchy · interactions',
-        tags: ['Services', 'Photos', 'Clear actions']
-      },
-      {
-        label: 'Development',
-        title: 'Built to load and convert',
-        copy: 'The approved design becomes a fast production site with working forms, tracking, responsive checks, SEO foundations, and clean code.',
-        output: 'Production code · forms · analytics · SEO',
-        tags: ['Fast pages', 'Forms work', 'Tracking']
-      },
-      {
-        label: 'Launch',
-        title: 'Live project proof',
-        copy: 'The system finishes as real work: tested on desktop and phone, connected to the domain, monitored, and prepared for handover.',
-        output: 'QA · domain · monitoring · handover',
-        tags: ['Desktop QA', 'Mobile QA', 'Live launch']
-      }
-    ];
-
-    wrap.classList.add('process-blueprint-wrap');
-    wrap.innerHTML = `
-      <div class="process-blueprint-sticky" data-process-sticky>
-        <div class="process-system-hud">
-          <span><b>$</b> PROCESS / BUILD SYSTEM</span>
-          <span><strong data-process-step>01 / 04</strong><i>—</i><span data-process-label>STRATEGY</span></span>
-        </div>
-        <div class="process-system-body">
-          <aside class="process-rail" aria-label="Process stages">
-            <div class="process-rail-line"><span data-process-rail-fill></span></div>
-            ${steps.map((step, index) => `
-              <div class="process-rail-step${index === 0 ? ' is-active' : ''}" data-process-rail-step="${index}">
-                <span class="process-rail-number">${String(index + 1).padStart(2, '0')}</span>
-                <span class="process-rail-name">${step.label}</span>
-              </div>`).join('')}
-          </aside>
-          <div class="process-sheet-stage" data-process-stage>
-            ${steps.map((step, index) => `
-              <article class="process-sheet${index === 0 ? ' is-active' : ''}" data-process-sheet="${index}">
-                <span class="process-sheet-ghost">${String(index + 1).padStart(2, '0')}</span>
-                <div class="process-sheet-content">
-                  <div class="process-sheet-kicker">${String(index + 1).padStart(2, '0')} / ${step.label}</div>
-                  <h3>${step.title}</h3>
-                  <p>${step.copy}</p>
-                  <div class="process-output"><span>OUTPUT</span><strong>${step.output}</strong></div>
-                  <div class="process-tags">${step.tags.map((tag) => `<span>${tag}</span>`).join('')}</div>
-                </div>
-              </article>`).join('')}
-          </div>
-        </div>
-        <div class="process-system-progress"><span data-process-progress></span></div>
-      </div>`;
-
-    const desktop = window.matchMedia('(min-width: 900px)');
-    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const sheets = [...wrap.querySelectorAll('[data-process-sheet]')];
-    const railSteps = [...wrap.querySelectorAll('[data-process-rail-step]')];
-    const stepEl = wrap.querySelector('[data-process-step]');
-    const labelEl = wrap.querySelector('[data-process-label]');
-    const progressEl = wrap.querySelector('[data-process-progress]');
-    const railFill = wrap.querySelector('[data-process-rail-fill]');
-    let raf = 0;
-
-    function paint() {
-      raf = 0;
-      if (!desktop.matches || reduced) {
-        sheets.forEach((sheet) => {
-          sheet.style.removeProperty('transform');
-          sheet.style.removeProperty('opacity');
-          sheet.style.removeProperty('visibility');
-        });
-        return;
-      }
-
-      const rect = wrap.getBoundingClientRect();
-      const scrollable = Math.max(1, wrap.offsetHeight - window.innerHeight);
-      const progress = Math.max(0, Math.min(1, -rect.top / scrollable));
-      const position = progress * (steps.length - 1);
-      const active = Math.max(0, Math.min(steps.length - 1, Math.round(position)));
-
-      sheets.forEach((sheet, index) => {
-        const delta = index - position;
-        const distance = Math.abs(delta);
-        const y = delta * 118;
-        const scale = Math.max(.94, 1 - distance * .028);
-        const opacity = Math.max(0, 1 - distance * .92);
-        sheet.style.transform = `translate3d(0, calc(-50% + ${y.toFixed(1)}px), 0) scale(${scale.toFixed(3)})`;
-        sheet.style.opacity = opacity.toFixed(3);
-        sheet.style.visibility = opacity < .02 ? 'hidden' : 'visible';
-        sheet.classList.toggle('is-active', index === active);
-      });
-
-      railSteps.forEach((step, index) => step.classList.toggle('is-active', index === active));
-      if (stepEl) stepEl.textContent = `${String(active + 1).padStart(2, '0')} / 04`;
-      if (labelEl) labelEl.textContent = steps[active].label.toUpperCase();
-      if (progressEl) progressEl.style.width = `${(progress * 100).toFixed(2)}%`;
-      if (railFill) railFill.style.height = `${(progress * 100).toFixed(2)}%`;
-    }
-
-    function requestPaint() {
-      if (!raf) raf = requestAnimationFrame(paint);
-    }
-
-    window.addEventListener('scroll', requestPaint, { passive: true });
-    window.addEventListener('resize', requestPaint, { passive: true });
-    desktop.addEventListener?.('change', requestPaint);
-    paint();
-  }
-
   setupArchiveLauncher();
   addLocationCue();
   alignContactWithAdminPipeline();
-  setupProcessBlueprint();
   function setupSectionActions() {
     const labels = [
-      ['.project-finder-head > span', 'project archive', '31 projects indexed'],
+      ['.project-finder-head > span', 'project archive', `${projects.length} projects indexed`],
       ['#expertise .badge', 'expertise', 'complete digital solutions'],
       ['.oy-signal-label', 'diagnostics', 'conversion system diagnostics'],
       ['.philosophy-kicker', 'principles', 'just work that lasts'],
       ['#contact > .section-status', 'contact', 'ready for new projects'],
-      ['.archive-status', 'project archive', '31 projects indexed']
+      ['.archive-status', 'project archive', `${projects.length} projects indexed`]
     ];
     labels.forEach(([selector, key, value]) => {
       const host = document.querySelector(selector);
@@ -400,10 +273,10 @@
       text.setAttribute('aria-hidden', 'true');
       text.textContent = label;
       el.replaceChildren(text);
-      if (reduced.matches || !('IntersectionObserver' in window)) return;
+      if (!('IntersectionObserver' in window)) return;
       let index = label.length, deleting = true, timer = null, visible = false;
       const tick = () => {
-        if (!visible || document.hidden) { timer = null; return; }
+        if (!visible || document.hidden || reduced.matches) { timer = null; return; }
         index += deleting ? -1 : 1;
         text.textContent = label.slice(0, index);
         let delay = deleting ? 38 : 70;
@@ -413,11 +286,14 @@
       };
       const resume = () => {
         clearTimeout(timer); timer = null;
-        if (visible && !document.hidden) timer = setTimeout(tick, 1800);
+        if (visible && !document.hidden && !reduced.matches) timer = setTimeout(tick, 1800);
       };
       new IntersectionObserver(entries => { visible = entries[0].isIntersecting; resume(); }, {threshold:0.1}).observe(el);
       document.addEventListener('visibilitychange', resume);
-      reduced.addEventListener('change', () => { if (reduced.matches) { visible = false; clearTimeout(timer); text.textContent = label; } });
+      reduced.addEventListener('change', () => {
+        if (reduced.matches) { index=label.length; deleting=true; text.textContent=label; }
+        resume();
+      });
     });
     const briefButton = document.querySelector('.brief-start');
     if (briefButton && !briefButton.dataset.bound) {
@@ -484,18 +360,38 @@
     pointer.hidden = true;
     pointer.setAttribute('aria-hidden', 'true');
     document.body.append(pointer);
-    let x = 0, y = 0, targetX = 0, targetY = 0, frame = 0, shown = false;
+    let x = 0, y = 0, targetX = 0, targetY = 0, frame = 0, shown = false, pendingEvent = null;
+    const visibleControls = new Set();
+    const controlObserver = new IntersectionObserver(entries => entries.forEach(entry => {
+      if (entry.isIntersecting) visibleControls.add(entry.target); else visibleControls.delete(entry.target);
+    }), {rootMargin:'70px'});
+    const trackControls = node => {
+      if (!(node instanceof Element)) return;
+      if (node.matches('a,button,summary')) controlObserver.observe(node);
+      node.querySelectorAll('a,button,summary').forEach(el => controlObserver.observe(el));
+    };
+    trackControls(document.body);
+    new MutationObserver(records => records.forEach(record => {
+      record.addedNodes.forEach(trackControls);
+      record.removedNodes.forEach(node => {
+        if (!(node instanceof Element)) return;
+        const removed = [node, ...node.querySelectorAll('a,button,summary')];
+        removed.forEach(el => { visibleControls.delete(el); controlObserver.unobserve(el); });
+      });
+    })).observe(document.body, {childList:true,subtree:true});
     const paint = () => {
+      frame = 0;
+      if (pendingEvent) { const event=pendingEvent; pendingEvent=null; updateTarget(event); }
       x += (targetX - x) * .38; y += (targetY - y) * .38;
       pointer.style.transform = `translate3d(${x}px,${y}px,0)`;
       frame = Math.abs(targetX-x) + Math.abs(targetY-y) > .15 ? requestAnimationFrame(paint) : 0;
     };
-    const hide = () => { shown = false; pointer.hidden = true; document.documentElement.classList.remove('magnetic-pointer-active'); cancelAnimationFrame(frame); frame = 0; };
-    document.addEventListener('pointermove', event => {
+    const hide = () => { pendingEvent = null; shown = false; pointer.hidden = true; document.documentElement.classList.remove('magnetic-pointer-active'); cancelAnimationFrame(frame); frame = 0; };
+    const updateTarget = event => {
       if (event.pointerType === 'touch' || reduced.matches || !fine.matches || event.target.closest('.project-finder-section')) { hide(); return; }
       let nearest = null, distance = 70;
-      document.querySelectorAll('a,button,summary').forEach(el => {
-        if (el.matches(':disabled') || !el.getClientRects().length) return;
+      visibleControls.forEach(el => {
+        if (!el.isConnected || el.matches(':disabled') || el.closest('[aria-hidden="true"]') || !el.getClientRects().length) return;
         const r = el.getBoundingClientRect();
         if (r.width > 400 || r.height > 160) return;
         const dx = Math.max(r.left-event.clientX, 0, event.clientX-r.right);
@@ -524,6 +420,10 @@
       if (!shown) { x=targetX; y=targetY; shown=true; }
       pointer.hidden = false;
       document.documentElement.classList.add('magnetic-pointer-active');
+    };
+    document.addEventListener('pointermove', event => {
+      if (event.pointerType === 'touch' || reduced.matches || !fine.matches || event.target.closest('.project-finder-section')) { hide(); return; }
+      pendingEvent = event;
       if (!frame) frame = requestAnimationFrame(paint);
     }, {passive:true});
     document.documentElement.addEventListener('pointerleave', hide);
@@ -585,7 +485,7 @@
       frame=moving ? requestAnimationFrame(paint) : 0;
     };
     const wake=()=>{ if (!frame) { last=performance.now(); frame=requestAnimationFrame(paint); } };
-    const reset=()=>{ pointer=null; pressed=false; wake(); };
+    const reset=()=>{ if (!pointer && !frame) return; pointer=null; pressed=false; wake(); };
     field.addEventListener('pointermove',e=>{
       if(e.pointerType==='touch' || reduced.matches || !fine.matches) return;
       pointer={x:e.clientX,y:e.clientY}; wake();
