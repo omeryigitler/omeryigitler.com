@@ -118,7 +118,8 @@
 
 .archive-card {
     min-height: 0;
-    height: clamp(350px, 23vw, 390px);
+    min-height: clamp(350px, 23vw, 390px);
+    height: auto;
     aspect-ratio: auto;
   }
 
@@ -538,7 +539,7 @@ nav .nav-cta { font-size:10px; letter-spacing:.06em; padding:12px 16px; }
 
 .project-finder-input { font-size:clamp(16px,4.8vw,24px); }
 
-.archive-search-right [data-result-count] { display:none; }
+.archive-search-right [data-result-count] { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip-path:inset(50%); white-space:nowrap; }
 
 .archive-search-input { font-size:20px; }
 
@@ -581,7 +582,7 @@ nav .nav-cta { font-size:10px; letter-spacing:.06em; padding:12px 16px; }
 
 html.magnetic-pointer-active * { cursor:none!important; }
 
-.project-finder-section, .project-finder-section * { cursor:none!important; }
+.project-finder-section.magnifier-active, .project-finder-section.magnifier-active * { cursor:none!important; }
 
 }
 
@@ -697,4 +698,19 @@ footer.signal-footer {
 }
 @media(max-width:767px) {
  nav .nav-cta { font-size:11px; padding:12px 16px; letter-spacing:.04em; }
+}
+
+/* Archive controls remain usable on narrow and touch screens. */
+.archive-card-title, .archive-card-meta-row > span { overflow-wrap:anywhere; }
+.archive-filter-row { padding:4px; }
+@media(max-width:767px) {
+ .archive-filter-row { display:flex; flex-wrap:wrap; gap:8px; }
+ .archive-filter-row .project-finder-chip { flex:0 0 auto; }
+}
+@media(hover:none) and (min-width:768px) {
+ .archive-card.preview-loaded .archive-card-preview { position:relative; height:200px; margin-bottom:24px; }
+ .archive-card { flex-direction:column; }
+ .archive-card.preview-loaded .archive-card-preview img { opacity:1; transform:none; }
+ .archive-card-cover { display:none; }
+ .archive-card-content { opacity:1!important; transform:none!important; flex:1; }
 }

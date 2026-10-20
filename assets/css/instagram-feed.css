@@ -294,7 +294,7 @@ div.cky-consent-container { left:50%!important; right:auto!important; bottom:0!i
 
 @media (pointer:fine) and (min-width:900px) {
 
-.project-finder-section, .project-finder-section a, .project-finder-section button, .project-finder-section input { cursor:none; }
+.project-finder-section.magnifier-active, .project-finder-section.magnifier-active * { cursor:none; }
 
 
 }

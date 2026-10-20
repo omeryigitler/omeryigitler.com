@@ -127,7 +127,7 @@
     }
 
     function setupMagnifier() {
-      if (!window.matchMedia('(pointer: fine)').matches) return;
+      const lensMedia = window.matchMedia('(pointer: fine) and (min-width:981px)');
       const lens = root.querySelector('[data-project-magnifier]');
       const clone = root.querySelector('[data-project-magnifier-clone]');
       const source = root.querySelector('[data-project-finder-content]');
@@ -136,7 +136,7 @@
       syncLensContent();
 
       const move = (event) => {
-        if (event.pointerType === 'touch') return;
+        if (event.pointerType === 'touch' || !lensMedia.matches) return;
         const sectionRect = root.getBoundingClientRect();
         const sourceRect = source.getBoundingClientRect();
         const sectionX = event.clientX - sectionRect.left;
@@ -151,6 +151,12 @@
         clone.style.transform = `translate3d(${LENS_SIZE / 2 - sourceX * LENS_ZOOM}px, ${LENS_SIZE / 2 - sourceY * LENS_ZOOM}px, 0) scale(${LENS_ZOOM})`;
       };
 
+      const syncLensMode = () => {
+        root.classList.toggle('magnifier-active', lensMedia.matches);
+        if (!lensMedia.matches) lens.style.opacity = '0';
+      };
+      syncLensMode();
+      lensMedia.addEventListener('change', syncLensMode);
       root.addEventListener('pointerenter', (event) => {
         syncLensContent();
         move(event);
@@ -388,7 +394,7 @@
     };
     const hide = () => { pendingEvent = null; shown = false; pointer.hidden = true; document.documentElement.classList.remove('magnetic-pointer-active'); cancelAnimationFrame(frame); frame = 0; };
     const updateTarget = event => {
-      if (event.pointerType === 'touch' || reduced.matches || !fine.matches || event.target.closest('.project-finder-section')) { hide(); return; }
+      if (event.pointerType === 'touch' || reduced.matches || !fine.matches || event.target.closest('.project-finder-section.magnifier-active')) { hide(); return; }
       let nearest = null, distance = 70;
       visibleControls.forEach(el => {
         if (!el.isConnected || el.matches(':disabled') || el.closest('[aria-hidden="true"]') || !el.getClientRects().length) return;
@@ -422,7 +428,7 @@
       document.documentElement.classList.add('magnetic-pointer-active');
     };
     document.addEventListener('pointermove', event => {
-      if (event.pointerType === 'touch' || reduced.matches || !fine.matches || event.target.closest('.project-finder-section')) { hide(); return; }
+      if (event.pointerType === 'touch' || reduced.matches || !fine.matches || event.target.closest('.project-finder-section.magnifier-active')) { hide(); return; }
       pendingEvent = event;
       if (!frame) frame = requestAnimationFrame(paint);
     }, {passive:true});

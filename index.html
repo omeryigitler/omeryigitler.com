@@ -2501,17 +2501,17 @@
             function rateBlockedMinutes() {
                 const now = Date.now();
                 let subs = [];
-                try { subs = JSON.parse(localStorage.getItem("formSubmissions") || "[]"); } catch (e) {}
+                try { const saved = JSON.parse(localStorage.getItem("formSubmissions") || "[]"); subs = Array.isArray(saved) ? saved.filter(Number.isFinite) : []; } catch (e) {}
                 subs = subs.filter((t) => now - t < WINDOW_MS);
-                localStorage.setItem("formSubmissions", JSON.stringify(subs));
+                try { localStorage.setItem("formSubmissions", JSON.stringify(subs)); } catch (e) { /* Storage may be unavailable; the API enforces its own limit. */ }
                 if (subs.length >= RATE_LIMIT) return Math.ceil((WINDOW_MS - (now - Math.min(...subs))) / 60000);
                 return 0;
             }
             function recordSubmission() {
                 let subs = [];
-                try { subs = JSON.parse(localStorage.getItem("formSubmissions") || "[]"); } catch (e) {}
+                try { const saved = JSON.parse(localStorage.getItem("formSubmissions") || "[]"); subs = Array.isArray(saved) ? saved.filter(Number.isFinite) : []; } catch (e) {}
                 subs.push(Date.now());
-                localStorage.setItem("formSubmissions", JSON.stringify(subs));
+                try { localStorage.setItem("formSubmissions", JSON.stringify(subs)); } catch (e) { /* Storage may be unavailable; the API enforces its own limit. */ }
             }
 
             // nav CTA → jump to the contact form and focus the first field

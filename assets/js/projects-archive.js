@@ -41,10 +41,10 @@
     const results=getResults();const grid=root.querySelector('[data-archive-grid]');const count=root.querySelector('[data-result-count]');if(count)count.textContent=`${String(results.length).padStart(2,'0')} RESULTS`;if(!grid)return;
     grid.innerHTML=results.length?results.map(card).join(''):'<div class="archive-empty"><p>No matching projects.</p><button type="button" class="project-finder-chip" data-reset-search>Clear search and filters</button></div>';
     grid.querySelectorAll('.archive-card.has-live').forEach((cardEl)=>{
-      const repo=cardEl.dataset.repo;const img=cardEl.querySelector('[data-preview-img]');const mobile=cardEl.querySelector('[data-mobile-preview]');
-      const mark=()=>{cardEl.classList.add('preview-loaded')};const fail=()=>{cardEl.classList.remove('preview-loaded');cardEl.classList.add('preview-failed')};
-      if(img){if(img.complete&&img.naturalWidth)mark();img.addEventListener('load',mark,{once:true});img.addEventListener('error',fail,{once:true})}
-      if(mobile){if(mobile.complete&&mobile.naturalWidth)mark();mobile.addEventListener('load',mark,{once:true});mobile.addEventListener('error',fail,{once:true})}
+      const img=cardEl.querySelector('[data-preview-img]');const mobile=cardEl.querySelector('[data-mobile-preview]');
+      const mark=()=>{cardEl.classList.remove('preview-failed');cardEl.classList.add('preview-loaded')};const fail=()=>{if ([img,mobile].some(image=>image&&image.naturalWidth)) return;cardEl.classList.remove('preview-loaded');cardEl.classList.add('preview-failed')};
+      if(img){if(img.complete){if(img.naturalWidth)mark();else fail();}img.addEventListener('load',mark,{once:true});img.addEventListener('error',fail,{once:true})}
+      if(mobile){if(mobile.complete){if(mobile.naturalWidth)mark();else fail();}mobile.addEventListener('load',mark,{once:true});mobile.addEventListener('error',fail,{once:true})}
     });
     grid.querySelector('[data-reset-search]')?.addEventListener('click', () => {
       query=''; filter='all'; input.value=''; clear.style.display='none';
@@ -62,7 +62,8 @@
     previewObserver?.disconnect();
     const cards = [...root.querySelectorAll('.archive-card.has-live')];
     cards.forEach(card => card.classList.remove('mobile-preview-active'));
-    if (!mobileMedia.matches || !('IntersectionObserver' in window)) return;
+    if (!mobileMedia.matches) return;
+    if (!('IntersectionObserver' in window)) { cards.forEach(card => card.classList.add('mobile-preview-active')); return; }
     const visible = new Set();
     previewObserver = new IntersectionObserver(entries => {
       entries.forEach(entry => entry.isIntersecting ? visible.add(entry.target) : visible.delete(entry.target));
@@ -80,7 +81,7 @@
   root.innerHTML=`<div class="archive-shell">
     <header class="archive-header"><div class="archive-header-left archive-status" aria-label="Project archive status"><span class="archive-prompt">$</span><span class="archive-status-key">project archive</span><span class="archive-status-arrow">→</span><strong>${String(projects.length).padStart(2,'0')} projects indexed</strong><span class="archive-status-cursor" aria-hidden="true"></span></div><a class="archive-back" href="/">${leftIcon} BACK HOME</a></header>
     <div class="archive-intro"><p class="archive-eyebrow">EVERYTHING I’VE BUILT / SHIPPED / TESTED</p><h1 class="archive-title"><span class="line-soft">All projects.</span><span class="line-soft">Experiments</span><span class="line-soft">&amp; tools<span class="accent">.</span></span></h1></div>
-    <div class="archive-controls"><div class="archive-search">${searchIcon}<input class="archive-search-input" data-archive-input value="${esc(query)}" placeholder="Search all projects..." aria-label="Search project archive"><div class="archive-search-right"><span data-result-count role="status" aria-live="polite" aria-atomic="true">${String(projects.length).padStart(2,'0')} RESULTS</span><button class="archive-clear" data-clear type="button" aria-label="Clear search" style="display:${query?'grid':'none'}">${closeIcon}</button></div></div><div class="archive-filter-row">${filters.map(item=>`<button class="project-finder-chip${item.value===filter?' is-active':''}" type="button" aria-pressed="${item.value===filter}" data-filter="${item.value}">${item.label}</button>`).join('')}</div></div>
+    <div class="archive-controls"><div class="archive-search">${searchIcon}<input type="search" autocomplete="off" spellcheck="false" class="archive-search-input" data-archive-input value="${esc(query)}" placeholder="Search all projects..." aria-label="Search project archive"><div class="archive-search-right"><span data-result-count role="status" aria-live="polite" aria-atomic="true">${String(projects.length).padStart(2,'0')} RESULTS</span><button class="archive-clear" data-clear type="button" aria-label="Clear search" style="display:${query?'grid':'none'}">${closeIcon}</button></div></div><div class="archive-filter-row">${filters.map(item=>`<button class="project-finder-chip${item.value===filter?' is-active':''}" type="button" aria-pressed="${item.value===filter}" data-filter="${item.value}">${item.label}</button>`).join('')}</div></div>
     <div class="archive-grid" data-archive-grid></div>
   </div>`;
 

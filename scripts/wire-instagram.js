@@ -73,8 +73,10 @@ addBefore('</head>', `    <link rel="stylesheet" href="/assets/css/refinements.c
 addBefore('            <section id="contact">', instagramSection);
 addBefore('</body>', `    <script src="/assets/js/instagram-feed.js?v=${portfolioVersion}" defer></script>\n`);
 const archiveVersion = createHash('sha256').update(fs.readFileSync(path.join(process.cwd(), 'assets/js/projects-archive.js'))).digest('hex').slice(0,16);
+const projectsPageVersion = createHash('sha256').update(fs.readFileSync(path.join(process.cwd(), 'assets/js/projects-page.js'))).digest('hex').slice(0,16);
 const projectsPath = path.join(process.cwd(), 'projects.html');
 let archive = fs.readFileSync(projectsPath, 'utf8');
+archive = archive.replace(/assets\/js\/projects-page\.js(?:\?[^"\s]*)?/g, `assets/js/projects-page.js?v=${projectsPageVersion}`);
 archive = archive.replace(/assets\/css\/refinements\.css(?:\?[^"\s]*)?/g, `assets/css/refinements.css?v=${refinementVersion}`)
   .replace(/assets\/js\/instagram-feed\.js(?:\?[^"\s]*)?/g, `assets/js/instagram-feed.js?v=${portfolioVersion}`)
   .replace(/assets\/js\/projects-archive\.js(?:\?[^"\s]*)?/g, `assets/js/projects-archive.js?v=${archiveVersion}`);
