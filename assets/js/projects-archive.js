@@ -23,13 +23,13 @@
   function getResults(){const q=query.trim().toLowerCase();return projects.filter((p)=>(filter==='all'||p.category===filter)&&(!q||p.title.toLowerCase().includes(q)||p.repo.toLowerCase().includes(q)||p.category.toLowerCase().includes(q)||p.kind.toLowerCase().includes(q)||(p.stack||[]).some((s)=>s.toLowerCase().includes(q))))}
 
   function card(project,index){
-    const repositoryUrl=project.githubUrl||githubFallback(project.repo);const targetUrl=project.siteUrl||repositoryUrl;const live=Boolean(project.siteUrl);const label=live?(project.siteLabel||displayUrl(project.siteUrl)):`github / omeryigitler / ${project.repo}`;const purl=previewUrl(project.repo);
+    const repositoryUrl=project.githubUrl||githubFallback(project.repo);const targetUrl=project.siteUrl||repositoryUrl;const live=Boolean(project.siteUrl);const label=live?(project.siteLabel||displayUrl(project.siteUrl)):`github / omeryigitler / ${project.repo}`;const purl=project.previewUrl === null ? null : (project.previewUrl || previewUrl(project.repo));
     return `<a class="archive-card${live?' has-live':' no-live'}" data-repo="${esc(project.repo)}" href="${esc(targetUrl)}" target="_blank" rel="noreferrer">
-      ${live?`<div class="archive-card-preview" aria-hidden="true"><img data-preview-img loading="lazy" decoding="async" src="${esc(purl)}" alt=""></div><div class="archive-card-cover" aria-hidden="true"></div>`:''}
+      ${live&&purl?`<div class="archive-card-preview" aria-hidden="true"><img data-preview-img loading="lazy" decoding="async" src="${esc(purl)}" alt=""></div><div class="archive-card-cover" aria-hidden="true"></div>`:''}
       <div class="archive-card-content">
         <div class="archive-card-top"><span>${String(index+1).padStart(2,'0')}</span><span>${esc(project.category)}</span></div>
         <div class="archive-card-main"><h2 class="archive-card-title">${esc(project.title)}</h2><p class="archive-card-url">${esc(label)}</p>
-          ${live?`<div class="archive-card-mobile-preview"><span class="preview-placeholder" aria-hidden="true">Project preview</span><img data-mobile-preview src="${esc(purl)}" alt="" loading="lazy" decoding="async"></div>`:''}
+          ${live&&purl?`<div class="archive-card-mobile-preview"><span class="preview-placeholder" aria-hidden="true">Project preview</span><img data-mobile-preview src="${esc(purl)}" alt="" loading="lazy" decoding="async"></div>`:''}
           <div class="archive-card-meta"><div class="archive-card-meta-row"><span>PROJECT</span><span>${esc(project.kind)}</span></div><div class="archive-card-meta-row"><span>STACK</span><span>${esc((project.stack||[]).join(' · '))}</span></div></div>
         </div>
         <div class="archive-card-bottom"><span>${live?'LIVE PROJECT':'REPOSITORY'}</span><span>${live?'LIVE SITE':'GITHUB'} ${upIcon}</span></div>
