@@ -99,7 +99,7 @@ const newHeadBootstrap = `    <script>
                 selectedTexture: selectedTexture
             };
 
-            [selectedTexture, "assets/globe/earth-topology-2k.webp"].forEach(function (href) {
+            ["assets/globe/earth-black-marble-2k.webp", selectedTexture, "assets/globe/earth-topology-2k.webp"].forEach(function (href) {
                 var preload = document.createElement("link");
                 preload.rel = "preload";
                 preload.as = "image";
@@ -326,3 +326,4 @@ replaceRequired(oldSignalStart, newSignalStart, "parallel library and texture pr
 
 fs.writeFileSync(indexPath, html, "utf8");
 console.log("Patched one-time adaptive 8K/4K globe intro without changing visual color settings");
+

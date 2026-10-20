@@ -1536,8 +1536,8 @@
             cursor: default;
         }
 
-        /* Pure-CSS globe poster: shows the globe silhouette instantly while the
-           WebGL bundle loads, then fades out on the first rendered frame. */
+        /* Lightweight earth poster stays visible while the WebGL globe loads,
+           then fades out after its first rendered frame. */
         #globe-poster {
             position: absolute;
             left: 50%;
@@ -1548,6 +1548,7 @@
             border-radius: 50%;
             background:
                 radial-gradient(circle at 38% 32%, rgba(255, 215, 0, 0.10), transparent 55%),
+                url("/assets/globe/earth-black-marble-2k.webp") center / auto 100% no-repeat,
                 radial-gradient(circle, #0d0c08 0%, #070705 62%, #050505 100%);
             box-shadow:
                 0 0 42px 6px rgba(255, 215, 0, 0.14),
