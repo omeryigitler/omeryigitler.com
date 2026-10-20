@@ -1525,42 +1525,18 @@
             inset: 0;
             width: 100%;
             height: 100%;
-            opacity: 1;
+            opacity: 0;
             transition: opacity 500ms ease;
             will-change: opacity;
             z-index: 0;
         }
 
+        #globe-container.is-ready:not(.is-fading) { opacity: 1; }
+
         #globe-container canvas {
             display: block;
             cursor: default;
         }
-
-        /* Lightweight earth poster stays visible while the WebGL globe loads,
-           then fades out after its first rendered frame. */
-        #globe-poster {
-            position: absolute;
-            left: 50%;
-            top: 50%;
-            width: min(46vmin, 420px);
-            aspect-ratio: 1;
-            transform: translate(-50%, -50%);
-            border-radius: 50%;
-            background:
-                radial-gradient(circle at 38% 32%, rgba(255, 215, 0, 0.10), transparent 55%),
-                url("/assets/globe/earth-black-marble-2k.webp") center / auto 100% no-repeat,
-                radial-gradient(circle, #0d0c08 0%, #070705 62%, #050505 100%);
-            box-shadow:
-                0 0 42px 6px rgba(255, 215, 0, 0.14),
-                inset 0 0 34px rgba(0, 0, 0, 0.85),
-                inset -8px -10px 42px rgba(0, 0, 0, 0.9);
-            opacity: 1;
-            transition: opacity 600ms ease;
-            pointer-events: none;
-            z-index: 0;
-        }
-
-        #globe-poster.is-hidden { opacity: 0; }
 
         /* intro theme: gold grid + corner HUD + boot log */
         .intro-grid {
@@ -1913,7 +1889,6 @@
         aria-live="polite"
         aria-label="Initializing location signal">
         <div class="intro-grid" aria-hidden="true"></div>
-        <div id="globe-poster" aria-hidden="true"></div>
         <div id="globe-container" aria-hidden="true"></div>
         <div class="intro-corners" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
         <div class="globe-preloader-status"><span class="prompt">$</span><span class="dim">status</span><span class="arrow">→</span><span class="sval" id="introStatusVal">scanning orbital nodes</span><span class="scur"></span></div>
@@ -3314,8 +3289,7 @@
       .ringRepeatPeriod(700)
       .onGlobeReady(function () {
         tuneGlobeMaterial();
-        const poster = document.getElementById("globe-poster");
-        if (poster) poster.classList.add("is-hidden");
+        globeContainer.classList.add("is-ready");
       });
 
     if (typeof world.globeCurvatureResolution === "function") {

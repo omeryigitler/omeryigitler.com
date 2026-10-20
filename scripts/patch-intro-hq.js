@@ -99,7 +99,7 @@ const newHeadBootstrap = `    <script>
                 selectedTexture: selectedTexture
             };
 
-            ["assets/globe/earth-black-marble-2k.webp", selectedTexture, "assets/globe/earth-topology-2k.webp"].forEach(function (href) {
+            [selectedTexture, "assets/globe/earth-topology-2k.webp"].forEach(function (href) {
                 var preload = document.createElement("link");
                 preload.rel = "preload";
                 preload.as = "image";
@@ -260,12 +260,8 @@ const materialFunctionEnd = `    material.needsUpdate = true;
 const prewarmFunction = `    material.needsUpdate = true;
   }
 
-  function prewarmGlobeTexturesAndRevealPoster() {
-    const poster = document.getElementById("globe-poster");
-    if (!world) {
-      if (poster) poster.classList.add("is-hidden");
-      return;
-    }
+  function prewarmGlobeTexturesAndReveal() {
+    if (!world || hasRevealedSite) return;
 
     try {
       const renderer = typeof world.renderer === "function" ? world.renderer() : null;
@@ -284,11 +280,11 @@ const prewarmFunction = `    material.needsUpdate = true;
       console.warn("[globe-preloader] texture prewarm fallback", error);
     }
 
-    // Keep the CSS globe visible while decode, GPU upload and shader compilation
-    // finish. Two frames ensure a completed WebGL render is ready underneath it.
+    // Keep the real globe hidden until texture upload and shader compilation
+    // finish, then wait two frames before revealing the rendered canvas.
     window.requestAnimationFrame(function () {
       window.requestAnimationFrame(function () {
-        if (poster) poster.classList.add("is-hidden");
+        if (!hasRevealedSite) globeContainer.classList.add("is-ready");
       });
     });
   }
@@ -304,12 +300,11 @@ replaceRequired(
 
 const oldReadyHandler = `      .onGlobeReady(function () {
         tuneGlobeMaterial();
-        const poster = document.getElementById("globe-poster");
-        if (poster) poster.classList.add("is-hidden");
+        globeContainer.classList.add("is-ready");
       });`;
 const newReadyHandler = `      .onGlobeReady(function () {
         tuneGlobeMaterial();
-        prewarmGlobeTexturesAndRevealPoster();
+        prewarmGlobeTexturesAndReveal();
       });`;
 replaceRequired(oldReadyHandler, newReadyHandler, "first-frame poster reveal");
 
