@@ -243,7 +243,7 @@ window.oyTypewriter = function (element, phrases) {
         .oy-signal-good { left:55%; top:16%; }
         .oy-signal-why { left:7%; top:41%; }
         .oy-signal-isnt { left:48%; top:45%; font-size:5.6cqw; }
-        .oy-signal-ending.typed-line { left:27%; top:69%; width:58%; font-size:7cqw; text-align:center; }
+        .oy-signal-ending.typed-line { left:27%; top:69%; width:58%; font-size:7cqw; line-height:1.16; text-align:left; }
         .oy-signal-sub { margin:22px 0 26px; text-align:left; font-size:11px; }
         .oy-signal-status { gap:12px; }
         .oy-signal-status div { font-size:8px; letter-spacing:.05em; }
