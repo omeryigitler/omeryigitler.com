@@ -10,6 +10,8 @@
   ];
 
   const projects = [
+    { repo:'THE-MOTTO-CLUB', title:'The Motto Club', category:'commerce', kind:'Custom T-shirt & hoodie store', stack:['E-commerce','Design Builder','Cloudflare Workers'], siteUrl:'https://the-motto-club.omeryigitler.workers.dev', siteLabel:'THE MOTTO CLUB · CLOUDFLARE', previewUrl:null },
+    { repo:'malta-cipher', title:'Malta Cipher', category:'sites', kind:'Clue-based Malta exploration experience', stack:['Interactive Web','Responsive UI','Cloudflare Workers'], siteUrl:'https://maltacipher.com', previewUrl:null },
     { repo:'reformerpilatesmalta.com', title:'Reformer Pilates Malta', category:'sites', kind:'Fitness booking platform', stack:['Next.js','TypeScript','Firebase'], siteUrl:'https://reformerpilatesmalta.com' },
     { repo:'bugunneyiyelim.com', title:'What Eat Today', category:'apps', kind:'Food discovery app', stack:['Web App','Responsive UI','Vercel'], siteUrl:'https://www.todayweeat.com/', siteLabel:'TODAYWEEAT.COM' },
     { repo:'mybabyshire.com', title:'MyBabyShire', category:'commerce', kind:'Baby e-commerce platform', stack:['React','Vite','Prisma','Express'], siteUrl:'https://mybabyshire.com' },
@@ -127,7 +129,7 @@
     }
 
     function setupMagnifier() {
-      if (!window.matchMedia('(pointer: fine)').matches) return;
+      const lensMedia = window.matchMedia('(pointer: fine) and (min-width:981px)');
       const lens = root.querySelector('[data-project-magnifier]');
       const clone = root.querySelector('[data-project-magnifier-clone]');
       const source = root.querySelector('[data-project-finder-content]');
@@ -136,7 +138,7 @@
       syncLensContent();
 
       const move = (event) => {
-        if (event.pointerType === 'touch') return;
+        if (event.pointerType === 'touch' || !lensMedia.matches) return;
         const sectionRect = root.getBoundingClientRect();
         const sourceRect = source.getBoundingClientRect();
         const sectionX = event.clientX - sectionRect.left;
@@ -151,6 +153,12 @@
         clone.style.transform = `translate3d(${LENS_SIZE / 2 - sourceX * LENS_ZOOM}px, ${LENS_SIZE / 2 - sourceY * LENS_ZOOM}px, 0) scale(${LENS_ZOOM})`;
       };
 
+      const syncLensMode = () => {
+        root.classList.toggle('magnifier-active', lensMedia.matches);
+        if (!lensMedia.matches) lens.style.opacity = '0';
+      };
+      syncLensMode();
+      lensMedia.addEventListener('change', syncLensMode);
       root.addEventListener('pointerenter', (event) => {
         syncLensContent();
         move(event);
@@ -388,7 +396,7 @@
     };
     const hide = () => { pendingEvent = null; shown = false; pointer.hidden = true; document.documentElement.classList.remove('magnetic-pointer-active'); cancelAnimationFrame(frame); frame = 0; };
     const updateTarget = event => {
-      if (event.pointerType === 'touch' || reduced.matches || !fine.matches || event.target.closest('.project-finder-section')) { hide(); return; }
+      if (event.pointerType === 'touch' || reduced.matches || !fine.matches || event.target.closest('.project-finder-section.magnifier-active')) { hide(); return; }
       let nearest = null, distance = 70;
       visibleControls.forEach(el => {
         if (!el.isConnected || el.matches(':disabled') || el.closest('[aria-hidden="true"]') || !el.getClientRects().length) return;
@@ -422,7 +430,7 @@
       document.documentElement.classList.add('magnetic-pointer-active');
     };
     document.addEventListener('pointermove', event => {
-      if (event.pointerType === 'touch' || reduced.matches || !fine.matches || event.target.closest('.project-finder-section')) { hide(); return; }
+      if (event.pointerType === 'touch' || reduced.matches || !fine.matches || event.target.closest('.project-finder-section.magnifier-active')) { hide(); return; }
       pendingEvent = event;
       if (!frame) frame = requestAnimationFrame(paint);
     }, {passive:true});

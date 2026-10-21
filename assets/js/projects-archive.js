@@ -23,13 +23,13 @@
   function getResults(){const q=query.trim().toLowerCase();return projects.filter((p)=>(filter==='all'||p.category===filter)&&(!q||p.title.toLowerCase().includes(q)||p.repo.toLowerCase().includes(q)||p.category.toLowerCase().includes(q)||p.kind.toLowerCase().includes(q)||(p.stack||[]).some((s)=>s.toLowerCase().includes(q))))}
 
   function card(project,index){
-    const repositoryUrl=project.githubUrl||githubFallback(project.repo);const targetUrl=project.siteUrl||repositoryUrl;const live=Boolean(project.siteUrl);const label=live?(project.siteLabel||displayUrl(project.siteUrl)):`github / omeryigitler / ${project.repo}`;const purl=previewUrl(project.repo);
+    const repositoryUrl=project.githubUrl||githubFallback(project.repo);const targetUrl=project.siteUrl||repositoryUrl;const live=Boolean(project.siteUrl);const label=live?(project.siteLabel||displayUrl(project.siteUrl)):`github / omeryigitler / ${project.repo}`;const purl=project.previewUrl === null ? null : (project.previewUrl || previewUrl(project.repo));
     return `<a class="archive-card${live?' has-live':' no-live'}" data-repo="${esc(project.repo)}" href="${esc(targetUrl)}" target="_blank" rel="noreferrer">
-      ${live?`<div class="archive-card-preview" aria-hidden="true"><img data-preview-img loading="lazy" decoding="async" src="${esc(purl)}" alt=""></div><div class="archive-card-cover" aria-hidden="true"></div>`:''}
+      ${live&&purl?`<div class="archive-card-preview" aria-hidden="true"><img data-preview-img loading="lazy" decoding="async" src="${esc(purl)}" alt=""></div><div class="archive-card-cover" aria-hidden="true"></div>`:''}
       <div class="archive-card-content">
         <div class="archive-card-top"><span>${String(index+1).padStart(2,'0')}</span><span>${esc(project.category)}</span></div>
         <div class="archive-card-main"><h2 class="archive-card-title">${esc(project.title)}</h2><p class="archive-card-url">${esc(label)}</p>
-          ${live?`<div class="archive-card-mobile-preview"><span class="preview-placeholder" aria-hidden="true">Project preview</span><img data-mobile-preview src="${esc(purl)}" alt="" loading="lazy" decoding="async"></div>`:''}
+          ${live&&purl?`<div class="archive-card-mobile-preview"><span class="preview-placeholder" aria-hidden="true">Project preview</span><img data-mobile-preview src="${esc(purl)}" alt="" loading="lazy" decoding="async"></div>`:''}
           <div class="archive-card-meta"><div class="archive-card-meta-row"><span>PROJECT</span><span>${esc(project.kind)}</span></div><div class="archive-card-meta-row"><span>STACK</span><span>${esc((project.stack||[]).join(' · '))}</span></div></div>
         </div>
         <div class="archive-card-bottom"><span>${live?'LIVE PROJECT':'REPOSITORY'}</span><span>${live?'LIVE SITE':'GITHUB'} ${upIcon}</span></div>
@@ -41,10 +41,10 @@
     const results=getResults();const grid=root.querySelector('[data-archive-grid]');const count=root.querySelector('[data-result-count]');if(count)count.textContent=`${String(results.length).padStart(2,'0')} RESULTS`;if(!grid)return;
     grid.innerHTML=results.length?results.map(card).join(''):'<div class="archive-empty"><p>No matching projects.</p><button type="button" class="project-finder-chip" data-reset-search>Clear search and filters</button></div>';
     grid.querySelectorAll('.archive-card.has-live').forEach((cardEl)=>{
-      const repo=cardEl.dataset.repo;const img=cardEl.querySelector('[data-preview-img]');const mobile=cardEl.querySelector('[data-mobile-preview]');
-      const mark=()=>{cardEl.classList.add('preview-loaded')};const fail=()=>{cardEl.classList.remove('preview-loaded');cardEl.classList.add('preview-failed')};
-      if(img){if(img.complete&&img.naturalWidth)mark();img.addEventListener('load',mark,{once:true});img.addEventListener('error',fail,{once:true})}
-      if(mobile){if(mobile.complete&&mobile.naturalWidth)mark();mobile.addEventListener('load',mark,{once:true});mobile.addEventListener('error',fail,{once:true})}
+      const img=cardEl.querySelector('[data-preview-img]');const mobile=cardEl.querySelector('[data-mobile-preview]');
+      const mark=()=>{cardEl.classList.remove('preview-failed');cardEl.classList.add('preview-loaded')};const fail=()=>{if ([img,mobile].some(image=>image&&image.naturalWidth)) return;cardEl.classList.remove('preview-loaded');cardEl.classList.add('preview-failed')};
+      if(img){if(img.complete){if(img.naturalWidth)mark();else fail();}img.addEventListener('load',mark,{once:true});img.addEventListener('error',fail,{once:true})}
+      if(mobile){if(mobile.complete){if(mobile.naturalWidth)mark();else fail();}mobile.addEventListener('load',mark,{once:true});mobile.addEventListener('error',fail,{once:true})}
     });
     grid.querySelector('[data-reset-search]')?.addEventListener('click', () => {
       query=''; filter='all'; input.value=''; clear.style.display='none';
@@ -62,7 +62,8 @@
     previewObserver?.disconnect();
     const cards = [...root.querySelectorAll('.archive-card.has-live')];
     cards.forEach(card => card.classList.remove('mobile-preview-active'));
-    if (!mobileMedia.matches || !('IntersectionObserver' in window)) return;
+    if (!mobileMedia.matches) return;
+    if (!('IntersectionObserver' in window)) { cards.forEach(card => card.classList.add('mobile-preview-active')); return; }
     const visible = new Set();
     previewObserver = new IntersectionObserver(entries => {
       entries.forEach(entry => entry.isIntersecting ? visible.add(entry.target) : visible.delete(entry.target));
@@ -80,7 +81,7 @@
   root.innerHTML=`<div class="archive-shell">
     <header class="archive-header"><div class="archive-header-left archive-status" aria-label="Project archive status"><span class="archive-prompt">$</span><span class="archive-status-key">project archive</span><span class="archive-status-arrow">→</span><strong>${String(projects.length).padStart(2,'0')} projects indexed</strong><span class="archive-status-cursor" aria-hidden="true"></span></div><a class="archive-back" href="/">${leftIcon} BACK HOME</a></header>
     <div class="archive-intro"><p class="archive-eyebrow">EVERYTHING I’VE BUILT / SHIPPED / TESTED</p><h1 class="archive-title"><span class="line-soft">All projects.</span><span class="line-soft">Experiments</span><span class="line-soft">&amp; tools<span class="accent">.</span></span></h1></div>
-    <div class="archive-controls"><div class="archive-search">${searchIcon}<input class="archive-search-input" data-archive-input value="${esc(query)}" placeholder="Search all projects..." aria-label="Search project archive"><div class="archive-search-right"><span data-result-count role="status" aria-live="polite" aria-atomic="true">${String(projects.length).padStart(2,'0')} RESULTS</span><button class="archive-clear" data-clear type="button" aria-label="Clear search" style="display:${query?'grid':'none'}">${closeIcon}</button></div></div><div class="archive-filter-row">${filters.map(item=>`<button class="project-finder-chip${item.value===filter?' is-active':''}" type="button" aria-pressed="${item.value===filter}" data-filter="${item.value}">${item.label}</button>`).join('')}</div></div>
+    <div class="archive-controls"><div class="archive-search">${searchIcon}<input type="search" autocomplete="off" spellcheck="false" class="archive-search-input" data-archive-input value="${esc(query)}" placeholder="Search all projects..." aria-label="Search project archive"><div class="archive-search-right"><span data-result-count role="status" aria-live="polite" aria-atomic="true">${String(projects.length).padStart(2,'0')} RESULTS</span><button class="archive-clear" data-clear type="button" aria-label="Clear search" style="display:${query?'grid':'none'}">${closeIcon}</button></div></div><div class="archive-filter-row">${filters.map(item=>`<button class="project-finder-chip${item.value===filter?' is-active':''}" type="button" aria-pressed="${item.value===filter}" data-filter="${item.value}">${item.label}</button>`).join('')}</div></div>
     <div class="archive-grid" data-archive-grid></div>
   </div>`;
 
