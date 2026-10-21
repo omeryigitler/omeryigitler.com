@@ -1,0 +1,243 @@
+/* Shared CookieYes theme for home and project archive. */
+        :root {
+            --cky-primary-color: #FFD700 !important;
+            --cky-link-color: #FFD700 !important;
+        }
+
+        div.cky-consent-container .cky-consent-bar {
+            background-color: rgba(10, 10, 10, 0.98) !important;
+            border-top: 2px solid #FFD700 !important;
+        }
+
+        div.cky-consent-container .cky-title,
+        div.cky-consent-container .cky-notice-des,
+        div.cky-consent-container .cky-label,
+        div.cky-consent-container p {
+            color: #f1f1f1 !important;
+        }
+
+        div.cky-consent-container .cky-show-desc-btn,
+        div.cky-consent-container .cky-notice-des a {
+            color: #FFD700 !important;
+            text-decoration: underline !important;
+        }
+
+        div.cky-consent-container button.cky-btn-accept,
+        div.cky-consent-container button.cky-btn-preferences,
+        div.cky-consent-container button.cky-btn-customize {
+            background-color: #FFD700 !important;
+            border: 1px solid #FFD700 !important;
+            color: #000000 !important;
+            font-weight: 800 !important;
+        }
+
+        div.cky-consent-container button.cky-btn-reject {
+            background-color: #000000 !important;
+            color: #ffffff !important;
+            border: 1px solid rgba(255, 215, 0, 0.5) !important;
+        }
+
+        div.cky-consent-container input[id^="ckySwitch"] {
+            background-color: #2b2b2b !important;
+            background: #2b2b2b !important;
+            border-color: rgba(255, 215, 0, 0.35) !important;
+            box-shadow: none !important;
+        }
+
+        div.cky-consent-container input[id^="ckySwitch"]:checked {
+            background-color: #FFD700 !important;
+            background: #FFD700 !important;
+            border-color: #FFD700 !important;
+            box-shadow: none !important;
+        }
+
+        div.cky-consent-container input[id^="ckySwitch"]:focus {
+            outline: none !important;
+            box-shadow: 0 0 0 2px rgba(255, 215, 0, 0.35) !important;
+        }
+
+        div.cky-consent-container .cky-switch input:checked + .cky-slider {
+            background-color: #FFD700 !important;
+            background: #FFD700 !important;
+        }
+
+        div.cky-consent-container .cky-always-active {
+            color: #FFD700 !important;
+        }
+
+        .cky-btn-revisit-wrapper {
+            background-color: #000 !important;
+            border: 2px solid #FFD700 !important;
+            left: auto !important;
+            right: 20px !important;
+        }
+
+        /* consent banner: full-width bar pinned to the bottom edge */
+        div.cky-consent-container {
+            top: auto !important;
+            left: 0 !important;
+            right: 0 !important;
+            bottom: 0 !important;
+            width: 100% !important;
+            max-width: none !important;
+            transform: none !important;
+            margin: 0 !important;
+        }
+
+        div.cky-consent-container .cky-consent-bar {
+            width: 100% !important;
+            max-width: none !important;
+            border-radius: 0 !important;
+            border-width: 2px 0 0 0 !important;
+            padding: 14px 28px !important;
+            box-shadow: 0 -14px 44px rgba(0, 0, 0, 0.5) !important;
+        }
+
+        /* normalize typography so the box never balloons */
+        div.cky-consent-container .cky-title {
+            font-size: 15px !important;
+            line-height: 1.35 !important;
+            margin-bottom: 6px !important;
+        }
+        div.cky-consent-container .cky-notice-des,
+        div.cky-consent-container .cky-notice-des p {
+            font-size: 12.5px !important;
+            line-height: 1.55 !important;
+        }
+
+        /* button order: Accept, Reject, then Customise (like before) */
+        div.cky-consent-container .cky-notice-btn-wrapper {
+            display: flex !important;
+            flex-wrap: wrap !important;
+            gap: 8px !important;
+            align-items: stretch !important;
+            margin-top: 12px !important;
+        }
+        div.cky-consent-container button.cky-btn-accept { order: 1 !important; }
+        div.cky-consent-container button.cky-btn-reject { order: 2 !important; }
+        div.cky-consent-container button.cky-btn-customize,
+        div.cky-consent-container button.cky-btn-preferences { order: 3 !important; }
+
+        /* symmetric buttons: identical height, padding, radius and font on every button */
+        div.cky-consent-container .cky-notice-btn-wrapper .cky-btn,
+        div.cky-consent-container .cky-prefrence-btn-wrapper .cky-btn,
+        div.cky-consent-container button.cky-btn {
+            flex: 1 1 0 !important;
+            min-width: 110px !important;
+            margin: 0 !important;
+            padding: 10px 14px !important;
+            min-height: 42px !important;
+            font-size: 12px !important;
+            line-height: 1.2 !important;
+            letter-spacing: .02em !important;
+            text-align: center !important;
+            border-radius: 10px !important;
+            white-space: nowrap !important;
+            box-sizing: border-box !important;
+        }
+
+        /* desktop bar: text on the left, equal fixed-width buttons on the right */
+        @media (min-width: 641px) {
+            div.cky-consent-container .cky-notice {
+                display: flex !important;
+                flex-wrap: wrap !important;
+                align-items: center !important;
+                gap: 6px 28px !important;
+                max-width: 1280px !important;
+                margin: 0 auto !important;
+            }
+
+            div.cky-consent-container .cky-title {
+                flex: 1 1 100% !important;
+                margin-bottom: 0 !important;
+            }
+
+            div.cky-consent-container .cky-notice-group {
+                display: flex !important;
+                flex: 1 1 auto !important;
+                align-items: center !important;
+                justify-content: space-between !important;
+                gap: 28px !important;
+                width: 100% !important;
+            }
+
+            div.cky-consent-container .cky-notice-des,
+            div.cky-consent-container .cky-notice-des p {
+                flex: 1 1 auto !important;
+                margin: 0 !important;
+            }
+
+            div.cky-consent-container .cky-notice-btn-wrapper {
+                flex: 0 0 auto !important;
+                flex-wrap: nowrap !important;
+                margin-top: 0 !important;
+            }
+
+            div.cky-consent-container .cky-notice-btn-wrapper .cky-btn {
+                flex: 0 0 auto !important;
+                width: 140px !important;
+            }
+        }
+
+        /* hide CookieYes while the 3D globe intro is playing */
+        html.intro-active .cky-consent-container,
+        html.intro-active .cky-overlay,
+        html.intro-active .cky-btn-revisit-wrapper {
+            display: none !important;
+        }
+
+        /* hide the floating cookie-settings circle while a form modal is open —
+           it overlaps the submit button on mobile */
+        body.cfg-modal-open .cky-btn-revisit-wrapper {
+            display: none !important;
+        }
+
+        .cky-btn-revisit-wrapper img,
+        .cky-btn-revisit-wrapper svg {
+            filter: brightness(0) saturate(100%) invert(83%) sepia(63%) saturate(747%) hue-rotate(1deg) brightness(103%) contrast(101%) !important;
+        }
+
+        div.cky-consent-container button:hover { opacity: 0.85 !important; }
+
+        @media (max-width: 640px) {
+            div.cky-consent-container {
+                left: 0 !important;
+                right: 0 !important;
+                bottom: 0 !important;
+                width: 100% !important;
+                max-width: none !important;
+            }
+
+            div.cky-consent-container .cky-consent-bar {
+                width: 100% !important;
+                border-radius: 0 !important;
+                border-width: 2px 0 0 !important;
+                padding: 10px 14px calc(6px + env(safe-area-inset-bottom)) !important;
+            }
+
+            div.cky-consent-container .cky-title {
+                margin-bottom: 4px !important;
+            }
+
+            div.cky-consent-container .cky-notice-des,
+            div.cky-consent-container .cky-notice-des p {
+                line-height: 1.45 !important;
+                margin: 0 !important;
+            }
+
+            div.cky-consent-container .cky-notice-btn-wrapper {
+                display: grid !important;
+                grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+                gap: 6px !important;
+                margin-top: 6px !important;
+            }
+
+            div.cky-consent-container button.cky-btn {
+                width: 100% !important;
+                min-width: 0 !important;
+                min-height: 42px !important;
+                margin: 0 !important;
+                padding: 8px 6px !important;
+                font-size: 11px !important;
+            }
+        }
