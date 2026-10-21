@@ -714,3 +714,27 @@ footer.signal-footer {
  .archive-card-cover { display:none; }
  .archive-card-content { opacity:1!important; transform:none!important; flex:1; }
 }
+
+/* One highlight treatment for hero and diagnostic typing, including mobile. */
+:is(.hero, .oy-signal-system) .typed-line .highlight {
+  color:#ffd700;
+  background:rgba(255,215,0,.10);
+  box-shadow:0 0 44px rgba(255,215,0,.18);
+  padding:0 .18em;
+  box-decoration-break:clone;
+  -webkit-box-decoration-break:clone;
+}
+:is(#typed, [data-signal-word]) {
+  background:linear-gradient(100deg,#ffd700 0%,#ffe65c 58%,#fff8cf 84%,#fff 100%);
+  -webkit-background-clip:text;
+  background-clip:text;
+  color:transparent;
+  -webkit-text-fill-color:transparent;
+  text-shadow:0 0 .45em rgba(255,215,0,.24);
+}
+:is(.hero, .oy-signal-system) .typed-line .cursor {
+  width:.14em;
+  height:1.05em;
+  vertical-align:-.08em;
+  background:#ffd700;
+}
