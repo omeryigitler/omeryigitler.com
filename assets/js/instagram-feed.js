@@ -11,7 +11,7 @@
 
   const projects = [
     { repo:'THE-MOTTO-CLUB', title:'The Motto Club', category:'commerce', kind:'Custom T-shirt & hoodie store', stack:['E-commerce','Design Builder','Cloudflare Workers'], siteUrl:'https://the-motto-club.omeryigitler.workers.dev', siteLabel:'THE MOTTO CLUB · CLOUDFLARE', previewUrl:'/assets/project-previews/the-motto-club.jpg' },
-    { repo:'malta-cipher', title:'Malta Cipher', category:'sites', kind:'Clue-based Malta exploration experience', stack:['Interactive Web','Responsive UI','Cloudflare Workers'], siteUrl:'https://maltacipher.com', previewUrl:'/assets/project-previews/malta-cipher.jpg' },
+    { repo:'malta-cipher', title:'Malta Cipher', category:'sites', kind:'Clue-based Malta exploration experience', stack:['Interactive Web','Responsive UI','Cloudflare Workers'], siteUrl:'https://maltacipher.com', previewUrl:'/assets/project-previews/malta-cipher-hero.jpg' },
     { repo:'reformerpilatesmalta.com', title:'Reformer Pilates Malta', category:'sites', kind:'Fitness booking platform', stack:['Next.js','TypeScript','Firebase'], siteUrl:'https://reformerpilatesmalta.com' },
     { repo:'bugunneyiyelim.com', title:'What Eat Today', category:'apps', kind:'Food discovery app', stack:['Web App','Responsive UI','Vercel'], siteUrl:'https://www.todayweeat.com/', siteLabel:'TODAYWEEAT.COM' },
     { repo:'mybabyshire.com', title:'MyBabyShire', category:'commerce', kind:'Baby e-commerce platform', stack:['React','Vite','Prisma','Express'], siteUrl:'https://mybabyshire.com' },
