@@ -738,3 +738,13 @@ footer.signal-footer {
   vertical-align:-.08em;
   background:#ffd700;
 }
+
+/* These saved desktop captures are 1200 × 750: preserve the whole page on mobile. */
+.archive-card:is([data-repo="THE-MOTTO-CLUB"], [data-repo="malta-cipher"]) .archive-card-mobile-preview {
+  aspect-ratio:8 / 5;
+}
+.archive-card:is([data-repo="THE-MOTTO-CLUB"], [data-repo="malta-cipher"]) .archive-card-mobile-preview img {
+  object-fit:contain;
+  object-position:center;
+  transform:none;
+}
