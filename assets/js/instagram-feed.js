@@ -10,6 +10,16 @@
   ];
 
   const projects = [
+    {
+      repo: 'motto-wardrobe',
+      title: 'The Motto Club — The Wardrobe',
+      category: 'commerce',
+      kind: 'Interactive clothing wardrobe',
+      stack: ['JavaScript', 'CSS Motion', 'Responsive UI'],
+      siteUrl: 'https://motto-wardrobe-omer.yigitleromer.chatgpt.site',
+      siteLabel: 'THE WARDROBE · PRIVATE PREVIEW',
+      previewUrl: '/assets/project-previews/motto-wardrobe.svg'
+    },
     { repo:'THE-MOTTO-CLUB', title:'The Motto Club', category:'commerce', kind:'Custom T-shirt & hoodie store', stack:['E-commerce','Design Builder','Cloudflare Workers'], siteUrl:'https://the-motto-club.omeryigitler.workers.dev', siteLabel:'THE MOTTO CLUB · CLOUDFLARE', previewUrl:'/assets/project-previews/the-motto-club.jpg' },
     { repo:'malta-cipher', title:'Malta Cipher', category:'sites', kind:'Clue-based Malta exploration experience', stack:['Interactive Web','Responsive UI','Cloudflare Workers'], siteUrl:'https://maltacipher.com', previewUrl:'/assets/project-previews/malta-cipher-hero.jpg' },
     { repo:'reformerpilatesmalta.com', title:'Reformer Pilates Malta', category:'sites', kind:'Fitness booking platform', stack:['Next.js','TypeScript','Firebase'], siteUrl:'https://reformerpilatesmalta.com' },
