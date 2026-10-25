@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-labelledby="socialTitle socialDesc">
+  <title id="socialTitle">Ömer Yiğitler — Web Design &amp; Development</title>
+  <desc id="socialDesc">Centered Taurus logo and studio name on a minimal black and gold background, sized to survive square crops in Instagram.</desc>
+  <defs>
+    <radialGradient id="ambient" cx="50%" cy="45%" r="59%">
+      <stop offset="0%" stop-color="#27210c"/>
+      <stop offset="50%" stop-color="#10100a"/>
+      <stop offset="100%" stop-color="#050505"/>
+    </radialGradient>
+    <linearGradient id="rule" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#FFD700" stop-opacity="0"/>
+      <stop offset="0.5" stop-color="#FFD700" stop-opacity=".7"/>
+      <stop offset="1" stop-color="#FFD700" stop-opacity="0"/>
+    </linearGradient>
+    <pattern id="microGrid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M 40 0 H 0 V 40" fill="none" stroke="#FFD700" stroke-opacity=".03" stroke-width="1"/>
+    </pattern>
+  </defs>
+  <rect width="1200" height="630" fill="#050505"/>
+  <rect width="1200" height="630" fill="url(#ambient)"/>
+  <rect width="1200" height="630" fill="url(#microGrid)"/>
+  <rect x="30" y="30" width="1140" height="570" rx="14" fill="none" stroke="#FFD700" stroke-opacity=".17"/>
+  <path d="M 58 82 V 58 H 82 M 1118 58 H 1142 V 82 M 58 548 V 572 H 82 M 1118 572 H 1142 V 548" stroke="#FFD700" stroke-opacity=".55" stroke-width="2" fill="none"/>
+  <text x="600" y="79" text-anchor="middle" fill="#AFA480" font-family="Arial, Helvetica, sans-serif" font-size="15" font-weight="700" letter-spacing="3.6">INDEPENDENT DIGITAL STUDIO</text>
+  <!-- TAURUS_MARK -->
+  <rect x="492" y="383" width="216" height="1" fill="url(#rule)"/>
+  <text x="600" y="447" text-anchor="middle" fill="#FFD700" font-family="Arial, Helvetica, sans-serif" font-weight="700" font-size="48" textLength="490" lengthAdjust="spacingAndGlyphs">ÖMER YİĞİTLER</text>
+  <text x="600" y="501" text-anchor="middle" fill="#F5F2E9" font-family="Arial, Helvetica, sans-serif" font-weight="600" font-size="25" letter-spacing="3">WEB DESIGN</text>
+  <text x="600" y="535" text-anchor="middle" fill="#F5F2E9" font-family="Arial, Helvetica, sans-serif" font-weight="600" font-size="25" letter-spacing="3">&amp; DEVELOPMENT</text>
+  <text x="600" y="579" text-anchor="middle" fill="#AAA48F" font-family="Arial, Helvetica, sans-serif" font-size="16" letter-spacing="2">omeryigitler.com</text>
+</svg>
