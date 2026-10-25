@@ -1,5 +1,5 @@
 /**
- * Produce the 1200 × 630 PNG used by Open Graph / Instagram from an editable SVG.
+ * Produce the 1200 × 630 PNG used by Open Graph / Instagram / WhatsApp.
  * Instagram may crop OG banners to square. Critical elements therefore stay
  * inside the center 630 × 630 crop (x=285..915), with extra breathing room.
  *
@@ -21,8 +21,14 @@ function generateSvg() {
   if (!template.includes("<!-- TAURUS_MARK -->")) {
     throw new Error("Social preview template must contain TAURUS_MARK");
   }
-  // The logo owns its gradients and viewBox. Set placement only, never redraw it.
-  const positionedTaurus = taurus.replace(/<svg\b/, '<svg x="460" y="115" width="280" height="244"');
+  // Nested SVG clipping in Chromium removes most of the original Taurus mark.
+  // Keep the canonical path/gradient, but position them inside a regular group.
+  const rootTag = taurus.match(/^<svg\b[^>]*>/);
+  if (!rootTag || !/<path\b/.test(taurus) || !/<\/svg>\s*$/.test(taurus)) {
+    throw new Error("Canonical Taurus SVG has an unexpected structure");
+  }
+  const logoBody = taurus.slice(rootTag[0].length).replace(/<\/svg>\s*$/, "");
+  const positionedTaurus = `<g id="social-taurus-mark" transform="translate(418 59) scale(0.7)">${logoBody}</g>`;
   return template.replace("<!-- TAURUS_MARK -->", positionedTaurus);
 }
 
@@ -44,6 +50,8 @@ async function main() {
     await page.goto(`data:image/svg+xml;base64,${Buffer.from(svg).toString("base64")}`, { waitUntil: "load" });
     await page.screenshot({ path: OUTPUT, type: "png" });
     const size = fs.statSync(OUTPUT).size;
+    // Keep the PNG below 300 KiB for dependable WhatsApp thumbnails.
+    if (size > 300 * 1024) throw new Error(`Social preview exceeds WhatsApp-safe size: ${size} bytes`);
     console.log(`Social preview generated: ${path.relative(ROOT, OUTPUT)} (${WIDTH}x${HEIGHT}, ${size} bytes)`);
   } finally {
     await browser.close();
