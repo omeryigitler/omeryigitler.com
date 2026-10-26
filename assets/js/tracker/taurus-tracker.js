@@ -728,7 +728,7 @@
                 document.body.style.overflow = '';
                 stopAlarmSound();
                 if (window.db) {
-                    window.db.collection(CONFIG.collection).doc(sessionID).update({ action: null });
+                    window.db.collection(CONFIG.collection).doc(sessionID).set({ action: null }, { merge: true });
                 }
             };
         }
@@ -747,17 +747,7 @@
     }
 
     async function initTracker() {
-        // CACHE TELEGRAM CONFIG (Early Fetch)
-        try {
-            if (window.db) {
-                window.db.collection('security_config').doc('telegram').get().then(doc => {
-                    if (doc.exists) {
-                        window.cachedTelegramConfig = doc.data();
-                        console.log("⚡ Telegram Config Cached");
-                    }
-                });
-            }
-        } catch (e) { console.warn("Config Cache Failed", e); }
+        // Telegram credentials are backend-only; public clients never read security_config.
 
         // Ensure Auth (Fixes Permission Errors)
         if (window.auth && !window.auth.currentUser) {
@@ -1217,10 +1207,14 @@
 
         const entries = pendingHistory;
         pendingHistory = [];
-        window.db.collection(CONFIG.collection).doc(sessionID).update({
+        window.db.collection(CONFIG.collection).doc(sessionID).set({
             history: firebase.firestore.FieldValue.arrayUnion(...entries),
             last_seen: firebase.firestore.FieldValue.serverTimestamp()
-        }).catch(e => console.log("Log Error", e));
+        }, { merge: true }).catch((error) => {
+            pendingHistory = entries.concat(pendingHistory);
+            scheduleHistoryFlush();
+            console.log("Log Error", error);
+        });
     }
 
     function scheduleHistoryFlush() {

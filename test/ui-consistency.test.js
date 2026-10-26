@@ -4,7 +4,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const vm = require('node:vm');
 const read = file => fs.readFileSync(path.join(__dirname, '..', file), 'utf8');
-const html = read('index.html');
+const html = read('assets/js/home-interactions.js');
 function eventTarget() {
   const events = {};
   return {addEventListener(name, fn) { (events[name] ||= []).push(fn); },
@@ -72,23 +72,4 @@ test('custom dropdown supports arrow navigation, selection, Escape and ARIA stat
   dd.dispatch('keydown',{key:'ArrowDown'});assert.equal(document.activeElement,b);
   dd.dispatch('keydown',{key:'Enter'});assert.equal(config.deliverySpeed,'fast');assert.equal(b.attrs['aria-selected'],'true');assert.equal(trigger.attrs['aria-expanded'],'false');assert.equal(document.activeElement,trigger);
   trigger.click();dd.dispatch('keydown',{key:'Escape'});assert.equal(trigger.attrs['aria-expanded'],'false');assert.equal(document.activeElement,trigger);
-});
-test('build wiring keeps a single versioned script and identical footers on both pages',()=>{
-  const root=path.resolve(__dirname,'..'), writes=new Map();
-  const virtualFS={readFileSync(file,encoding){return writes.has(file)?writes.get(file):fs.readFileSync(file,encoding);},writeFileSync(file,value){writes.set(file,value);}};
-  const source=read('scripts/wire-instagram.js').split('// Remove the legacy browser read')[0];
-  const run=()=>vm.runInNewContext(source,{require(name){return name==='fs'?virtualFS:require(name);},process:{cwd:()=>root}});
-  run();const first=writes.get(path.join(root,'index.html'));run();
-  const home=writes.get(path.join(root,'index.html')),archive=writes.get(path.join(root,'projects.html'));
-  assert.equal(home,first,'build wiring must be idempotent');
-  assert.equal([...home.matchAll(/<script[^>]+src="[^\"]*instagram-feed\.js/g)].length,1);
-  assert.equal([...home.matchAll(/<script[^>]+src="[^\"]*trusted-types-bootstrap\.js/g)].length,1);
-  const footer=text=>text.match(/<footer class="signal-footer"[\s\S]*?<\/footer>/)[0];
-  assert.equal(footer(archive),footer(home).replaceAll('href="#contact"','href="/#contact"'));
-});
-test('intro preparation still recognizes the original CSS source blocks',()=>{
-  const root=path.resolve(__dirname,'..'),writes=new Map();
-  const virtualFS={readFileSync(file,encoding){return writes.has(file)?writes.get(file):fs.readFileSync(file,encoding);},writeFileSync(file,value){writes.set(file,value);}};
-  vm.runInNewContext(read('scripts/patch-intro-hq.js'),{require(name){return name==='node:fs'||name==='fs'?virtualFS:require(name);},__dirname:path.join(root,'scripts'),console:{log(){}}});
-  assert.match(writes.get(path.join(root,'index.html')),/html\.intro-skip #intro-modal/);
 });

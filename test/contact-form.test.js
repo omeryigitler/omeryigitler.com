@@ -3,7 +3,7 @@ const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const path = require("node:path");
 
-const html = fs.readFileSync(path.join(__dirname, "..", "index.html"), "utf8");
+const html = fs.readFileSync(path.join(__dirname, "..", "index.html"), "utf8") + fs.readFileSync(path.join(__dirname, "..", "assets/js/home-interactions.js"), "utf8");
 
 test("loads Turnstile explicitly and never posts an empty token", () => {
   assert.match(html, /turnstile\/v0\/api\.js\?render=explicit/);

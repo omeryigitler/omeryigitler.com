@@ -28,19 +28,16 @@ The goal is to evolve the current website/admin dashboard into a controlled priv
 
 The project uses Vite for React islands and Tailwind for CSS generation.
 
-Current build scripts:
+Current build flow (`npm run build`):
 
-```json
-{
-  "dev": "vite --host 0.0.0.0",
-  "build:react": "vite build",
-  "build:css": "npx tailwindcss -i ./src/input.css -o ./assets/css/styles.css --minify",
-  "prepare:instagram": "node scripts/wire-instagram.js",
-  "build": "npm run prepare:instagram && npm run build:react && npm run build:css"
-}
-```
+1. Concatenate `src/admin/manifest.json` sources into the generated admin script.
+2. Build React islands and Tailwind CSS.
+3. Build `pricing-tool` from its own source and lockfile.
+4. Generate the social preview and assemble public files into `dist/`.
 
-Agent changes must preserve this build flow unless the task explicitly asks for a build-system migration.
+Builds must not modify source HTML, APIs or tracker logic. Dependencies and generated
+outputs are ignored by Git. `npm run quality` runs tests, TypeScript, JavaScript
+syntax checks and the full build. See DEPLOYMENT.md for environment setup.
 
 ### 2.2 React island pattern
 
@@ -63,7 +60,7 @@ Current important APIs:
 
 ### 2.4 Admin panel pattern
 
-`admin.html` currently contains a large amount of inline UI, state, Firebase client logic, realtime listeners, workflow automation, and modal behavior.
+`admin.html` contains the dashboard markup. Its state, Firebase client logic, realtime listeners, workflow automation and modal behavior live in `src/admin/`, assembled in manifest order into one classic script to preserve global bindings and hoisting.
 
 Agents must treat `admin.html` as high-risk because it combines:
 

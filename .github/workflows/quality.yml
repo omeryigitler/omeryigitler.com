@@ -1,0 +1,32 @@
+name: Quality
+on:
+  pull_request:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+concurrency:
+  group: quality-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            pricing-tool/package-lock.json
+      - run: npm ci
+      - run: npm run quality
+      - name: Verify repeatable build and unchanged sources
+        run: |
+          find dist -type f -print0 | sort -z | xargs -0 sha256sum > /tmp/build-before.sha256
+          npm run build
+          find dist -type f -print0 | sort -z | xargs -0 sha256sum > /tmp/build-after.sha256
+          diff -u /tmp/build-before.sha256 /tmp/build-after.sha256
+          git diff --exit-code
+          test -z "$(git ls-files node_modules pricing-tool/dist assets/react assets/css/styles.css)"

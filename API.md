@@ -1,3 +1,5 @@
+> Historical reference: some paths, setup steps and status counts predate the current build. See [README.md](README.md) and [DEPLOYMENT.md](DEPLOYMENT.md). Runtime source and tests are authoritative.
+
 # API Documentation
 
 > **Technical reference** for Firestore collections, workflow functions, and integration APIs.

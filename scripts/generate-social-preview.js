@@ -38,6 +38,7 @@ async function main() {
   const executablePath = process.env.SOCIAL_PREVIEW_CHROMIUM_PATH || await chromium.executablePath();
   const browser = await puppeteer.launch({
     executablePath,
+    pipe: true,
     args: chromium.args,
     headless: true,
     defaultViewport: { width: WIDTH, height: HEIGHT, deviceScaleFactor: 1 },
