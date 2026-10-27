@@ -14,8 +14,8 @@ The goal is to evolve the current website/admin dashboard into a controlled priv
 - Frontend style: mostly static HTML/CSS/JS, with selected React islands built by Vite
 - API style: Vercel Serverless Functions under `/api`
 - Data layer: Firebase / Firestore
-- Admin area: `admin.html`
-- Gateway/security area: `gateway.html`, `passkey-setup.html`, Telegram challenge flow
+- Admin area: `src/pages/admin.html`
+- Gateway/security area: `src/pages/gateway.html`, `src/pages/passkey-setup.html`, Telegram challenge flow
 - Existing AI/command entry point: `api/webhook.js`
 - Existing PDF generation endpoint: `api/pdf.js`
 - Existing Instagram endpoint: `api/instagram.js`
@@ -37,7 +37,7 @@ Current build flow (`npm run build`):
 
 Builds must not modify source HTML, APIs or tracker logic. Dependencies and generated
 outputs are ignored by Git. `npm run quality` runs tests, TypeScript, JavaScript
-syntax checks and the full build. See DEPLOYMENT.md for environment setup.
+syntax checks and the full build. See docs/guides/DEPLOYMENT.md for environment setup.
 
 ### 2.2 React island pattern
 
@@ -60,9 +60,9 @@ Current important APIs:
 
 ### 2.4 Admin panel pattern
 
-`admin.html` contains the dashboard markup. Its state, Firebase client logic, realtime listeners, workflow automation and modal behavior live in `src/admin/`, assembled in manifest order into one classic script to preserve global bindings and hoisting.
+`src/pages/admin.html` contains the dashboard markup. Its state, Firebase client logic, realtime listeners, workflow automation and modal behavior live in `src/admin/`, assembled in manifest order into one classic script to preserve global bindings and hoisting.
 
-Agents must treat `admin.html` as high-risk because it combines:
+Agents must treat `src/pages/admin.html` as high-risk because it combines:
 
 - Authentication guard
 - Firestore realtime reads/writes
@@ -214,7 +214,7 @@ Future agent implementation should use this structure:
   agent-architecture.md     # Expanded human documentation
 ```
 
-Initial implementation may start with fewer files, but agents must avoid further growing `admin.html` with large inline logic.
+Initial implementation may start with fewer files, but agents must avoid further growing `src/pages/admin.html` with large inline logic.
 
 ---
 
@@ -510,7 +510,7 @@ Agents must follow these rules:
 
 Agents modifying the site should protect performance:
 
-1. Do not add more long inline scripts to `admin.html`.
+1. Do not add more long inline scripts to `src/pages/admin.html`.
 2. Avoid starting multiple `onSnapshot` listeners for the same collection.
 3. Avoid Firestore writes inside snapshot loops.
 4. Only activate realtime listeners for the active admin tab when possible.
@@ -587,7 +587,7 @@ Minimum tools:
 
 ### Phase 3 — Admin panel agent modal
 
-Add `assets/js/admin-agent.js` and a compact modal shell in `admin.html`.
+Add `public/assets/js/admin-agent.js` and a compact modal shell in `src/pages/admin.html`.
 
 Modal features:
 

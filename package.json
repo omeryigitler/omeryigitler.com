@@ -8,8 +8,8 @@
   "scripts": {
     "dev": "vite --host 0.0.0.0",
     "build:react": "vite build",
-    "build:css": "npx tailwindcss -i ./src/input.css -o ./assets/css/styles.css --minify",
-    "watch:css": "npx tailwindcss -i ./src/input.css -o ./assets/css/styles.css --watch",
+    "build:css": "npx tailwindcss -i ./src/input.css -o ./public/assets/css/styles.css --minify",
+    "watch:css": "npx tailwindcss -i ./src/input.css -o ./public/assets/css/styles.css --watch",
     "build": "npm run build:admin && npm run build:react && npm run build:css && npm run build:pricing && node scripts/generate-social-preview.js && node scripts/prepare-public.js",
     "deploy": "vercel --prod",
     "test": "node --test test/*.test.js",
@@ -18,7 +18,8 @@
     "build:admin": "node scripts/build-admin.js",
     "build:pricing": "npm run build --prefix pricing-tool",
     "typecheck": "tsc --noEmit",
-    "check:syntax": "node scripts/check-syntax.js"
+    "check:syntax": "node scripts/check-syntax.js",
+    "predev": "npm run build"
   },
   "repository": {
     "type": "git",

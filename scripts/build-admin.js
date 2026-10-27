@@ -9,4 +9,4 @@ const files = JSON.parse(fs.readFileSync(path.join(sourceDir, 'manifest.json'), 
 // and shared lexical bindings behave exactly as before the file extraction.
 const source = files.map(file => fs.readFileSync(path.join(sourceDir, file), 'utf8')).join('');
 new vm.Script(source, { filename: 'admin-app.js' });
-fs.writeFileSync(path.join(root, 'assets/js/admin-app.js'), source);
+fs.writeFileSync(path.join(root, 'public/assets/js/admin-app.js'), source);

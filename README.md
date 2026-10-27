@@ -32,25 +32,38 @@ The pricing app is built, but its independent TypeScript project is not covered 
 
 ## Structure
 
-| Path | Purpose |
+| Folder | Contents |
 | --- | --- |
-| `index.html`, `projects.html` | Public markup |
-| `admin.html` | Dashboard markup |
-| `assets/css/`, `assets/js/` | Styles and browser integrations |
-| `src/admin/` | Dashboard features and ordered build manifest |
+| `src/pages/` | Homepage, projects, admin, gateway and legal HTML pages |
+| `src/admin/` | Dashboard feature code and build manifest |
 | `src/react/`, `src/input.css` | React islands and Tailwind input |
-| `api/`, `lib/` | Serverless endpoints and helpers |
-| `pricing-tool/` | Embedded pricing/proposal app |
-| `elitebody/` | Separate demo source with portfolio references |
+| `public/assets/` | Browser scripts, CSS, images, globe textures and previews |
+| `public/icons/` | Favicons, Apple touch icons and installable app icons |
+| `public/` | Sitemap, robots.txt, manifest and domain marker |
+| `api/`, `lib/` | Serverless endpoints and server-side helpers |
+| `config/firebase/` | Firestore rules/indexes and storage CORS configuration |
 | `config/pricing.json` | Server-side pricing rules |
-| `scripts/`, `test/`, `docs/` | Build tools, tests and operational notes |
+| `templates/` | New-page template and reusable HTML snippets |
+| `docs/guides/` | API, deployment and user guides |
+| `docs/` | Dated audits and operational notes |
+| `pricing-tool/`, `elitebody/` | Independent application packages |
+| `scripts/`, `test/` | Build tools and regression tests |
+
+Root files are limited to the README, agent instructions, package manifests and
+configuration files used directly by development/deployment tools. Source pages
+are assembled at their original root URLs; grouped icon files are also published
+at their existing URLs. This organization does not change public links.
+
+`npm run dev` builds first, then serves `dist/` through Vite. Rebuild and refresh
+after editing HTML or admin sources. Use `bash scripts/create-page.sh page-name`
+to create a page under `src/pages/` from `templates/page.html`.
 
 Admin sources are concatenated in manifest order into one classic script, preserving shared state, function hoisting and existing inline handlers. This is a file organization change, not an authentication or workflow redesign.
 
 ## Configuration and releases
 
-Vercel hosts the website and APIs. Firebase supplies data/auth, not website hosting. See [DEPLOYMENT.md](DEPLOYMENT.md) and [.env.example](.env.example). Use separate backend credentials for development and previews. Anonymous Firebase authentication does not grant admin rights; access is governed by the existing gateway and `firestore.rules`.
+Vercel hosts the website and APIs. Firebase supplies data/auth, not website hosting. See [deployment guide](docs/guides/DEPLOYMENT.md) and [.env.example](.env.example). Use separate backend credentials for development and previews. Anonymous Firebase authentication does not grant admin rights; access is governed by the existing gateway and `config/firebase/firestore.rules`.
 
-Work on a task branch and open a draft PR; see [AGENTS.md](AGENTS.md). The [API reference](API.md) and [user guide](USER_GUIDE.md) retain historical workflow detail; source and tests take precedence where they differ.
+Work on a task branch and open a draft PR; see [AGENTS.md](AGENTS.md). The [API reference](docs/guides/API.md) and [user guide](docs/guides/USER_GUIDE.md) retain historical workflow detail; source and tests take precedence where they differ.
 
 Private/proprietary application code; no open-source license grant is provided.

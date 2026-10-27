@@ -4,7 +4,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const vm = require('node:vm');
 const read = file => fs.readFileSync(path.join(__dirname, '..', file), 'utf8');
-const html = read('assets/js/home-interactions.js');
+const html = read('public/assets/js/home-interactions.js');
 function eventTarget() {
   const events = {};
   return {addEventListener(name, fn) { (events[name] ||= []).push(fn); },
@@ -18,7 +18,7 @@ function typeHarness(reduce = false) {
     setTimeout(fn, delay){timers.set(++id,{fn,delay});return id;},clearTimeout(id){timers.delete(id);}};
   context.IntersectionObserver = class { constructor(fn){visibility=fn;} observe(){} };
   context.window.IntersectionObserver = context.IntersectionObserver;
-  const source=read('assets/js/trusted-types-bootstrap.js');
+  const source=read('public/assets/js/trusted-types-bootstrap.js');
   vm.runInNewContext(source.slice(source.indexOf('window.oyTypewriter ='),source.indexOf('/* Keep the restored')),context);
   const element={textContent:'',closest(){return this;}};
   context.window.oyTypewriter(element,['abc','xy']);

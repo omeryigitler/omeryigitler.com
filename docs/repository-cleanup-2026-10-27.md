@@ -45,3 +45,9 @@ The following task tips are all ancestors of the reviewed `main` commit. Their S
 | `intro-gold-balance-v4` | `b5fdf5243c39cd6f70e25b143fb2fa7027f40600` |
 | `intro-hq-v3` | `3d71e43123183276d923c61c05b97f37fa89629d` |
 | `intro-texture-only-v5` | `ac36ab60dfd0e5b5ba5cab36777a3c1d61218970` |
+
+## Folder organization follow-up
+
+The root screenshot feedback is addressed by grouping HTML pages in `src/pages/`, browser assets in `public/assets/`, icons in `public/icons/`, reference guides in `docs/guides/`, Firebase rules/indexes/CORS in `config/firebase/`, and page/snippet templates in `templates/`. Root configuration entrypoints stay where their tools expect them. Existing page, icon and asset URLs are preserved by the output assembler.
+
+All 43 tests, root TypeScript and JS syntax checks pass after the moves. React, CSS, pricing, social-image and public-output build stages succeeded. Local serverless Chromium needed its host-only SwiftShader extraction repaired again; no production workaround or secret was added. No previous output path was removed; the domain marker CNAME is now included. All generated asset bytes match the pre-move output. Isolated desktop/mobile homepage and project-page comparisons still show identical layout dimensions and no missing local assets or page errors. New-page creation was checked against the relocated template.

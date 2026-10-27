@@ -13,14 +13,16 @@ test('public output is repeatable, versions changes and excludes private source'
       fs.writeFileSync(path.join(root, file), value);
     };
     const home = '<script src="/assets/js/app.js?v=old"></script><footer class="signal-footer"><a href="#contact">Contact</a></footer>';
-    write('index.html', home);
-    write('projects.html', '<footer>outdated</footer>');
-    write('assets/js/app.js', 'window.ready = true;');
+    write('src/pages/index.html', home);
+    write('src/pages/projects.html', '<footer>outdated</footer>');
+    write('public/assets/js/app.js', 'window.ready = true;');
+    write('public/icons/favicon.svg', '<svg/>');
     write('pricing-tool/dist/index.html', '<p>Pricing</p>');
     for (const file of ['.env', 'api/private.js', 'src/admin/state.js', 'README.md', '_TEMPLATE_new_page.html']) write(file, 'not public');
     preparePublic(root);
     const output = path.join(root, 'dist');
     const first = fs.readFileSync(path.join(output, 'index.html'), 'utf8');
+    assert.equal(fs.readFileSync(path.join(output, 'favicon.svg'), 'utf8'), '<svg/>');
     assert.match(first, /app\.js\?v=[a-f0-9]{16}/);
     assert.match(fs.readFileSync(path.join(output, 'projects.html'), 'utf8'), /href="\/#contact"/);
     for (const file of ['.env', 'api', 'src', 'README.md', '_TEMPLATE_new_page.html']) assert.equal(fs.existsSync(path.join(output, file)), false);
@@ -28,8 +30,8 @@ test('public output is repeatable, versions changes and excludes private source'
     preparePublic(root);
     assert.equal(fs.readFileSync(path.join(output, 'index.html'), 'utf8'), first);
     assert.equal(fs.existsSync(path.join(output, 'stale.html')), false);
-    assert.equal(fs.readFileSync(path.join(root, 'index.html'), 'utf8'), home);
-    write('assets/js/app.js', 'window.ready = false;');
+    assert.equal(fs.readFileSync(path.join(root, 'src/pages/index.html'), 'utf8'), home);
+    write('public/assets/js/app.js', 'window.ready = false;');
     preparePublic(root);
     assert.notEqual(fs.readFileSync(path.join(output, 'index.html'), 'utf8'), first);
   } finally {

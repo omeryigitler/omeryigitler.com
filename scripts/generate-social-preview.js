@@ -12,12 +12,12 @@ const path = require("node:path");
 const ROOT = path.resolve(__dirname, "..");
 const WIDTH = 1200;
 const HEIGHT = 630;
-const TEMPLATE = path.join(ROOT, "assets", "social-preview-v2.svg");
-const OUTPUT = path.join(ROOT, "assets", "social-preview-v2.png");
+const TEMPLATE = path.join(ROOT, "public", "assets", "social-preview-v2.svg");
+const OUTPUT = path.join(ROOT, "public", "assets", "social-preview-v2.png");
 
 function generateSvg() {
   const template = fs.readFileSync(TEMPLATE, "utf8");
-  const taurus = fs.readFileSync(path.join(ROOT, "favicon_taurus.svg"), "utf8");
+  const taurus = fs.readFileSync(path.join(ROOT, "public", "icons", "favicon_taurus.svg"), "utf8");
   if (!template.includes("<!-- TAURUS_MARK -->")) {
     throw new Error("Social preview template must contain TAURUS_MARK");
   }

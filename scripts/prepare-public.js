@@ -7,15 +7,18 @@ function preparePublic(root, output = path.join(root, 'dist')) {
   fs.mkdirSync(output, { recursive: true });
   // Only public files belong in the static output. APIs are handled separately
   // by Vercel; documentation, tests, source, config and dependencies stay private.
-  for (const entry of fs.readdirSync(root, { withFileTypes: true })) {
-    if (!entry.isFile()) continue;
-    const name = entry.name;
-    if ((name.endsWith('.html') && !name.startsWith('_')) ||
-        /^(favicon.*\.(ico|svg|png)|apple-touch-icon.*\.png|icon-.*\.png|robots\.txt|sitemap\.xml|site\.webmanifest)$/.test(name)) {
-      fs.copyFileSync(path.join(root, name), path.join(output, name));
-    }
+  const pages = path.join(root, 'src/pages');
+  for (const name of fs.readdirSync(pages).filter(name => name.endsWith('.html'))) {
+    fs.copyFileSync(path.join(pages, name), path.join(output, name));
   }
-  fs.cpSync(path.join(root, 'assets'), path.join(output, 'assets'), { recursive: true });
+  const publicDir = path.join(root, 'public');
+  for (const entry of fs.readdirSync(publicDir)) {
+    if (entry === 'icons') continue;
+    fs.cpSync(path.join(publicDir, entry), path.join(output, entry), { recursive: true });
+  }
+  // Group icon sources in Git, but preserve all existing root icon URLs for
+  // browser bookmarks, installed shortcuts and cached web manifests.
+  fs.cpSync(path.join(publicDir, 'icons'), output, { recursive: true });
   fs.cpSync(path.join(root, 'pricing-tool/dist'), path.join(output, 'pricing-tool/dist'), { recursive: true });
 
   const homePath = path.join(output, 'index.html');

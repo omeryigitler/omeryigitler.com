@@ -29,4 +29,4 @@ jobs:
           find dist -type f -print0 | sort -z | xargs -0 sha256sum > /tmp/build-after.sha256
           diff -u /tmp/build-before.sha256 /tmp/build-after.sha256
           git diff --exit-code
-          test -z "$(git ls-files node_modules pricing-tool/dist assets/react assets/css/styles.css)"
+          test -z "$(git ls-files node_modules pricing-tool/dist public/assets/react public/assets/css/styles.css)"

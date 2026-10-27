@@ -24,7 +24,7 @@ The build generates admin JavaScript, React islands, Tailwind CSS, pricing asset
 
 ## Environment
 
-See `.env.example`. Set secrets separately for Preview and Production. The Firebase service account is backend-only. Client configuration in `assets/js/firebase-config.js` identifies the project and does not replace authorization. Passkey settings must match the intended origin and registered credentials.
+See `.env.example`. Set secrets separately for Preview and Production. The Firebase service account is backend-only. Client configuration in `public/assets/js/firebase-config.js` identifies the project and does not replace authorization. Passkey settings must match the intended origin and registered credentials.
 
 Firebase rules/indexes are deployed separately, only when explicitly intended:
 
@@ -40,6 +40,10 @@ The social preview generator uses serverless Chromium. If a local environment ca
 
 ## Generated output and rollback
 
-Do not commit `node_modules/`, `dist/`, `pricing-tool/dist/`, `assets/react/`, `assets/css/styles.css`, `assets/js/admin-app.js` or `assets/social-preview-v2.png`. Keep both package lockfiles.
+Do not commit `node_modules/`, `dist/`, `pricing-tool/dist/`, `public/assets/react/`, `public/assets/css/styles.css`, `public/assets/js/admin-app.js` or `public/assets/social-preview-v2.png`. Keep both package lockfiles.
 
 Old `/index-legacy.html` and `/projects-legacy.html` URLs redirect to current pages. Rollback uses the previous reviewed deployment/commit. Dependency cleanup reduces the current checkout; it does not rewrite Git history.
+
+## Source folders and public URLs
+
+HTML sources live in `src/pages/`; assets and icon sources live in `public/`. The assembler flattens `public/icons/` into the output root so existing favicon, Apple icon and manifest URLs keep working. Firebase rules/indexes are under `config/firebase/`, with paths declared in root `firebase.json`. Documentation and templates are not published.

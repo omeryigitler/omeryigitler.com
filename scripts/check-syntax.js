@@ -9,4 +9,4 @@ function check(directory) {
     else if (entry.name.endsWith('.js')) execFileSync(process.execPath, ['--check', file], { cwd: root, stdio: 'inherit' });
   }
 }
-for (const directory of ['api', 'lib', 'scripts', 'assets/js', 'src/admin']) check(directory);
+for (const directory of ['api', 'lib', 'scripts', 'public/assets/js', 'src/admin']) check(directory);

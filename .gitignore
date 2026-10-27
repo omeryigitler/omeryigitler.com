@@ -48,21 +48,16 @@ tmp/
 temp/
 *.tmp
 
-# Vercel (if used alongside Firebase)
-.vercel
-
 # Python
 __pycache__/
 *.py[cod]
-*.pyc
 
-.env*.local
 
 # Claude local settings
 .claude/settings.local.json
 
 # Generated frontend assets
-/assets/react/
-/assets/css/styles.css
-/assets/js/admin-app.js
-/assets/social-preview-v2.png
+/public/assets/react/
+/public/assets/css/styles.css
+/public/assets/js/admin-app.js
+/public/assets/social-preview-v2.png
