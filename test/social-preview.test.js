@@ -5,7 +5,7 @@ const path = require("node:path");
 const { generateSvg, WIDTH, HEIGHT } = require("../scripts/generate-social-preview.js");
 
 test("social share image is a 1200x630 static PNG with readable OG metadata", () => {
-  const html = fs.readFileSync(path.join(__dirname, "..", "index.html"), "utf8");
+  const html = fs.readFileSync(path.join(__dirname, "..", "src/pages/index.html"), "utf8");
   const imageUrl = "https://omeryigitler.com/assets/social-preview-v2.png";
   assert.equal(WIDTH, 1200);
   assert.equal(HEIGHT, 630);
@@ -19,7 +19,7 @@ test("social share image is a 1200x630 static PNG with readable OG metadata", ()
 
 test("social artwork reuses canonical Taurus logo inside a centered safe square", () => {
   const svg = generateSvg();
-  const sourceLogo = fs.readFileSync(path.join(__dirname, "..", "favicon_taurus.svg"), "utf8");
+  const sourceLogo = fs.readFileSync(path.join(__dirname, "..", "public/icons/favicon_taurus.svg"), "utf8");
   const sourceMark = sourceLogo.match(/<path\b[^>]*\/>/);
   assert.ok(sourceMark, "expected canonical Taurus path");
   assert.ok(svg.includes(sourceMark[0]), "reuse the original complete Taurus path");
@@ -35,7 +35,7 @@ test("social artwork reuses canonical Taurus logo inside a centered safe square"
 
 test("WhatsApp crawlers receive Open Graph image and required tags", () => {
   const root = path.join(__dirname, "..");
-  const html = fs.readFileSync(path.join(root, "index.html"), "utf8");
+  const html = fs.readFileSync(path.join(root, "src/pages/index.html"), "utf8");
   const head = html.slice(0, html.indexOf("</head>"));
   assert.ok(Buffer.byteLength(head, "utf8") < 300 * 1024, "Open Graph head must be in first 300 KB");
   for (const property of ["og:title", "og:description", "og:url", "og:image"]) {
@@ -45,6 +45,6 @@ test("WhatsApp crawlers receive Open Graph image and required tags", () => {
     assert.match(element, /content="[^"]+"/, property + " must have a nonempty value");
   }
   assert.ok(head.includes('content="https://omeryigitler.com/assets/social-preview-v2.png"'));
-  const robots = fs.readFileSync(path.join(root, "robots.txt"), "utf8");
+  const robots = fs.readFileSync(path.join(root, "public/robots.txt"), "utf8");
   assert.ok(/User-agent: \*\s+Allow: \//.test(robots), "public social crawler must be allowed");
 });

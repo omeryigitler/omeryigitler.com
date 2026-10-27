@@ -92,6 +92,36 @@ function optionalEnv(name) {
   return value && String(value).trim() ? String(value).trim() : "";
 }
 
+let telegramWebhookConfiguredAt = 0;
+
+async function ensureTelegramWebhook() {
+  if (Date.now() - telegramWebhookConfiguredAt < 60_000) return;
+
+  const botToken = requireEnv("TELEGRAM_BOT_TOKEN");
+  const secret = optionalEnv("TELEGRAM_WEBHOOK_SECRET");
+  if (secret && !/^[A-Za-z0-9_-]{1,256}$/.test(secret)) {
+    throw new Error("TELEGRAM_WEBHOOK_SECRET contains unsupported characters");
+  }
+
+  const payload = {
+    url: "https://omeryigitler.com/api/webhook",
+    allowed_updates: ["message", "callback_query"],
+    drop_pending_updates: false,
+  };
+  if (secret) payload.secret_token = secret;
+
+  const response = await axios.post(
+    `https://api.telegram.org/bot${botToken}/setWebhook`,
+    payload,
+    { timeout: 7000 },
+  );
+  if (!response.data?.ok) {
+    throw new Error(response.data?.description || "Telegram rejected webhook configuration");
+  }
+
+  telegramWebhookConfiguredAt = Date.now();
+}
+
 function getPasskeyConfig() {
   const rpID = optionalEnv("PASSKEY_RP_ID") || "omeryigitler.com";
   const origins = (
@@ -310,6 +340,8 @@ async function handleAuthInit(req, res, body) {
   if (!/^[a-f0-9]{32}$/i.test(reqId)) {
     return res.status(400).json({ error: "Invalid reqId" });
   }
+
+  await ensureTelegramWebhook();
 
   const challengeCode = generateCode();
   const options = generateOptions(challengeCode);

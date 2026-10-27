@@ -1,0 +1,18 @@
+[
+  "state-and-pricing.js",
+  "pricing-bridge.js",
+  "pdf-queue.js",
+  "navigation.js",
+  "security-settings.js",
+  "workflow.js",
+  "search.js",
+  "client-records.js",
+  "quote-records.js",
+  "project-records.js",
+  "inbox.js",
+  "quotes.js",
+  "clients.js",
+  "projects.js",
+  "visitors.js",
+  "project-modal.js"
+]

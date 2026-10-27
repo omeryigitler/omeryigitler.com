@@ -1,10 +1,12 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 
-export default defineConfig({
+export default defineConfig(({ command }) => ({
+  root: command === "serve" ? "dist" : ".",
+  publicDir: false,
   plugins: [react()],
   build: {
-    outDir: "assets/react",
+    outDir: "public/assets/react",
     emptyOutDir: true,
     rollupOptions: {
       input: {
@@ -20,4 +22,4 @@ export default defineConfig({
       }
     }
   }
-});
+}));

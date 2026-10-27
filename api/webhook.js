@@ -206,47 +206,86 @@ async function handleAuthCallback(callbackQuery) {
     return;
   }
 
+  // Telegram requires answerCallbackQuery immediately. Firestore work must never
+  // keep the mobile button spinner open.
+  await answerCallback(callbackQuery, "Checking");
+
   const [, reqId, selectedCode] = match;
   const code = Number(selectedCode);
   const docRef = db.collection("auth_requests").doc(reqId);
-  const doc = await docRef.get();
 
-  if (!doc.exists) {
-    await answerCallback(callbackQuery, "Expired request");
-    return;
-  }
+  let result = "expired";
+  try {
+    result = await db.runTransaction(async (transaction) => {
+      const snapshot = await transaction.get(docRef);
+      if (!snapshot.exists) return "expired";
 
-  const data = doc.data() || {};
-  const expiresAtMs = data.expiresAt?.toMillis ? data.expiresAt.toMillis() : 0;
+      const data = snapshot.data() || {};
+      const expiresAtMs = data.expiresAt?.toMillis ? data.expiresAt.toMillis() : 0;
+      const expired = Boolean(expiresAtMs && Date.now() > expiresAtMs);
 
-  if (data.status !== "pending" || (expiresAtMs && Date.now() > expiresAtMs)) {
-    if (data.status === "pending") {
-      await docRef.update({
-        status: "expired",
-        expiredAt: admin.firestore.FieldValue.serverTimestamp(),
+      if (data.status !== "pending" || expired) {
+        if (data.status === "pending" && expired) {
+          transaction.update(docRef, {
+            status: "expired",
+            expiredAt: admin.firestore.FieldValue.serverTimestamp(),
+          });
+        }
+        return "expired";
+      }
+
+      if (code === Number(data.expectedCode)) {
+        transaction.update(docRef, {
+          status: "approved",
+          approvedAt: admin.firestore.FieldValue.serverTimestamp(),
+          approvedBy: String(fromId),
+        });
+        return "approved";
+      }
+
+      transaction.update(docRef, {
+        status: "denied",
+        deniedAt: admin.firestore.FieldValue.serverTimestamp(),
+        deniedBy: String(fromId),
+        attempts: admin.firestore.FieldValue.increment(1),
       });
-    }
-    await answerCallback(callbackQuery, "Expired request");
-    return;
-  }
-
-  if (code === Number(data.expectedCode)) {
-    await docRef.update({
-      status: "approved",
-      approvedAt: admin.firestore.FieldValue.serverTimestamp(),
-      approvedBy: String(fromId),
+      return "denied";
     });
-    await answerCallback(callbackQuery, "Access granted");
+  } catch (error) {
+    console.error("Auth callback transaction failed:", error);
     return;
   }
 
-  await docRef.update({
-    status: "denied",
-    deniedAt: admin.firestore.FieldValue.serverTimestamp(),
-    deniedBy: String(fromId),
-    attempts: admin.firestore.FieldValue.increment(1),
-  });
-  await answerCallback(callbackQuery, "Wrong code");
+  const chatId = callbackQuery.message?.chat?.id;
+  const messageId = callbackQuery.message?.message_id;
+  if (chatId && messageId) {
+    try {
+      await telegram("editMessageReplyMarkup", {
+        chat_id: chatId,
+        message_id: messageId,
+        reply_markup: { inline_keyboard: [] },
+      });
+    } catch (error) {
+      console.warn("Could not clear auth keyboard:", error?.response?.data || error.message);
+    }
+  }
+
+  if (chatId) {
+    const text = result === "approved"
+      ? "✅ Taurus Gateway: access granted."
+      : result === "denied"
+        ? "❌ Taurus Gateway: wrong code."
+        : "⌛ Taurus Gateway: request expired.";
+    try {
+      await telegram("sendMessage", {
+        chat_id: chatId,
+        text,
+        disable_notification: true,
+      });
+    } catch (error) {
+      console.warn("Could not send auth result:", error?.response?.data || error.message);
+    }
+  }
 }
 
 async function handleTrackerCallback(callbackQuery) {
