@@ -26,6 +26,20 @@
       const START_ORIGIN = 'https://start.omeryigitler.com';
       const gatewayFrame = document.getElementById('gateway-frame');
       let handoffStarted = false;
+      let verifiedToken = null;
+      let vaultReady = false;
+      function completeHandoff() {
+        if (!vaultReady || !verifiedToken || handoffStarted) return;
+        handoffStarted = true;
+        hideGatewayFrame();
+        postSession(verifiedToken);
+      }
+      window.addEventListener('message', (event) => {
+        if (event.origin !== window.location.origin || event.source !== gatewayFrame.contentWindow) return;
+        if (event.data?.type !== 'taurus-vault-complete') return;
+        vaultReady = true;
+        completeHandoff();
+      });
 
       function hideGatewayFrame() {
         gatewayFrame.style.visibility = 'hidden';
@@ -103,9 +117,8 @@
             const tokenResult = await user.getIdTokenResult(true);
             const claims = tokenResult.claims || {};
             if (claims.admin !== true || claims.role !== 'admin') return;
-            handoffStarted = true;
-            hideGatewayFrame();
-            postSession(tokenResult.token);
+            verifiedToken = tokenResult.token;
+            completeHandoff();
           } catch (error) {
             console.error('Startpage gateway handoff failed:', error);
             handoffStarted = false;
