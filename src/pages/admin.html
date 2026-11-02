@@ -755,28 +755,6 @@
     <script src="assets/js/tracker/taurus-globe.js?v=V1"></script>
     <script src="assets/js/admin-agent.js?v=V5"></script>
 
-    <script>
-      // A client-controlled authToken is not authorization. Verify a fresh Firebase ID token
-      // and server-assigned admin claims before initializing the admin application.
-      document.documentElement.style.visibility = 'hidden';
-      (function () {
-        const timeout = setTimeout(() => window.location.replace('gateway.html'), 12000);
-        firebase.auth().onAuthStateChanged(async (user) => {
-          if (!user) { clearTimeout(timeout); window.location.replace('gateway.html'); return; }
-          try {
-            const result = await user.getIdTokenResult(true);
-            if (result.claims.admin !== true || result.claims.role !== 'admin') throw new Error('Unauthorized');
-            clearTimeout(timeout);
-            document.documentElement.style.visibility = '';
-            // Existing admin script keeps its original parser execution order.
-          } catch (error) {
-            clearTimeout(timeout);
-            window.location.replace('gateway.html');
-          }
-        });
-      })();
-    </script>
-
     <script src="/assets/js/admin-app.js"></script>
 
     <!-- Message Detail Modal -->
