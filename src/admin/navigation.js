@@ -12,6 +12,7 @@
 
         let activeTab = 'dashboard';
         function switchTab(tabId) {
+            if (typeof StudioOS !== 'undefined') StudioOS.hide();
             activeTab = tabId;
 
             // Hide all views
@@ -43,17 +44,17 @@
 
             // Update Title (Desktop only or shared)
             const titles = {
-                'dashboard': 'Dashboard Overview',
+                'dashboard': 'Overview',
                 'messages': 'Communications Hub',
                 'pricing': 'Pricing Tool',
                 'quotes': 'Proposals Management', // NEW
                 'clients': 'Client Management', // NEW
-                'projects': 'Operational Matrix',
-                'settings': 'Security Protocols',
+                'projects': 'Projects',
+                'settings': 'Settings',
                 'intelligence': 'Visitor Intelligence Matrix'
             };
             const titleEl = document.getElementById('page-title');
-            if (titleEl) titleEl.innerText = titles[tabId];
+            if (titleEl) titleEl.innerText = titles[tabId] || 'Studio OS';
 
             // Load relevant data
             if (tabId === 'messages') loadMessages();

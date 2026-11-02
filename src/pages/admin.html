@@ -29,6 +29,7 @@
         rel="stylesheet">
 
     <link rel="stylesheet" href="/assets/css/admin.css">
+    <link rel="stylesheet" href="/assets/css/studio-admin.css">
 </head>
 
 <body class="bg-obsidian text-white font-body h-screen flex overflow-hidden">
@@ -708,15 +709,14 @@
                                         <i data-lucide="smartphone" class="w-4 h-4"></i>
                                         Telegram 2FA Config
                                     </h4>
-                                    <p class="text-xs text-gray-500 mt-1 italic">Configure your bot credentials for
-                                        Gateway access</p>
+                                    <p class="text-xs text-gray-500 mt-1 italic">Tokenlar tarayıcıya yüklenmez. TELEGRAM_BOT_TOKEN ve TELEGRAM_CHAT_ID sunucuda yönetilir. Önceden kaynak kodunda bulunan tokenın sağlayıcı tarafında yenilenmesi gerekir.</p>
                                 </div>
 
                                 <div class="space-y-4">
                                     <div>
                                         <label class="text-[10px] text-gray-500 uppercase tracking-wider block mb-1">Bot
                                             Token</label>
-                                        <input type="password" id="tele-token"
+                                        <input type="password" id="tele-token" disabled aria-label="Token yalnızca sunucuda yönetilir"
                                             class="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-xs text-white font-mono focus:border-taurusGold focus:outline-none transition-colors"
                                             placeholder="123456:ABC-DEF...">
                                     </div>
@@ -724,15 +724,15 @@
                                         <label
                                             class="text-[10px] text-gray-500 uppercase tracking-wider block mb-1">Chat
                                             ID</label>
-                                        <input type="text" id="tele-chat-id"
+                                        <input type="text" id="tele-chat-id" disabled
                                             class="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-xs text-white font-mono focus:border-taurusGold focus:outline-none transition-colors"
                                             placeholder="123456789">
                                     </div>
                                 </div>
 
-                                <button id="save-telegram-btn"
+                                <button id="save-telegram-btn" disabled
                                     class="w-full py-3 bg-taurusGold text-black font-bold text-[10px] uppercase tracking-widest rounded-lg hover:bg-white transition-all shadow-[0_0_15px_rgba(212,175,55,0.3)]">
-                                    Save & Test Connection
+                                    Sunucu ortam değişkenlerinden yönetilir
                                 </button>
                             </div>
                         </div>
