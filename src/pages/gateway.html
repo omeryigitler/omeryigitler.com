@@ -197,6 +197,29 @@ body.vault-page{min-height:100dvh;overflow-x:hidden;font-family:Manrope,Arial,sa
 @media(max-width:900px){.vault-scene{top:50%;--d:min(44vw,39dvh,410px)}.vault-logo{top:50%}}
 @media(max-width:540px){.vault-scene{top:50%;--d:min(64vw,30dvh)}.vault-logo{top:50%}.vault-controls{padding:10px 12px;background:linear-gradient(180deg,transparent,#080908 13%,#080908ed);border-radius:16px}.vault-heading h1{font-size:18px}}
 @media(max-height:690px) and (max-width:900px){.vault-screen{min-height:690px}.vault-scene{top:50%;--d:min(43vw,30dvh)}.vault-logo{top:50%;position:absolute}}
+
+/* Vault refinement v3: machined depth, fasteners and conduit illumination */
+.vault-screen{background:radial-gradient(ellipse at 47% 46%,#171913 0,#090b09 42%,#050605 82%)}
+.vault-scene{filter:drop-shadow(0 24px 30px #000b)}
+.vault-door{background:repeating-conic-gradient(from 11deg,#44463f 0deg,#1a1c19 13deg,#383a34 25deg,#0d0f0c 33deg,#3b3e35 48deg),radial-gradient(circle at 30% 21%,#62665b,#10120e);border-color:#55594f;box-shadow:0 22px 40px #000e,0 0 0 2px #171b16,0 0 0 8px #65695c,0 0 0 11px #0c0f0b,inset 0 0 0 4px #171b16,inset 0 0 0 7px #7d8072,inset 0 0 40px #000}
+.vault-door:before{content:"";position:absolute;inset:3%;border-radius:50%;background:radial-gradient(circle at 32% 22%,#ffffff0e,transparent 45%),repeating-conic-gradient(#ffffff07 0deg 2deg,transparent 2deg 19deg);border:1px solid #b6ba9b33;pointer-events:none}
+.vault-rim{inset:9%;border:clamp(11px,1.65vw,24px) ridge #2b3028;box-shadow:0 0 0 2px #868b7b,0 0 0 7px #11140f,0 0 0 9px #6b6e61,inset 0 0 0 2px #8c9382,inset 0 12px 35px #000e}
+.vault-inner{inset:12%;border:clamp(8px,1.15vw,17px) ridge #42463c;background:repeating-radial-gradient(circle,#151813 0 8%,#282b23 9% 10%,#10120f 11% 20%);box-shadow:0 4px 16px #000,inset 0 0 0 3px #929589,inset 0 12px 20px #000a}
+.vault-wheel{inset:17%;border:clamp(8px,1.25vw,16px) ridge #51574a;background:repeating-conic-gradient(from 12deg,#777d70 0deg 7deg,#10140f 9deg 12deg,transparent 13deg 60deg);box-shadow:0 0 0 2px #93998a,0 0 0 7px #11140f,inset 0 0 18px #000}
+.vault-spoke-cross{position:absolute;inset:28%;border-radius:50%;background:radial-gradient(circle,#0c0f0b 30%,#858875 33%,#1b2018 40%,#070907 58%);box-shadow:0 0 0 5px #444a40,0 0 0 7px #9b9f90}
+.vault-outer-fasteners{position:absolute;inset:0;border-radius:50%;pointer-events:none}
+.vault-outer-fasteners i{position:absolute;left:50%;top:50%;width:clamp(8px,1.15vw,15px);height:clamp(8px,1.15vw,15px);margin-left:clamp(-7px,-.575vw,-4px);margin-top:clamp(-7px,-.575vw,-4px);border-radius:50%;transform:rotate(var(--angle)) translateY(calc(var(--d, 400px) * -.44));background:linear-gradient(135deg,#b3b7a6 0,#40463b 46%,#10140f 47%,#666c60 90%);border:1px solid #12160f;box-shadow:0 1px 3px #000}
+.vault-lock-arms{position:absolute;inset:0;z-index:2;pointer-events:none}
+.vault-lock-arms b{position:absolute;left:50%;top:50%;height:clamp(13px,2vw,26px);width:16%;border-radius:6px;border:2px solid #171b15;background:linear-gradient(180deg,#a4a899,#3a3e35 40%,#131713 55%,#666b5e 95%);box-shadow:0 4px 9px #0009;transform-origin:0 50%;transform:rotate(var(--angle)) translateX(calc(var(--d, 400px) * .17));opacity:.85}
+.vault-hinge{width:16%;right:-9%;background:repeating-linear-gradient(180deg,#747b6c 0 8%,#171d17 8% 16%,#4c5346 16% 28%);border:5px ridge #676f61}
+.pipe{border-color:#363c34;background:transparent;box-shadow:inset 3px 3px #9b9d88,0 0 0 4px #10140e,0 6px 10px #0009}.pipe:before{content:"";position:absolute;inset:-5px;border-radius:28px;border-top:2px solid #c6c8aa55;border-left:2px solid #c6c8aa55}.pipe span{border-top-color:#6c5c12;border-left-color:#50450e;filter:drop-shadow(0 0 3px #d4a60030)}
+.vault-scene.is-unlocking .vault-lock-arms{animation:vaultBolts 1s .65s ease-in-out forwards}
+@keyframes vaultBolts{to{transform:rotate(22deg);opacity:.25}}
+.vault-controls{right:clamp(24px,4.5vw,85px);width:min(370px,30vw)}
+.vault-primary,.vault-secondary{font-size:10px}
+@media(min-width:901px){.vault-scene,.vault-logo{left:50%}}
+@media(max-width:900px){.vault-scene,.vault-logo{left:50%}.vault-controls{width:min(460px,calc(100vw - 36px))}}
+@media(max-width:540px){.vault-controls{width:calc(100vw - 24px)}.vault-screen{min-height:100dvh}}
 </style>
 </head>
 
@@ -209,7 +232,9 @@ body.vault-page{min-height:100dvh;overflow-x:hidden;font-family:Manrope,Arial,sa
       <div class="pipe pipe-one"><span></span></div><div class="pipe pipe-two"><span></span></div>
       <div class="vault-hinge" aria-hidden="true"></div>
       <div class="vault-door" aria-hidden="true">
-        <div class="vault-rim"><div class="vault-inner"><div class="vault-bolts"></div><div class="vault-wheel"></div></div></div>
+        <div class="vault-outer-fasteners" aria-hidden="true"><i style="--angle:0deg"></i><i style="--angle:30deg"></i><i style="--angle:60deg"></i><i style="--angle:90deg"></i><i style="--angle:120deg"></i><i style="--angle:150deg"></i><i style="--angle:180deg"></i><i style="--angle:210deg"></i><i style="--angle:240deg"></i><i style="--angle:270deg"></i><i style="--angle:300deg"></i><i style="--angle:330deg"></i></div>
+        <div class="vault-rim"><div class="vault-inner"><div class="vault-bolts"></div><div class="vault-wheel"><div class="vault-spoke-cross"></div></div></div></div>
+        <div class="vault-lock-arms" aria-hidden="true"><b style="--angle:0deg"></b><b style="--angle:60deg"></b><b style="--angle:120deg"></b><b style="--angle:180deg"></b><b style="--angle:240deg"></b><b style="--angle:300deg"></b></div>
         <div class="vault-light"></div>
       </div>
     </div>
