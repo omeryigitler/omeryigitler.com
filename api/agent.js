@@ -107,8 +107,8 @@ function publicError(error) {
 
 module.exports = async function handler(req, res) {
   const action = String(req.query?.action || "").trim().toLowerCase();
-  const getActions = new Set(["status", "todos", "agenda"]);
-  const postActions = new Set(["command", "approve", "todo", "event"]);
+  const getActions = new Set(["status", "todos", "agenda", "studio-status", "studio-records"]);
+  const postActions = new Set(["command", "approve", "todo", "event", "studio-settings", "studio-save", "studio-transition"]);
   if (!getActions.has(action) && !postActions.has(action)) {
     return sendJson(res, 404, { ok: false, code: "unknown_action", error: "Unknown agent action." });
   }
@@ -121,6 +121,18 @@ module.exports = async function handler(req, res) {
     const googleActor = await loadGoogleAuth().verifyGoogleAgentRequest(req);
     const actor = googleActor || await agent.verifyAgentRequest(req);
 
+    if (action.startsWith('studio-') && action !== 'studio-status') {
+      require('../lib/studio-policy').assertIsolatedPreview();
+    }
+
+    if (action === 'studio-status') {
+      const result = await require('../lib/studio-ai').engine().status();
+      return sendJson(res, 200, { ok: true, ...result });
+    }
+    if (action === 'studio-records') {
+      const result = await require('../lib/studio-records').list();
+      return sendJson(res, 200, { ok: true, ...result });
+    }
     if (action === "status") {
       const approvals = await agent.listPendingApprovals();
       return sendJson(res, 200, { ok: true, approvals });
@@ -135,6 +147,15 @@ module.exports = async function handler(req, res) {
     }
 
     const body = await readJson(req);
+    if (action === 'studio-settings') {
+      const result = await require('../lib/studio-ai').engine().save(body.settings, actor.id);
+      return sendJson(res, 200, { ok: true, ...result });
+    }
+    if (action === 'studio-save' || action === 'studio-transition') {
+      const records = require('../lib/studio-records');
+      const result = action === 'studio-save' ? await records.save(body, actor) : await records.transition(body, actor);
+      return sendJson(res, 200, { ok: true, ...result });
+    }
     if (action === "command") {
       const result = await agent.handleCommand({ text: body.text || body.command, actor });
       return sendJson(res, 200, { ok: true, ...result });
