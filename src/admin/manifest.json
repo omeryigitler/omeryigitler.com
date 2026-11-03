@@ -14,5 +14,6 @@
   "clients.js",
   "projects.js",
   "visitors.js",
-  "project-modal.js"
+  "project-modal.js",
+  "studio-os.js"
 ]
