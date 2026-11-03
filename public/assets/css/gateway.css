@@ -1,0 +1,78 @@
+/* Original supplied artwork is retained intact. Coordinates map its 684 × 1306
+   panel (x=201, y=57) to accessible, live authentication controls. */
+:root { color-scheme: dark; }
+* { box-sizing: border-box; }
+html { min-height: 100%; background: #080807; }
+body.vault-page {
+  margin: 0; min-height: 100svh; padding: 24px 12px;
+  display: grid; place-items: center;
+  color: #e7e7e5; font-family: Manrope, Arial, sans-serif;
+  background: radial-gradient(ellipse at center, #29230b30, transparent 65%),
+    repeating-linear-gradient(0deg, #ffffff04 0 1px, transparent 1px 62px),
+    repeating-linear-gradient(90deg, #ffffff04 0 1px, transparent 1px 62px), #080807;
+}
+.vault-screen {
+  position: relative; isolation: isolate; container-type: inline-size;
+  width: min(560px, max(340px, calc((100svh - 48px) * 684 / 1306)), 100%);
+  aspect-ratio: 684 / 1306; border-radius: 12% / 6%;
+  box-shadow: 0 24px 90px #000a, 0 0 60px #ffd60008;
+}
+.vault-scene {
+  position: absolute; inset: 0; z-index: -1; border-radius: inherit;
+  background: url('../gateway/taurus-vault-reference.png') 50% 40.141% / 158.772% 110.873% no-repeat;
+}
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }
+.hidden { display: none !important; }
+#status-desc {
+  position: absolute; top: 65.9%; left: 12%; width: 76%; min-height: 3.3%;
+  margin: 0; padding: .7% 1%; display: grid; place-items: center;
+  background: #0d0d0b; box-shadow: 0 0 10px 5px #0d0d0b;
+  text-align: center; text-transform: uppercase; color: #ffdf00;
+  font: 600 clamp(10px, 1.95cqw, 14px)/1.5 monospace; letter-spacing: .12em;
+}
+#status-desc.text-red-500 { color: #ff9191; }
+.vault-actions, .vault-error {
+  position: absolute; left: 9.3%; top: 71.2%; width: 81.4%; height: 15.2%;
+  background: #0e0e0d; border-radius: 4%;
+  box-shadow: 0 0 12px 4px #0e0e0d;
+}
+.vault-primary, .vault-secondary, .vault-code, .vault-loading {
+  position: absolute; width: 100%; display: flex; align-items: center; justify-content: center;
+  gap: 4%; text-align: center; border-radius: 3.2cqw;
+}
+.vault-primary, .vault-secondary {
+  cursor: pointer; min-height: 44px; padding: 0 3%; font-family: Manrope, Arial, sans-serif;
+  font-weight: 800; letter-spacing: .12em; transition: filter .18s, box-shadow .18s;
+}
+.vault-primary {
+  top: 0; height: 45%; font-size: 3.5cqw; color: #080800;
+  border: 2px solid #ffe653;
+  background: radial-gradient(ellipse at 50% 0, #fff131, transparent 75%), linear-gradient(#ffdb00, #ffcf00 65%, #e3a800);
+  box-shadow: inset 0 0 0 2px #bc8c00, inset 0 0 15px #ffed55, 0 0 22px #ffd00065;
+}
+.vault-secondary {
+  top: 60.5%; height: 38%; font-size: 2.65cqw; color: #c8c8c8;
+  border: 1px solid #73736d;
+  background: radial-gradient(ellipse at 40% 0, #ffffff10, transparent 65%), linear-gradient(#292929, #171717);
+  box-shadow: inset 0 1px 2px #ffffff25, inset 0 -2px 3px #ffffff14, 0 9px 16px #000a;
+}
+.vault-primary svg, .vault-secondary svg { width: 4.8cqw; height: 4.8cqw; flex-shrink: 0; }
+button:hover { filter: brightness(1.13); }
+button:active { filter: brightness(.94); }
+button:focus-visible { outline: 3px solid white; outline-offset: 5px; }
+.vault-loading { inset: 0; color: #c8b64d; font: 600 2.5cqw monospace; letter-spacing: .1em; }
+.vault-actions:has(button:not(.hidden), .vault-code:not(.hidden)) .vault-loading { display: none; }
+.vault-code { top: 59%; height: 40%; flex-direction: column; background: #181710; border: 1px solid #aa8c20; color: #ffdb00; }
+.vault-code .code-label { font: 600 1.8cqw monospace; letter-spacing: .08em; }
+#challenge-code { font: 700 5cqw/1.3 monospace; letter-spacing: .16em; }
+.vault-actions:has(.vault-primary.hidden) .vault-code { top: 10%; height: 75%; }
+.vault-error { flex-direction: column; justify-content: center; align-items: center; padding: 3%; text-align: center; }
+.vault-error h2 { color: #ff9191; margin: 0; font-size: 3.4cqw; }
+.vault-error p { margin: 3% 0; font-size: 2.6cqw; }
+.vault-error button { background: #ffda00; color: #111; border: 0; border-radius: 8px; padding: 3% 5%; font-weight: 800; font-size: 2.5cqw; }
+.vault-screen:has(.is-unlocking) { animation: vault-confirm 1.2s ease-in-out 2; }
+/* The existing lockout replaces the panel contents; do not leave painted controls behind. */
+.vault-screen:not(:has(.vault-controls)) { display: grid; place-items: center; background: #111; border: 1px solid #7f6b24; }
+@keyframes vault-confirm { 50% { box-shadow: 0 0 65px #ffd00065; } }
+@media (max-width: 380px) { body.vault-page { padding: 12px 8px; } }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
