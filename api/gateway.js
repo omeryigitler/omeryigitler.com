@@ -393,7 +393,7 @@ async function handleCheckStatus(req, res) {
   const data = doc.data() || {};
   const expiresAtMs = data.expiresAt?.toMillis ? data.expiresAt.toMillis() : 0;
 
-  if (data.status === "pending" && expiresAtMs && Date.now() > expiresAtMs) {
+  if (!expiresAtMs || Date.now() >= expiresAtMs) {
     await docRef.update({
       status: "expired",
       expiredAt: admin.firestore.FieldValue.serverTimestamp(),

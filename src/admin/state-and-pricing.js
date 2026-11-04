@@ -317,9 +317,14 @@
                 db = firebase.firestore();
 
                 // SECURITY: Check authentication state
-                firebase.auth().onAuthStateChanged((user) => {
-                    if (user) {
-                        // User is authenticated - grant access
+                firebase.auth().onAuthStateChanged(async (user) => {
+                    let authorized = false;
+                    try {
+                        const token = user && !user.isAnonymous ? await user.getIdTokenResult(true) : null;
+                        authorized = token?.claims?.admin === true && token?.claims?.role === 'admin';
+                    } catch (_) { /* Fail closed when the session cannot be verified. */ }
+                    if (authorized) {
+                        // Only an authorized admin may initialize dashboard listeners.
                         console.log("✅ Authenticated access verified:", user.uid, "IsAnon:", user.isAnonymous);
                         console.log("Intelligence System Initialized");
 

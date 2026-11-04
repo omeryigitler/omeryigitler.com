@@ -1,0 +1,76 @@
+/* The supplied photographic vault is composited in CSS, without repainting its metalwork.
+   Each layer maps the same 700px square: source origin (196, 80), axis (546, 430). */
+:root { color-scheme: dark; }
+* { box-sizing: border-box; }
+html, body { margin: 0; min-height: 100%; background: #080908; }
+body.vault-page { color: #ddd; font-family: Manrope, Arial, sans-serif; }
+.vault-screen { --vault-size: min(74vh, 54vw, 800px); position: relative; isolation: isolate; min-height: 100svh; overflow: hidden; background: radial-gradient(ellipse at center,#28291f 0,#10120f 47%,#080908 80%); }
+.vault-brand { position: absolute; top: 32px; left: 36px; font: 600 11px monospace; letter-spacing: .18em; color: #e5e5de; }
+.vault-brand span { color: #7e8176; }
+.vault-scene { position: absolute; width: var(--vault-size); height: var(--vault-size); left: 50%; top: 50svh; transform: translate(-50%,-50%); perspective: 1200px; }
+.vault-art { position: absolute; inset: 0; background: url('../gateway/taurus-vault-reference.png') 50.7772% 10.6952% / 155.142857% 206.857143% no-repeat; }
+.vault-wall { mask-image: radial-gradient(ellipse,black 51%,transparent 72%); }
+.vault-interior { position: absolute; inset: 13%; border-radius: 50%; background: radial-gradient(ellipse at 65% 45%,#20231b,#030403 62%); box-shadow: inset 0 0 35px #000; }
+.vault-door { clip-path: circle(37% at 50% 50%); transform-origin: 85% 50%; will-change: transform; }
+.vault-logo { clip-path: circle(12.6% at 50% 50%); pointer-events: none; }
+.vault-energy { position: absolute; inset: 0; width: 100%; height: 100%; stroke: #ffe242; stroke-width: 4; stroke-linecap: round; filter: drop-shadow(0 0 5px #ffca00); }
+.vault-energy path { stroke-dasharray: 1; stroke-dashoffset: 1; }
+.vault-scene.is-unlocking .vault-energy path { animation: vault-energy .85s ease-out forwards; }
+.vault-scene.is-unlocking .vault-door { animation: vault-open 1.65s .9s cubic-bezier(.4,0,.2,1) forwards; }
+@keyframes vault-energy { to { stroke-dashoffset: 0; } }
+@keyframes vault-open { to { transform: rotateY(78deg); filter: brightness(.55); } }
+.vault-controls { position: absolute; z-index: 2; right: 4vw; bottom: 7vh; width: min(310px,25vw); padding: 20px; border-radius: 12px; background: linear-gradient(135deg,#0c0e0bd9,#0c0e0bf5); }
+.vault-heading h1 { margin: 0 0 9px; font: 700 clamp(19px,2vw,27px)/1.2 Syncopate,Arial,sans-serif; letter-spacing: .04em; color: #ffda00; }
+.vault-heading p,.vault-footer { font: 9px/1.6 monospace; letter-spacing: .14em; color: #8d9086; }
+#status-desc { min-height: 30px; margin: 18px 0 12px; font: 11px/1.5 monospace; color: #e8ce47; }
+#status-desc.text-red-500 { color: #ff9797; }
+.vault-actions { display: flex; flex-direction: column; gap: 12px; }
+.vault-primary,.vault-secondary { display: flex; justify-content: center; align-items: center; gap: 12px; width: 100%; min-height: 50px; padding: 12px; border-radius: 9px; font: 800 11px Manrope,Arial,sans-serif; letter-spacing: .09em; cursor: pointer; }
+.vault-primary { color: #111; border: 1px solid #ffe468; background: linear-gradient(#ffe020,#efbb00); box-shadow: inset 0 0 0 2px #bb9000,0 0 18px #ffcc0020; }
+.vault-secondary { color: #ddd; border: 1px solid #55584d; background: linear-gradient(#30322b,#181a16); }
+.vault-actions svg { width: 20px; height: 20px; flex-shrink: 0; }
+button:hover:not(:disabled) { filter: brightness(1.12); }
+button:focus-visible { outline: 3px solid #fff; outline-offset: 4px; }
+button:disabled { cursor: wait; opacity: .65; }
+.vault-loading { font: 10px monospace; color: #aba579; padding: 16px 0; }
+.vault-actions:has(button:not(.hidden),.vault-code:not(.hidden)) .vault-loading { display: none; }
+.vault-code { display: grid; gap: 6px; place-items: center; padding: 12px; border: 1px solid #8f7b27; border-radius: 9px; background: #191b14; color: #ffdc00; }
+.code-label { font: 9px monospace; letter-spacing: .06em; }
+#challenge-code { font: 700 26px monospace; letter-spacing: .15em; }
+.vault-error { display: flex; flex-direction: column; gap: 12px; }
+.vault-error h2 { font-size: 15px; color: #ff9191; margin: 0; }
+.vault-error p { font-size: 12px; margin: 0; }
+.vault-error button { min-height: 44px; border: 1px solid #8b782b; background: #24271d; color: white; border-radius: 8px; cursor: pointer; }
+.vault-footer { margin: 18px 0 0; }
+.hidden { display: none !important; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.vault-screen:not(:has(.vault-controls)) { display: grid; place-items: center; text-align: center; }
+@media(max-width:900px) {
+ .vault-screen { --vault-size: min(88vw,46svh); }
+ .vault-brand { top: 22px; left: 20px; font-size: 9px; }
+ .vault-controls { width: min(460px,calc(100% - 32px)); right: 50%; transform: translateX(50%); bottom: 18px; padding: 16px; text-align: center; }
+ .vault-heading { position: fixed; bottom: calc(50svh + var(--vault-size)/2 - 18px); left: 50%; transform: translateX(-50%); width: 90vw; }
+ .vault-heading h1 { font-size: 22px; }
+ #status-desc { margin: 0 0 10px; min-height: 17px; }
+ .vault-actions { gap: 9px; }
+ .vault-primary,.vault-secondary { min-height: 46px; }
+ .vault-footer { margin-top: 12px; }
+}
+@media(max-height:700px) and (max-width:900px) {
+ .vault-screen { --vault-size: min(70vw,34svh); }
+ .vault-controls { bottom: 8px; padding: 10px; }
+ .vault-primary,.vault-secondary { min-height: 44px; padding: 8px; }
+ .vault-footer { margin-top: 7px; font-size: 8px; }
+}
+@media(max-height:480px) and (min-width:540px) {
+ .vault-screen { --vault-size: 70svh; }
+ .vault-controls { width: 29%; right: 12px; bottom: 12px; transform: none; padding: 10px; }
+ .vault-heading { position: static; transform: none; width: auto; }
+ .vault-heading h1 { font-size: 16px; }
+ .vault-heading p,.vault-footer { display: none; }
+}
+@media(prefers-reduced-motion:reduce) { *,*::before,*::after { animation: none !important; transition: none !important; } }
+/* Keep only the mechanical artwork; headings and the emblem remain separate. */
+.vault-wall { mask-image: radial-gradient(ellipse,black 51%,transparent 72%),linear-gradient(transparent 3%,black 15% 86%,transparent 93%); mask-composite: intersect; }
+.vault-door::after { content: ''; position: absolute; width: 25.2%; height: 25.2%; left: 37.4%; top: 37.4%; border-radius: 50%; background: radial-gradient(circle at 35% 30%,#28291c,#0a0b08 70%); box-shadow: inset 0 0 0 2px #8b7526,inset 0 0 14px #000; }
+.vault-energy { stroke-width: 2; opacity: .8; }
