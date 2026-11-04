@@ -14,8 +14,12 @@ body.vault-page { color: #ddd; font-family: Manrope, Arial, sans-serif; }
 .vault-door { clip-path: circle(37% at 50% 50%); transform-origin: 85% 50%; will-change: transform; }
 .vault-logo { clip-path: circle(12.6% at 50% 50%); pointer-events: none; }
 .vault-energy { position: absolute; inset: 0; width: 100%; height: 100%; stroke: #ffe242; stroke-width: 4; stroke-linecap: round; filter: drop-shadow(0 0 5px #ffca00); }
-.vault-energy path { stroke-dasharray: 1; stroke-dashoffset: 1; }
-.vault-scene.is-unlocking .vault-energy path { animation: vault-energy .85s ease-out forwards; }
+/* Flow is already active while awaiting authentication, with staggered liquid highlights. */
+.vault-energy path { stroke-dasharray: 18 82; stroke-dashoffset: 100; animation: vault-fluid 3.6s linear infinite; }
+.vault-energy path:nth-child(2) { animation-duration: 4.8s; animation-delay: -2.4s; }
+.vault-energy path:nth-child(3) { animation-duration: 3.2s; animation-delay: -1.6s; }
+@keyframes vault-fluid { from { stroke-dashoffset: 100; } to { stroke-dashoffset: 0; } }
+.vault-scene.is-unlocking .vault-energy path { stroke-dasharray: 100; stroke-dashoffset: 100; animation: vault-energy .85s ease-out forwards; }
 .vault-scene.is-unlocking .vault-door { animation: vault-open 1.65s .9s cubic-bezier(.4,0,.2,1) forwards; }
 @keyframes vault-energy { to { stroke-dashoffset: 0; } }
 @keyframes vault-open { to { transform: rotateY(78deg); filter: brightness(.55); } }
@@ -73,4 +77,4 @@ button:disabled { cursor: wait; opacity: .65; }
 /* Keep only the mechanical artwork; headings and the emblem remain separate. */
 .vault-wall { mask-image: radial-gradient(ellipse,black 51%,transparent 72%),linear-gradient(transparent 3%,black 15% 86%,transparent 93%); mask-composite: intersect; }
 .vault-door::after { content: ''; position: absolute; width: 25.2%; height: 25.2%; left: 37.4%; top: 37.4%; border-radius: 50%; background: radial-gradient(circle at 35% 30%,#28291c,#0a0b08 70%); box-shadow: inset 0 0 0 2px #8b7526,inset 0 0 14px #000; }
-.vault-energy { stroke-width: 2; opacity: .8; }
+.vault-energy { stroke-width: 3; opacity: .85; pointer-events: none; }
