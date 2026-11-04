@@ -14,6 +14,7 @@ test('public output is repeatable, versions changes and excludes private source'
     };
     const home = '<script src="/assets/js/app.js?v=old"></script><footer class="signal-footer"><a href="#contact">Contact</a></footer>';
     write('src/pages/index.html', home);
+    write('src/pages/admin.html', '<script src="/assets/js/app.js"></script>');
     write('src/pages/projects.html', '<footer>outdated</footer>');
     write('public/assets/js/app.js', 'window.ready = true;');
     write('public/icons/favicon.svg', '<svg/>');
@@ -21,6 +22,8 @@ test('public output is repeatable, versions changes and excludes private source'
     for (const file of ['.env', 'api/private.js', 'src/admin/state.js', 'README.md', '_TEMPLATE_new_page.html']) write(file, 'not public');
     preparePublic(root);
     const output = path.join(root, 'dist');
+    assert.equal(fs.existsSync(path.join(output,'admin.html')), false);
+    assert.match(fs.readFileSync(path.join(root,'server-generated/admin.html'),'utf8'), /app\.js\?v=[a-f0-9]{16}/);
     const first = fs.readFileSync(path.join(output, 'index.html'), 'utf8');
     assert.equal(fs.readFileSync(path.join(output, 'favicon.svg'), 'utf8'), '<svg/>');
     assert.match(first, /app\.js\?v=[a-f0-9]{16}/);

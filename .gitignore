@@ -61,3 +61,5 @@ __pycache__/
 /public/assets/css/styles.css
 /public/assets/js/admin-app.js
 /public/assets/social-preview-v2.png
+
+/server-generated/

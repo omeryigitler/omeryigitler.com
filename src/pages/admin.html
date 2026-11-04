@@ -32,19 +32,14 @@
 </head>
 
 <body class="bg-obsidian text-white font-body h-screen flex overflow-hidden">
-    <!--AUTH GUARD-->
-    <script>
-        if (sessionStorage.getItem('authToken') !== 'valid' && localStorage.getItem('authToken') !== 'valid') {
-            window.location.replace('gateway.html');
-        }
-    </script>
-
     <!-- SECURE LOGOUT LOGIC -->
     <script>
-        function logout() {
+        async function logout() {
+            const response = await fetch('/api/gateway?action=logout', { method: 'POST', credentials: 'same-origin' });
+            if (!response.ok) throw new Error('Sign-out failed. Please retry.');
             sessionStorage.removeItem('authToken');
             localStorage.removeItem('authToken');
-            if (window.firebase) firebase.auth().signOut();
+            if (window.firebase) await firebase.auth().signOut();
             if (window.taurus_set_internal) window.taurus_set_internal();
             window.location.href = 'gateway.html';
         }

@@ -44,6 +44,13 @@ function preparePublic(root, output = path.join(root, 'dist')) {
       });
     fs.writeFileSync(file, html);
   }
+  // Admin markup is bundled only with the authenticated function, never served statically.
+  const adminPage = path.join(output, 'admin.html');
+  if (fs.existsSync(adminPage)) {
+    const privateDir = path.join(root, 'server-generated');
+    fs.mkdirSync(privateDir, { recursive: true });
+    fs.renameSync(adminPage, path.join(privateDir, 'admin.html'));
+  }
 }
 
 if (require.main === module) preparePublic(path.resolve(__dirname, '..'));

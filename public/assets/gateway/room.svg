@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1800 1100" fill="none">
+<defs><linearGradient id="pipe" x2="0" y2="1"><stop stop-color="#5d6353"/><stop offset=".22" stop-color="#242a20"/><stop offset=".6" stop-color="#11160e"/><stop offset=".85" stop-color="#3f4736"/><stop offset="1" stop-color="#151b11"/></linearGradient><radialGradient id="glow"><stop stop-color="#b9ad4b" stop-opacity=".04"/><stop offset="1" stop-color="#000" stop-opacity="0"/></radialGradient></defs>
+<path d="M0 145H345Q405 145 405 205V330Q405 390 465 390H550M1800 940H1435Q1375 940 1375 880V780Q1375 720 1315 720H1250" stroke="#000" stroke-width="32"/>
+<path d="M0 145H345Q405 145 405 205V330Q405 390 465 390H550M1800 940H1435Q1375 940 1375 880V780Q1375 720 1315 720H1250" stroke="url(#pipe)" stroke-width="24"/>
+<path d="M170 0V1100M1630 0V1100M0 80H1800M0 1020H1800" stroke="#aaa98c" stroke-opacity=".07"/>
+<path d="M0 148H345M1435 943H1800" stroke="#cfb853" stroke-opacity=".25" stroke-width="2"/>
+<circle cx="900" cy="550" r="650" fill="url(#glow)"/>
+</svg>

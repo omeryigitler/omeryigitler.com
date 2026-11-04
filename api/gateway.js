@@ -10,6 +10,8 @@ const { isoBase64URL } = require("@simplewebauthn/server/helpers");
 const { admin, db, requireEnv } = require("./_firebaseAdmin");
 const { authKeyboard, panel, row } = require("./telegramFormat");
 
+const security = require("../lib/gateway-security");
+
 const AUTH_REQUEST_TTL_MS = 5 * 60 * 1000;
 const PASSKEY_CHALLENGE_TTL_MS = 2 * 60 * 1000;
 const PASSKEY_REGISTRATION_TTL_MS = 5 * 60 * 1000;
@@ -52,7 +54,7 @@ function getTelegramAdminChatId() {
 }
 
 function generateCode() {
-  return Math.floor(Math.random() * 90) + 10;
+  return crypto.randomInt(10, 100);
 }
 
 function generateOptions(challengeCode) {
@@ -63,7 +65,11 @@ function generateOptions(challengeCode) {
     if (!options.includes(next)) options.push(next);
   }
 
-  return options.sort(() => Math.random() - 0.5);
+  for (let i = options.length - 1; i > 0; i--) {
+    const j = crypto.randomInt(i + 1);
+    [options[i], options[j]] = [options[j], options[i]];
+  }
+  return options;
 }
 
 function getClientIp(req) {
@@ -98,7 +104,7 @@ async function ensureTelegramWebhook() {
   if (Date.now() - telegramWebhookConfiguredAt < 60_000) return;
 
   const botToken = requireEnv("TELEGRAM_BOT_TOKEN");
-  const secret = optionalEnv("TELEGRAM_WEBHOOK_SECRET");
+  const secret = requireEnv("TELEGRAM_WEBHOOK_SECRET");
   if (secret && !/^[A-Za-z0-9_-]{1,256}$/.test(secret)) {
     throw new Error("TELEGRAM_WEBHOOK_SECRET contains unsupported characters");
   }
@@ -331,7 +337,7 @@ async function sendAuthChallenge({ reqId, challengeCode, options, ip, userAgent 
     text: message,
     parse_mode: "HTML",
     reply_markup: authKeyboard(reqId, options),
-  });
+  }, { timeout: 7000 });
 }
 
 async function handleAuthInit(req, res, body) {
@@ -341,6 +347,8 @@ async function handleAuthInit(req, res, body) {
     return res.status(400).json({ error: "Invalid reqId" });
   }
 
+  const sessionHash = security.requireSession(req);
+  await security.throttle(db, "telegram-account", 12, 60 * 60 * 1000);
   await ensureTelegramWebhook();
 
   const challengeCode = generateCode();
@@ -350,7 +358,8 @@ async function handleAuthInit(req, res, body) {
   const ip = getClientIp(req);
   const userAgent = String(body.userAgent || req.headers["user-agent"] || "").slice(0, 500);
 
-  await db.collection("auth_requests").doc(reqId).set({
+  await db.collection("auth_requests").doc(reqId).create({
+    sessionHash,
     expectedCode: challengeCode,
     status: "pending",
     attempts: 0,
@@ -376,48 +385,18 @@ async function handleAuthInit(req, res, body) {
   });
 }
 
-async function handleCheckStatus(req, res) {
-  const reqId = String(req.query.reqId || "").trim();
-
-  if (!/^[a-f0-9]{32}$/i.test(reqId)) {
-    return res.status(400).json({ error: "Invalid reqId" });
+async function handleCheckStatus(req, res, body) {
+  const result = await security.consumeApproval(db, body.reqId, security.requireSession(req));
+  if (result.status === 'approved') {
+    const customToken = await createAdminCustomToken('telegram');
+    return res.status(200).json({ status: 'approved', customToken });
   }
-
-  const docRef = db.collection("auth_requests").doc(reqId);
-  const doc = await docRef.get();
-
-  if (!doc.exists) {
-    return res.status(404).json({ status: "not_found" });
-  }
-
-  const data = doc.data() || {};
-  const expiresAtMs = data.expiresAt?.toMillis ? data.expiresAt.toMillis() : 0;
-
-  if (!expiresAtMs || Date.now() >= expiresAtMs) {
-    await docRef.update({
-      status: "expired",
-      expiredAt: admin.firestore.FieldValue.serverTimestamp(),
-    });
-    return res.status(200).json({ status: "expired" });
-  }
-
-  if (data.status === "approved") {
-    const customToken = await admin.auth().createCustomToken(`telegram_admin_${data.approvedBy || "primary"}`, {
-      admin: true,
-      role: "admin",
-      provider: "telegram",
-    });
-
-    return res.status(200).json({
-      status: "approved",
-      customToken,
-    });
-  }
-
-  return res.status(200).json({ status: data.status || "pending" });
+  return res.status(200).json({ status: result.status });
 }
 
-async function handlePasskeyChallenge(req, res) {
+async function handlePasskeyChallenge(req, res, body) {
+  const sessionHash = security.requireSession(req);
+  const reqId = security.requestId(body.reqId);
   const config = getPasskeyConfig();
   if (!config.enabled) {
     return res.status(503).json({ error: "Passkey is not configured" });
@@ -434,6 +413,7 @@ async function handlePasskeyChallenge(req, res) {
     userVerification: "required",
   });
 
+  await security.saveChallenge(db, options.challenge, sessionHash, reqId, PASSKEY_CHALLENGE_TTL_MS);
   return res.status(200).json(options);
 }
 
@@ -446,6 +426,8 @@ async function handlePasskeyStatus(req, res) {
 }
 
 async function handlePasskeyVerify(req, res, body) {
+  const sessionHash = security.requireSession(req);
+  const reqId = security.requestId(body.reqId);
   const config = getPasskeyConfig();
   if (!config.enabled) {
     return res.status(503).json({ error: "Passkey is not configured" });
@@ -461,30 +443,34 @@ async function handlePasskeyVerify(req, res, body) {
     return res.status(403).json({ error: "Unknown credential" });
   }
 
+  const challenge = security.clientChallenge(response);
+  const counterRecord = await db.collection('gateway_credentials').doc(security.hash(credential.id)).get();
+  const storedCounter = counterRecord.exists ? Number(counterRecord.data().counter || 0) : credential.counter;
   let verification;
   try {
     verification = await verifyAuthenticationResponse({
       response,
-      expectedChallenge: (challenge) => verifyPasskeyChallenge(challenge, config.challengeSecret),
+      expectedChallenge: (value) => value === challenge && verifyPasskeyChallenge(value, config.challengeSecret),
       expectedOrigin: config.origins,
       expectedRPID: config.rpID,
       requireUserVerification: true,
       credential: {
         id: credential.id,
         publicKey: getPasskeyPublicKeyBytes(credential.publicKey),
-        counter: credential.counter,
+        counter: storedCounter,
         transports: credential.transports,
       },
     });
   } catch (error) {
     console.error("Passkey verification failed:", error);
-    return res.status(400).json({ verified: false, error: error.message });
+    return res.status(400).json({ verified: false, error: "Credential verification failed. Please try again." });
   }
 
   if (!verification.verified) {
     return res.status(401).json({ verified: false });
   }
 
+  await security.consumeChallenge(db, challenge, sessionHash, reqId, credential.id, verification.authenticationInfo.newCounter);
   const customToken = await createAdminCustomToken("passkey");
   return res.status(200).json({
     verified: true,
@@ -532,6 +518,7 @@ async function handlePasskeyRegisterOptions(req, res, body) {
     preferredAuthenticatorType: "localDevice",
   });
 
+  await security.saveChallenge(db, options.challenge, security.hash(body.setupToken), 'registration', PASSKEY_REGISTRATION_TTL_MS);
   return res.status(200).json(options);
 }
 
@@ -556,13 +543,14 @@ async function handlePasskeyRegisterVerify(req, res, body) {
     });
   } catch (error) {
     console.error("Passkey registration failed:", error);
-    return res.status(400).json({ verified: false, error: error.message });
+    return res.status(400).json({ verified: false, error: "Credential verification failed. Please try again." });
   }
 
   if (!verification.verified || !verification.registrationInfo?.credential) {
     return res.status(401).json({ verified: false });
   }
 
+  await security.consumeChallenge(db, security.clientChallenge(response), security.hash(body.setupToken), 'registration');
   const credential = verification.registrationInfo.credential;
   const label = getSetupLabel(body.label);
   const transports = response.response?.transports?.length ? response.response.transports : ["internal"];
@@ -593,6 +581,35 @@ async function handlePasskeyRegisterVerify(req, res, body) {
   });
 }
 
+async function handleAdminPage(req, res) {
+  res.setHeader('Cache-Control', 'private, no-store');
+  const sessionCookie = String(req.headers.cookie || '').split(';').map(v => v.trim()).find(v => v.startsWith('__Host-taurus_admin='))?.slice(20);
+  try {
+    if (!sessionCookie) throw new Error('No session');
+    const claims = await admin.auth().verifySessionCookie(sessionCookie, true);
+    if (claims.admin !== true || claims.role !== 'admin') throw new Error('Not authorized');
+    const fs = require('node:fs');
+    const path = require('node:path');
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    res.setHeader('X-Robots-Tag', 'noindex, nofollow, noarchive');
+    return res.status(200).send(fs.readFileSync(path.join(process.cwd(), 'server-generated', 'admin.html'), 'utf8'));
+  } catch (_) {
+    res.setHeader('Location', '/gateway.html');
+    return res.status(302).end();
+  }
+}
+async function handleSession(req, res, body) {
+  security.requireSession(req);
+  const claims = await admin.auth().verifyIdToken(body.idToken, true);
+  if (claims.admin !== true || claims.role !== 'admin' || !claims.auth_time || Date.now() / 1000 - claims.auth_time > 300) {
+    throw security.failure(403, 'A fresh admin sign-in is required.');
+  }
+  const expiresIn = 8 * 60 * 60 * 1000;
+  const cookie = await admin.auth().createSessionCookie(body.idToken, { expiresIn });
+  res.setHeader('Set-Cookie', `__Host-taurus_admin=${cookie}; Path=/; Max-Age=28800; HttpOnly; Secure; SameSite=Strict`);
+  return res.status(200).json({ ready: true });
+}
+
 module.exports = async (req, res) => {
   setCors(req, res);
 
@@ -608,6 +625,23 @@ module.exports = async (req, res) => {
   }
 
   try {
+    const protectedActions = new Set(['bootstrap', 'session', 'logout', 'auth_init', 'check_status', 'passkey_challenge', 'passkey_verify', 'passkey_register_options', 'passkey_register_verify']);
+    if (protectedActions.has(action)) {
+      if (req.method !== 'POST') return res.status(405).json({ error: 'POST required.' });
+      if (!security.sameOrigin(req)) return res.status(403).json({ error: 'Origin rejected.' });
+      if (action === 'check_status') await security.throttle(db, `poll:${getClientIp(req)}`, 180, 60 * 1000);
+      if (action !== 'check_status' && action !== 'logout') {
+        const group = action === 'auth_init' ? 'telegram' : 'login';
+        await security.throttle(db, `${group}:${getClientIp(req)}`, group === 'telegram' ? 5 : 30, 10 * 60 * 1000);
+      }
+    }
+    if (action === 'admin_page') return await handleAdminPage(req, res);
+    if (action === 'session') return await handleSession(req, res, body);
+    if (action === 'logout') {
+      res.setHeader('Set-Cookie', '__Host-taurus_admin=; Path=/; Max-Age=0; HttpOnly; Secure; SameSite=Strict');
+      return res.status(200).json({ ready: true });
+    }
+    if (action === 'bootstrap') return security.bootstrap(req, res);
     if (action === "check_command") {
       const sessionId = req.query.sessionId || body.sessionId;
       if (!sessionId) return res.status(400).json({ error: "Missing sessionId" });
@@ -637,36 +671,37 @@ module.exports = async (req, res) => {
     }
 
     if (action === "auth_init") {
-      return handleAuthInit(req, res, body);
+      return await handleAuthInit(req, res, body);
     }
 
     if (action === "check_status") {
-      return handleCheckStatus(req, res);
+      return await handleCheckStatus(req, res, body);
     }
 
     if (action === "passkey_status") {
-      return handlePasskeyStatus(req, res);
+      return await handlePasskeyStatus(req, res);
     }
 
     if (action === "passkey_challenge") {
-      return handlePasskeyChallenge(req, res);
+      return await handlePasskeyChallenge(req, res, body);
     }
 
     if (action === "passkey_verify") {
-      return handlePasskeyVerify(req, res, body);
+      return await handlePasskeyVerify(req, res, body);
     }
 
     if (action === "passkey_register_options") {
-      return handlePasskeyRegisterOptions(req, res, body);
+      return await handlePasskeyRegisterOptions(req, res, body);
     }
 
     if (action === "passkey_register_verify") {
-      return handlePasskeyRegisterVerify(req, res, body);
+      return await handlePasskeyRegisterVerify(req, res, body);
     }
 
     return res.status(400).json({ error: "Invalid action" });
   } catch (error) {
     console.error("Gateway Error:", error);
-    return res.status(500).json({ error: error.message });
+    if (error.status === 429) res.setHeader('Retry-After', '600');
+    return res.status(error.status || 503).json({ error: error.status ? error.message : 'Verification is unavailable. Please try again.' });
   }
 };

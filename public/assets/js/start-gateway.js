@@ -1,0 +1,111 @@
+    (async function () {
+      const START_ORIGIN = 'https://start.omeryigitler.com';
+      const gatewayFrame = document.getElementById('gateway-frame');
+      let handoffStarted = false;
+      let readyForHandoff = false;
+      let freshVerifiedToken = null;
+      function completeHandoff() {
+        if (!readyForHandoff || !freshVerifiedToken || handoffStarted) return;
+        handoffStarted = true;
+        hideGatewayFrame();
+        postSession(freshVerifiedToken);
+      }
+      window.addEventListener('message', (event) => {
+        if (event.origin !== location.origin || event.source !== gatewayFrame.contentWindow) return;
+        if (event.data?.type !== 'taurus-vault-complete') return;
+        readyForHandoff = true;
+        completeHandoff();
+      });
+
+      function hideGatewayFrame() {
+        gatewayFrame.style.visibility = 'hidden';
+      }
+
+      function showGatewayFrame() {
+        gatewayFrame.style.visibility = 'visible';
+      }
+
+      function armNavigationShield() {
+        try {
+          const frameWindow = gatewayFrame.contentWindow;
+          if (!frameWindow) return;
+          frameWindow.addEventListener('beforeunload', hideGatewayFrame, { once: true });
+        } catch (_) {
+          // The frame is same-origin, but keep the handoff functional if access is blocked.
+        }
+      }
+
+      gatewayFrame.addEventListener('load', () => {
+        try {
+          const pathname = gatewayFrame.contentWindow?.location?.pathname || '';
+          if (pathname.endsWith('/admin.html')) {
+            hideGatewayFrame();
+            return;
+          }
+          showGatewayFrame();
+          armNavigationShield();
+        } catch (_) {
+          // Ignore frame inspection failures; Firebase handoff below remains authoritative.
+        }
+      });
+
+      function safeReturnTarget() {
+        try {
+          const raw = new URLSearchParams(window.location.search).get('return') || START_ORIGIN + '/';
+          const target = new URL(raw);
+          return target.origin === START_ORIGIN ? target.href : START_ORIGIN + '/';
+        } catch (_) {
+          return START_ORIGIN + '/';
+        }
+      }
+
+      function postSession(idToken) {
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = START_ORIGIN + '/api/gateway/session';
+        form.style.display = 'none';
+
+        const tokenInput = document.createElement('input');
+        tokenInput.type = 'hidden';
+        tokenInput.name = 'idToken';
+        tokenInput.value = idToken;
+
+        const returnInput = document.createElement('input');
+        returnInput.type = 'hidden';
+        returnInput.name = 'return';
+        returnInput.value = safeReturnTarget();
+
+        form.append(tokenInput, returnInput);
+        document.body.appendChild(form);
+        form.submit();
+      }
+
+      try {
+        const auth = firebase.auth();
+
+        // A previously persisted Firebase user must never be re-submitted automatically.
+        // Startpage handoff is accepted only after a fresh passkey or Telegram approval.
+        await auth.signOut().catch(() => undefined);
+
+        auth.onAuthStateChanged(async (user) => {
+          if (!user || handoffStarted) return;
+          try {
+            const tokenResult = await user.getIdTokenResult(true);
+            const claims = tokenResult.claims || {};
+            if (claims.admin !== true || claims.role !== 'admin') return;
+            freshVerifiedToken = tokenResult.token;
+            completeHandoff();
+          } catch (error) {
+            console.error('Startpage gateway handoff failed:', error);
+            handoffStarted = false;
+            showGatewayFrame();
+            armNavigationShield();
+          }
+        });
+
+        gatewayFrame.src = 'gateway.html?target=startpage&t=' + Date.now();
+      } catch (error) {
+        console.error('Startpage gateway bootstrap failed:', error);
+        gatewayFrame.src = 'gateway.html?target=startpage&t=' + Date.now();
+      }
+    })();

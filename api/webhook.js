@@ -36,7 +36,7 @@ function isAllowedTelegramId(id) {
 
 function isTelegramWebhookAuthorized(req) {
   const expectedSecret = process.env.TELEGRAM_WEBHOOK_SECRET;
-  if (!expectedSecret) return true;
+  if (!expectedSecret) return false;
 
   return req.headers["x-telegram-bot-api-secret-token"] === expectedSecret;
 }
