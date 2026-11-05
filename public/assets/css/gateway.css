@@ -31,7 +31,7 @@ button { font:inherit; }
 /* Lightweight controls leave the reference vault as the focal point. */
 .vault-controls { position:absolute; z-index:2; width:clamp(240px,19vw,300px); right:max(32px,4vw); top:50%; transform:translateY(-50%); }
 .vault-heading { margin:0 0 22px; }
-.vault-heading h1 { font-size:clamp(21px,1.6vw,26px); line-height:1.2; font-weight:550; letter-spacing:.1em; color:#e2e3d7; margin:0 0 9px; }
+.vault-title { position:absolute; z-index:2; left:50%; bottom:max(26px,env(safe-area-inset-bottom)); transform:translateX(-50%); width:max-content; max-width:calc(100% - 48px); text-align:center; font-size:clamp(21px,1.6vw,26px); line-height:1.2; font-weight:550; letter-spacing:.1em; color:#e2e3d7; margin:0; }
 .vault-heading p { color:#8d9683; font-size:9px; letter-spacing:.17em; margin:0; line-height:1.5; }
 #status-desc { font-size:13px; line-height:1.6; min-height:42px; color:#abb4a1; margin:0 0 20px; }
 #status-desc.is-error { color:#e0a28c; }
@@ -56,20 +56,20 @@ button:disabled { opacity:.5; cursor:wait; }
 .hidden { display:none !important; }
 .motion-paused .vault-energy path { animation-play-state:paused !important; }
 @media(max-width:1100px) and (min-height:600px) {
- .vault-screen { --h:max(100svh,640px); --d:min(78vw,calc(var(--h) - 400px),660px); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:24px; min-height:var(--h); padding:80px 24px 30px; }
+ .vault-screen { --h:max(100svh,640px); --d:min(78vw,calc(var(--h) - 400px),660px); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:24px; min-height:var(--h); padding:80px 24px 84px; }
  .vault-scene { position:relative; flex-shrink:0; left:auto; top:auto; transform:none; }
  .vault-controls { position:relative; flex-shrink:0; width:min(330px,100%); left:auto; right:auto; top:auto; transform:none; text-align:center; }
- .vault-heading { margin-bottom:16px; }.vault-heading h1 { font-size:22px; }
+ .vault-heading { margin-bottom:16px; }.vault-title { font-size:22px; }
  #status-desc { min-height:21px; margin-bottom:18px; }
  .vault-footer { margin-top:14px; }
 }
 @media(max-width:600px) {
- .vault-screen { --h:max(100svh,620px); --d:min(94vw,calc(var(--h) - 380px)); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:20px; min-height:var(--h); padding:76px 24px 26px; }
+ .vault-screen { --h:max(100svh,620px); --d:min(94vw,calc(var(--h) - 380px)); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:20px; min-height:var(--h); padding:76px 24px 80px; }
  .vault-scene { position:relative; flex-shrink:0; left:auto; top:auto; transform:none; }
  .vault-controls { position:relative; flex-shrink:0; width:min(320px,100%); left:auto; right:auto; top:auto; transform:none; text-align:center; }
  .vault-brand { left:22px; top:23px; font-size:9px; }.vault-brand span { display:block; margin-top:6px; font-size:8px; }
  .motion-toggle { right:18px; top:14px; font-size:10px; }
- .vault-heading { margin-bottom:14px; }.vault-heading h1 { font-size:21px; margin-bottom:7px; }.vault-heading p { font-size:8px; }
+ .vault-heading { margin-bottom:14px; }.vault-title { font-size:21px; bottom:max(24px,env(safe-area-inset-bottom)); }.vault-heading p { font-size:8px; }
  #status-desc { font-size:12px; min-height:20px; margin-bottom:16px; }
  .vault-footer { margin-top:12px; }
  .vault-code { padding:12px 0; }#challenge-code { font-size:44px; }
@@ -78,7 +78,7 @@ button:disabled { opacity:.5; cursor:wait; }
  .vault-screen { --d:min(94svh,51vw); min-height:max(100dvh,360px); }
  .vault-scene { left:41%; top:50%; }
  .vault-controls { width:clamp(210px,25vw,260px); right:24px; }
- .vault-heading { margin-bottom:14px; }.vault-heading h1 { font-size:19px; }.vault-heading p { font-size:8px; }
+ .vault-heading { margin-bottom:14px; }.vault-title { font-size:19px; bottom:max(16px,env(safe-area-inset-bottom)); }.vault-heading p { font-size:8px; }
  #status-desc { min-height:20px; margin-bottom:14px; font-size:12px; }
  .vault-primary,.vault-secondary { min-height:44px; font-size:10px; }
  .vault-footer { margin-top:12px; }
