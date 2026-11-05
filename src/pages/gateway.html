@@ -39,15 +39,15 @@
       <header class="vault-heading">
 
         <h1 id="status-title">TAURUS VAULT</h1>
-        <p>PRIVATE STUDIO ACCESS</p>
+        <p>ACCESS CONTROL</p>
       </header>
       <p id="status-desc" role="status" aria-live="polite">Checking authentication methods</p>
       <div id="challenge-container" class="vault-actions">
 
         <button id="passkey-btn" type="button" class="hidden vault-primary"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="4" y="10" width="16" height="12" rx="2"/><path d="M8 10V6a4 4 0 0 1 8 0v4"/></svg><span>UNLOCK VAULT</span></button>
-        <button id="telegram-fallback-btn" type="button" class="hidden vault-secondary"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="16" cy="7" r="5"/><path d="m12 11-9 9v2h3v-3h3v-3l3-3M17 6h.01"/></svg><span>VERIFY WITH TELEGRAM</span></button>
+        <button id="telegram-fallback-btn" type="button" class="hidden vault-secondary"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="16" cy="7" r="5"/><path d="m12 11-9 9v2h3v-3h3v-3l3-3M17 6h.01"/></svg><span>TELEGRAM</span></button>
         <button id="cancel-auth" type="button" class="hidden vault-cancel">Choose another method</button>
-        <div id="telegram-code-box" class="hidden vault-code" aria-live="polite"><span class="code-label">TELEGRAM VERIFICATION CODE</span><span id="challenge-code">--</span></div>
+        <div id="telegram-code-box" class="hidden vault-code" aria-live="polite"><span class="code-label">MATCH IN TELEGRAM</span><span id="challenge-code">--</span></div>
       </div>
       <div id="error-container" class="hidden vault-error" role="alert"><h2>ACCESS DENIED</h2><p id="error-msg">Verification failed.</p><button id="retry-auth" type="button">TRY AGAIN</button></div>
       <p class="vault-footer">AUTHORIZED DEVICES ONLY</p>
