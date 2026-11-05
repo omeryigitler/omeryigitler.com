@@ -1,13 +1,13 @@
-:root { color-scheme: dark; font-family: ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; background:#141612; color:#dddcd1; }
+:root { color-scheme:dark; font-family:ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; background:#101210; color:#e2e3da; }
 * { box-sizing:border-box; }
 body { margin:0; }
 button { font:inherit; }
-.vault-screen { --d:min(112svh,70vw,1600px); position:relative; isolation:isolate; min-height:100svh; min-height:100dvh; overflow:clip; background:#141612 url('../gateway/wall-v2.webp') center/cover no-repeat; }
-.vault-screen::before { content:''; position:absolute; inset:0; z-index:-1; background:radial-gradient(ellipse at 50% 50%,#0b0d09aa 8%,transparent 72%),linear-gradient(90deg,#0003,transparent 20% 80%,#0003); pointer-events:none; }
-.vault-screen::after { content:''; position:absolute; inset:14px; z-index:-1; border:1px solid #c6c4aa12; box-shadow:0 0 0 1px #0005,inset 0 0 24px #0002; pointer-events:none; }
-.vault-brand { position:absolute; z-index:3; left:max(32px,env(safe-area-inset-left)); top:max(28px,env(safe-area-inset-top)); font-size:10px; letter-spacing:.2em; font-weight:600; color:#b3b4a6; text-shadow:0 1px 1px #000; }
-.vault-brand span { display:block; margin-top:7px; color:#797e70; font-size:9px; letter-spacing:.22em; }
-.motion-toggle { position:absolute; z-index:4; right:max(28px,env(safe-area-inset-right)); top:max(16px,env(safe-area-inset-top)); min-height:44px; padding:0 12px; border:0; border-bottom:1px solid #c3c5ac2a; background:transparent; color:#b1b6a4; font-size:10px; letter-spacing:.08em; cursor:pointer; }
+.vault-screen { --d:min(96svh,62vw,1250px); position:relative; isolation:isolate; min-height:100svh; min-height:100dvh; overflow:clip; background:#101210; }
+.vault-screen::before { content:''; position:absolute; inset:0; z-index:-2; background:url('../gateway/wall-v2.webp') center/130% 130% no-repeat; filter:grayscale(1); opacity:.075; pointer-events:none; }
+.vault-screen::after { content:''; position:absolute; inset:0; z-index:-1; background:radial-gradient(ellipse at 48% 50%,transparent 25%,#080a084d 100%); pointer-events:none; }
+.vault-brand { position:absolute; z-index:3; left:max(32px,env(safe-area-inset-left)); top:max(28px,env(safe-area-inset-top)); font-size:10px; letter-spacing:.18em; font-weight:550; color:#afb4a8; }
+.vault-brand span { color:#7f8778; font-weight:400; }
+.motion-toggle { position:absolute; z-index:4; right:max(28px,env(safe-area-inset-right)); top:max(15px,env(safe-area-inset-top)); min-height:44px; padding:0 8px; border:0; background:transparent; color:#91998a; font-size:11px; cursor:pointer; }
 .vault-scene { position:absolute; width:var(--d); height:var(--d); left:50%; top:50dvh; transform:translate(-50%,-50%); perspective:1400px; pointer-events:none; }
 .vault-art { position: absolute; inset: 0; background: url('../gateway/taurus-vault-reference.png') 50.7772% 10.6952% / 155.142857% 206.857143% no-repeat; }
 .vault-wall { mask-image: radial-gradient(ellipse,black 51%,transparent 72%),linear-gradient(transparent 3%,black 15% 86%,transparent 93%); mask-composite: intersect; }
@@ -16,10 +16,10 @@ button { font:inherit; }
 .vault-door::before { content: ''; position: absolute; width: 25.2%; height: 25.2%; left: 37.4%; top: 37.4%; border-radius: 50%; background: radial-gradient(circle at 35% 30%,#28291c,#0a0b08 70%); box-shadow: inset 0 0 0 2px #8b7526,inset 0 0 14px #000; }
 .vault-logo { position: absolute; left: 37.4%; top: 37.4%; width: 25.2%; height: 25.2%; display: grid; place-items: center; border: 2px solid #dfbd31; border-radius: 50%; background: radial-gradient(circle at 45% 40%,#292715,#0b0d09 70%); box-shadow: inset 0 0 0 3px #b29120,inset 0 0 25px #d1b02125,0 0 9px #e2c32730; }
 .vault-logo img { width: 64%; height: 64%; object-fit: contain; }
-.vault-energy { position: absolute; inset: 0; width: 100%; height: 100%; stroke: #ffe15a; stroke-width: 3; stroke-linecap: round; filter: drop-shadow(0 0 3px #e4bb00); opacity: .7; }
-.vault-energy path { stroke-dasharray: 18 82; stroke-dashoffset: 100; animation: vault-fluid 4.8s linear infinite; }
-.vault-energy path:nth-child(2) { animation-duration: 6s; animation-delay: -3s; }
-.vault-energy path:nth-child(3) { animation-duration: 4s; animation-delay: -2s; }
+.vault-energy { position: absolute; inset: 0; width: 100%; height: 100%; stroke: #ffe15a; stroke-width: 3; stroke-linecap: round; filter: drop-shadow(0 0 3px #e4bb00); opacity: .5; }
+.vault-energy path { stroke-dasharray: 18 82; stroke-dashoffset: 100; animation: vault-fluid 7s linear infinite; }
+.vault-energy path:nth-child(2) { animation-duration: 8s; animation-delay: -3s; }
+.vault-energy path:nth-child(3) { animation-duration: 6s; animation-delay: -2s; }
 @keyframes vault-fluid { from { stroke-dashoffset: 100; } to { stroke-dashoffset: 0; } }
 .vault-scene.is-verifying .vault-energy path { animation-duration: 2.4s; }
 .vault-scene.is-unlocking .vault-energy path { stroke-dasharray: 100; stroke-dashoffset: 100; animation: vault-fill .85s ease-out forwards; }
@@ -27,78 +27,61 @@ button { font:inherit; }
 @keyframes vault-fill { to { stroke-dashoffset: 0; } }
 @keyframes vault-open { to { transform: rotateY(78deg); } }
 
-/* A recessed physical console, separate from the authenticated application. */
-.vault-controls { position:absolute; z-index:2; width:clamp(226px,18vw,320px); right:max(30px,2.5vw); top:50%; transform:translateY(-50%); padding:28px 20px 20px; border:1px solid #7b7c6659; border-radius:4px; background:repeating-linear-gradient(0deg,#fff00003 0 1px,transparent 1px 3px),linear-gradient(115deg,#34362e,#1a1d17 32%,#292c22 75%,#14170f); box-shadow:0 0 0 5px #12150f,0 0 0 6px #93977b24,0 15px 30px #0009,inset 1px 1px #b8b99b28,inset -1px -1px #000; }
-.vault-controls::before,.vault-controls::after { content:''; position:absolute; width:7px; height:7px; border-radius:50%; top:9px; background:linear-gradient(135deg,#22261e 42%,#080a07 43% 57%,#656955 58%); box-shadow:0 0 0 1px #070905,1px 1px 1px #a0a58b50; }
-.vault-controls::before { left:9px; }.vault-controls::after { right:9px; }
-.vault-heading { margin:0 0 21px; padding:0 0 16px; border-bottom:1px solid #050704; box-shadow:0 1px #969c7820; }
-.vault-heading h1 { font-size:clamp(17px,1.3vw,23px); line-height:1.15; font-weight:600; letter-spacing:.19em; color:#bfc2ad; margin:0 0 7px; text-shadow:0 2px 1px #000; }
-.vault-heading p { color:#8b937b; font-size:8px; letter-spacing:.18em; margin:0; }
-#status-desc { position:relative; font:11px/1.65 ui-monospace,SFMono-Regular,Consolas,monospace; min-height:68px; display:flex; align-items:center; color:#b6c594; margin:0 0 18px; padding:13px 12px 13px 24px; border:1px solid #070905; border-radius:2px; background:linear-gradient(#080d07,#12180d); box-shadow:inset 0 2px 8px #000,0 1px #777b5b55; }
-#status-desc::before { content:''; position:absolute; left:10px; top:22px; width:4px; height:4px; border-radius:50%; background:#d0c353; box-shadow:0 0 5px #bdae3a60; }
-#status-desc.is-error { color:#e7a68d; }
-.vault-actions { display:flex; flex-direction:column; gap:10px; }
-.vault-primary,.vault-secondary { position:relative; display:flex; align-items:center; justify-content:center; gap:10px; min-height:50px; width:100%; border:1px solid #646a515c; border-radius:3px; font-size:11px; line-height:1.35; letter-spacing:.1em; font-weight:600; padding:10px 8px; cursor:pointer; transition:filter .18s,transform .18s; color:#d9dccb; background:linear-gradient(175deg,#3e4234,#24281e 50%,#20241b); box-shadow:inset 0 1px #b5b69b40,0 3px 0 #090c07,0 4px 0 #72765c40; }
-.vault-primary { color:#ebd568; border-color:#8e854354; }
-.vault-primary::before { content:''; position:absolute; left:0; top:12px; bottom:12px; width:2px; background:#e1c43c; box-shadow:0 0 7px #d1b51c55; }
-.vault-secondary { color:#aeb69f; background:linear-gradient(175deg,#2c3125,#191f15); }
-.vault-primary:hover:not(:disabled),.vault-secondary:hover:not(:disabled) { filter:brightness(1.2); }
-.vault-primary:active:not(:disabled),.vault-secondary:active:not(:disabled) { transform:translateY(2px); }
-button:focus-visible { outline:2px solid #f5df73; outline-offset:4px; }
+
+/* Lightweight controls leave the reference vault as the focal point. */
+.vault-controls { position:absolute; z-index:2; width:clamp(240px,19vw,300px); right:max(32px,4vw); top:50%; transform:translateY(-50%); }
+.vault-heading { margin:0 0 22px; }
+.vault-heading h1 { font-size:clamp(21px,1.6vw,26px); line-height:1.2; font-weight:550; letter-spacing:.1em; color:#e2e3d7; margin:0 0 9px; }
+.vault-heading p { color:#8d9683; font-size:9px; letter-spacing:.17em; margin:0; line-height:1.5; }
+#status-desc { font-size:13px; line-height:1.6; min-height:42px; color:#abb4a1; margin:0 0 20px; }
+#status-desc.is-error { color:#e0a28c; }
+.vault-actions { display:flex; flex-direction:column; gap:8px; }
+.vault-primary,.vault-secondary { display:flex; align-items:center; justify-content:center; gap:10px; min-height:48px; width:100%; border-radius:6px; font-size:11px; line-height:1.4; letter-spacing:.08em; font-weight:550; padding:12px; cursor:pointer; transition:background .18s,color .18s; }
+.vault-primary { border:1px solid #d0bd66; color:#202212; background:#d4be60; }
+.vault-primary:hover:not(:disabled) { background:#e0cb77; }
+.vault-secondary { border:1px solid transparent; background:transparent; color:#9aa58c; font-size:10px; }
+.vault-secondary:hover:not(:disabled) { color:#dce1d2; background:#ffffff04; }
+button:focus-visible { outline:2px solid #e7d578; outline-offset:4px; }
 button:disabled { opacity:.5; cursor:wait; }
-.vault-actions svg { width:17px; height:17px; flex-shrink:0; }
-.vault-code { order:-1; display:grid; place-items:center; gap:12px; padding:19px 8px; border:1px solid #050803; border-radius:2px; background:repeating-linear-gradient(0deg,#0002 0 1px,transparent 1px 3px),#0c1208; box-shadow:inset 0 3px 12px #000,0 1px #8c946740; }
-.code-label { font:8px/1.5 ui-monospace,monospace; letter-spacing:.12em; color:#9ca780; }
-#challenge-code { padding-left:.15em; font:500 48px/1 ui-monospace,SFMono-Regular,Consolas,monospace; letter-spacing:.15em; color:#ecd65f; text-shadow:0 0 14px #c6ac192e; }
-.vault-cancel { min-height:40px; border:0; border-top:1px solid #8b92702e; background:transparent; color:#a7af98; font-size:10px; letter-spacing:.05em; cursor:pointer; }
+.vault-actions svg { width:18px; height:18px; flex-shrink:0; }
+.vault-code { order:-1; display:flex; flex-direction:column; align-items:center; gap:14px; padding:16px 0 20px; border-top:1px solid #a4af8d24; }
+.code-label { font-size:9px; letter-spacing:.12em; color:#9ca78b; }
+#challenge-code { padding-left:.15em; font:450 48px/1.1 ui-monospace,SFMono-Regular,Consolas,monospace; letter-spacing:.15em; color:#dfcc71; }
+.vault-cancel { min-height:44px; border:0; background:transparent; color:#9ca68e; font-size:12px; cursor:pointer; }
 .vault-controls:has(.vault-code:not(.hidden)) .vault-primary,.vault-controls:has(.vault-code:not(.hidden)) .vault-secondary { display:none; }
-.vault-footer { margin:20px 0 0; color:#7f8870; font-size:8px; letter-spacing:.14em; text-align:center; }
-.vault-error h2 { font-size:12px; letter-spacing:.08em; color:#d8a28a; margin:0 0 10px; }
-.vault-error p { font-size:12px; line-height:1.6; }
-.vault-error button { width:100%; min-height:44px; border:1px solid #85876766; background:linear-gradient(#363b2d,#22271c); color:#d6c97d; border-radius:2px; cursor:pointer; font-size:11px; }
+.vault-footer { margin:20px 0 0; color:#7c8770; font-size:8px; letter-spacing:.14em; text-align:center; }
+.vault-error h2 { font-size:13px; font-weight:500; letter-spacing:.08em; color:#d9a28b; margin:0 0 10px; }
+.vault-error p { font-size:13px; line-height:1.6; }
+.vault-error button { width:100%; min-height:48px; border:1px solid #bfb06a; background:#d4be60; color:#222512; border-radius:6px; cursor:pointer; font-size:11px; }
 .hidden { display:none !important; }
 .motion-paused .vault-energy path { animation-play-state:paused !important; }
 @media(max-width:1100px) and (min-height:600px) {
- .vault-screen { --h:max(100svh,640px); --d:min(108vw,calc((var(--h) - 310px)*1.3),1000px); min-height:var(--h); background-size:auto 100%; }
- .vault-scene { top:calc((var(--h) - 250px)/2 + 18px); }
- .vault-controls { width:min(440px,calc(100% - 56px)); right:auto; left:50%; top:auto; bottom:max(28px,env(safe-area-inset-bottom)); transform:translateX(-50%); padding:20px 20px 15px; }
- .vault-heading { display:flex; align-items:center; justify-content:space-between; gap:12px; margin:0 0 12px; padding:0 0 12px; }
- .vault-heading h1 { font-size:14px; margin:0; }.vault-heading p { font-size:7px; }
- #status-desc { min-height:44px; margin-bottom:12px; padding:8px 10px 8px 24px; }
- #status-desc::before { top:19px; }
- .vault-actions { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
- .vault-primary,.vault-secondary { min-height:48px; font-size:9px; letter-spacing:.06em; gap:7px; }
- .vault-code { grid-column:1/-1; display:flex; justify-content:space-between; padding:14px 16px; }
- #challenge-code { font-size:36px; }
- .vault-cancel { grid-column:1/-1; min-height:32px; }
- .vault-footer { margin-top:15px; }
+ .vault-screen { --h:max(100svh,640px); --d:min(78vw,calc(var(--h) - 400px),660px); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:24px; min-height:var(--h); padding:80px 24px 30px; }
+ .vault-scene { position:relative; flex-shrink:0; left:auto; top:auto; transform:none; }
+ .vault-controls { position:relative; flex-shrink:0; width:min(330px,100%); left:auto; right:auto; top:auto; transform:none; text-align:center; }
+ .vault-heading { margin-bottom:16px; }.vault-heading h1 { font-size:22px; }
+ #status-desc { min-height:21px; margin-bottom:18px; }
+ .vault-footer { margin-top:14px; }
 }
 @media(max-width:600px) {
- .vault-screen { --h:max(100svh,600px); --d:min(134vw,calc((var(--h) - 280px)*1.2)); min-height:var(--h); background-size:auto 100%; }
- .vault-scene { top:calc((var(--h) - 230px)/2 + 18px); }
- .vault-brand { left:24px; top:24px; font-size:9px; }.vault-brand span { font-size:8px; }
- .motion-toggle { right:22px; top:13px; font-size:9px; padding:0 5px; }
- .vault-controls { width:calc(100% - 44px); max-width:390px; left:50%; right:auto; top:auto; bottom:max(24px,env(safe-area-inset-bottom)); transform:translateX(-50%); padding:20px 16px 14px; }
- .vault-heading { display:flex; align-items:center; justify-content:space-between; gap:8px; margin:0 0 12px; padding:0 0 12px; }
- .vault-heading h1 { font-size:13px; margin:0; }.vault-heading p { font-size:7px; letter-spacing:.08em; }
- #status-desc { min-height:44px; margin-bottom:12px; padding:8px 10px 8px 24px; font-size:10px; }
- #status-desc::before { top:18px; }
- .vault-actions { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
- .vault-primary,.vault-secondary { min-height:56px; font-size:10px; letter-spacing:.03em; flex-direction:column; gap:5px; }
- .vault-actions svg { width:15px; height:15px; }
- .vault-code { grid-column:1/-1; display:flex; justify-content:space-between; padding:14px; }
- #challenge-code { font-size:34px; }.code-label { font-size:9px; }
- .vault-cancel { grid-column:1/-1; min-height:30px; }
- .vault-footer { margin-top:13px; font-size:7px; }
+ .vault-screen { --h:max(100svh,620px); --d:min(94vw,calc(var(--h) - 380px)); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:20px; min-height:var(--h); padding:76px 24px 26px; }
+ .vault-scene { position:relative; flex-shrink:0; left:auto; top:auto; transform:none; }
+ .vault-controls { position:relative; flex-shrink:0; width:min(320px,100%); left:auto; right:auto; top:auto; transform:none; text-align:center; }
+ .vault-brand { left:22px; top:23px; font-size:9px; }.vault-brand span { display:block; margin-top:6px; font-size:8px; }
+ .motion-toggle { right:18px; top:14px; font-size:10px; }
+ .vault-heading { margin-bottom:14px; }.vault-heading h1 { font-size:21px; margin-bottom:7px; }.vault-heading p { font-size:8px; }
+ #status-desc { font-size:12px; min-height:20px; margin-bottom:16px; }
+ .vault-footer { margin-top:12px; }
+ .vault-code { padding:12px 0; }#challenge-code { font-size:44px; }
 }
 @media(min-width:601px) and (max-height:599px) {
- .vault-screen { --d:min(124svh,68vw); min-height:max(100dvh,360px); }
- .vault-scene { left:41%; top:50dvh; }
- .vault-controls { width:clamp(200px,25vw,250px); right:22px; top:50%; padding:23px 14px 14px; }
- .vault-heading { margin-bottom:10px; padding-bottom:10px; }.vault-heading h1 { font-size:14px; }.vault-heading p { font-size:7px; }
- #status-desc { margin-bottom:12px; min-height:44px; padding:8px 10px 8px 22px; font-size:10px; }
- #status-desc::before { top:17px; }
- .vault-primary,.vault-secondary { min-height:42px; font-size:9px; }.vault-footer { margin-top:13px; font-size:7px; }
- .vault-code { padding:10px; }#challenge-code { font-size:34px; }
+ .vault-screen { --d:min(94svh,51vw); min-height:max(100dvh,360px); }
+ .vault-scene { left:41%; top:50%; }
+ .vault-controls { width:clamp(210px,25vw,260px); right:24px; }
+ .vault-heading { margin-bottom:14px; }.vault-heading h1 { font-size:19px; }.vault-heading p { font-size:8px; }
+ #status-desc { min-height:20px; margin-bottom:14px; font-size:12px; }
+ .vault-primary,.vault-secondary { min-height:44px; font-size:10px; }
+ .vault-footer { margin-top:12px; }
+ .vault-code { padding:10px 0; }#challenge-code { font-size:36px; }
 }
 @media(prefers-reduced-motion:reduce) { *,*::before,*::after { animation:none !important; transition:none !important; } }
