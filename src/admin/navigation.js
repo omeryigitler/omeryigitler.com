@@ -65,5 +65,4 @@
                 loadIntelligence();
                 setTimeout(ensureTaurusGlobe, 80);
             }
-            if (tabId === 'settings') initSecuritySettings();
         }

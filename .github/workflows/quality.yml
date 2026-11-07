@@ -20,6 +20,7 @@ jobs:
           cache-dependency-path: |
             package-lock.json
             pricing-tool/package-lock.json
+      - run: node scripts/check-telegram-secrets.js
       - run: npm ci
       - run: npm run quality
       - name: Verify repeatable build and unchanged sources

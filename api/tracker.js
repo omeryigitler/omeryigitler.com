@@ -142,7 +142,7 @@ module.exports = async (req, res) => {
 
         return res.status(200).json({ success: true });
     } catch (error) {
-        console.error("Tracker API Error:", error);
+        console.error("Tracker API Error:", error?.response?.status || "request failed");
         return res.status(500).json({ error: error.message });
     }
 };

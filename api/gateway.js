@@ -700,7 +700,7 @@ module.exports = async (req, res) => {
 
     return res.status(400).json({ error: "Invalid action" });
   } catch (error) {
-    console.error("Gateway Error:", error);
+    console.error("Gateway Error:", error?.response?.status || "request failed");
     if (error.status === 429) res.setHeader('Retry-After', '600');
     return res.status(error.status || 503).json({ error: error.status ? error.message : 'Verification is unavailable. Please try again.' });
   }

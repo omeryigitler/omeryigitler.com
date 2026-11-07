@@ -54,7 +54,7 @@ service cloud.firestore {
     }
 
     match /security_config/{docId} {
-      allow read, write: if isAdmin();
+      allow read, write: if false;
     }
 
     match /{document=**} {

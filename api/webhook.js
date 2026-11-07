@@ -74,7 +74,7 @@ async function answerCallback(callbackQuery, text) {
       text,
     });
   } catch (error) {
-    console.error("Callback answer failed:", error);
+    console.error("Callback answer failed:", error?.response?.status || "request failed");
   }
 }
 
@@ -587,7 +587,7 @@ module.exports = async (req, res) => {
 
     return res.status(200).send("OK");
   } catch (error) {
-    console.error("Webhook Fatal Error:", error);
+    console.error("Webhook Fatal Error:", error?.response?.status || "request failed");
     return res.status(200).send("OK");
   }
 };
