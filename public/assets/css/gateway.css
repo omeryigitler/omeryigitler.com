@@ -65,33 +65,49 @@ body:focus-within .intro { visibility: hidden; }
 #status-desc.is-error, #error-msg { color: #ffc4ae; }
 .actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
 button { cursor: pointer; }
+.method-bar {
+  display: flex;
+  width: min(100%, 290px);
+  padding: 3px;
+  border: 1px solid #726026;
+  border-radius: 999px;
+  background: #0d0c08;
+}
+.method-bar:not(:has(.method:not(.hidden))),
+.actions:has(#telegram-code-box:not(.hidden)) .method-bar { display: none; }
 .method {
+  position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 9px;
-  padding: 0 clamp(9px, 2.8vw, 16px);
   flex: 1 1 0;
-  min-height: 50px;
-  border: 1px solid #806e36;
-  border-radius: 12px;
-  background: #1a1b1c;
-  color: #f5f5f2;
-  font: 600 15px/1.2 system-ui, sans-serif;
-  letter-spacing: -.015em;
+  gap: 8px;
+  min-height: 44px;
+  padding-inline: 14px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: #eee9d7;
+  font: 550 14px/1.2 system-ui, sans-serif;
 }
-:where(#telegram-fallback-btn).method { border-color: #45474a; }
-#telegram-fallback-btn svg { color: #c9ccce; }
-.method svg { color: var(--yellow); width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linejoin: round; stroke-linecap: round; }
-.method:hover:not(:disabled) { background: #232425; border-color: #c1a638; }
-.method:active:not(:disabled) { background: #121314; }
+.method:not(.hidden) + .method::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  height: 16px;
+  width: 1px;
+  background: #645523;
+}
+.method svg { color: #e5c84b; width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linejoin: round; stroke-linecap: round; }
+.method:hover:not(:disabled), .method:focus-visible { color: #ffe770; background: #242012; }
+.method:active:not(:disabled) { background: #332b12; }
+#error-container .method { border: 1px solid #726026; }
 @media (prefers-reduced-motion: no-preference) {
-  .method { transition: transform .16s ease, border-color .16s ease, background-color .16s ease; }
-  .method:active:not(:disabled) { transform: translateY(1px); }
+  .method { transition: color .16s ease, background-color .16s ease; }
 }
 button:disabled { opacity: .65; cursor: wait; }
 :focus-visible { outline: 2px solid white; outline-offset: 4px; }
 .text-button { font: 13px/1.4 var(--mono); color: var(--muted); border: 0; background: transparent; min-height: 44px; padding: 0; }
 #challenge-code { color: var(--yellow); font: 600 48px/1 var(--mono); }
 #telegram-code-box { width: 100%; }
-.actions:has(#telegram-code-box:not(.hidden)) .method, .hidden { display: none !important; }
+.hidden { display: none !important; }
