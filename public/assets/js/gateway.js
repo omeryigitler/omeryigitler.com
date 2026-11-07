@@ -7,7 +7,6 @@
   const telegram = $('telegram-fallback-btn');
   const status = $('status-desc');
   const reduced = matchMedia('(prefers-reduced-motion: reduce)');
-  let paused = reduced.matches;
   let busy = false;
   let attempt = 0;
   let timer;
@@ -15,16 +14,6 @@
   let supportsPasskey = false;
   const requestId = () => Array.from(crypto.getRandomValues(new Uint8Array(16)), n => n.toString(16).padStart(2, '0')).join('');
   const setStatus = (text, error = false) => { status.textContent = text; status.classList.toggle('is-error', error); };
-  function motion() {
-    document.documentElement.classList.toggle('motion-paused', paused || reduced.matches || document.hidden);
-    $('motion-toggle').setAttribute('aria-pressed', String(paused || reduced.matches));
-    $('motion-toggle').textContent = reduced.matches ? 'Reduced motion' : paused ? 'Enable motion' : 'Pause motion';
-    $('motion-toggle').disabled = reduced.matches;
-  }
-  $('motion-toggle').addEventListener('click', () => { paused = !paused; motion(); });
-  document.addEventListener('visibilitychange', motion);
-  reduced.addEventListener('change', () => { paused = reduced.matches; motion(); });
-  motion();
   async function api(action, body = {}) {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 15000);
@@ -77,7 +66,7 @@
       } finally { clearTimeout(timeout); }
       supportsPasskey = Boolean(data.enabled && window.SimpleWebAuthnBrowser?.browserSupportsWebAuthn?.());
       booted = true; methods();
-      setStatus(supportsPasskey ? 'Your secure workspace awaits.' : 'Continue with Telegram verification.');
+      setStatus('');
     } catch (error) { booted = false; fail(error.message || 'Connection unavailable. Please try again.'); }
   }
   async function grant(customToken, current) {
@@ -102,7 +91,7 @@
         parent.postMessage({ type: 'taurus-vault-complete' }, location.origin);
       } else { location.assign('/admin.html'); }
     };
-    if (paused || reduced.matches) finish(); else setTimeout(finish, 2700);
+    if (reduced.matches) finish(); else setTimeout(finish, 240);
   }
   passkey.addEventListener('click', async () => {
     if (busy || !booted) return;

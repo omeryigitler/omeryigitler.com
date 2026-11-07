@@ -21,36 +21,24 @@
     <link rel="stylesheet" href="assets/css/gateway.css">
 </head>
 
-<body class="vault-page">
-  <main id="main-panel" class="vault-screen">
-    <button id="motion-toggle" type="button" class="motion-toggle" aria-pressed="false">Pause motion</button>
-    <div class="vault-brand">OMERYIGITLER <span>/ SECURE ACCESS</span></div>
-    <h1 id="status-title" class="vault-title">TAURUS VAULT</h1>
-    <div class="vault-scene" id="vault-stage" aria-hidden="true">
-      <div class="vault-art vault-wall"></div><div class="vault-interior"></div>
-      <div class="vault-art vault-door"></div>
-      <svg class="vault-energy" viewBox="0 0 700 700" fill="none">
-        <path pathLength="100" d="M101 81 V102 Q101 128 130 128 H191 Q211 128 229 116 L295 90"/>
-        <path pathLength="100" d="M12 421 Q41 406 41 374 V263 Q41 202 66 186 Q83 174 111 173"/>
-        <path pathLength="100" d="M563 525 Q548 552 565 575 Q575 587 600 587 H633"/>
-      </svg>
-      <div class="vault-logo"><img src="/favicon_taurus.svg" alt="" width="112" height="112"></div>
-    </div>
-    <section class="vault-controls" aria-label="Secure access">
-      <header class="vault-heading">
-
-        <p>PRIVATE STUDIO ACCESS</p>
-      </header>
-      <p id="status-desc" role="status" aria-live="polite">Checking authentication methods</p>
+<body>
+  <main class="vault-screen">
+    <section class="vault-access" aria-labelledby="status-title">
+      <img id="vault-stage" class="vault-mark" src="/favicon_taurus.svg" alt="" width="128" height="115">
+      <h1 id="status-title">TAURUS VAULT</h1>
+      <p id="status-desc" role="status" aria-live="polite">Preparing secure access…</p>
       <div id="challenge-container" class="vault-actions">
-
-        <button id="passkey-btn" type="button" class="hidden vault-primary"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="4" y="10" width="16" height="12" rx="2"/><path d="M8 10V6a4 4 0 0 1 8 0v4"/></svg><span>UNLOCK VAULT</span></button>
-        <button id="telegram-fallback-btn" type="button" class="hidden vault-secondary"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="16" cy="7" r="5"/><path d="m12 11-9 9v2h3v-3h3v-3l3-3M17 6h.01"/></svg><span>USE TELEGRAM INSTEAD</span></button>
-        <button id="cancel-auth" type="button" class="hidden vault-cancel">Choose another method</button>
-        <div id="telegram-code-box" class="hidden vault-code" aria-live="polite"><span class="code-label">MATCH IN TELEGRAM</span><span id="challenge-code">--</span></div>
+        <button id="passkey-btn" type="button" class="hidden primary">Unlock with passkey</button>
+        <button id="telegram-fallback-btn" type="button" class="hidden secondary">Continue with Telegram</button>
+        <div id="telegram-code-box" class="hidden vault-code" aria-live="polite">
+          <span id="challenge-code"></span>
+        </div>
+        <button id="cancel-auth" type="button" class="hidden secondary">Choose another method</button>
       </div>
-      <div id="error-container" class="hidden vault-error" role="alert"><h2>ACCESS DENIED</h2><p id="error-msg">Verification failed.</p><button id="retry-auth" type="button">TRY AGAIN</button></div>
-      <p class="vault-footer">AUTHORIZED DEVICES ONLY</p>
+      <div id="error-container" class="hidden" role="alert">
+        <p id="error-msg"></p>
+        <button id="retry-auth" type="button" class="primary">Try again</button>
+      </div>
     </section>
   </main>
   <script src="/assets/js/gateway.js" defer></script>
