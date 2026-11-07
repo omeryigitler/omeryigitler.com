@@ -152,7 +152,7 @@ window.systemConfirm = (title, message, icon = 'help-circle') => {
     function load() {
         if (document.querySelector('script[data-admin-portfolio]')) return;
         var script = document.createElement('script');
-        script.src = 'assets/js/admin-portfolio.js?v=V2';
+        script.src = 'assets/js/admin-portfolio.js?v=V3';
         script.dataset.adminPortfolio = 'true';
         document.body.appendChild(script);
     }

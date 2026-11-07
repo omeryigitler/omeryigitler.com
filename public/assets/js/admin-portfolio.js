@@ -307,11 +307,12 @@
 
   async function mount() {
     if (state.mounted) return;
-    const settings = document.querySelector("#view-settings .max-w-3xl");
-    if (!settings || !window.firebase?.auth?.().currentUser) { window.setTimeout(mount, 350); return; }
+    const projectsView = document.getElementById("view-projects");
+    if (!projectsView) return;
+    if (!window.firebase?.auth?.().currentUser) { window.setTimeout(mount, 350); return; }
     state.mounted = true;
     installStyles();
-    settings.insertAdjacentHTML("beforeend", markup());
+    projectsView.insertAdjacentHTML("beforeend", markup());
     $("portfolio-admin-form").addEventListener("submit", save);
     $("pf-capture").addEventListener("click", captureCurrent);
     $("pf-reset").addEventListener("click", reset);

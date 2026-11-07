@@ -12,6 +12,7 @@
 
         let activeTab = 'dashboard';
         function switchTab(tabId) {
+            if (!document.getElementById('view-' + tabId)) tabId = 'dashboard';
             activeTab = tabId;
 
             // Hide all views
@@ -22,7 +23,6 @@
             document.getElementById('view-clients').classList.add('hidden'); // NEW
             document.getElementById('view-projects').classList.add('hidden');
             document.getElementById('view-intelligence').classList.add('hidden');
-            document.getElementById('view-settings').classList.add('hidden');
 
             // Show selected view
             if (tabId === 'dashboard') document.getElementById('view-dashboard').classList.remove('hidden');
@@ -32,7 +32,6 @@
             else if (tabId === 'clients') document.getElementById('view-clients').classList.remove('hidden'); // NEW
             else if (tabId === 'projects') document.getElementById('view-projects').classList.remove('hidden');
             else if (tabId === 'intelligence') document.getElementById('view-intelligence').classList.remove('hidden');
-            else if (tabId === 'settings') document.getElementById('view-settings').classList.remove('hidden');
 
             // Update nav active state
             document.querySelectorAll('.nav-item').forEach(btn => btn.classList.remove('active', 'text-white'));
@@ -49,7 +48,6 @@
                 'quotes': 'Proposals Management', // NEW
                 'clients': 'Client Management', // NEW
                 'projects': 'Operational Matrix',
-                'settings': 'Security Protocols',
                 'intelligence': 'Visitor Intelligence Matrix'
             };
             const titleEl = document.getElementById('page-title');
