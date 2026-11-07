@@ -22,27 +22,38 @@
 </head>
 
 <body>
-  <main class="vault-screen">
-    <section class="vault-access" aria-labelledby="status-title">
-      <div id="vault-stage" class="vault-medallion" aria-hidden="true">
-        <span class="vault-hub"><img src="/favicon_taurus.svg" alt="" width="128" height="115"></span>
+  <div class="gateway" id="vault-stage">
+    <header class="masthead">
+      <span class="wordmark">ÖMER YİĞİTLER<span>.</span></span>
+      <a href="/" target="_top">Portfolio <span aria-hidden="true">↗</span></a>
+    </header>
+    <main>
+      <div class="brand-art" aria-hidden="true">
+        <div class="brand-print"><img src="/favicon_taurus.svg" width="392" height="352" alt=""></div>
       </div>
-      <h1 id="status-title">TAURUS VAULT</h1>
-      <p id="status-desc" role="status" aria-live="polite">Preparing secure access…</p>
-      <div id="challenge-container" class="vault-actions">
-        <button id="passkey-btn" type="button" class="hidden primary">Unlock with passkey</button>
-        <button id="telegram-fallback-btn" type="button" class="hidden secondary">Continue with Telegram</button>
-        <div id="telegram-code-box" class="hidden vault-code" aria-live="polite">
-          <span id="challenge-code"></span>
+      <section class="access" aria-labelledby="status-title">
+        <h1 id="status-title">Studio<br><em>access.</em></h1>
+        <p class="instruction">Choose a method to sign in.</p>
+        <p id="status-desc" role="status" aria-live="polite">Preparing secure access…</p>
+        <div id="challenge-container" class="actions">
+          <button id="passkey-btn" type="button" class="hidden method">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="8" cy="9" r="4"/><path d="m11 12 8 8 3-3-2-2-2 2"/></svg>
+            Passkey <span aria-hidden="true">↗</span>
+          </button>
+          <button id="telegram-fallback-btn" type="button" class="hidden method">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 10 18-7-4 18-6-6-4 3v-6zM7 12l10-6-6 9"/></svg>
+            Telegram <span aria-hidden="true">↗</span>
+          </button>
+          <div id="telegram-code-box" class="hidden" aria-live="polite"><span id="challenge-code"></span></div>
+          <button id="cancel-auth" type="button" class="hidden text-button">Choose another method</button>
         </div>
-        <button id="cancel-auth" type="button" class="hidden secondary">Choose another method</button>
-      </div>
-      <div id="error-container" class="hidden" role="alert">
-        <p id="error-msg"></p>
-        <button id="retry-auth" type="button" class="primary">Try again</button>
-      </div>
-    </section>
-  </main>
+        <div id="error-container" class="hidden" role="alert">
+          <p id="error-msg"></p>
+          <button id="retry-auth" type="button" class="method">Try again <span aria-hidden="true">↗</span></button>
+        </div>
+      </section>
+    </main>
+  </div>
   <script src="/assets/js/gateway.js" defer></script>
 </body>
 </html>
