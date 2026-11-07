@@ -6,7 +6,6 @@
   const passkey = $('passkey-btn');
   const telegram = $('telegram-fallback-btn');
   const status = $('status-desc');
-  const reduced = matchMedia('(prefers-reduced-motion: reduce)');
   let busy = false;
   let attempt = 0;
   let timer;
@@ -86,12 +85,9 @@
     $('cancel-auth').classList.add('hidden');
     stage.classList.remove('is-verifying'); stage.classList.add('is-unlocking');
     document.documentElement.classList.add('access-granted');
-    const finish = () => {
-      if (new URLSearchParams(location.search).get('target') === 'startpage' && parent !== window) {
-        parent.postMessage({ type: 'taurus-vault-complete' }, location.origin);
-      } else { location.assign('/admin.html'); }
-    };
-    if (reduced.matches) finish(); else setTimeout(finish, 240);
+    if (new URLSearchParams(location.search).get('target') === 'startpage' && parent !== window) {
+      parent.postMessage({ type: 'taurus-vault-complete' }, location.origin);
+    } else { location.assign('/admin.html'); }
   }
   passkey.addEventListener('click', async () => {
     if (busy || !booted) return;

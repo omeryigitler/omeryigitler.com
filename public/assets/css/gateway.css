@@ -9,6 +9,7 @@
 body { margin: 0; }
 
 .vault-screen {
+  background: radial-gradient(ellipse at 50% 42%, #2b2a20 0%, #191a16 38%, #10110f 72%, #0d0e0d 100%);
   display: grid;
   place-items: center;
   min-height: 100vh;
@@ -18,26 +19,42 @@ body { margin: 0; }
 }
 
 .vault-access {
-  width: min(100%, 17rem);
+  width: min(100%, 38rem);
   text-align: center;
 }
 
-.vault-mark {
-  display: block;
-  width: clamp(88px, 15vmin, 128px);
-  height: auto;
+.vault-medallion {
+  position: relative;
+  width: min(100%, 54svh, 500px);
+  aspect-ratio: 1;
   margin-inline: auto;
 }
 
-.vault-mark.is-unlocking { animation: verified 240ms ease-out both; }
-@keyframes verified { to { opacity: .5; } }
-@media (prefers-reduced-motion: reduce) {
-  .vault-mark.is-unlocking { animation: none; }
+/* Keep the machined door from the reference, feathering its housing into the page. */
+.vault-medallion::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: url("../gateway/taurus-vault-reference.png") 50.7772% 10.6952% / 155.142857% 206.857143% no-repeat;
+  mask-image: radial-gradient(circle closest-side, black 70%, transparent 88%);
 }
 
+.vault-hub {
+  position: absolute;
+  inset: 37.4%;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: radial-gradient(circle at 40% 28%, #383324, #100f0b 72%);
+  box-shadow: inset 0 0 0 1px #cfac44, 0 1px 4px #080805;
+}
+
+.vault-hub img { width: 64%; height: auto; }
+.vault-actions, #error-container { width: min(100%, 17rem); margin-inline: auto; }
+
 h1 {
-  margin: 22px 0 32px;
-  font-size: clamp(18px, 3.8vw, 22px);
+  margin: 0 0 24px;
+  font-size: clamp(20px, 3.8vw, 30px);
   line-height: 1.2;
   font-weight: 550;
   letter-spacing: .16em;
@@ -69,7 +86,7 @@ button {
 
 .primary, #passkey-btn.hidden + .secondary {
   color: #1a1911;
-  background: #e1c95f;
+  background: linear-gradient(105deg, #e7cf82, #cdb060);
   font-weight: 600;
 }
 .primary:hover:not(:disabled) { background: #efda79; }
@@ -87,4 +104,10 @@ button:focus-visible { outline: 2px solid #e1c95f; outline-offset: 4px; }
   letter-spacing: .14em;
   text-indent: .14em;
   color: #e1c95f;
+}
+
+@media (max-height: 480px) {
+  .vault-screen { padding-block: 12px; }
+  .vault-medallion { width: min(40svh, 100%); }
+  h1 { margin-bottom: 12px; }
 }
