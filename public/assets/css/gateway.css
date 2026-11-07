@@ -83,8 +83,8 @@ button { cursor: pointer; }
   justify-content: center;
   flex: 1 1 0;
   gap: 8px;
-  min-height: 44px;
-  padding-inline: 14px;
+  min-height: 50px;
+  padding-inline: 9px;
   border: 1px solid var(--yellow);
   border-radius: 999px;
   background: #12110c;
@@ -92,7 +92,26 @@ button { cursor: pointer; }
   color: #faf8ef;
   font: 650 14px/1.2 system-ui, sans-serif;
 }
-.method svg { color: var(--yellow); width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linejoin: round; stroke-linecap: round; }
+.method-icon {
+  display: grid;
+  place-items: center;
+  flex: 0 0 34px;
+  height: 34px;
+  border: 1px solid rgba(255,215,0,.32);
+  border-radius: 50%;
+  color: var(--yellow);
+  background: #0a0905;
+  box-shadow: inset 0 0 0 3px rgba(255,215,0,.025), 0 0 13px rgba(255,215,0,.18);
+}
+.method-icon svg {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
 .method:hover:not(:disabled), .method:focus-visible { color: #ffe770; background: #242012; }
 .method:active:not(:disabled) { background: #332b12; }
 #error-container .method { border: 1px solid #726026; }
