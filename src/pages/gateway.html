@@ -12,28 +12,20 @@
     <link rel="apple-touch-icon" href="/apple-touch-icon-20260806.png" sizes="180x180">
     <link rel="manifest" href="/site.webmanifest?v=20260806">
     <meta name="theme-color" content="#050505">
-    <!-- Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
-    <script src="assets/js/gateway-firebase.js"></script>
-    <script src="/assets/vendor/simplewebauthn-browser-13.3.0.js"></script>
-
     <link rel="stylesheet" href="assets/css/gateway.css">
+    <script src="/assets/js/gateway-intro.js" defer></script>
+    <!-- Firebase SDK -->
+    <script defer src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script defer src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script defer src="assets/js/gateway-firebase.js"></script>
+    <script defer src="/assets/vendor/simplewebauthn-browser-13.3.0.js"></script>
 </head>
 
 <body>
-  <div class="gateway" id="vault-stage">
-    <header class="masthead">
-      <span class="wordmark">ÖMER YİĞİTLER<span>.</span></span>
-      <a href="/" target="_top">Portfolio <span aria-hidden="true">↗</span></a>
-    </header>
-    <main>
-      <div class="brand-art" aria-hidden="true">
-        <div class="brand-print"><img src="/favicon_taurus.svg" width="392" height="352" alt=""></div>
-      </div>
-      <section class="access" aria-labelledby="status-title">
-        <h1 id="status-title">Studio<br><em>access.</em></h1>
-        <p class="instruction">Choose a method to sign in.</p>
+  <canvas class="intro" aria-hidden="true"></canvas>
+  <main class="gateway" id="vault-stage">
+      <section class="access" aria-label="Studio sign-in">
+        <img class="logo" src="/favicon_taurus.svg" width="392" height="352" alt="Ömer Yiğitler">
         <p id="status-desc" role="status" aria-live="polite">Preparing secure access…</p>
         <div id="challenge-container" class="actions">
           <button id="passkey-btn" type="button" class="hidden method">
@@ -52,8 +44,7 @@
           <button id="retry-auth" type="button" class="method">Try again <span aria-hidden="true">↗</span></button>
         </div>
       </section>
-    </main>
-  </div>
+  </main>
   <script src="/assets/js/gateway.js" defer></script>
 </body>
 </html>
