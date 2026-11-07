@@ -19,34 +19,43 @@ body { margin: 0; }
 .access { width: min(100%, 350px); text-align: center; }
 .logo-ring {
   position: relative;
+  isolation: isolate;
   display: grid;
   place-items: center;
-  width: clamp(152px, 29vmin, 236px);
-  aspect-ratio: 1;
-  margin: 0 auto clamp(28px, 5vmin, 44px);
-  border: 1px solid #ffd70055;
+  width: 124px;
+  height: 124px;
+  margin: 18px auto 48px;
+  border: 1px solid rgba(255,215,0,.62);
   border-radius: 50%;
-  background: radial-gradient(circle at 50% 36%, #242112, #0d0d09 70%);
-  box-shadow: 0 0 0 7px #ffd70005;
+  background: #080704;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.05), 0 0 46px rgba(255,215,0,.16), 0 22px 70px rgba(0,0,0,.55);
+  backdrop-filter: blur(18px);
+  transition: transform .35s ease, border-color .35s ease, box-shadow .35s ease;
 }
-.logo-ring::before {
-  content: "";
-  position: absolute;
-  inset: -3px;
-  border: 1px solid;
-  border-color: #ffe56c #796b29 #dbc14a #4e451e;
-  border-radius: inherit;
-  box-shadow: 0 0 9px #ffd70022;
+.logo-ring:hover {
+  transform: scale(1.035);
+  border-color: var(--yellow);
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.06), 0 0 58px rgba(255,215,0,.26), 0 26px 80px rgba(0,0,0,.62);
 }
-@media (prefers-reduced-motion: no-preference) {
-  .logo-ring::before { animation: ring-tremor 3s ease-in-out infinite; }
-  @keyframes ring-tremor {
-    0%, 35%, 60%, 100% { transform: translate(0); }
-    40%, 53% { transform: translate(.9px, -.6px); }
-    46%, 57% { transform: translate(-.8px, .7px); }
-  }
+.logo { display: block; width: 66%; height: 66%; object-fit: contain; filter: drop-shadow(0 0 16px rgba(255,215,0,.18)); }
+.logo-ring:before,.logo-ring:after{
+  content:"";position:absolute;z-index:-1;pointer-events:none;border:1px solid rgba(255,215,0,.68);
+  border-radius:48% 52% 46% 54% / 52% 45% 55% 48%;
+  box-shadow:0 0 10px rgba(255,215,0,.2),inset 0 0 7px rgba(255,215,0,.07);
+  animation:taurusCircularWave 2.8s ease-in-out infinite;
 }
-.logo { display: block; width: 55%; height: auto; }
+.logo-ring:before{inset:-9px}
+.logo-ring:after{inset:-18px;opacity:.36;animation-delay:-1.4s;animation-direction:reverse}
+@keyframes taurusCircularWave{
+  0%,100%{transform:rotate(0) scale(.98);border-radius:48% 52% 46% 54% / 52% 45% 55% 48%;opacity:.42}
+  35%{transform:rotate(7deg) scale(1.04);border-radius:53% 47% 55% 45% / 46% 56% 44% 54%;opacity:1}
+  70%{transform:rotate(-6deg) scale(1);border-radius:45% 55% 48% 52% / 55% 47% 53% 45%;opacity:.6}
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .logo-ring::before, .logo-ring::after { animation: none; }
+  .logo-ring, .method { transition: none; }
+}
 .intro { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 1; background: var(--yellow); pointer-events: none; animation: dismiss 1.6s step-end forwards; }
 @keyframes dismiss { to { visibility: hidden; } }
 @media (prefers-reduced-motion: reduce) { .intro { display: none; } }
@@ -66,13 +75,15 @@ button { cursor: pointer; }
   min-height: 50px;
   border: 1px solid var(--yellow);
   border-radius: 999px;
-  background: var(--yellow);
+  background: linear-gradient(165deg, #ffe349, var(--yellow) 72%);
+  box-shadow: inset 0 1px 0 #fff6, 0 4px 16px #ffd70012;
   color: #101010;
   font: 650 15px/1.2 system-ui, sans-serif;
   letter-spacing: -.02em;
 }
 #passkey-btn:not(.hidden) + #telegram-fallback-btn {
-  background: #15140e;
+  background: linear-gradient(155deg, #211e13, #12120e);
+  box-shadow: inset 0 1px 0 #ffffff0a;
   color: #ffe469;
   border-color: #655923;
 }
@@ -83,6 +94,11 @@ button { cursor: pointer; }
 .method svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linejoin: round; stroke-linecap: round; }
 .method:hover:not(:disabled) { background: #ffe754; }
 .method:active:not(:disabled) { background: #e6c200; }
+@media (prefers-reduced-motion: no-preference) {
+  .method { transition: transform .16s ease, box-shadow .16s ease; }
+  .method:hover:not(:disabled) { transform: translateY(-1px); }
+  .method:active:not(:disabled) { transform: translateY(1px); }
+}
 button:disabled { opacity: .65; cursor: wait; }
 :focus-visible { outline: 2px solid white; outline-offset: 4px; }
 .text-button { font: 13px/1.4 var(--mono); color: var(--muted); border: 0; background: transparent; min-height: 44px; padding: 0; }
