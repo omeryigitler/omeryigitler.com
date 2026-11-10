@@ -29,6 +29,7 @@
         rel="stylesheet">
 
     <link rel="stylesheet" href="/assets/css/admin.css">
+    <link rel="stylesheet" href="/assets/css/start-agency-embed.css">
 </head>
 
 <body class="bg-obsidian text-white font-body h-screen flex overflow-hidden">
@@ -138,7 +139,7 @@
     </aside>
 
     <!-- MOBILE TOP BAR -->
-    <div
+    <div id="admin-mobile-header"
         class="lg:hidden fixed top-0 w-full h-20 bg-obsidian/80 backdrop-blur-xl border-b border-glassBorder flex items-center justify-between px-6 z-50">
         <div onclick="if(window.taurus_set_internal) window.taurus_set_internal(); window.location.href='index.html'"
             class="flex items-center gap-2 cursor-pointer">
@@ -669,6 +670,7 @@
     <script src="assets/js/admin-agent.js?v=V5"></script>
 
     <script src="/assets/js/admin-app.js"></script>
+    <script src="/assets/js/start-agency-bridge.js"></script>
 
     <!-- Message Detail Modal -->
     <div id="message-modal"

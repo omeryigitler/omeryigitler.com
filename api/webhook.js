@@ -41,16 +41,16 @@ function isTelegramWebhookAuthorized(req) {
   return req.headers["x-telegram-bot-api-secret-token"] === expectedSecret;
 }
 
-function getGeminiModel() {
+function getGeminiModel(modelName = process.env.GEMINI_MODEL || "gemini-2.5-flash") {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) return null;
 
-  const modelName = process.env.GEMINI_MODEL || "gemini-2.5-flash";
   const genAI = new GoogleGenerativeAI(apiKey);
   return genAI.getGenerativeModel({
     model: modelName,
     generationConfig: {
       temperature: 0,
+      maxOutputTokens: 512,
       responseMimeType: "application/json",
       responseSchema: COMMAND_RESPONSE_SCHEMA,
     },
@@ -182,7 +182,10 @@ Examples:
 "Alarm ver" -> {"command":"ALARM","message":""}
   `.trim();
 
-  const result = await model.generateContent([prompt, ...inputs]);
+  const result = await require('../lib/studio-ai').engine().generate(
+    name => getGeminiModel(name),
+    permittedModel => permittedModel.generateContent([prompt, ...inputs], { timeout: 12000 })
+  );
   const responseText = result.response
     .text()
     .replace(/```json|```/g, "")

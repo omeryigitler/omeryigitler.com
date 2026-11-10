@@ -90,9 +90,9 @@ async function initializeDashboard(user) {
   let callback;
   let listeners = 0;
   const firebase = { initializeApp() {}, firestore: () => ({}), auth: () => ({ onAuthStateChanged(fn) { callback = fn; } }) };
-  const window = { firebaseConfig: { apiKey: 'test' }, location: {} };
+  const window = { firebaseConfig: { apiKey: 'test' }, location: {}, dispatchEvent() {} };
   const context = {
-    firebase, window, console: { log() {}, warn() {} },
+    firebase, window, Event, console: { log() {}, warn() {} },
     document: { addEventListener: (_, fn) => fn() },
     setupRealtimeListeners: () => listeners++, loadTrafficChart() {}, startAutoPipelineListener() {}, setInterval() {}
   };
