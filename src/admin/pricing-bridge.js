@@ -31,7 +31,8 @@
         }
 
         window.addEventListener('message', async (event) => {
-            if (!event.data) return;
+            const moduleWindow = document.getElementById('pricing-iframe')?.contentWindow;
+            if (event.origin !== location.origin || event.source !== moduleWindow || !event.data) return;
 
             if (event.data.type === 'PRICING_TOOL_READY' || event.data.type === 'PRICING_TOOL_PONG') {
                 markPricingToolReady();
@@ -147,7 +148,7 @@
                             await updateWorkflow(projectId, 'proposal', { source: 'pricing', quoteId: id });
                             await updateWorkflow(projectId, 'active', { source: 'pricing' });
 
-                            event.source.postMessage({ type: 'QUOTE_SAVED', success: true, quoteId: id }, '*'); // Close iframe loader?
+                            event.source.postMessage({ type: 'QUOTE_SAVED', success: true, quoteId: id }, location.origin); // Close iframe loader?
 
                             // Return to project view
                             switchTab('projects');
@@ -276,7 +277,7 @@
                             await storeGeneratedPdfForProject('contract', payload.contractPdf, projectId);
                         }
 
-                        event.source.postMessage({ type: 'QUOTE_SAVED', success: true, quoteId: id }, '*');
+                        event.source.postMessage({ type: 'QUOTE_SAVED', success: true, quoteId: id }, location.origin);
 
                         // Close the pricing tool modal
                         closePricingModal();
@@ -307,10 +308,10 @@
                 console.log('📨 Save Quote Request (Legacy)');
                 const id = await saveQuoteToFirestore(event.data.data, event.data.messageId);
                 if (id) {
-                    event.source.postMessage({ type: 'QUOTE_SAVED', success: true, quoteId: id }, '*');
+                    event.source.postMessage({ type: 'QUOTE_SAVED', success: true, quoteId: id }, location.origin);
                     systemAlert('SUCCESS', 'Proposal saved successfully.', 'check-circle');
                 } else {
-                    event.source.postMessage({ type: 'QUOTE_SAVED', success: false }, '*');
+                    event.source.postMessage({ type: 'QUOTE_SAVED', success: false }, location.origin);
                     systemAlert('ERROR', 'Proposal save failed.', 'x-circle');
                 }
             }

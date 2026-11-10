@@ -2,7 +2,9 @@
 export default {
     content: [
         "./index.html",
-        "./**/*.{js,ts,jsx,tsx}",
+        "./*.{js,ts,jsx,tsx}",
+        "./components/**/*.{js,ts,jsx,tsx}",
+        "./utils/**/*.{js,ts,jsx,tsx}",
     ],
     theme: {
         extend: {
@@ -10,7 +12,8 @@ export default {
                 taurusGold: '#FFD700', // Matching main site gold color
             },
             fontFamily: {
-                poppins: ['Poppins', 'sans-serif'],
+                sans: ['Manrope', 'sans-serif'],
+                poppins: ['Manrope', 'sans-serif'],
             },
         },
     },

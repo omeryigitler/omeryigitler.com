@@ -47,7 +47,7 @@
                     request: job.request,
                     breakdown: job.breakdown
                 }
-            }, '*');
+            }, location.origin);
 
             // Fail-safe timeout
             const activeId = job.id;

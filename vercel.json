@@ -24,6 +24,16 @@
       "source": "/projects-legacy.html",
       "destination": "/projects.html",
       "permanent": true
+    },
+    {
+      "source": "/admin",
+      "destination": "https://start.omeryigitler.com/#agency/overview",
+      "permanent": false
+    },
+    {
+      "source": "/admin.html",
+      "destination": "https://start.omeryigitler.com/#agency/overview",
+      "permanent": false
     }
   ],
   "headers": [
@@ -194,16 +204,38 @@
           "value": "private, no-store"
         }
       ]
+    },
+    {
+      "source": "/tools/pricing/(.*)",
+      "headers": [
+        {
+          "key": "Content-Security-Policy",
+          "value": "frame-ancestors 'self' https://start.omeryigitler.com; base-uri 'self'; object-src 'none'"
+        },
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow, noarchive"
+        }
+      ]
+    },
+    {
+      "source": "/pricing-tool/dist/(.*)",
+      "headers": [
+        {
+          "key": "Content-Security-Policy",
+          "value": "frame-ancestors 'self' https://start.omeryigitler.com; base-uri 'self'; object-src 'none'"
+        },
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow, noarchive"
+        }
+      ]
     }
   ],
   "rewrites": [
     {
-      "source": "/admin",
-      "destination": "/api/gateway?action=admin_page"
-    },
-    {
-      "source": "/admin.html",
-      "destination": "/api/gateway?action=admin_page"
+      "source": "/workspace.html",
+      "destination": "/api/gateway?action=workspace_page"
     },
     {
       "source": "/webhook",

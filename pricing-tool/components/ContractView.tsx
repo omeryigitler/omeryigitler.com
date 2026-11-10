@@ -1,5 +1,6 @@
 
 
+import { sendHost } from '../host';
 import React, { useRef, useState } from 'react';
 import { QuoteRequest, PricingRules, Country, Language, DiscountType, PricingFactorType, PricingFactor, CostBreakdown, DesignType, AddonService } from '../types';
 import { TRANSLATIONS } from '../translations';
@@ -306,19 +307,8 @@ const ContractView: React.FC<Props> = ({ config, addons, request, onBack, langua
                 // The Admin Panel will handle saving the project data directly.
                 // PDFs can be generated on-demand from the Admin Panel using "Generate PDF".
 
-                window.parent.postMessage({
-                  type: 'SAVE_QUOTE_FULL',
-                  payload: {
-                    request: request,
-                    breakdown: breakdown,
-                    total: breakdown.finalTotal,
-                    projectId: request.projectId,
-                    messageId: request.messageId,
-                    status: 'contract_signed',
-                    quotePdf: null,
-                    contractPdf: null
-                  }
-                }, '*');
+                if (window.__TAURUS_PRICING_SAVE__) await window.__TAURUS_PRICING_SAVE__({ request, breakdown });
+                else sendHost({ type: 'SAVE_QUOTE_FULL', payload: { request, breakdown, projectId: request.projectId, messageId: request.messageId } });
 
               } catch (e) {
                 console.error("Save Error", e);

@@ -487,7 +487,7 @@ export const TRANSLATIONS = {
       urlPlaceholder: 'Ex: www.example.com'
     },
     admin: {
-      title: 'Admin Settings',
+      title: 'Pricing Settings',
       subtitle: 'Configure the pricing engine and service fees.',
       reset: 'Reset to Defaults',
       save: 'Save Changes',

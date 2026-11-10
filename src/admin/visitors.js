@@ -11,8 +11,8 @@
         }
 
         // Freeze with a custom on-screen message — prompts the admin, sends it verbatim
-        function sendFreeze(visitorId) {
-            const msg = window.prompt("Message to display on the visitor's frozen screen (leave empty for none):", "");
+        async function sendFreeze(visitorId) {
+            const msg = await window.taurusPrompt("Message to display on the visitor's frozen screen (leave empty for none):", "");
             if (msg === null) return; // cancelled
             sendRemoteCommand(visitorId, 'freeze', msg);
         }
@@ -416,6 +416,7 @@
             // Close message modal
             closeMessageModal();
 
+            if (window.openStartPricing) { window.openStartPricing({ clientName: message.name, clientEmail: message.email, messageId, projectId, ...buildQuoteRequestFromMessage(message) }); return; }
             // Switch to pricing tab
             switchTab('pricing');
 
@@ -439,7 +440,7 @@
                             maintenanceLevel: message.maintenanceLevel || '',
                             selectedAddons: message.selectedAddons || []
                         }
-                    }, '*');
+                    }, location.origin);
                     console.log('📋 Opened pricing tool with client data:', message.name);
                 } else {
                     console.warn('Pricing tool iframe not found');
@@ -469,7 +470,7 @@
          * @param {string} messageId - Message document ID
          */
         async function createProjectDirectly(messageId) {
-            if (!confirm('Create project directly without a quote?')) return;
+            if (!await systemConfirm('CREATE PROJECT', 'Create project directly without a quote?')) return;
 
             console.log('🚀 Creating project from message...');
 
@@ -541,6 +542,7 @@
                 clientName: clientName,
                 clientEmail: clientEmail,
                 country: data.country || (data.currency === 'EUR' ? 'MT' : 'TR'),
+                hasSeo: data.hasSeo, isMultiLang: data.isMultiLang, hasGraphics: data.hasGraphics, hasUx: data.hasUx, hasCrm: data.hasCrm,
                 siteType: data.siteType,
                 designType: data.designType,
                 pageCount: data.pageCount,
@@ -556,6 +558,7 @@
             // Close modal
             closeProjectModal();
 
+            if (window.openStartPricing) { window.openStartPricing(payload); return; }
             // Switch to pricing
             switchTab('pricing');
 
@@ -569,7 +572,7 @@
                     pricingIframe.contentWindow.postMessage({
                         type: 'PRE_FILL_CLIENT',
                         data: payload
-                    }, '*');
+                    }, location.origin);
                     console.log(`📡 Sync Attempt ${attempts}: Data sent to pricing tool`);
                 }
 

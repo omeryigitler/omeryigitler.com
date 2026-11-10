@@ -1,92 +1,25 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+@config "./tailwind.config.js";
+@source "./components";
+@source "./App.tsx";
 
-:root {
-  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
-
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
-
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+@layer base {
+  :root { font-family: Manrope, system-ui, sans-serif; color-scheme: dark; color: #f3f3ed; background: #050505; font-synthesis: none; text-rendering: optimizeLegibility; -webkit-font-smoothing: antialiased; }
+  body { margin: 0; min-width: 320px; min-height: 100vh; width: 100%; }
+  #root { width: 100%; min-height: 100vh; }
+  button, input, textarea { font: inherit; }
+  button:focus-visible, input:focus-visible, a:focus-visible { outline: 2px solid #FFD700; outline-offset: 3px; }
 }
+html { scrollbar-gutter: stable; }
+body:not(:has([data-print-document])) { background: #050505; }
+body.plugin-agency nav { overflow-x: auto; }
+body.plugin-agency nav > div { min-width: 680px; }
+body.plugin-agency nav [data-language-switcher] { display: none; }
+body.plugin-agency main h1 { font-family: Syncopate, Manrope, sans-serif; font-size: clamp(20px, 2.5vw, 34px); }
+body.plugin-agency .bg-zinc-900 { background-color: #0c0b08; }
+body.plugin-agency .border-zinc-800 { border-color: #ffffff14; }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; } }
 
-html {
-  scrollbar-gutter: stable;
-}
-
-a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
-}
-
-a:hover {
-  color: #535bf2;
-}
-
-body {
-  margin: 0;
-  display: flex;
-  place-items: center;
-  min-width: 320px;
-  min-height: 100vh;
-  width: 100%;
-  scrollbar-gutter: stable;
-}
-
-#root {
-  width: 100%;
-  min-height: 100vh;
-}
-
-h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
-}
-
-button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  background-color: #1a1a1a;
-  cursor: pointer;
-  transition: border-color 0.25s;
-}
-
-button:hover {
-  border-color: #FFD700;
-}
-
-button:focus,
-button:focus-visible {
-  outline: 2px solid #FFD700;
-  outline-offset: 2px;
-  box-shadow: none;
-}
-
-button:focus:not(:focus-visible) {
-  outline: none;
-}
-
-@media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
-  }
-  a:hover {
-    color: #747bff;
-  }
-  button {
-    background-color: #f9f9f9;
-  }
-}
+input[type=range] { appearance: none; -webkit-appearance: none; height: 5px; border-radius: 8px; background: #FFD70030; cursor: pointer; }
+input[type=range]::-webkit-slider-thumb { appearance: none; -webkit-appearance: none; width: 18px; height: 18px; border-radius: 50%; background: #FFD700; border: 3px solid #050505; box-shadow: 0 0 0 1px #FFD700; }
+input[type=range]::-moz-range-thumb { width: 15px; height: 15px; border-radius: 50%; background: #FFD700; border: 2px solid #050505; }

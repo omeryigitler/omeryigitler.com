@@ -107,8 +107,8 @@ function publicError(error) {
 
 module.exports = async function handler(req, res) {
   const action = String(req.query?.action || "").trim().toLowerCase();
-  const getActions = new Set(["status", "todos", "agenda", "studio-status", "studio-records"]);
-  const postActions = new Set(["command", "approve", "todo", "event", "studio-settings", "studio-save", "studio-transition"]);
+  const getActions = new Set(["status", "todos", "agenda", "studio-status", "studio-records", "studio-pricing-config"]);
+  const postActions = new Set(["command", "approve", "todo", "event", "studio-settings", "studio-save", "studio-transition", "studio-pricing-save", "studio-pricing-settings", "studio-lead-process"]);
   if (!getActions.has(action) && !postActions.has(action)) {
     return sendJson(res, 404, { ok: false, code: "unknown_action", error: "Unknown agent action." });
   }
@@ -140,6 +140,7 @@ module.exports = async function handler(req, res) {
       const result = await require('../lib/studio-records').list();
       return sendJson(res, 200, { ok: true, ...result });
     }
+    if (action === 'studio-pricing-config') return sendJson(res, 200, { ok: true, ...await require('../lib/studio-leads').service().settings() });
     if (action === "status") {
       const approvals = await agent.listPendingApprovals();
       return sendJson(res, 200, { ok: true, approvals });
@@ -154,6 +155,9 @@ module.exports = async function handler(req, res) {
     }
 
     const body = await readJson(req);
+    if (action === 'studio-pricing-save') return sendJson(res, 200, { ok: true, ...await require('../lib/studio-leads').service().save(body, actor) });
+    if (action === 'studio-pricing-settings') return sendJson(res, 200, { ok: true, ...await require('../lib/studio-leads').service().saveSettings(body, actor) });
+    if (action === 'studio-lead-process') return sendJson(res, 200, { ok: true, ...await require('../lib/studio-leads').service().prepare(String(body.messageId || '')) });
     if (action === 'studio-settings') {
       const result = await require('../lib/studio-ai').engine().save(body.settings, actor.id);
       return sendJson(res, 200, { ok: true, ...result });

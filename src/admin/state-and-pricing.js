@@ -266,6 +266,7 @@
         }
 
         function buildQuoteRequestFromMessage(message) {
+            const features = message.config?.features || message.features || [];
             return {
                 customerName: message.name || 'Unknown',
                 customerEmail: message.email || '',
@@ -273,11 +274,11 @@
                 siteType: message.siteType || message.projectType || 'CORPORATE',
                 pageCount: Number(message.pageCount || 10),
                 designType: message.designType || 'TEMPLATE',
-                isMultiLang: !!message.isMultiLang,
-                hasSeo: !!message.hasSeo,
-                hasGraphics: !!message.hasGraphics,
-                hasUx: !!message.hasUx,
-                hasCrm: !!message.hasCrm,
+                isMultiLang: !!message.isMultiLang || features.includes('multilang'),
+                hasSeo: !!message.hasSeo || features.includes('seo'),
+                hasGraphics: !!message.hasGraphics || features.includes('graphics'),
+                hasUx: !!message.hasUx || features.includes('ux'),
+                hasCrm: !!message.hasCrm || features.includes('crm'),
                 deliverySpeed: message.deliverySpeed || 'STANDARD',
                 maintenanceLevel: message.maintenanceLevel || 'NONE',
                 selectedAddons: Array.isArray(message.selectedAddons) ? message.selectedAddons : [],

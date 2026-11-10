@@ -638,7 +638,8 @@ module.exports = async (req, res) => {
         await security.throttle(db, `${group}:${getClientIp(req)}`, group === 'telegram' ? 5 : 30, 10 * 60 * 1000);
       }
     }
-    if (action === 'admin_page') return await handleAdminPage(req, res);
+    if (action === 'admin_page') { res.setHeader('Location', 'https://start.omeryigitler.com/#agency/overview'); return res.status(302).end(); }
+    if (action === 'workspace_page') return await handleAdminPage(req, res);
     if (action === 'session') return await handleSession(req, res, body);
     if (action === 'logout') {
       res.setHeader('Set-Cookie', '__Host-taurus_admin=; Path=/; Max-Age=0; HttpOnly; Secure; SameSite=Strict');

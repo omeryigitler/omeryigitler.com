@@ -105,60 +105,13 @@
             const existingId = await getExistingProjectIdForMessage(messageId);
             if (existingId) return existingId;
 
-            let message = messageOverride;
-            if (!message) {
-                const messageDoc = await db.collection('messages').doc(messageId).get();
-                if (!messageDoc.exists) return null;
-                message = messageDoc.data();
-            }
-            if (!message) return null;
-
-            const projectData = {
-                name: `Project for ${message.name || 'Client'}`,
-                projectName: `Project for ${message.name || 'Client'}`,
-                clientName: message.name || 'Unknown Client',
-                clientEmail: message.email || '',
-                status: 'active',
-                progress: 0,
-                messageId: messageId,
-                description: message.message || '',
-                siteType: message.siteType || message.projectType || 'CORPORATE',
-                designType: message.designType || 'TEMPLATE',
-                pageCount: message.pageCount || '10',
-                deliverySpeed: message.deliverySpeed || 'STANDARD',
-                maintenanceLevel: message.maintenanceLevel || 'NONE',
-                selectedAddons: message.selectedAddons || [],
-                country: message.country || 'TR',
-                workflowStage: 'lead',
-                autoPipeline: !!autoPipeline,
-                studio: {
-                    brief: message.message || '',
-                    goals: '',
-                    audience: '',
-                    tone: '',
-                    keywords: '',
-                    references: '',
-                    sitemap: '',
-                    content: '',
-                    notes: '',
-                    assets: {
-                        logo: false,
-                        brandbook: false,
-                        copy: false,
-                        images: false,
-                        video: false
-                    }
-                }
-            };
-
-            const projectId = await saveProjectToFirestore(projectData);
-            if (projectId) {
-                await db.collection('messages').doc(messageId).update({
-                    projectId: projectId,
-                    dossierCreated: true
-                });
-            }
-            return projectId;
+            const response = await fetch('/api/agent?action=studio-lead-process', {
+                method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ messageId })
+            });
+            const result = await response.json();
+            if (!response.ok) throw new Error(result.error || 'Lead preparation could not be completed.');
+            return result.projectId;
         }
 
         // --- AUTO PIPELINE: Message -> Dossier -> Quote -> Project -> Docs ---
@@ -170,64 +123,11 @@
 
             autoPipelineLocks.add(messageId);
             try {
-                const projectId = await getOrCreateProjectFromMessage(messageId, message, true);
-                if (!projectId) return;
-                await autoGenerateQuoteFromMessage(messageId, message, projectId);
-            } catch (e) {
-                console.error('Auto dossier failed:', e);
-            } finally {
-                autoPipelineLocks.delete(messageId);
-            }
-        }
-
-        async function autoGenerateQuoteFromMessage(messageId, message, projectId) {
-            try {
-                const existingQuoteId = await getExistingQuoteIdForMessage(messageId);
-                if (existingQuoteId) return;
-                const pricingConfig = getPricingConfig();
-                const addons = getAddonConfig();
-                const request = buildQuoteRequestFromMessage(message);
-                const breakdown = calculateBreakdownFromRequest(request, pricingConfig, addons);
-
-                const quoteData = {
-                    clientName: request.customerName,
-                    clientEmail: request.customerEmail || '',
-                    country: request.country,
-                    siteType: request.siteType,
-                    pageCount: request.pageCount,
-                    totalPrice: breakdown.finalTotal,
-                    breakdown: breakdown,
-                    currency: request.country === 'MT' ? 'EUR' : 'TRY',
-                    projectId: projectId || null,
-                    notes: 'AUTO: Generated from form input'
-                };
-
-                const quoteId = await saveQuoteToFirestore(quoteData, messageId);
-                if (!quoteId || !projectId) return;
-
-                await db.collection('projects').doc(projectId).update({
-                    quoteId: quoteId,
-                    budget: breakdown.finalTotal,
-                    currency: quoteData.currency,
-                    breakdown: breakdown,
-                    siteType: request.siteType,
-                    designType: request.designType,
-                    pageCount: request.pageCount,
-                    deliverySpeed: request.deliverySpeed,
-                    maintenanceLevel: request.maintenanceLevel,
-                    selectedAddons: request.selectedAddons || [],
-                    country: request.country,
-                    lastUpdated: firebase.firestore.FieldValue.serverTimestamp(),
-                    workflowStage: 'active'
+                const response = await fetch('/api/agent?action=studio-lead-process', {
+                    method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ messageId })
                 });
-
-                await updateWorkflow(projectId, 'proposal', { source: 'auto', quoteId });
-                await updateWorkflow(projectId, 'active', { source: 'auto' });
-
-                // Auto-generate docs (queue)
-                enqueuePdfJob({ id: `${projectId}-quote`, projectId, docType: 'quote', request, breakdown, download: false });
-                enqueuePdfJob({ id: `${projectId}-contract`, projectId, docType: 'contract', request, breakdown, download: false });
-            } catch (e) {
-                console.error('Auto quote failed:', e);
-            }
+                if (!response.ok) throw new Error('Lead preparation is pending.');
+            } catch (_) { console.warn('Lead preparation will retry on the next workspace sync.'); }
+            finally { autoPipelineLocks.delete(messageId); }
         }

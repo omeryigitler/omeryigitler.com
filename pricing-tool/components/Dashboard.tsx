@@ -1,3 +1,4 @@
+import { isHostEvent, sendHost, saveProposal, isAgencyPlugin } from '../host';
 import React, { useState } from 'react';
 import { PlusCircle, FileText, ArrowRight, ArrowUpRight, Save } from 'lucide-react';
 import { Language, QuoteRequest } from '../types';
@@ -17,7 +18,7 @@ const Dashboard: React.FC<Props> = ({ onNavigate, language, onRequestUpdate }) =
   const [clientName, setClientName] = useState('');
   const [clientEmail, setClientEmail] = useState('');
 
-  const handleSaveQuote = () => {
+  const handleSaveQuote = async () => {
     const notify = (type: 'success' | 'error' | 'info', message: string) => {
       if (window.__TAURUS_TOAST__) {
         window.__TAURUS_TOAST__(type, message);
@@ -31,35 +32,18 @@ const Dashboard: React.FC<Props> = ({ onNavigate, language, onRequestUpdate }) =
       return;
     }
 
-    // Send to parent window (admin panel)
-    if (window.parent && window.parent !== window) {
-      window.parent.postMessage({
-        type: 'SAVE_QUOTE',
-        data: {
-          clientName: clientName.trim(),
-          clientEmail: clientEmail.trim(),
-          country: language === Language.TR ? 'TR' : 'MT',
-          siteType: 'Corporate',
-          pageCount: 10,
-          totalPrice: 0,
-          breakdown: {}
-        }
-      }, '*');
-
-      notify('info', language === Language.TR ? 'Teklif kaydediliyor...' : 'Saving proposal...');
-      setClientName('');
-      setClientEmail('');
+    if (window.__TAURUS_PRICING_SAVE__) {
+      await window.__TAURUS_PRICING_SAVE__({ request: { customerName: clientName.trim(), customerEmail: clientEmail.trim(), country: language === Language.TR ? 'TR' : 'MT', siteType: 'CORPORATE', pageCount: 10 } });
     } else {
-      notify('error', language === Language.TR
-        ? 'Not: Bu özellik sadece admin panelden çalışır'
-        : 'Note: This feature only works from admin panel');
+      sendHost({ type: 'SAVE_QUOTE', data: { clientName: clientName.trim(), clientEmail: clientEmail.trim(), country: language === Language.TR ? 'TR' : 'MT', siteType: 'CORPORATE', pageCount: 10 } });
     }
+
   };
 
   // Listen for messages from parent (admin panel) to pre-fill client data
   React.useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
-      if (event.data && event.data.type === 'PRE_FILL_CLIENT') {
+      if (isHostEvent(event) && event.data && event.data.type === 'PRE_FILL_CLIENT') {
         const { clientName, clientEmail } = event.data.data;
 
         // Update local state
