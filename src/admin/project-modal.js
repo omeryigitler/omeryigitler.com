@@ -487,6 +487,7 @@
         let currentProjectFilter = 'active';
         function filterProjects(s) {
             currentProjectFilter = s;
+            updateCollectionFilter('projects', s);
             document.getElementById('filter-active').className = s === 'active' ? 'h-full flex-1 justify-center px-6 rounded-lg text-[10px] font-black uppercase tracking-widest bg-taurusGold text-black transition-all whitespace-nowrap' : 'h-full flex-1 justify-center px-6 rounded-lg text-[10px] font-black uppercase tracking-widest text-gray-400 hover:text-white transition-all whitespace-nowrap';
             document.getElementById('filter-completed').className = s === 'completed' ? 'h-full flex-1 justify-center px-6 rounded-lg text-[10px] font-black uppercase tracking-widest bg-taurusGold text-black transition-all whitespace-nowrap' : 'h-full flex-1 justify-center px-6 rounded-lg text-[10px] font-black uppercase tracking-widest text-gray-400 hover:text-white transition-all whitespace-nowrap';
             loadProjects();

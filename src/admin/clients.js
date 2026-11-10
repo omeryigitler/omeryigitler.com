@@ -4,13 +4,14 @@
 
         function updateClientsBulkUI() {
             const count = selectedClients.size;
+            updateCollectionSelection('clients', count);
             const total = visibleClientIds.length;
             const countEl = document.getElementById('clients-selected-count');
             const deleteBtn = document.getElementById('clients-bulk-delete');
             const selectAll = document.getElementById('clients-select-all');
             const selectAllTop = document.getElementById('clients-select-all-top');
 
-            if (countEl) countEl.innerText = `${count} Selected`;
+            if (countEl) countEl.innerText = `${count} selected`;
             if (deleteBtn) deleteBtn.disabled = count === 0;
             [selectAll, selectAllTop].forEach(el => {
                 if (!el) return;
@@ -97,7 +98,7 @@
                         clientsHtml += `
                             <tr onclick="openClientModal('${doc.id}')" class="border-b border-white/5 hover:bg-white/5 transition-all cursor-pointer group">
                                 <td class="p-4 text-center" onclick="event.stopPropagation()">
-                                    <input type="checkbox" class="client-select-checkbox accent-[#FFD700]" ${checkedAttr}
+                                    <input type="checkbox" class="client-select-checkbox accent-[#FFD700]" aria-label="Select ${escapeAdminText(data.name || 'client')}" ${checkedAttr}
                                         onchange="toggleClientSelection('${doc.id}', this.checked)">
                                 </td>
                                 <td class="p-4">
@@ -111,7 +112,7 @@
                                 <td class="p-4" onclick="event.stopPropagation()">
                                     <div class="flex items-center justify-end gap-2">
                                         <button onclick="openClientModal('${doc.id}')" class="px-3 py-1 bg-taurusGold/10 text-taurusGold rounded hover:bg-taurusGold hover:text-black transition-all text-xs font-bold uppercase">
-                                            VIEW DETAILS
+                                            View details
                                         </button>
                                         <button onclick="deleteClient('${doc.id}')" title="Delete Client"
                                             class="p-2 rounded-md bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white transition-all border border-red-500/20">
@@ -123,11 +124,11 @@
                         `;
                     });
 
-                    clientsTable.innerHTML = clientsHtml || '<tr><td colspan="7" class="p-8 text-center text-gray-500">No clients yet</td></tr>';
+                    clientsTable.innerHTML = clientsHtml || `<tr><td colspan="7" class="agency-empty-cell">${collectionEmptyState('No clients yet', 'Clients will appear here as enquiries and proposals are linked.', 'users')}</td></tr>`;
 
                     // One-line summary instead of duplicated stat cards
                     const clientsSummary = document.getElementById('clients-summary');
-                    if (clientsSummary) clientsSummary.textContent = `${snapshot.size} client · ${totalMessages} messages · ${totalQuotes} proposals · ${totalProjects} projects`;
+                    if (clientsSummary) clientsSummary.textContent = `${snapshot.size} ${snapshot.size === 1 ? 'client' : 'clients'} · ${totalMessages} ${totalMessages === 1 ? 'message' : 'messages'} · ${totalQuotes} ${totalQuotes === 1 ? 'proposal' : 'proposals'} · ${totalProjects} ${totalProjects === 1 ? 'project' : 'projects'}`;
 
                     pruneSelection(selectedClients, visibleClientIds);
                     updateClientsBulkUI();

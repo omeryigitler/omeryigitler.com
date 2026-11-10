@@ -9,7 +9,7 @@
             if (projectsUnsubscribe) projectsUnsubscribe();
             projectsUnsubscribe = db.collection('projects').onSnapshot(snapshot => {
                 if (snapshot.empty) {
-                    container.innerHTML = '<div class="col-span-full py-20 text-center text-gray-500 uppercase tracking-widest text-xs">No active deployments.</div>';
+                    container.innerHTML = collectionEmptyState(currentProjectFilter === 'completed' ? 'No archived projects' : 'No active projects', 'Create a project to start tracking scope, progress and delivery.', 'folder');
                     return;
                 }
 
@@ -30,7 +30,7 @@
                     const budget = Number(data.budget) || 0;
                     const dueDate = data.dueDate || data.deliveryDate || null;
                     html += `
-                        <div onclick="openProjectModal('${doc.id}')" class="group bg-white/5 border border-glassBorder rounded-2xl p-5 hover:border-taurusGold/40 transition-all cursor-pointer active:scale-[0.98]">
+                        <div onclick="openProjectModal('${doc.id}')" data-agency-card class="group bg-white/5 border border-glassBorder rounded-2xl p-5 hover:border-taurusGold/40 transition-all cursor-pointer active:scale-[0.98]">
                             <div class="flex items-start justify-between gap-3">
                                 <h3 class="min-w-0 flex-1 text-base font-display font-bold text-white group-hover:text-taurusGold transition-colors leading-snug break-words">${highlightMatch(projectTitle, searchQuery)}</h3>
                                 <span class="flex-none px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-widest ${status === 'active' ? 'bg-taurusGold text-black' : 'bg-green-500/20 text-green-400 border border-green-500/30'}">${status}</span>
@@ -53,7 +53,7 @@
                     `;
                 });
 
-                container.innerHTML = html || '<div class="col-span-full py-20 text-center text-gray-500 uppercase tracking-widest text-xs">No projects in this category.</div>';
+                container.innerHTML = html || collectionEmptyState('No matching projects', 'Try another status or search term.', 'folder');
                 lucide.createIcons();
             });
         }
