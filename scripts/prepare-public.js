@@ -21,6 +21,9 @@ function preparePublic(root, output = path.join(root, 'dist')) {
   fs.cpSync(path.join(publicDir, 'icons'), output, { recursive: true });
   fs.cpSync(path.join(root, 'pricing-tool/dist'), path.join(output, 'pricing-tool/dist'), { recursive: true });
 
+  // Stable, independent module entry; legacy URLs stay available to PDF jobs.
+  fs.cpSync(path.join(root, 'pricing-tool/dist'), path.join(output, 'tools/pricing'), { recursive: true });
+
   const homePath = path.join(output, 'index.html');
   const archivePath = path.join(output, 'projects.html');
   const home = fs.readFileSync(homePath, 'utf8');

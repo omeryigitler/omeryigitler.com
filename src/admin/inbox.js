@@ -64,7 +64,7 @@
                                     <i data-lucide="user" class="w-4 h-4"></i>
                                 </div>
                                 <div class="flex-1 min-w-0">
-                                    <div class="text-xs font-bold text-white truncate">${data.name || 'Anonymous'}</div>
+                                    <div class="text-xs font-bold text-white truncate">${escapeAdminText(data.name || 'Anonymous')}</div>
                                     <div class="text-[9px] text-gray-500 font-mono truncate">${date}</div>
                                 </div>
                                 ${isNew ? '<div class="w-1.5 h-1.5 bg-taurusGold rounded-full shadow-[0_0_8px_rgba(255,215,0,0.6)]"></div>' : ''}
@@ -92,8 +92,8 @@
                                 ${isNew ? '<span class="px-2 py-0.5 rounded-full border border-taurusGold/50 text-taurusGold text-[9px] font-black uppercase">Unread</span>' : '<span class="px-2 py-0.5 rounded-full bg-white/5 text-gray-500 text-[9px] font-black uppercase">Archived</span>'}
                             </td>
                             <td class="p-4 w-sender">
-                                <div class="font-bold text-white force-truncate" title="${data.name || 'Anonymous'}">${highlightMatch(data.name || 'Anonymous', searchQuery)}</div>
-                                <div class="text-[10px] text-gray-500 force-truncate" title="${data.email || ''}">${highlightMatch(data.email || '', searchQuery)}</div>
+                                <div class="font-bold text-white force-truncate" title="${escapeAdminText(data.name || 'Anonymous')}">${highlightMatch(data.name || 'Anonymous', searchQuery)}</div>
+                                <div class="text-[10px] text-gray-500 force-truncate" title="${escapeAdminText(data.email || '')}">${highlightMatch(data.email || '', searchQuery)}</div>
                                 <!-- NEW: Status badges -->
                                 <div class="flex gap-1 mt-1">
                                     ${data.quoteId ? '<span class="px-2 py-0.5 rounded text-[9px] font-bold bg-blue-500/20 text-blue-400 border border-blue-500/30">📋 QUOTED</span>' : ''}
@@ -101,7 +101,7 @@
                                 </div>
                             </td>
                             <td class="p-4 w-message text-gray-400 text-xs">
-                                <div class="force-truncate" title="${data.message || ''}">${highlightMatch(data.message || 'No content...', searchQuery)}</div>
+                                <div class="force-truncate" title="${escapeAdminText(data.message || '')}">${highlightMatch(data.message || 'No content...', searchQuery)}</div>
                             </td>
                             <td class="p-4 w-date text-gray-600 text-[10px] font-mono">${date}</td>
                             <td class="p-4 w-actions text-right" onclick="event.stopPropagation()">

@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { Country, PricingRules, SiteType, MaintenanceLevel, DeliverySpeed, Language, PricingFactor, PricingFactorType, AddonService } from '../types';
 import { Save, RotateCcw, Settings, Globe, Plus, Trash2, Percent, Zap, Package } from 'lucide-react';
 import { TRANSLATIONS } from '../translations';
-import { DEFAULT_AVAILABLE_ADDONS } from '../constants';
+import { DEFAULT_PRICING_CONFIG, DEFAULT_AVAILABLE_ADDONS } from '../constants';
 
 interface Props {
   config: Record<Country, PricingRules>;
@@ -12,9 +12,10 @@ interface Props {
   onUpdateAddons: (newAddons: AddonService[]) => void;
   onResetDefaults: () => void;
   language: Language;
+  onPersist?: (config: Record<Country, PricingRules>, addons: AddonService[]) => Promise<unknown>;
 }
 
-const AdminSettings: React.FC<Props> = ({ config, addons, onUpdateConfig, onUpdateAddons, onResetDefaults, language }) => {
+const AdminSettings: React.FC<Props> = ({ config, addons, onUpdateConfig, onUpdateAddons, onResetDefaults, language, onPersist }) => {
   const [activeTab, setActiveTab] = useState<Country>(Country.TR);
   // Local state for forms to prevent jittery updates, commit on save
   const [localConfig, setLocalConfig] = useState(config);
@@ -64,14 +65,16 @@ const AdminSettings: React.FC<Props> = ({ config, addons, onUpdateConfig, onUpda
     );
   }, [language]);
 
-  const handleSave = () => {
+  const handleSave = async () => {
+    if (onPersist) { try { await onPersist(localConfig, localAddons); } catch (error) { notify('error', error instanceof Error ? error.message : 'Save failed.'); return; } }
     onUpdateConfig(localConfig);
     onUpdateAddons(localAddons);
     notify('success', t.saveSuccess);
   };
 
-  const handleReset = () => {
-    if(confirm(t.resetConfirm)) {
+  const handleReset = async () => {
+    if(await window.taurusConfirm(t.resetConfirm)) {
+      if (onPersist) { try { await onPersist(DEFAULT_PRICING_CONFIG, DEFAULT_AVAILABLE_ADDONS); } catch (error) { notify('error', error instanceof Error ? error.message : 'Reset failed.'); return; } }
       onResetDefaults();
       window.location.reload(); 
     }
@@ -156,7 +159,7 @@ const AdminSettings: React.FC<Props> = ({ config, addons, onUpdateConfig, onUpda
                     ? 'bg-zinc-700 text-white shadow-sm' 
                     : 'text-zinc-500 hover:text-white'
                 } ${!onTypeChange ? 'cursor-default opacity-80' : ''}`}
-                title="Sabit Fiyat"
+                title="Fixed amount"
                >
                  <span className="text-xs font-bold">{rules.currencySymbol}</span>
                </button>
@@ -168,7 +171,7 @@ const AdminSettings: React.FC<Props> = ({ config, addons, onUpdateConfig, onUpda
                     ? 'bg-zinc-700 text-white shadow-sm' 
                     : 'text-zinc-500 hover:text-white'
                 } ${!onTypeChange ? 'cursor-default opacity-50' : ''}`}
-                title="Yüzde"
+                title="Percentage"
                >
                  <Percent className="w-3 h-3" />
                </button>
@@ -424,7 +427,7 @@ const AdminSettings: React.FC<Props> = ({ config, addons, onUpdateConfig, onUpda
                                 ? 'bg-zinc-600 text-white' 
                                 : 'text-zinc-500 hover:text-white'
                             }`}
-                            title="Sabit"
+                            title="Fixed amount"
                            >
                              <span className="text-[10px] font-bold">{rules.currencySymbol}</span>
                            </button>
@@ -435,7 +438,7 @@ const AdminSettings: React.FC<Props> = ({ config, addons, onUpdateConfig, onUpda
                                 ? 'bg-zinc-600 text-white' 
                                 : 'text-zinc-500 hover:text-white'
                             }`}
-                            title="Yüzde"
+                            title="Percentage"
                            >
                              <Percent className="w-3 h-3" />
                            </button>

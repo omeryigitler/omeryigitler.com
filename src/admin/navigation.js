@@ -54,6 +54,7 @@
             if (titleEl) titleEl.innerText = titles[tabId];
 
             // Load relevant data
+            if (tabId === 'pricing') { const frame = document.getElementById('pricing-iframe'); if (frame && !frame.getAttribute('src')) frame.src = frame.dataset.src; }
             if (tabId === 'messages') loadMessages();
             if (tabId === 'quotes') loadQuotes(); // NEW
             if (tabId === 'clients') loadClients(); // NEW

@@ -1,9 +1,10 @@
 
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useId } from 'react';
 import {
   Country, SiteType, DesignType, DeliverySpeed, MaintenanceLevel, QuoteRequest, CostBreakdown, PricingRules, Language, DiscountType, PricingFactor, PricingFactorType, AddonService
 } from '../types';
 import { TRANSLATIONS } from '../translations';
+import { isAgencyPlugin, saveProposal, sendHost } from '../host';
 // removed unused imports
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import { ArrowRight, Save, Zap, ChevronDown, User, Globe, Layout, Layers, Check, Plus, PenTool, MousePointer, Database, Percent, DollarSign, Tag, FileText, Download, Send, ArrowLeft } from 'lucide-react';
@@ -35,6 +36,7 @@ interface CustomSelectProps {
 const CustomSelect: React.FC<CustomSelectProps> = ({ label, value, options, onChange, icon }) => {
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const menuId = useId();
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -53,7 +55,13 @@ const CustomSelect: React.FC<CustomSelectProps> = ({ label, value, options, onCh
       {/* Label is passed already uppercased from parent if needed, handled via JS not CSS to fix locale issues */}
       {label && <label className="block text-xs font-bold text-zinc-500 tracking-wider mb-2 ml-1">{label}</label>}
 
-      <div
+      <div role="combobox" tabIndex={0} aria-label={label || 'Choose an option'} aria-expanded={isOpen} aria-controls={menuId}
+        onKeyDown={event => {
+          if (['ArrowDown','ArrowUp'].includes(event.key)) { event.preventDefault(); const i = options.findIndex(option => option.value === value); onChange(options[(i + (event.key === 'ArrowDown' ? 1 : -1) + options.length) % options.length].value); setIsOpen(true); }
+          if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); setIsOpen(!isOpen); }
+          if (event.key === 'Escape') { event.stopPropagation(); setIsOpen(false); }
+          if (event.key === 'Tab') setIsOpen(false);
+        }}
         onClick={() => setIsOpen(!isOpen)}
         className={`w-full relative flex items-center justify-between bg-zinc-900/80 border px-5 py-4 rounded-xl cursor-pointer transition-all duration-300 select-none ${isOpen
           ? 'border-[#FFD700] ring-1 ring-taurusGold shadow-[0_0_15px_rgba(255,215,0,0.1)]'
@@ -73,10 +81,10 @@ const CustomSelect: React.FC<CustomSelectProps> = ({ label, value, options, onCh
       {/* Dropdown Menu */}
       {isOpen && (
         <div className="absolute z-[60] w-full mt-2 bg-zinc-900/95 border border-zinc-800 rounded-xl shadow-2xl shadow-black/80 overflow-hidden animate-in fade-in zoom-in-95 duration-150 origin-top">
-          <ul className="max-h-64 overflow-auto py-1 no-scrollbar">
+          <ul id={menuId} role="listbox" className="max-h-64 overflow-auto py-1 no-scrollbar">
             {options.map((option) => (
               <li
-                key={option.value}
+                key={option.value} role="option" aria-selected={option.value === value}
                 onClick={() => {
                   onChange(option.value);
                   setIsOpen(false);
@@ -151,7 +159,7 @@ const PricingCalculator: React.FC<Props> = ({ config, addons, onRequestUpdate, o
   };
 
   useEffect(() => {
-    setRequest(prev => ({ ...prev, country: language === Language.TR ? Country.TR : Country.MT }));
+    if (!isAgencyPlugin()) setRequest(prev => ({ ...prev, country: language === Language.TR ? Country.TR : Country.MT }));
   }, [language]);
 
 
@@ -301,22 +309,13 @@ const PricingCalculator: React.FC<Props> = ({ config, addons, onRequestUpdate, o
     }
   };
 
-  const handleFinalize = () => {
+  const handleFinalize = async () => {
     if (breakdown) {
-      // Send complete data package to parent (Admin Panel)
-      window.parent.postMessage({
-        type: 'SAVE_QUOTE_FULL',
-        payload: {
-          request: request,
-          breakdown: breakdown,
-          total: breakdown.finalTotal,
-          projectId: request.projectId,
-          messageId: request.messageId
-        }
-      }, '*');
+      try {
+        if (window.__TAURUS_PRICING_SAVE__) await window.__TAURUS_PRICING_SAVE__({ request, breakdown });
+        else sendHost({ type: 'SAVE_QUOTE_FULL', payload: { request, breakdown, projectId: request.projectId, messageId: request.messageId } });
+      } catch (_) { notify('error', 'The proposal could not be saved.'); }
 
-      // Also trigger the legacy callback if needed, but postMessage is key for Admin
-      // onNavigate('dashboard'); // Optional: close or reset
     }
   };
 
@@ -751,7 +750,7 @@ const PricingCalculator: React.FC<Props> = ({ config, addons, onRequestUpdate, o
                     onClick={handleStepNext}
                     className="w-full flex items-center justify-center space-x-2 bg-[#FFD700] hover:bg-[#FFD700] text-black py-4 rounded-xl font-bold transition-all border border-[#FFD700] shadow-[0_0_20px_rgba(255,215,0,0.2)] hover:shadow-[0_0_30px_rgba(255,215,0,0.4)] hover:-translate-y-1"
                   >
-                    <span>{t.createProposal} / {t.next || 'Next'}</span>
+                    <span>{t.createProposal} / {language === Language.EN ? 'Next' : 'Devam'}</span>
                     <ArrowRight className="w-5 h-5" />
                   </button>
                 </div>

@@ -38,6 +38,7 @@ const SeoTracker: React.FC<Props> = ({ language, initialClientName }) => {
     localStorage.setItem('seo_projects', JSON.stringify(projects));
   }, [projects]);
 
+  const englishLabels: Record<string, string> = {"technical": "Technical SEO", "content": "On-page SEO", "offpage": "Off-page SEO", "monitoring": "Monitoring and reporting", "t1": "Optimize site speed (Core Web Vitals)", "t2": "Check responsive layouts", "t3": "Optimize URL structure", "t4": "Check SSL and HTTPS", "t5": "Create and submit the XML sitemap", "t6": "Configure robots.txt", "t7": "Add structured data markup", "t8": "Review 404 errors and 301 redirects", "c1": "Research and analyze keywords", "c2": "Optimize heading structure (H1, H2, H3)", "c3": "Write meta titles and descriptions", "c4": "Optimize image sizes and alt text", "c5": "Plan internal linking", "c6": "Check duplicate content", "o1": "Create the Google Business listing", "o2": "Connect social media profiles", "o3": "Analyze backlinks and plan outreach", "o4": "Research competitors", "m1": "Configure Google Analytics 4", "m2": "Configure Google Search Console", "m3": "Prepare the monthly performance report"};
   const activeProject = projects.find(p => p.id === activeProjectId);
 
   const handleOpenModal = () => {
@@ -66,9 +67,9 @@ const SeoTracker: React.FC<Props> = ({ language, initialClientName }) => {
     setNewProjectUrl('');
   };
 
-  const handleDeleteProject = (e: React.MouseEvent, id: string) => {
+  const handleDeleteProject = async (e: React.MouseEvent, id: string) => {
     e.stopPropagation();
-    if (window.confirm(t.deleteConfirm)) {
+    if (await window.taurusConfirm(t.deleteConfirm)) {
       setProjects(projects.filter(p => p.id !== id));
       if (activeProjectId === id) setActiveProjectId(null);
     }
@@ -126,8 +127,8 @@ const SeoTracker: React.FC<Props> = ({ language, initialClientName }) => {
     setProjects(updatedProjects);
   };
 
-  const addNewTask = (catId: string) => {
-    const title = prompt(t.newTaskTitle);
+  const addNewTask = async (catId: string) => {
+    const title = await window.taurusPrompt(t.newTaskTitle);
     if (!title || !activeProjectId) return;
 
     const updatedProjects = projects.map(project => {
@@ -285,7 +286,7 @@ const SeoTracker: React.FC<Props> = ({ language, initialClientName }) => {
                        <div className={`p-2 rounded-lg ${expandedCategories.includes(category.id) ? 'bg-[#FFD700] text-black' : 'bg-zinc-800 text-zinc-400'}`}>
                           {expandedCategories.includes(category.id) ? <ChevronDown className="w-5 h-5" /> : <ChevronRight className="w-5 h-5" />}
                        </div>
-                       <h3 className="text-xl font-bold text-white">{category.title}</h3>
+                       <h3 className="text-xl font-bold text-white">{language === Language.EN ? englishLabels[category.id] || category.title : category.title}</h3>
                        <span className="text-xs font-bold bg-zinc-800 text-zinc-400 px-2 py-1 rounded border border-zinc-700">
                          {category.tasks.filter(t => t.isCompleted).length} / {category.tasks.length}
                        </span>
@@ -308,7 +309,7 @@ const SeoTracker: React.FC<Props> = ({ language, initialClientName }) => {
                                 
                                 <div className="flex-1">
                                    <p className={`text-base font-medium transition-all ${task.isCompleted ? 'text-zinc-500 line-through' : 'text-zinc-200'}`}>
-                                     {task.title}
+                                     {language === Language.EN && DEFAULT_SEO_TEMPLATE.some(category => category.tasks.some(item => item.id === task.id && item.title === task.title)) ? englishLabels[task.id] || task.title : task.title}
                                    </p>
                                    
                                    {/* Note Section */}

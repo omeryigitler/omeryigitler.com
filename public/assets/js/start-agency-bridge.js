@@ -21,6 +21,15 @@
         currentView = view;
         if (authenticated) switchTab(view);
     }
+    window.openStartPricing = context => {
+        if (!authenticated) return;
+        parent.postMessage({ type: 'taurus:agency:open-pricing', context: context || {} }, ORIGIN);
+    };
+    const originalSwitchTab = switchTab;
+    window.switchTab = view => {
+        if (view === 'pricing') { window.openStartPricing({}); return; }
+        originalSwitchTab(view);
+    };
     window.addEventListener('message', event => {
         if (event.origin !== ORIGIN || event.source !== parent) return;
         if (event.data?.type === 'taurus:agency:navigate') navigate(event.data.view);

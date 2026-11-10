@@ -81,8 +81,9 @@ test('session cookies require fresh admin authentication and protect admin HTML'
  assert.equal((await call('session',{idToken:'id'})).code,403);
  claims={admin:true,role:'admin',auth_time:Date.now()/1000-600};assert.equal((await call('session',{idToken:'id'})).code,403);assert.equal(cookies,0);
  claims.auth_time=Date.now()/1000;const result=await call('session',{idToken:'id'});assert.equal(result.code,200);assert.match(result.headers['Set-Cookie'],/HttpOnly; Secure; SameSite=Strict/);
- assert.equal((await call('admin_page',{}, {},'GET')).code,302);
- const admin=await call('admin_page',{}, {cookie:'__Host-taurus_admin=session'},'GET');assert.equal(admin.code,200);assert.match(admin.body,/<!DOCTYPE html>/i);assert.equal(admin.headers['Cache-Control'],'private, no-store');
+ assert.equal((await call('workspace_page',{}, {},'GET')).code,302);
+ const admin=await call('workspace_page',{}, {cookie:'__Host-taurus_admin=session'},'GET');assert.equal(admin.code,200);assert.match(admin.body,/<!DOCTYPE html>/i);assert.equal(admin.headers['Cache-Control'],'private, no-store');
+ assert.equal((await call('admin_page',{}, {},'GET')).headers.Location, 'https://start.omeryigitler.com/#agency/overview');
  const logout=await call('logout');assert.match(logout.headers['Set-Cookie'],/Max-Age=0/);
 });
 

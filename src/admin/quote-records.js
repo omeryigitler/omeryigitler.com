@@ -156,7 +156,7 @@
         function sendPricingToolPing() {
             const iframe = document.getElementById('pricing-iframe');
             if (!iframe || !iframe.contentWindow) return;
-            iframe.contentWindow.postMessage({ type: 'PING_PRICING_TOOL' }, '*');
+            iframe.contentWindow.postMessage({ type: 'PING_PRICING_TOOL' }, location.origin);
         }
 
         function initPricingToolBridge() {

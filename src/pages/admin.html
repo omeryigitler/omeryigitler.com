@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard | Ömer YİĞİTLER</title>
+    <title>Taurus Operations Module</title>
     <link rel="icon" href="/favicon-20260806.svg" type="image/svg+xml" sizes="any">
     <link rel="icon" href="/favicon-32x32-20260806.png" type="image/png" sizes="32x32">
     <link rel="icon" href="/favicon-16x16-20260806.png" type="image/png" sizes="16x16">
@@ -30,6 +30,8 @@
 
     <link rel="stylesheet" href="/assets/css/admin.css">
     <link rel="stylesheet" href="/assets/css/start-agency-embed.css">
+    <link rel="stylesheet" href="/assets/css/workspace-controls.css">
+    <script defer src="/assets/js/workspace-controls.js"></script>
 </head>
 
 <body class="bg-obsidian text-white font-body h-screen flex overflow-hidden">
@@ -392,7 +394,7 @@
                         </p>
                     </div>
                     <div class="flex gap-3">
-                        <button onclick="window.open('pricing-tool/dist/index.html', '_blank')"
+                        <button onclick="window.open('/tools/pricing/index.html?plugin=agency', '_blank', 'noopener')"
                             class="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-white text-[10px] font-black uppercase tracking-widest hover:bg-taurusGold hover:text-black hover:border-taurusGold transition-all">
                             <i data-lucide="arrow-up-right" class="w-4 h-4"></i> Open in New Tab
                         </button>
@@ -402,7 +404,7 @@
                 <!-- Pricing Tool iFrame -->
                 <div
                     class="w-full h-[calc(100vh-280px)] lg:h-[calc(100vh-200px)] bg-white/5 border border-glassBorder rounded-3xl overflow-hidden backdrop-blur-md">
-                    <iframe id="pricing-iframe" src="pricing-tool/dist/index.html" class="w-full h-full" frameborder="0"
+                    <iframe id="pricing-iframe" data-src="/tools/pricing/index.html" class="w-full h-full" frameborder="0"
                         style="border: none;" title="Pricing Tool">
                     </iframe>
                 </div>

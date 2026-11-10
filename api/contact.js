@@ -356,7 +356,7 @@ async function contactHandler(req, res) {
 
     const serverTimestamp = admin.firestore.FieldValue.serverTimestamp();
     try {
-      await db.collection("messages").add({
+      const messageRef = await db.collection("messages").add({
         name,
         email,
         message,
@@ -378,6 +378,13 @@ async function contactHandler(req, res) {
         timestamp: serverTimestamp
       });
       stored = true;
+      try {
+        await require('../lib/studio-leads').service().prepare(messageRef.id);
+      } catch (error) {
+        // The durable message remains retryable if downstream preparation fails.
+        console.warn('[contact] lead preparation pending', { requestId, code: error?.code || 'pipeline_unavailable' });
+        await messageRef.set({ pipelineStatus: 'pending', pipelineVersion: 1 }, { merge: true }).catch(() => {});
+      }
     } catch (error) {
       console.error("[contact] message write failed", { requestId, error: error?.message });
     }

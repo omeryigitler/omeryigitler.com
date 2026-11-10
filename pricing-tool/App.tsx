@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import Navbar from './components/Navbar';
+import { isAgencyPlugin, isHostEvent, moduleApi, saveProposal, saveSettings, sendHost } from './host';
 import Dashboard from './components/Dashboard';
 import PricingCalculator from './components/PricingCalculator';
 import ProposalView from './components/ProposalView';
@@ -19,15 +20,20 @@ type ToastType = 'success' | 'error' | 'info';
 declare global {
   interface Window {
     __TAURUS_TOAST__?: (type: ToastType, message: string) => void;
+    __TAURUS_PRICING_SAVE__?: (payload: unknown) => Promise<void>;
+    taurusConfirm: (message: string) => Promise<boolean>;
+    taurusPrompt: (message: string, value?: string) => Promise<string | null>;
     __TAURUS_PDF_GENERATOR__?: (...args: any[]) => Promise<Blob>;
   }
 }
 
 const App: React.FC = () => {
-  const [currentView, setCurrentView] = useState('dashboard');
+  const [currentView, setCurrentView] = useState(isAgencyPlugin() ? 'calculator' : 'dashboard');
   const [language, setLanguage] = useState<Language>(Language.EN);
   const [toast, setToast] = useState<{ type: ToastType; message: string } | null>(null);
   const toastTimerRef = useRef<number | null>(null);
+  const moduleReady = useRef(!isAgencyPlugin());
+  const [connectionError, setConnectionError] = useState('');
 
   const showToast = useCallback((type: ToastType, message: string) => {
     setToast({ type, message });
@@ -60,13 +66,14 @@ const App: React.FC = () => {
 
   // Load configuration from local storage on startup
   useEffect(() => {
+    document.body.classList.toggle('plugin-agency', isAgencyPlugin());
     const savedConfig = localStorage.getItem('pricing_config');
-    if (savedConfig) {
-      setPricingConfig(JSON.parse(savedConfig));
+    if (savedConfig && !isAgencyPlugin()) {
+      try { setPricingConfig(JSON.parse(savedConfig)); } catch {}
     }
     const savedAddons = localStorage.getItem('addon_config');
-    if (savedAddons) {
-      setAvailableAddons(JSON.parse(savedAddons));
+    if (savedAddons && !isAgencyPlugin()) {
+      try { setAvailableAddons(JSON.parse(savedAddons)); } catch {}
     }
 
     // --- NEW: Handle Redirection from Admin Panel ---
@@ -78,7 +85,7 @@ const App: React.FC = () => {
       try {
         const jsonString = decodeURIComponent(atob(payload));
         const data = JSON.parse(jsonString);
-        console.log("📥 Loaded Pricing Data from URL:", data);
+
 
         setQuoteRequest(prev => ({
           ...prev,
@@ -100,7 +107,7 @@ const App: React.FC = () => {
         }
 
         // Force Language to Turkish if Country is TR
-        if (data.country === 'TR') {
+        if (!isAgencyPlugin() && data.country === 'TR') {
           setLanguage(Language.TR);
         }
 
@@ -115,15 +122,14 @@ const App: React.FC = () => {
   // Notify parent when pricing tool is ready (iframe handshake)
   useEffect(() => {
     if (window.parent && window.parent !== window) {
-      window.parent.postMessage({ type: 'PRICING_TOOL_READY' }, '*');
+      sendHost({ type: 'PRICING_TOOL_READY', version: 1 });
     }
   }, []);
 
   // -- NEW: Admin Panel Integration (Iframe Mode) --
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
-      // Validate origin if needed, or check message structure
-      if (!event.data || !event.data.type) return;
+      if (!isHostEvent(event) || !event.data || !event.data.type) return;
 
       if (event.data.type === 'QUOTE_SAVED') {
         if (event.data.success) {
@@ -135,7 +141,7 @@ const App: React.FC = () => {
       }
 
       if (event.data.type === 'PING_PRICING_TOOL') {
-        window.parent.postMessage({ type: 'PRICING_TOOL_PONG' }, '*');
+        sendHost({ type: 'PRICING_TOOL_PONG' });
         return;
       }
 
@@ -151,7 +157,7 @@ const App: React.FC = () => {
           pageCount,
           deliverySpeed,
           maintenanceLevel,
-          selectedAddons
+          selectedAddons, hasSeo, isMultiLang, hasGraphics, hasUx, hasCrm
         } = event.data.data;
 
         setQuoteRequest(prev => ({
@@ -168,12 +174,13 @@ const App: React.FC = () => {
           pageCount: pageCount ? Number(pageCount) : prev.pageCount,
           deliverySpeed: (deliverySpeed as DeliverySpeed) || prev.deliverySpeed,
           maintenanceLevel: (maintenanceLevel as MaintenanceLevel) || prev.maintenanceLevel,
+          hasSeo: Boolean(hasSeo), isMultiLang: Boolean(isMultiLang), hasGraphics: Boolean(hasGraphics), hasUx: Boolean(hasUx), hasCrm: Boolean(hasCrm),
           selectedAddons: Array.isArray(selectedAddons) ? selectedAddons : prev.selectedAddons
         }));
 
-        if (country === 'TR') {
+        if (!isAgencyPlugin() && country === 'TR') {
           setLanguage(Language.TR);
-        } else if (country === 'MT') {
+        } else if (!isAgencyPlugin() && country === 'MT') {
           setLanguage(Language.EN);
         }
 
@@ -209,16 +216,16 @@ const App: React.FC = () => {
             if (blob) {
               const reader = new FileReader();
               reader.onloadend = () => {
-                window.parent.postMessage({
+                sendHost({
                   type: 'PDF_GENERATED',
                   payload: { quotePdf: reader.result as string, fileName: 'Quote.pdf' }
-                }, '*');
+                });
               };
               reader.readAsDataURL(blob);
             }
           } catch (error) {
             console.error("PDF Generation Error:", error);
-            window.parent.postMessage({ type: 'PDF_GENERATED', payload: null }, '*');
+            sendHost({ type: 'PDF_GENERATED', payload: null });
           }
         })();
       }
@@ -249,16 +256,16 @@ const App: React.FC = () => {
             if (blob) {
               const reader = new FileReader();
               reader.onloadend = () => {
-                window.parent.postMessage({
+                sendHost({
                   type: 'PDF_GENERATED',
                   payload: { contractPdf: reader.result as string, fileName: 'Contract.pdf' }
-                }, '*');
+                });
               };
               reader.readAsDataURL(blob);
             }
           } catch (error) {
             console.error("PDF Generation Error:", error);
-            window.parent.postMessage({ type: 'PDF_GENERATED', payload: null }, '*');
+            sendHost({ type: 'PDF_GENERATED', payload: null });
           }
         })();
       }
@@ -267,6 +274,16 @@ const App: React.FC = () => {
     window.addEventListener('message', handleMessage);
     return () => window.removeEventListener('message', handleMessage);
   }, [pricingConfig, availableAddons, language, showToast]);
+
+  useEffect(() => {
+    if (!isAgencyPlugin()) return;
+    moduleApi('pricing-config').then(value => { setPricingConfig(value.config); setAvailableAddons(value.addons); moduleReady.current = true; setConnectionError(''); }).catch(error => setConnectionError(error.message));
+    window.__TAURUS_PRICING_SAVE__ = async payload => {
+      try { if (!moduleReady.current) throw new Error('Reconnect to the pricing service before saving. Your inputs are still available.'); await saveProposal(payload); showToast('success', 'Proposal and project saved. Final approval remains manual.'); }
+      catch (error) { const message = error instanceof Error ? error.message : 'Save failed.'; setConnectionError(message); showToast('error', message); }
+    };
+    return () => { delete window.__TAURUS_PRICING_SAVE__; };
+  }, [showToast]);
 
   // Handlers for Admin Updates
   const updateConfig = (newConfig: Record<Country, PricingRules>) => {
@@ -311,9 +328,9 @@ const App: React.FC = () => {
     // Update HTML lang attribute to ensure CSS text-transform works correctly (i -> I vs i -> İ)
     document.documentElement.lang = language === Language.TR ? 'tr' : 'en';
 
-    if (language === Language.TR) {
+    if (!isAgencyPlugin() && language === Language.TR) {
       setQuoteRequest(prev => ({ ...prev, country: Country.TR }));
-    } else {
+    } else if (!isAgencyPlugin()) {
       setQuoteRequest(prev => ({ ...prev, country: Country.MT }));
     }
   }, [language]);
@@ -381,16 +398,22 @@ const App: React.FC = () => {
             onUpdateAddons={updateAddons}
             onResetDefaults={resetDefaults}
             language={language}
+            onPersist={isAgencyPlugin() ? saveSettings : undefined}
           />
         );
       default:
-        return <Dashboard onNavigate={setCurrentView} language={language} />;
+        return <Dashboard onNavigate={setCurrentView} language={language} onRequestUpdate={setQuoteRequest} />;
     }
   };
 
   return (
     <div className="min-h-screen flex flex-col font-sans bg-black">
       <Navbar currentView={currentView} setView={setCurrentView} language={language} setLanguage={setLanguage} />
+      {connectionError && <div role="status" className="border-b border-[#FFD700]/20 bg-[#FFD700]/5 px-6 py-3 text-xs text-[#d7c87a] flex flex-wrap items-center gap-4">
+        <span>{connectionError}</span>
+        <button type="button" onClick={() => moduleApi('pricing-config').then(value => { setPricingConfig(value.config); setAvailableAddons(value.addons); moduleReady.current = true; setConnectionError(''); }).catch(error => setConnectionError(error.message))}>Retry connection</button>
+        <a href="https://omeryigitler.com/start-gateway.html?return=https%3A%2F%2Fstart.omeryigitler.com%2F%23agency%2Fpricing" target="_top">Renew Gateway session</a>
+      </div>}
       <main className="flex-grow">
         {renderView()}
       </main>

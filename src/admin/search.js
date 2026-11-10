@@ -18,12 +18,16 @@
             }
         }
 
+        function escapeAdminText(value) {
+            return String(value ?? '').replace(/[&<>"']/g, character => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[character]));
+        }
+
         function highlightMatch(text, query) {
-            if (!query) return text;
-            try {
-                const regex = new RegExp(`(${query})`, 'gi');
-                return String(text).replace(regex, '<span class="search-highlight">$1</span>');
-            } catch (e) { return text; }
+            const source = String(text ?? '');
+            if (!query) return escapeAdminText(source);
+            const literal = String(query).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            const parts = source.split(new RegExp(`(${literal})`, 'gi'));
+            return parts.map((part, index) => index % 2 ? `<span class="search-highlight">${escapeAdminText(part)}</span>` : escapeAdminText(part)).join('');
         }
 
         function filterMessages(f) {

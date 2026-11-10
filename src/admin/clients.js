@@ -101,8 +101,8 @@
                                         onchange="toggleClientSelection('${doc.id}', this.checked)">
                                 </td>
                                 <td class="p-4">
-                                    <div class="font-bold text-white group-hover:text-taurusGold transition-colors">${data.name || 'Unknown'}</div>
-                                    <div class="text-xs text-gray-500">${data.email}</div>
+                                    <div class="font-bold text-white group-hover:text-taurusGold transition-colors">${escapeAdminText(data.name || 'Unknown')}</div>
+                                    <div class="text-xs text-gray-500">${escapeAdminText(data.email)}</div>
                                 </td>
                                 <td class="p-4 text-center text-taurusGold font-bold">${data.totalMessages || 0}</td>
                                 <td class="p-4 text-center text-blue-400 font-bold">${data.totalQuotes || 0}</td>

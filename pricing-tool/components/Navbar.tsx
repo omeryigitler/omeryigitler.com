@@ -1,6 +1,7 @@
 import React from 'react';
 import { Calculator, FileText, LayoutDashboard, PenTool, ShieldCheck, ListTodo, Settings, Languages } from 'lucide-react';
 import { Language } from '../types';
+import { isAgencyPlugin } from '../host';
 import { TRANSLATIONS } from '../translations';
 
 interface NavbarProps {
@@ -28,7 +29,7 @@ const Navbar: React.FC<NavbarProps> = ({ currentView, setView, language, setLang
         <div className="flex justify-start items-center h-16">
           <div className="flex items-center gap-4">
             {/* Language Switcher */}
-            <div className="hidden md:flex bg-zinc-900 rounded-lg p-1 border border-zinc-700">
+            <div data-language-switcher className="hidden md:flex bg-zinc-900 rounded-lg p-1 border border-zinc-700">
               <button
                 onClick={() => setLanguage(Language.TR)}
                 className={`px-3 py-1.5 text-xs font-bold rounded-md transition-all focus:outline-none focus-visible:outline-none focus-visible:ring-0 ${language === Language.TR ? 'bg-zinc-700 text-white' : 'text-zinc-500 hover:text-white'}`}
@@ -43,7 +44,7 @@ const Navbar: React.FC<NavbarProps> = ({ currentView, setView, language, setLang
               </button>
             </div>
 
-            <div className="hidden md:flex space-x-1 items-center">
+            <div className="flex space-x-1 items-center">
               {navItems.map((item) => (
                 <button
                   key={item.id}
