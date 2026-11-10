@@ -583,6 +583,9 @@ async function handlePasskeyRegisterVerify(req, res, body) {
 
 async function handleAdminPage(req, res) {
   res.setHeader('Cache-Control', 'private, no-store');
+  // Only the existing Startpage may host the authenticated admin workspace.
+  // An enforced frame-ancestors directive takes precedence over X-Frame-Options.
+  res.setHeader('Content-Security-Policy', "frame-ancestors 'self' https://start.omeryigitler.com; base-uri 'self'; object-src 'none'");
   const sessionCookie = String(req.headers.cookie || '').split(';').map(v => v.trim()).find(v => v.startsWith('__Host-taurus_admin='))?.slice(20);
   try {
     if (!sessionCookie) throw new Error('No session');

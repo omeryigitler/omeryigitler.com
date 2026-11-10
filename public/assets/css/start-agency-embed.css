@@ -1,0 +1,16 @@
+/* Scoped to an authenticated admin document embedded by the Startpage. */
+.start-agency-embed body { background: #090d12; }
+.start-agency-embed #sidebar-menu,
+.start-agency-embed #admin-mobile-header,
+.start-agency-embed #admin-main > .ticker,
+.start-agency-embed #admin-main > header { display: none !important; }
+.start-agency-embed #admin-main { padding-top: 0 !important; }
+.start-agency-embed #admin-main > div { padding: 24px; }
+@media (max-width: 640px) {
+    .start-agency-embed #admin-main > div { padding: 12px; }
+}
+@media (prefers-reduced-motion: reduce) {
+    .start-agency-embed *, .start-agency-embed *::before, .start-agency-embed *::after {
+        animation-duration: .01ms !important; transition-duration: .01ms !important;
+    }
+}

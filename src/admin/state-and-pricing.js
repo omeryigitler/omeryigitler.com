@@ -334,6 +334,7 @@
                         setupRealtimeListeners();
                         loadTrafficChart();
                         startAutoPipelineListener();
+                        window.dispatchEvent(new Event('taurus:admin-ready'));
 
                         // Live Metadata Update
                         setInterval(() => {
