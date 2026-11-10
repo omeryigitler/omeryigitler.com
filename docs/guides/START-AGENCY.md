@@ -44,7 +44,7 @@ preview domains are intentionally not added to the trust boundary.
 
 ## Validation
 
-- 88 backend/security tests pass, including spoofed navigation, strict admin
+- 89 backend/security tests pass, including spoofed navigation, strict admin
   claims, revoked sessions, CORS, free-only accounting and idempotent CRM writes.
 - Portfolio `npm run quality` and Startpage production build pass.
 - 104 public built files match the current main baseline byte for byte; pricing module output and admin-only integration assets are excluded.

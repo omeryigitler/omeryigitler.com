@@ -58,3 +58,7 @@ test('contact-derived names and literal search text are escaped before HTML rend
  assert.equal(context.highlightMatch('A [literal] company','[literal]'),'A <span class="search-highlight">[literal]</span> company');
  assert.ok(!context.highlightMatch(value,'img').includes('<img'));
 });
+
+test('plain contact messages retain the existing ten-page default without changing explicit page counts',()=>{
+ assert.equal(normalizeRequest({name:'Example'}).pageCount,10);assert.equal(normalizeRequest({name:'Example',pageCount:1}).pageCount,1);
+});
