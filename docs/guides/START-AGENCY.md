@@ -90,3 +90,25 @@ planning described above. See [the audit and operational guide](../agency-runner
 for its exact capabilities, quotas, approval boundaries and verification limits.
 The private workspace now uses one Manrope font family and shell-owned section
 headings; the original public homepage typography remains unchanged.
+
+## Collection UI consistency
+
+Projects, Clients, Proposals and Inbox use one scoped collection layout: a 44px
+status/action toolbar, matching surfaces and a 320px empty state (280px at narrow
+widths). Selection actions appear only while records are selected. Filter state
+uses `aria-pressed`, independent of legacy utility-class mutations. Terminal label
+font rules now resolve to Manrope through the scoped `--admin-mono` variable;
+scanline overlays are disabled in the embedded workspace. Public pages are unaffected.
+
+The Startpage sidebar reuses the existing tightly cropped Taurus SVG mark, replacing
+the padded raster image. Its text contrast and shared surface colors match the
+collection modules. No authentication, API, pricing, pipeline, globe or Firestore
+behavior was changed.
+
+Browser QA used the actual shell, HTML, CSS, list renderers and filter functions
+with isolated synthetic snapshots. All four empty layouts were measured at the
+same 38px left inset, 44px toolbar and 320px empty-content height. Populated lists,
+filter changes, selection counts and 390px table/card layouts were also exercised.
+This does not claim a live authenticated customer-data test.
+
+![Collection UI in isolated QA](../agency-ui-consistency.png)

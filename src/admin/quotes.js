@@ -13,12 +13,13 @@
 
         function updateQuotesBulkUI() {
             const count = selectedQuotes.size;
+            updateCollectionSelection('quotes', count);
             const total = visibleQuoteIds.length;
             const countEl = document.getElementById('quotes-selected-count');
             const deleteBtn = document.getElementById('quotes-bulk-delete');
             const selectAll = document.getElementById('quotes-select-all');
 
-            if (countEl) countEl.innerText = `${count} Selected`;
+            if (countEl) countEl.innerText = `${count} selected`;
             if (deleteBtn) deleteBtn.disabled = count === 0;
             if (selectAll) {
                 selectAll.checked = total > 0 && count === total;
@@ -132,7 +133,7 @@
                     visibleQuoteIds = [];
 
                     if (snapshot.empty) {
-                        container.innerHTML = '<div class="col-span-full py-20 text-center text-gray-500 uppercase tracking-widest text-xs">No quotes yet.</div>';
+                        container.innerHTML = collectionEmptyState('No proposals yet', 'Prepare a proposal in Pricing, then manage its status here.', 'file');
                         selectedQuotes.clear();
                         updateQuotesBulkUI();
                         return;
@@ -157,11 +158,11 @@
 
                         const checkedAttr = selectedQuotes.has(quote.id) ? 'checked' : '';
                         const card = `
-                            <div class="bg-white/5 border border-white/10 rounded-3xl p-6 hover:border-[#FFD700]/30 transition-all cursor-pointer group">
+                            <div data-agency-card class="bg-white/5 border border-white/10 rounded-3xl p-6 hover:border-[#FFD700]/30 transition-all cursor-pointer group">
                                 <!-- Quote Number & Status -->
                                 <div class="flex justify-between items-start mb-4">
                                     <div class="flex items-center gap-2">
-                                        <input type="checkbox" class="quote-select-checkbox accent-[#FFD700]" ${checkedAttr}
+                                        <input type="checkbox" class="quote-select-checkbox accent-[#FFD700]" aria-label="Select proposal ${escapeAdminText(quote.quoteNumber || quote.id)}" ${checkedAttr}
                                             onclick="event.stopPropagation()" onchange="toggleQuoteSelection('${quote.id}', this.checked)">
                                         <h3 class="text-xl font-bold text-white group-hover:text-[#FFD700] transition-colors">${quote.quoteNumber || 'N/A'}</h3>
                                     </div>
@@ -190,7 +191,7 @@
                                 </div>
 
                                 <!-- Linked Project Badge -->
-                                ${quote.projectId ? '<div class="mt-3 flex items-center gap-2"><i data-lucide="rocket" class="w-3 h-3 text-green-400"></i><span class="text-xs text-green-400 font-bold">PROJECT CREATED</span></div>' : ''}
+                                ${quote.projectId ? '<div class="mt-3 flex items-center gap-2"><i data-lucide="rocket" class="w-3 h-3 text-green-400"></i><span class="text-xs text-green-400 font-bold">Project linked</span></div>' : ''}
 
                                 <!-- Actions -->
                                 <div class="mt-4 pt-4 border-t border-white/5 flex flex-wrap gap-2">
@@ -211,6 +212,7 @@
                         container.insertAdjacentHTML('beforeend', card);
                     });
 
+                    if (!visibleQuoteIds.length) container.innerHTML = collectionEmptyState('No matching proposals', 'Try another proposal status.', 'file');
                     pruneSelection(selectedQuotes, visibleQuoteIds);
                     updateQuotesBulkUI();
                     lucide.createIcons();
@@ -223,6 +225,7 @@
          */
         function filterQuotes(status) {
             currentQuoteFilter = status;
+            updateCollectionFilter('quotes', status);
 
             // Update button styles
             ['all', 'draft', 'sent', 'accepted'].forEach(s => {

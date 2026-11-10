@@ -17,7 +17,7 @@ input[type=radio]:checked:not(.hidden)::after { content: ''; width: 6px; height:
 input[type=checkbox]:indeterminate:not(.hidden)::after { content: ''; width: 8px; height: 2px; background: #FFD700; }
 .taurus-dialog-backdrop { position:fixed;inset:0;z-index:2147483000;display:grid;place-items:center;padding:20px;background:#000b;backdrop-filter:blur(14px);font-family:Manrope,system-ui,sans-serif; }
 .taurus-dialog { width:min(440px,100%);padding:28px;border:1px solid #FFD70035;border-radius:18px;background:#090806;box-shadow:0 30px 100px #0009;color:#f3f3ed; }
-.taurus-dialog h2 { margin:0 0 14px;font:700 15px Syncopate,Manrope,sans-serif;color:#FFD700; }
+.taurus-dialog h2 { margin:0 0 14px;font:700 17px Manrope,system-ui,sans-serif;color:#FFD700; }
 .taurus-dialog p { margin:0 0 22px;line-height:1.8;font-size:13px;color:#aaa99c;white-space:pre-wrap; }
 .taurus-dialog input { width:100%;padding:12px;border:1px solid #ffffff22;border-radius:8px;background:#050505;color:#f3f3ed;margin-bottom:20px;font:inherit; }
 .taurus-dialog-actions { display:flex;justify-content:flex-end;gap:8px; }

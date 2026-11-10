@@ -5,6 +5,7 @@
   "navigation.js",
   "workflow.js",
   "search.js",
+  "collection-ui.js",
   "client-records.js",
   "quote-records.js",
   "project-records.js",

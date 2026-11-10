@@ -312,63 +312,39 @@
                 </div>
             </div>
 
-            <!-- MESSAGES VIEW -->
-            <div id="view-messages" class="hidden space-y-6 fade-in">
-                <!-- Standardized Header -->
-                <div class="mb-2">
-                    <h2 data-agency-section-title class="text-3xl font-display font-bold text-white uppercase">COMMUNICATIONS HUB <span
-                            class="text-taurusGold text-sm align-middle font-body ml-2 uppercase tracking-widest border border-taurusGold/30 px-2 py-1 rounded text-[10px]">V1.0</span>
-                    </h2>
-                    <p class="text-[10px] text-gray-500 uppercase tracking-widest mt-1">Customer messages</p>
-                </div>
-
-                <!-- Message Headers (Desktop) / Summary (Mobile) -->
-                <div class="flex flex-col md:flex-row justify-end items-end md:items-center gap-4 mb-2">
-                    <div
-                        class="flex items-center gap-1 bg-white/5 p-1 rounded-xl border border-white/10 w-full md:w-fit">
-                        <button onclick="filterMessages('all')" id="filter-all-messages"
-                            class="flex-1 justify-center px-6 py-2 rounded-lg bg-taurusGold text-black text-[10px] font-black uppercase tracking-widest whitespace-nowrap transition-all">All
-                            Messages</button>
-                        <button onclick="filterMessages('unread')" id="filter-unread-messages"
-                            class="flex-1 justify-center px-6 py-2 rounded-lg text-gray-400 text-[10px] font-black uppercase tracking-widest whitespace-nowrap hover:text-white transition-all">Unread</button>
+            <!-- INBOX -->
+            <div id="view-messages" class="hidden fade-in" data-agency-collection="messages">
+                <div data-agency-toolbar>
+                    <div data-agency-filters="messages" role="group" aria-label="Message status">
+                        <button id="filter-all-messages" type="button" data-filter="all" aria-pressed="true" onclick="filterMessages('all')">All messages</button>
+                        <button id="filter-unread-messages" type="button" data-filter="unread" aria-pressed="false" onclick="filterMessages('unread')">Unread</button>
                     </div>
+                    <span data-agency-context>Incoming enquiries</span>
                 </div>
-
-                <!-- Bulk Actions -->
-                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
-                    <div class="flex items-center gap-3 text-[10px] uppercase tracking-widest text-gray-500">
-                        <label
-                            class="flex items-center gap-2 px-3 py-2 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 transition-all">
-                            <input id="messages-select-all" type="checkbox" class="accent-[#FFD700]"
-                                onchange="toggleSelectAllMessages(this.checked)">
-                            Select All
-                        </label>
-                        <span id="messages-selected-count"
-                            class="px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-gray-400">0
-                            Selected</span>
+                <div data-agency-bulk="messages" data-selection-count="0" role="region" aria-label="Messages selection">
+                    <div data-agency-selection>
+                        <label><input id="messages-select-all" type="checkbox" aria-label="Select all messages" onchange="toggleSelectAllMessages(this.checked)">Select all</label>
+                        <span id="messages-selected-count" aria-live="polite">0 selected</span>
                     </div>
-                    <button id="messages-bulk-delete" onclick="bulkDeleteMessages()" disabled
-                        class="px-4 py-2 rounded-lg bg-red-500/10 text-red-500 border border-red-500/20 text-[10px] font-bold uppercase tracking-widest hover:bg-red-500 hover:text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed">
-                        Delete Selected
-                    </button>
+                    <button id="messages-bulk-delete" onclick="bulkDeleteMessages()" disabled data-agency-action="danger">Delete selected</button>
                 </div>
 
                 <!-- Desktop Table View -->
                 <div
-                    class="hidden lg:block w-full bg-white/5 border border-glassBorder rounded-3xl overflow-hidden backdrop-blur-md">
+                    data-agency-table class="hidden lg:block w-full">
                     <table class="inbox-table-fixed text-left">
                         <thead>
                             <tr
                                 class="bg-white/5 border-b border-white/5 text-[10px] font-black uppercase tracking-[0.2em] text-gray-500">
                                 <th class="p-4 w-select text-center">
-                                    <input id="messages-select-all-top" type="checkbox" class="accent-[#FFD700]"
+                                    <input id="messages-select-all-top" type="checkbox" aria-label="Select all messages" class="accent-[#FFD700]"
                                         onchange="toggleSelectAllMessages(this.checked)">
                                 </th>
-                                <th class="p-4 w-status">STATUS</th>
-                                <th class="p-4 w-sender">SENDER</th>
-                                <th class="p-4 w-message">MESSAGE</th>
-                                <th class="p-4 w-date">DATE</th>
-                                <th class="p-4 w-actions text-right">ACTIONS</th>
+                                <th class="p-4 w-status">Status</th>
+                                <th class="p-4 w-sender">Sender</th>
+                                <th class="p-4 w-message">Message</th>
+                                <th class="p-4 w-date">Date</th>
+                                <th class="p-4 w-actions text-right">Actions</th>
                             </tr>
                         </thead>
                         <tbody id="messages-tbody-desktop" class="text-sm text-gray-300">
@@ -378,7 +354,7 @@
                 </div>
 
                 <!-- Mobile/Tablet Card View -->
-                <div id="messages-mobile-container" class="lg:hidden space-y-4">
+                <div id="messages-mobile-container" class="lg:hidden space-y-4" data-agency-mobile-list>
                     <!-- JS Loaded -->
                 </div>
             </div>
@@ -410,62 +386,27 @@
                 </div>
             </div>
 
-            <!-- PROJECTS VIEW -->
-            <!-- QUOTES VIEW (NEW) -->
-            <div id="view-quotes" class="hidden fade-in flex flex-col h-full overflow-auto space-y-8">
-                <!-- Header -->
-                <div class="flex justify-between items-center">
-                    <div>
-                        <h1 data-agency-section-title class="text-3xl font-display font-black text-white uppercase tracking-wider mb-2">
-                            PROPOSALS
-                        </h1>
-                            <p class="text-[10px] text-gray-500 uppercase tracking-widest">
-                                Draft → Sent → Accepted
-                            </p>
-                        </div>
-
-                        <!-- Filter Buttons -->
-                        <div class="flex gap-2">
-                            <button onclick="filterQuotes('all')" id="filter-quotes-all"
-                                class="px-4 py-2 bg-white/10 hover:bg-white/20 rounded-lg text-white text-xs uppercase tracking-wider transition-all">
-                                All
-                            </button>
-                            <button onclick="filterQuotes('draft')" id="filter-quotes-draft"
-                                class="px-4 py-2 bg-white/5 hover:bg-white/10 rounded-lg text-white text-xs uppercase tracking-wider transition-all">
-                                Draft
-                            </button>
-                            <button onclick="filterQuotes('sent')" id="filter-quotes-sent"
-                                class="px-4 py-2 bg-white/5 hover:bg-white/10 rounded-lg text-white text-xs uppercase tracking-wider transition-all">
-                                Sent
-                            </button>
-                            <button onclick="filterQuotes('accepted')" id="filter-quotes-accepted"
-                                class="px-4 py-2 bg-white/5 hover:bg-white/10 rounded-lg text-white text-xs uppercase tracking-wider transition-all">
-                                Accepted
-                            </button>
-                        </div>
+            <!-- PROPOSALS -->
+            <div id="view-quotes" class="hidden fade-in" data-agency-collection="quotes">
+                <div data-agency-toolbar>
+                    <div data-agency-filters="quotes" role="group" aria-label="Proposal status">
+                        <button id="filter-quotes-all" type="button" data-filter="all" aria-pressed="true" onclick="filterQuotes('all')">All</button>
+                        <button id="filter-quotes-draft" type="button" data-filter="draft" aria-pressed="false" onclick="filterQuotes('draft')">Draft</button>
+                        <button id="filter-quotes-sent" type="button" data-filter="sent" aria-pressed="false" onclick="filterQuotes('sent')">Sent</button>
+                        <button id="filter-quotes-accepted" type="button" data-filter="accepted" aria-pressed="false" onclick="filterQuotes('accepted')">Accepted</button>
                     </div>
-
-                <!-- Bulk Actions -->
-                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                    <div class="flex items-center gap-3 text-[10px] uppercase tracking-widest text-gray-500">
-                        <label
-                            class="flex items-center gap-2 px-3 py-2 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 transition-all">
-                                <input id="quotes-select-all" type="checkbox" class="accent-[#FFD700]"
-                                    onchange="toggleSelectAllQuotes(this.checked)">
-                                Select All
-                            </label>
-                            <span id="quotes-selected-count"
-                                class="px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-gray-400">0
-                                Selected</span>
-                        </div>
-                        <button id="quotes-bulk-delete" onclick="bulkDeleteQuotes()" disabled
-                            class="px-4 py-2 rounded-lg bg-red-500/10 text-red-500 border border-red-500/20 text-[10px] font-bold uppercase tracking-widest hover:bg-red-500 hover:text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed">
-                            Delete Selected
-                        </button>
+                    <button type="button" data-agency-action="primary" onclick="switchTab('pricing')"><i data-lucide="plus"></i>New proposal</button>
+                </div>
+                <div data-agency-bulk="quotes" data-selection-count="0" role="region" aria-label="Proposal selection">
+                    <div data-agency-selection>
+                        <label><input id="quotes-select-all" type="checkbox" aria-label="Select all proposals" onchange="toggleSelectAllQuotes(this.checked)">Select all</label>
+                        <span id="quotes-selected-count" aria-live="polite">0 selected</span>
                     </div>
+                    <button id="quotes-bulk-delete" onclick="bulkDeleteQuotes()" disabled data-agency-action="danger">Delete selected</button>
+                </div>
 
                 <!-- Quotes Grid -->
-                <div id="quotes-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div id="quotes-grid" data-agency-grid class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
                     <!-- Quotes will be loaded here -->
                     <div class="col-span-full py-20 text-center text-gray-500 uppercase tracking-widest text-xs">
                         Loading quotes...
@@ -473,69 +414,43 @@
                 </div>
             </div>
 
-            <div id="view-projects" class="hidden fade-in flex flex-col h-full">
-                <!-- Toolbar -->
-                <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-6">
-                    <div>
-                        <h2 data-agency-section-title class="text-3xl font-display font-bold text-white uppercase">PROJECTS</h2>
-                        <p class="text-[10px] text-gray-500 uppercase tracking-widest mt-1">Active work and archive</p>
+            <div id="view-projects" class="hidden fade-in" data-agency-collection="projects">
+                <div data-agency-toolbar>
+                    <div data-agency-filters="projects" role="group" aria-label="Project status">
+                        <button id="filter-active" type="button" data-filter="active" aria-pressed="true" onclick="filterProjects('active')">Active</button>
+                        <button id="filter-completed" type="button" data-filter="completed" aria-pressed="false" onclick="filterProjects('completed')">Archived</button>
                     </div>
-                    <div class="flex flex-col md:flex-row items-stretch md:items-center gap-3 w-full md:w-auto">
-                        <div class="h-11 flex bg-white/5 rounded-xl p-1 border border-white/10 w-full md:w-auto">
-                            <button onclick="filterProjects('active')" id="filter-active"
-                                class="h-full flex-1 justify-center px-6 rounded-lg text-[10px] font-black uppercase tracking-widest bg-taurusGold text-black transition-all whitespace-nowrap">Active</button>
-                            <button onclick="filterProjects('completed')" id="filter-completed"
-                                class="h-full flex-1 justify-center px-6 rounded-lg text-[10px] font-black uppercase tracking-widest text-gray-400 hover:text-white transition-all whitespace-nowrap">Archived</button>
-                        </div>
-                        <button onclick="openProjectModal()"
-                            class="h-11 px-6 bg-taurusGold/10 border border-taurusGold/30 text-taurusGold hover:bg-taurusGold hover:text-black rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2 whitespace-nowrap">
-                            <i data-lucide="plus" class="w-4 h-4"></i> New Project
-                        </button>
-                    </div>
+                    <button type="button" onclick="openProjectModal()" data-agency-action="primary"><i data-lucide="plus"></i>New project</button>
                 </div>
 
                 <!-- Projects Grid -->
-                <div id="projects-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 pb-20">
+                <div id="projects-grid" data-agency-grid class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
                     <!-- Dynamic Project Cards -->
                 </div>
             </div>
 
-            <!-- CLIENTS VIEW -->
-            <div id="view-clients" class="hidden fade-in flex flex-col h-full">
-                <!-- Header -->
-                <div class="mb-6">
-                    <h2 data-agency-section-title class="text-3xl font-display font-bold text-white uppercase">CLIENTS</h2>
-                    <p id="clients-summary" class="text-[10px] text-gray-500 uppercase tracking-widest mt-1">All clients with their history</p>
+            <!-- CLIENTS -->
+            <div id="view-clients" class="hidden fade-in" data-agency-collection="clients">
+                <div data-agency-toolbar>
+                    <span id="clients-summary" data-agency-context>Client relationships and history</span>
                 </div>
-
-                <!-- Bulk Actions -->
-                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
-                    <div class="flex items-center gap-3 text-[10px] uppercase tracking-widest text-gray-500">
-                        <label
-                            class="flex items-center gap-2 px-3 py-2 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 transition-all">
-                            <input id="clients-select-all" type="checkbox" class="accent-[#FFD700]"
-                                onchange="toggleSelectAllClients(this.checked)">
-                            Select All
-                        </label>
-                        <span id="clients-selected-count"
-                            class="px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-gray-400">0
-                            Selected</span>
+                <div data-agency-bulk="clients" data-selection-count="0" role="region" aria-label="Clients selection">
+                    <div data-agency-selection>
+                        <label><input id="clients-select-all" type="checkbox" aria-label="Select all clients" onchange="toggleSelectAllClients(this.checked)">Select all</label>
+                        <span id="clients-selected-count" aria-live="polite">0 selected</span>
                     </div>
-                    <button id="clients-bulk-delete" onclick="bulkDeleteClients()" disabled
-                        class="px-4 py-2 rounded-lg bg-red-500/10 text-red-500 border border-red-500/20 text-[10px] font-bold uppercase tracking-widest hover:bg-red-500 hover:text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed">
-                        Delete Selected
-                    </button>
+                    <button id="clients-bulk-delete" onclick="bulkDeleteClients()" disabled data-agency-action="danger">Delete selected</button>
                 </div>
 
                 <!-- Clients Table -->
-                <div class="flex-1 overflow-auto">
-                    <div class="bg-white/5 border border-white/10 rounded-2xl overflow-hidden">
+                <div data-agency-table class="overflow-auto">
+                    <div>
                         <table class="w-full text-left">
                             <thead class="sticky top-0 bg-black/50 backdrop-blur">
                                 <tr
                                     class="text-gray-500 text-[10px] font-bold uppercase tracking-widest border-b border-white/5">
                                     <th class="p-4 text-center">
-                                        <input id="clients-select-all-top" type="checkbox" class="accent-[#FFD700]"
+                                        <input id="clients-select-all-top" type="checkbox" aria-label="Select all clients" class="accent-[#FFD700]"
                                             onchange="toggleSelectAllClients(this.checked)">
                                     </th>
                                     <th class="p-4">Client</th>

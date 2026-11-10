@@ -14,8 +14,8 @@
                     visibleMessageIds = [];
                     selectedMessages.clear();
                     updateMessagesBulkUI();
-                    desktopBody.innerHTML = '<tr><td colspan="6" class="p-10 text-center text-gray-500 uppercase tracking-widest text-[10px]">Neural link empty. No messages.</td></tr>';
-                    mobileContainer.innerHTML = '<div class="p-10 text-center text-gray-600 uppercase tracking-widest text-[10px]">No incoming signals found.</div>';
+                    desktopBody.innerHTML = `<tr><td colspan="6" class="agency-empty-cell">${collectionEmptyState('Your inbox is clear', 'New enquiries from your website will appear here.', 'inbox')}</td></tr>`;
+                    mobileContainer.innerHTML = collectionEmptyState('Your inbox is clear', 'New enquiries from your website will appear here.', 'inbox');
                     if (recentLeadsContainer) recentLeadsContainer.innerHTML = '<p class="text-[10px] text-gray-600 uppercase text-center py-4">No leads detected</p>';
                     return;
                 }
@@ -86,7 +86,7 @@
                     desktopHtml += `
                         <tr onclick="openMessageModal('${id}')" class="border-b border-white/5 hover:bg-white/5 transition-all group cursor-pointer">
                             <td class="p-4 w-select text-center" onclick="event.stopPropagation()">
-                                <input type="checkbox" data-message-select="${id}" class="accent-[#FFD700]" ${isSelected ? 'checked' : ''} onchange="toggleMessageSelection('${id}', this.checked)">
+                                <input type="checkbox" data-message-select="${id}" class="accent-[#FFD700]" aria-label="Select message from ${escapeAdminText(data.name || 'sender')}" ${isSelected ? 'checked' : ''} onchange="toggleMessageSelection('${id}', this.checked)">
                             </td>
                             <td class="p-4 w-status">
                                 ${isNew ? '<span class="px-2 py-0.5 rounded-full border border-taurusGold/50 text-taurusGold text-[9px] font-black uppercase">Unread</span>' : '<span class="px-2 py-0.5 rounded-full bg-white/5 text-gray-500 text-[9px] font-black uppercase">Archived</span>'}
@@ -119,7 +119,7 @@
                             ${isNew ? '<div class="absolute top-0 right-0 p-2"><div class="w-2 h-2 bg-taurusGold rounded-full animate-pulse shadow-[0_0_8px_rgba(255,215,0,0.6)]"></div></div>' : ''}
                             <div class="flex items-center gap-4 mb-4">
                                 <div onclick="event.stopPropagation()" class="shrink-0">
-                                    <input type="checkbox" data-message-select="${id}" class="accent-[#FFD700]" ${isSelected ? 'checked' : ''} onchange="toggleMessageSelection('${id}', this.checked)">
+                                    <input type="checkbox" data-message-select="${id}" class="accent-[#FFD700]" aria-label="Select message from ${escapeAdminText(data.name || 'sender')}" ${isSelected ? 'checked' : ''} onchange="toggleMessageSelection('${id}', this.checked)">
                                 </div>
                                 <div class="w-12 h-12 rounded-full flex items-center justify-center bg-white/5 border border-white/10 text-taurusGold shadow-lg">
                                     <i data-lucide="user" class="w-6 h-6"></i>
@@ -144,8 +144,8 @@
                 });
 
                 if (!visibleMessageIds.length) {
-                    desktopHtml = '<tr><td colspan="6" class="p-10 text-center text-gray-500 uppercase tracking-widest text-[10px]">No visitor messages found.</td></tr>';
-                    mobileHtml = '<div class="p-10 text-center text-gray-600 uppercase tracking-widest text-[10px]">No incoming visitor messages found.</div>';
+                    desktopHtml = `<tr><td colspan="6" class="agency-empty-cell">${collectionEmptyState(currentMessageFilter === 'unread' ? 'No unread messages' : 'Your inbox is clear', 'New enquiries from your website will appear here.', 'inbox')}</td></tr>`;
+                    mobileHtml = collectionEmptyState(currentMessageFilter === 'unread' ? 'No unread messages' : 'Your inbox is clear', 'New enquiries from your website will appear here.', 'inbox');
                 }
 
                 if (desktopBody) desktopBody.innerHTML = desktopHtml;
@@ -159,13 +159,14 @@
 
         function updateMessagesBulkUI() {
             const count = selectedMessages.size;
+            updateCollectionSelection('messages', count);
             const total = visibleMessageIds.length;
             const countEl = document.getElementById('messages-selected-count');
             const deleteBtn = document.getElementById('messages-bulk-delete');
             const selectAll = document.getElementById('messages-select-all');
             const selectAllTop = document.getElementById('messages-select-all-top');
 
-            if (countEl) countEl.innerText = `${count} Selected`;
+            if (countEl) countEl.innerText = `${count} selected`;
             if (deleteBtn) deleteBtn.disabled = count === 0;
             [selectAll, selectAllTop].forEach(el => {
                 if (!el) return;
