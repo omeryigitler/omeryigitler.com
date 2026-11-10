@@ -82,3 +82,11 @@ automatically. PDFs remain generated on demand from the existing project tools.
 ![Verified pricing UI with synthetic example data](../agency-pricing-preview.png)
 
 Contact-derived names, email addresses and search highlights are escaped at HTML rendering boundaries before being displayed in the operations module.
+
+## Research runner follow-up
+
+The typed, on-demand directory/research/concept runner supersedes the paused-only
+planning described above. See [the audit and operational guide](../agency-runner-audit.md)
+for its exact capabilities, quotas, approval boundaries and verification limits.
+The private workspace now uses one Manrope font family and shell-owned section
+headings; the original public homepage typography remains unchanged.

@@ -15,10 +15,21 @@
     }
 }
 .start-agency-embed body { font-family: Manrope, system-ui, sans-serif; color: #f3f3ed; background: #050505; }
-.start-agency-embed .font-display { font-family: Syncopate, Manrope, sans-serif; }
-.start-agency-embed .font-mono { font-family: 'JetBrains Mono', monospace; }
 .start-agency-embed #admin-main { background: radial-gradient(ellipse at 60% 0, #FFD70004, transparent 50%), #050505; }
 .start-agency-embed [class*="bg-zinc-900"], .start-agency-embed [class*="bg-slate-900"] { background-color: #0c0b08; }
 .start-agency-embed .glass-panel, .start-agency-embed .content-view { border-color: #ffffff12; }
 .start-agency-embed #admin-main .text-3xl { font-size: clamp(18px, 1.6vw, 26px); }
 .start-agency-embed #admin-main .main-scroll { padding-top: 25px; }
+
+/* One workspace typeface and one section heading: the parent owns the title. */
+.start-agency-embed { --workspace-font: Manrope, system-ui, sans-serif; }
+.start-agency-embed body, .start-agency-embed .font-display, .start-agency-embed .font-mono,
+.start-agency-embed button, .start-agency-embed input, .start-agency-embed select,
+.start-agency-embed textarea, .start-agency-embed h1, .start-agency-embed h2,
+.start-agency-embed h3 { font-family: var(--workspace-font) !important; }
+.start-agency-embed [data-agency-section-title],
+.start-agency-embed [data-agency-section-title] + p { display: none !important; }
+.start-agency-embed [class*="tracking-"] { letter-spacing: .025em; }
+.start-agency-embed #admin-main [class*="justify-between"]:has(> div > [data-agency-section-title]) { justify-content: flex-end; }
+.start-agency-embed #admin-main [class*="justify-between"]:has(> div > [data-agency-section-title]) > div:has(> [data-agency-section-title]) { display: none; }
+.start-agency-embed * { scrollbar-width: thin; scrollbar-color: #665918 #080704; }

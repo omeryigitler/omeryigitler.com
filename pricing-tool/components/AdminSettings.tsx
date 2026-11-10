@@ -191,7 +191,7 @@ const AdminSettings: React.FC<Props> = ({ config, addons, onUpdateConfig, onUpda
     <div className="max-w-7xl mx-auto px-4 py-12">
       <div className="flex justify-between items-center mb-8">
         <div>
-          <h1 className="text-3xl font-bold text-white font-poppins">{t.title}</h1>
+          <h1 data-pricing-title className="text-3xl font-bold text-white font-poppins">{t.title}</h1>
           <p className="text-zinc-500">{t.subtitle}</p>
         </div>
         <div className="flex space-x-3">
