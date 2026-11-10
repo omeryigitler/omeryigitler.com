@@ -49,3 +49,12 @@ test('a stale pricing configuration cannot silently save a different total',asyn
  await assert.rejects(service.save({requestId:'manual-version-test',pricingVersion:before.version,request:{customerName:'Example',country:'MT'}},{id:'admin'}),{code:'pricing_changed'});
  assert.equal([...db.data.keys()].filter(key=>key.startsWith('quotes/')).length,0);
 });
+
+test('contact-derived names and literal search text are escaped before HTML rendering',()=>{
+ const vm=require('node:vm'),fs=require('node:fs'),context={};
+ vm.runInNewContext(fs.readFileSync('src/admin/search.js','utf8'),context);
+ const value='<img src=x onerror=alert(1)> & \"quoted\"';
+ assert.equal(context.highlightMatch(value,''),'&lt;img src=x onerror=alert(1)&gt; &amp; &quot;quoted&quot;');
+ assert.equal(context.highlightMatch('A [literal] company','[literal]'),'A <span class="search-highlight">[literal]</span> company');
+ assert.ok(!context.highlightMatch(value,'img').includes('<img'));
+});

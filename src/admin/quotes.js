@@ -178,8 +178,8 @@
 
                                 <!-- Client Info -->
                                 <div class="mb-4">
-                                    <p class="text-gray-300 text-sm font-medium">${quote.clientName || 'Unknown'}</p>
-                                    <p class="text-gray-500 text-xs font-mono">${quote.clientEmail || 'No email'}</p>
+                                    <p class="text-gray-300 text-sm font-medium">${escapeAdminText(quote.clientName || 'Unknown')}</p>
+                                    <p class="text-gray-500 text-xs font-mono">${escapeAdminText(quote.clientEmail || 'No email')}</p>
                                     ${quote.siteType ? `<p class="text-gray-400 text-xs mt-1">${quote.siteType}</p>` : ''}
                                 </div>
 

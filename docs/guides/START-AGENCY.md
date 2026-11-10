@@ -44,7 +44,7 @@ preview domains are intentionally not added to the trust boundary.
 
 ## Validation
 
-- 87 backend/security tests pass, including spoofed navigation, strict admin
+- 88 backend/security tests pass, including spoofed navigation, strict admin
   claims, revoked sessions, CORS, free-only accounting and idempotent CRM writes.
 - Portfolio `npm run quality` and Startpage production build pass.
 - 104 public built files match the current main baseline byte for byte; pricing module output and admin-only integration assets are excluded.
@@ -80,3 +80,5 @@ creation pipeline. No proposal is sent, project finalized or contract accepted
 automatically. PDFs remain generated on demand from the existing project tools.
 
 ![Verified pricing UI with synthetic example data](../agency-pricing-preview.png)
+
+Contact-derived names, email addresses and search highlights are escaped at HTML rendering boundaries before being displayed in the operations module.
