@@ -108,7 +108,7 @@ function publicError(error) {
 module.exports = async function handler(req, res) {
   const action = String(req.query?.action || "").trim().toLowerCase();
   const getActions = new Set(["status", "todos", "agenda", "studio-status", "studio-records", "studio-pricing-config", "studio-runner-status"]);
-  const postActions = new Set(["command", "approve", "todo", "event", "studio-settings", "studio-save", "studio-transition", "studio-pricing-save", "studio-pricing-settings", "studio-lead-process", "studio-enqueue", "studio-run", "studio-draft-decision"]);
+  const postActions = new Set(["command", "approve", "todo", "event", "studio-settings", "studio-save", "studio-transition", "studio-history", "studio-pricing-save", "studio-pricing-settings", "studio-lead-process", "studio-enqueue", "studio-run", "studio-draft-decision"]);
   if (!getActions.has(action) && !postActions.has(action)) {
     return sendJson(res, 404, { ok: false, code: "unknown_action", error: "Unknown agent action." });
   }
@@ -156,6 +156,7 @@ module.exports = async function handler(req, res) {
     }
 
     const body = await readJson(req);
+    if (action === 'studio-history') return sendJson(res, 200, { ok: true, ...await require('../lib/studio-history').change(body, actor) });
     if (action === 'studio-enqueue') return sendJson(res, 200, { ok: true, ...await require('../lib/studio-runner').service().enqueue(body, actor) });
     if (action === 'studio-run') return sendJson(res, 200, { ok: true, ...await require('../lib/studio-runner').service().run(body.id, actor) });
     if (action === 'studio-draft-decision') return sendJson(res, 200, { ok: true, ...await require('../lib/studio-runner').service().decide(body, actor) });

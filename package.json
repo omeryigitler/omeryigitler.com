@@ -10,7 +10,7 @@
     "build:react": "vite build",
     "build:css": "npx tailwindcss -i ./src/input.css -o ./public/assets/css/styles.css --minify",
     "watch:css": "npx tailwindcss -i ./src/input.css -o ./public/assets/css/styles.css --watch",
-    "build": "npm run build:admin && npm run build:react && npm run build:css && npm run build:pricing && node scripts/generate-social-preview.js && node scripts/prepare-public.js && node scripts/check-telegram-secrets.js",
+    "build": "npm run build:admin && npm run build:react && npm run build:css && npm run build:pricing && node scripts/generate-social-preview.js && node scripts/prepare-public.js && node scripts/check-telegram-secrets.js && node scripts/cleanup-studio-history.js",
     "deploy": "vercel --prod",
     "test": "node --test test/*.test.js",
     "quality": "npm run test && npm run typecheck && npm run check:syntax && npm run build",

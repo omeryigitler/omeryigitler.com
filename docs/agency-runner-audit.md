@@ -1,5 +1,25 @@
 # Agency audit and research runner
 
+## Requested history removal · 11 November 2026
+
+Finished, failed and cancelled runs can be removed from Run history and restored
+with Undo. This retains the underlying run evidence, linked companies, concepts
+and attempt counts; it writes only history visibility fields and an audit entry.
+Queued/running/paused tasks and pending reviews must be resolved before removal.
+Archived runs cannot be restarted by an old browser tab. The new POST action
+uses the same admin session, Origin policy and isolated-preview gate.
+
+The user also explicitly requested removal of the one old Sliema hotel search.
+`scripts/cleanup-studio-history.js` performs that operation once at the end of a
+reviewed Vercel production build using the existing server identity. It does not
+run locally, in CI or in previews, and no credentials are copied to the workspace.
+It requires exactly one finished discovery run for MT/Sliema/hospitality created
+before the discovery correction (11 November, 12:00 UTC); zero/multiple matches
+stop cleanup without modifying any run. A persisted receipt prevents repeat
+cleanup, including after an operator restores that entry. The production log
+reports only the removed run ID and verified visibility result. Remove this
+completed migration hook during a future routine maintenance release.
+
 ## Baseline audit · 10 November 2026
 
 The production portfolio deployment `f86e3cb` and Startpage `30d8917` were both
