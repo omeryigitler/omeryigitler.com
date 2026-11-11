@@ -1,0 +1,26 @@
+name: Live directory check
+on:
+  pull_request:
+    paths:
+      - 'lib/studio-discovery.js'
+      - 'lib/studio-runner.js'
+      - 'scripts/check-studio-directory.js'
+      - '.github/workflows/studio-directory.yml'
+permissions:
+  contents: read
+concurrency:
+  group: studio-directory-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  source-check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: 26
+      - name: Verify Sliema hospitality discovery using real public data
+        run: node scripts/check-studio-directory.js
