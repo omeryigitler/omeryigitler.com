@@ -139,3 +139,16 @@ test('new API actions retain authentication, origin and preview checks; file rea
   const detail=await s.service.get(ID);assert.equal('lease' in detail.workflow,false);assert.equal('actions' in detail.workflow,false);assert.equal(JSON.stringify(detail).includes('base64'),false);
 });
 
+
+test('explicit AI retries receive separate bounded task reservations while replay remains protected', async () => {
+  const ids=[];let fail=true;
+  const s=setup({model:{async research(company,taskId){ids.push(taskId);if(fail)throw Object.assign(Error('Retry the provider.'),{code:'provider_error',statusCode:503});return research;}}});
+  let v=await s.service.start(ID,actor);await assert.rejects(s.act(v),{code:'provider_error'});
+  fail=false;v=await s.act(v);assert.equal(v.workflow.state,'research_review');assert.notEqual(ids[0],ids[1]);assert.ok(ids.every(id=>/^[a-zA-Z0-9_-]{1,100}$/.test(id)));assert.equal(s.stats().emails,0);
+});
+test('setting a company aside can be undone without advancing a review or sending mail', async () => {
+  const s=setup();let v=await s.service.start(ID,actor);v=await s.act(v);assert.equal(v.workflow.state,'research_review');
+  v=await s.act(v,'skip');assert.equal(v.workflow.state,'skipped');
+  v=await s.act(v,'resume');assert.equal(v.workflow.state,'research_review');assert.equal(s.stats().emails,0);assert.equal(s.stats().calls,1);
+});
+
