@@ -1,5 +1,8 @@
 # Agency audit and research runner
 
+The new Continue workflow is described in [agency-continue-workflow.md](agency-continue-workflow.md).
+The template/score runner below is retained for earlier concepts; new automation discovery uses AI research checkpoints.
+
 ## Requested history removal · 11 November 2026
 
 Finished, failed and cancelled runs can be removed from Run history and restored

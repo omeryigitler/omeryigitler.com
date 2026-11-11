@@ -107,8 +107,8 @@ function publicError(error) {
 
 module.exports = async function handler(req, res) {
   const action = String(req.query?.action || "").trim().toLowerCase();
-  const getActions = new Set(["status", "todos", "agenda", "studio-status", "studio-records", "studio-pricing-config", "studio-runner-status"]);
-  const postActions = new Set(["command", "approve", "todo", "event", "studio-settings", "studio-save", "studio-transition", "studio-history", "studio-pricing-save", "studio-pricing-settings", "studio-lead-process", "studio-enqueue", "studio-run", "studio-draft-decision"]);
+  const getActions = new Set(["status", "todos", "agenda", "studio-status", "studio-records", "studio-pricing-config", "studio-runner-status", "studio-workflow", "studio-workflow-file"]);
+  const postActions = new Set(["command", "approve", "todo", "event", "studio-settings", "studio-save", "studio-transition", "studio-history", "studio-pricing-save", "studio-pricing-settings", "studio-lead-process", "studio-enqueue", "studio-run", "studio-draft-decision", "studio-workflow-action", "studio-ai-verify"]);
   if (!getActions.has(action) && !postActions.has(action)) {
     return sendJson(res, 404, { ok: false, code: "unknown_action", error: "Unknown agent action." });
   }
@@ -134,7 +134,18 @@ module.exports = async function handler(req, res) {
 
     if (action === 'studio-status') {
       const result = await require('../lib/studio-ai').engine().status();
-      return sendJson(res, 200, { ok: true, ...result, runner: await require('../lib/studio-runner').service().status() });
+      return sendJson(res, 200, { ok: true, ...result, runner: await require('../lib/studio-runner').service().status(), mail: require('../lib/studio-mail').createMail().status() });
+    }
+    if (action === 'studio-workflow') return sendJson(res, 200, { ok: true, ...await require('../lib/studio-workflows').service().get(String(req.query?.id || '')) });
+    if (action === 'studio-workflow-file') {
+      const file = await require('../lib/studio-workflows').service().file(String(req.query?.id || ''), String(req.query?.file || ''));
+      res.statusCode = 200;
+      res.setHeader('Cache-Control', 'no-store');
+      res.setHeader('Content-Type', file.type);
+      res.setHeader('Content-Disposition', `attachment; filename="${file.name}"`);
+      res.setHeader('X-Content-Type-Options', 'nosniff');
+      res.setHeader('Content-Security-Policy', "default-src 'none'; sandbox");
+      return res.end(Buffer.from(file.base64, 'base64'));
     }
     if (action === 'studio-records') {
       const result = await require('../lib/studio-records').list();
@@ -156,6 +167,8 @@ module.exports = async function handler(req, res) {
     }
 
     const body = await readJson(req);
+    if (action === 'studio-ai-verify') return sendJson(res, 200, { ok: true, ...await require('../lib/studio-ai').engine().verify(body, actor) });
+    if (action === 'studio-workflow-action') return sendJson(res, 200, { ok: true, ...await require('../lib/studio-workflows').service().action(body, actor) });
     if (action === 'studio-history') return sendJson(res, 200, { ok: true, ...await require('../lib/studio-history').change(body, actor) });
     if (action === 'studio-enqueue') return sendJson(res, 200, { ok: true, ...await require('../lib/studio-runner').service().enqueue(body, actor) });
     if (action === 'studio-run') return sendJson(res, 200, { ok: true, ...await require('../lib/studio-runner').service().run(body.id, actor) });
