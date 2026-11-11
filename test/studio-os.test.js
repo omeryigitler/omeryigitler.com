@@ -148,7 +148,7 @@ test('unauthenticated callers cannot read or mutate Studio endpoints', async()=>
   };
   try {
     const handler=require('../api/agent');
-    for(const [action,method] of [['studio-status','GET'],['studio-records','GET'],['studio-settings','POST'],['studio-save','POST'],['studio-transition','POST'],['studio-pricing-config','GET'],['studio-pricing-save','POST'],['studio-pricing-settings','POST'],['studio-lead-process','POST'],['studio-runner-status','GET'],['studio-enqueue','POST'],['studio-run','POST'],['studio-draft-decision','POST']]){
+    for(const [action,method] of [['studio-status','GET'],['studio-records','GET'],['studio-settings','POST'],['studio-save','POST'],['studio-transition','POST'],['studio-history','POST'],['studio-pricing-config','GET'],['studio-pricing-save','POST'],['studio-pricing-settings','POST'],['studio-lead-process','POST'],['studio-runner-status','GET'],['studio-enqueue','POST'],['studio-run','POST'],['studio-draft-decision','POST']]){
       const res={statusCode:200,setHeader(){},end(value){this.body=JSON.parse(value);}};
       await handler({method,query:{action},headers:{},body:{settings:{enabled:true}}},res);
       assert.equal(res.statusCode,403);assert.equal(res.body.code,'agent_forbidden');
