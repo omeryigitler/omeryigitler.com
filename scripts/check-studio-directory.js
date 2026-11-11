@@ -16,8 +16,8 @@ const db = {
   batch() { const writes = []; return { set: (ref, value) => writes.push(() => data.set(ref.key, value)), commit: async () => writes.forEach(write => write()) }; }
 };
 async function main() {
-  const events = [], started = Date.now();
-  const runner = createRunner({ db, env: {}, pricing: defaultSettings(), discover: createDiscovery({ db, onAttempt: event => { events.push(event); console.info(JSON.stringify(event)); } }) });
+  const started = Date.now();
+  const runner = createRunner({ db, env: {}, pricing: defaultSettings(), discover: createDiscovery({ db, onAttempt: event => console.info(JSON.stringify(event)) }) });
   const id = 'live-source-check', actor = { id: 'isolated-check' };
   await runner.enqueue({ kind: 'discovery', requestId: id, country: 'MT', region: 'sliema', industry: 'hospitality', limit: 3 }, actor);
   const result = await runner.run(id, actor);
@@ -28,6 +28,6 @@ async function main() {
     assert.equal(company.country, 'MT'); assert.ok(company.research);
     if (company.draft) { assert.equal(company.draft.generatedBy, 'template'); assert.ok(company.draft.proposal.breakdown.finalTotal > 0); }
   }
-  console.info(JSON.stringify({ result: 'PASS', status: result.status, companies: companies.length, concepts: companies.filter(row => row.draft).length, unavailableInspections: companies.filter(row => row.research.status === 'unavailable').length, elapsedMs: Date.now() - started, checkedAt: new Date().toISOString() }));
+  console.info(JSON.stringify({ result: 'PASS', status: result.status, companies: companies.length, concepts: companies.filter(row => row.draft).length, sources: companies.map(row => row.source), unavailableInspections: companies.filter(row => row.research.status === 'unavailable').length, elapsedMs: Date.now() - started, checkedAt: new Date().toISOString() }));
 }
 main().catch(error => { console.error(JSON.stringify({ result: 'FAIL', code: /^[a-z_]{1,60}$/.test(error?.code || '') ? error.code : 'check_failed' })); process.exitCode = 1; });

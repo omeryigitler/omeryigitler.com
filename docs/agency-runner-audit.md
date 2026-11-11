@@ -79,8 +79,9 @@ publishing remain outside this runner. It never calls messaging or deployment AP
   maximum three attempts per job. Cancellation/emergency pause is checked at
   each persisted checkpoint and immediately before final completion.
 - `studio_runtime/directory`, `studio_directory_cache`: five new searches per UTC
-  day, one-minute global cooldown, 24-hour result cache. Private.coffee Overpass
-  is tried first, then the main Overpass endpoint on a transient failure only.
+  day, one-minute global cooldown, 24-hour result cache. The free European
+  Overpass instance `ovp.dresel.systems` is tried first, then Private.coffee
+  on a transient failure only. The European source updates its data daily.
   A logical search makes at most two sequential requests of 14 seconds each.
   A provider 429 stops the search without changing hosts. An operator-controlled
   HTTPS `STUDIO_DIRECTORY_URL` selects one exclusive compatible instance.
@@ -99,7 +100,8 @@ The user’s first Sliema hotel search failed before its first checkpoint. The
 previous catch discarded transport details and persisted only `runner_failed`;
 production logs therefore cannot establish its exact historical exception.
 Read-only reproductions saw HTTP 502 and native `TimeoutError` responses from
-the external directory boundary. The old mocked tests did not prove that
+the external directory boundary. An independent Node 26 live check also timed
+out against Private.coffee and the main Overpass instance. The old mocked tests did not prove that
 boundary worked, and this was an unresolved limitation of the first release.
 
 The corrected adapter translates fetch/body-read failures into safe typed
@@ -119,6 +121,20 @@ using real public directory/site reads, current default pricing and in-memory
 persistence. A dedicated PR check runs it on Node 26 without credentials or any
 production writes. This external check is separate from deterministic tests;
 neither a passing build nor synthetic browser fixtures imply provider uptime.
+
+A live read from the documented free European endpoint returned HTTP 200 and
+30 Sliema hotel/guest-house records. Normalization selected Saint Julians Bay
+Hotel (`node/301355391`), Alborada Aparthotel (`node/1316077749`) and Valentina
+Hotel (`node/1332708982`), each retaining its exact OSM source. No production
+records were written by that check. Public source availability remains an
+external dependency rather than a guarantee.
+
+On 11 November the full live read → normalization → website check → private
+concept/estimate flow completed in 6.3 seconds using isolated in-memory storage:
+three real companies, two template concepts awaiting review, one explicitly
+unavailable website inspection. An Ankara hospitality read also returned HTTP
+200 with 30 directory records, confirming that the European extract covers
+the selected Turkish market as well as Malta.
 
 ## External source policy
 
